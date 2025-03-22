@@ -1,0 +1,23 @@
+<!-- Extend "main/base.html" -->
+{% extends "main/base.html" %}
+
+<!-- START - Block title -->
+{% block title %} 
+
+Backend - Inicio 
+
+{% endblock %}
+<!-- END - Block title -->
+
+<!-- START - Block content -->
+{% block content %}
+
+    <div class="flex flex-col flex-1 w-full">
+
+        {% include './partials/header.html' %}
+        {% include './content/data.html' %}
+
+    </div>
+
+{% endblock %}
+<!-- END - Block content -->
