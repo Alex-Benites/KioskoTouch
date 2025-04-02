@@ -74,6 +74,8 @@ WSGI_APPLICATION = 'KioskoTouch.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# base de datos local
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -85,6 +87,18 @@ DATABASES = {
     }
 }
 
+#Para comentar codigo ctrl+k luego ctrl+c y para descomentar ctrl+k luego ctrl+u
+# Base de datos para usar en pythonAnywhere
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'AxelB$kiosko_db',  # Usa el nombre completo de la base de datos
+#         'USER': 'AxelB',
+#         'PASSWORD': 'root2002',
+#         'HOST': 'AxelB.mysql.pythonanywhere-services.com',
+#         'PORT': '3306',
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
