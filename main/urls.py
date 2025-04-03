@@ -4,9 +4,13 @@ Asocie la ruta raíz (‘’) con la vista basada en función (function-based vi
 '''
 
 from django.urls import path
-from main.views import chef_views, cliente_views, administrador_views
+from main.views import chef_views, cliente_views
+from main.views.home import home
 
 urlpatterns = [
+    # entrada principal
+    path('', home, name='home'),
+
     # URLs para el chef
     path('chef/', chef_views.chef_dashboard, name='chef_dashboard'),
 
@@ -14,5 +18,5 @@ urlpatterns = [
     path('cliente/menu/', cliente_views.cliente_menu, name='cliente_menu'),
 
     # URLs para el administrador
-    path('admin/dashboard/', administrador_views.admin_dashboard, name='admin_dashboard'),
+    #path('admin/dashboard/', administrador_views.admin_dashboard, name='admin_dashboard'),
 ]

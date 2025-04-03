@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-va0!@(g=u78w+lo7_1-(*zu1cd)nssw!bvu@xbgik0ko&b(brn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['KioskoGo.pythonanywhere.com']
 
 
 # Application definition
@@ -76,29 +76,29 @@ WSGI_APPLICATION = 'KioskoTouch.wsgi.application'
 
 # base de datos local
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'kiosko_db',
-        'USER': 'root',
-        'PASSWORD': 'root2002',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'kiosko_db',
+#        'USER': 'root',
+#        'PASSWORD': 'root2002',
+#        'HOST': 'localhost',
+#        'PORT': '3306',
+#    }
+#}
 
 #Para comentar codigo ctrl+k luego ctrl+c y para descomentar ctrl+k luego ctrl+u
 # Base de datos para usar en pythonAnywhere
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'AxelB$kiosko_db',  # Usa el nombre completo de la base de datos
-#         'USER': 'AxelB',
-#         'PASSWORD': 'root2002',
-#         'HOST': 'AxelB.mysql.pythonanywhere-services.com',
-#         'PORT': '3306',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'KioskoGo$db',  # Usa el nombre completo de la base de datos
+        'USER': 'KioskoGo',
+        'PASSWORD': 'root2002',
+        'HOST': 'KioskoGo.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -142,5 +142,9 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / STATIC_URL,
 ]
+
+STATIC_ROOT = "assets/"
+
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
