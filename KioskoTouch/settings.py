@@ -134,11 +134,8 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / STATIC_URL,
-    #BASE_DIR / 'frontend-cliente/dist/frontend-cliente',
-    #os.path.join(BASE_DIR, 'frontend-cliente/dist/frontend-cliente/browser' ),
-    os.path.join(BASE_DIR, 'frontend-chef', 'dist', 'frontend-chef', 'browser'),
-    os.path.join(BASE_DIR, 'frontend-cliente', 'dist', 'frontend-cliente', 'browser'),
-    os.path.join(BASE_DIR, 'frontend-administrador', 'dist', 'frontend-administrador', 'browser'),
+    os.path.join(BASE_DIR, 'frontend/dist/frontend/browser'),
+
 ]
 
 #STATIC_ROOT = "assets/"
