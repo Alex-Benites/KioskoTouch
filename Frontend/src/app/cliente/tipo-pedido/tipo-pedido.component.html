@@ -1,0 +1,33 @@
+<div class="container">
+    <header class="header">
+      <h1>Kiosko Go</h1>
+      <p>¿Dónde desea comer?</p>
+    </header>
+  
+    <section class="opciones">
+      <div class="opcion">
+        <img src="img/cliente/icon-servir.png" alt="Para Servir" />
+        <label>
+          <input type="radio" name="tipoPedido" value="servir" [(ngModel)]="seleccion" />
+          Para Servir
+        </label>
+      </div>
+      <div class="opcion">
+        <img src="img/cliente/icon-llevar.png" alt="Para Llevar" />
+        <label>
+          <input type="radio" name="tipoPedido" value="llevar" [(ngModel)]="seleccion" />
+          Para Llevar
+        </label>
+      </div>
+    </section>
+  
+    <button class="continuar" [disabled]="!seleccion" (click)="continuar()">Continuar</button>
+  
+    <hr />
+  
+    <section class="publicidad">
+      <!-- Aquí va el espacio para banners o promos -->
+      <p>Publicidad</p>
+    </section>
+  </div>
+  

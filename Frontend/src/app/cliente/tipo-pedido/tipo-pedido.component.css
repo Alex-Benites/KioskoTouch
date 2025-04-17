@@ -1,0 +1,68 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    justify-content: space-between;
+  }
+  
+  .header {
+    text-align: center;
+  }
+  
+  .opciones {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    margin: 2rem 0;
+  }
+  
+  .opcion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .opcion img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+  }
+  
+  label {
+    font-size: 1.2rem;
+  }
+  
+  .continuar {
+    align-self: flex-end;
+    margin-right: 2rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .continuar:disabled {
+    background-color: #9e9e9e;
+    cursor: not-allowed;
+  }
+  
+  hr {
+    width: 100%;
+    margin-top: 2rem;
+  }
+  
+  .publicidad {
+    text-align: center;
+    color: #555;
+    margin-top: 1rem;
+  }
+  
