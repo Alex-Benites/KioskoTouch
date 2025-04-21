@@ -1,0 +1,120 @@
+/* Encabezado */
+header {
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+}
+  
+header h1 {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+  
+button {
+transition: background-color 0.3s ease;
+}
+
+button:hover {
+opacity: 0.9;
+}
+
+/* Idioma radio buttons */
+input[type="radio"] {
+margin-right: 4px;
+}
+
+/* Carrusel vertical */
+.col-span-1 {
+background-color: #fafafa;
+border-right: 1px solid #eee;
+}
+
+.col-span-1 div {
+transition: background-color 0.2s;
+}
+
+.col-span-1 div:hover {
+background-color: #ffeeba; /* Suave efecto hover */
+}
+
+/* Producto card */
+.grid-cols-2 > div {
+background-color: white;
+border: 1px solid #ddd;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+transition: transform 0.2s ease-in-out;
+}
+
+.grid-cols-2 > div:hover {
+transform: scale(1.02);
+}
+
+/* Precio burbuja */
+span {
+background-color: #f3f3f3;
+padding: 4px 8px;
+border-radius: 999px;
+display: inline-block;
+margin-top: 4px;
+}
+
+/* Mi orden */
+.bg-red-500 {
+background-color: #dc2626 !important; /* rojo más fuerte */
+color: white;
+border: 2px solid #dc2626;
+border-radius: 0.5rem;
+}
+
+/* Footer */
+footer {
+border-top: 2px solid #e5e7eb;
+background-color: #f9f9f9;
+font-weight: 500;
+}
+
+footer button {
+background-color: #16a34a;
+}
+
+footer button:hover {
+background-color: #15803d;
+}
+
+/* Publicidad */
+hr {
+border-color: #e5e7eb;
+}
+
+.text-center img {
+object-fit: cover;
+border-radius: 0.5rem;
+}
+
+/* Popup */
+.fixed {
+z-index: 50;
+}
+
+.popup {
+background-color: white;
+border-radius: 0.5rem;
+padding: 1.5rem;
+max-width: 20rem;
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.popup img {
+border-radius: 0.5rem;
+}
+
+.popup button {
+background: transparent;
+font-weight: bold;
+cursor: pointer;
+}
+
+/* Transiciones generales */
+* {
+transition: all 0.2s ease;
+}
+  

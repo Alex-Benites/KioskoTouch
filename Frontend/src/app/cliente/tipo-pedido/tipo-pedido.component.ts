@@ -19,7 +19,7 @@ export class TipoPedidoComponent {
   continuar() {
     if (this.seleccion) {
       // Aquí podrías guardar la elección en un servicio si quieres usarla después
-      //this.router.navigate(['/cliente/menu']); // Redirige donde quieras
+      this.router.navigate(['/cliente/menu']); // Redirige donde quieras
     }
   }
 }
