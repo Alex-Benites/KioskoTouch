@@ -1,139 +1,246 @@
 /* Encabezado */
-@import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
-.header__container{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: center;
-    margin-bottom: 2rem;
-    background-color: #f8f8f8;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .header__container h1 {
-    font-family: "Lobster", sans-serif;
-    font-size: 55px;
-    font-weight: bold;
+:host{
+  --medium-gray:#6A6A6A;
+  --intense-red: #ff4a2e;
+  --dark-red: #EF2A39;
+  --light-gray: #CDCDCD;
 }
 
-.header__container button{
-    width: 270px;
-    height: 64px;
-    background-color: #FF4A2E ;
-    color: white;
-    font-size: 32px;
-    border-radius: 10px;
-    font-family: "Poppins", sans-serif;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
 }
-  
+
 button {
-transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
 }
 
 button:hover {
-opacity: 0.9;
+  opacity: 0.9;
 }
 
-/* Idioma radio buttons */
-input[type="radio"] {
-margin-right: 4px;
+.header__container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  padding: 0px 44px 0 20px;
+  margin-bottom: 2rem;
+  background-color: #f8f8f8;
+}
+
+.header__title {
+  font-family: "Lobster", sans-serif;
+  font-size: 55px;
+  font-weight: bold;
+}
+
+.login__button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 278px;
+  height: 64px;
+  padding: 12px;
+  border: none;
+  background-color: var(--intense-red);
+  color: white;
+  font-size: 32px;
+  border-radius: 10px;
+}
+
+.icon__qrcode {
+  display: block;
+  width: 36px;
+  height: 36px;
+  background-image: url(../../../../../assets/img/codigoQR.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.home__languages-container{
+  padding: 0 64px 0 44px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.home__title{
+  color: var(--medium-gray);
+  font-size: 40px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.home__languages{
+  width: 260px;
+  height: 28px;
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  align-items: center;
+}
+
+.flag{
+  display: block;
+  width: 24px;
+  height: 16px;
+  border-radius: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.english__language{
+  background-image: url(../../../../../assets/img/englishflag.png);
+}
+
+.spanish__language{
+  background-image: url(../../../../../assets/img/spanishflag.png);
+}
+
+.language__selector {
+  transform: scale(1.5);
+  transform-origin: center;
+  margin-left: 8px;
+  cursor: pointer;
+  accent-color: var(--dark-red);
+}
+
+.home__languages label{
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+}
+
+.category__image{
+  width: 104px;
+  height: 98px;
+}
+.carousel__outer-container{
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: scroll;
+}
+
+/* .carousel__inner-container{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+} */
+
+.category__image-container{
+
+  width: 116px;
+  height: 108px;
+  background-color: var(--light-gray);
+  border-radius: 16px;
+  filter: drop-shadow(2px 9px 42px rgba(0, 0, 0, 0.08));
 }
 
 /* Carrusel vertical */
 .col-span-1 {
-background-color: #fafafa;
-border-right: 1px solid #eee;
+  background-color: #fafafa;
+  border-right: 1px solid #eee;
 }
 
 .col-span-1 div {
-transition: background-color 0.2s;
+  transition: background-color 0.2s;
 }
 
 .col-span-1 div:hover {
-background-color: #ffeeba; /* Suave efecto hover */
+  background-color: #ffeeba; /* Suave efecto hover */
 }
 
 /* Producto card */
 .grid-cols-2 > div {
-background-color: white;
-border: 1px solid #ddd;
-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-transition: transform 0.2s ease-in-out;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
 }
 
 .grid-cols-2 > div:hover {
-transform: scale(1.02);
+  transform: scale(1.02);
 }
 
 /* Precio burbuja */
 span {
-background-color: #f3f3f3;
-padding: 4px 8px;
-border-radius: 999px;
-display: inline-block;
-margin-top: 4px;
+  background-color: #f3f3f3;
+  padding: 4px 8px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-top: 4px;
 }
 
 /* Mi orden */
 .bg-red-500 {
-background-color: #dc2626 !important; /* rojo más fuerte */
-color: white;
-border: 2px solid #dc2626;
-border-radius: 0.5rem;
+  background-color: #dc2626 !important; /* rojo más fuerte */
+  color: white;
+  border: 2px solid #dc2626;
+  border-radius: 0.5rem;
 }
 
 /* Footer */
 footer {
-border-top: 2px solid #e5e7eb;
-background-color: #f9f9f9;
-font-weight: 500;
+  border-top: 2px solid #e5e7eb;
+  background-color: #f9f9f9;
+  font-weight: 500;
 }
 
 footer button {
-background-color: #16a34a;
+  background-color: #16a34a;
 }
 
 footer button:hover {
-background-color: #15803d;
+  background-color: #15803d;
 }
 
 /* Publicidad */
 hr {
-border-color: #e5e7eb;
+  border-color: #e5e7eb;
 }
 
 .text-center img {
-object-fit: cover;
-border-radius: 0.5rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
 }
 
 /* Popup */
 .fixed {
-z-index: 50;
+  z-index: 50;
 }
 
 .popup {
-background-color: white;
-border-radius: 0.5rem;
-padding: 1.5rem;
-max-width: 20rem;
-box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 20rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .popup img {
-border-radius: 0.5rem;
+  border-radius: 0.5rem;
 }
 
 .popup button {
-background: transparent;
-font-weight: bold;
-cursor: pointer;
+  background: transparent;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 /* Transiciones generales */
 * {
-transition: all 0.2s ease;
+  transition: all 0.2s ease;
 }
-  
