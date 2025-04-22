@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Renderer2  } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -10,7 +10,8 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.css'
 })
-export class MenuComponent implements OnInit {
+
+export class MenuComponent implements OnInit, OnDestroy {
   categorias = [
     { nombre: 'Hamburguesas', img: 'img/cliente/hamburguesa1-home.png' },
     { nombre: 'Postres', img: 'img/cliente/Sundae.png' },
@@ -30,14 +31,19 @@ export class MenuComponent implements OnInit {
   mostrarPopupLogin = false;
   idioma = 'es';
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
-
+  constructor(private route: ActivatedRoute, private router: Router, private renderer: Renderer2) {}
 
   ngOnInit() {
+    this.renderer.addClass(document.body, 'fondo-home');
+
     this.route.paramMap.subscribe(params => {
       const categoria = params.get('categoria') || this.categorias[0].nombre;
       this.seleccionarCategoria(categoria);
     });
+  }
+
+  ngOnDestroy() {
+    this.renderer.removeClass(document.body, 'fondo-home');
   }
 
   seleccionarCategoria(cat: any) {

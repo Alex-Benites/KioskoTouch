@@ -11,40 +11,42 @@
     <label><span class="flag spanish__language"></span>Español<input class="language__selector" type="radio" name="idioma" value="es" [(ngModel)]="idioma"></label>
   </article>
 </section>
-<main class="grid grid-cols-5 gap-4 px-4 py-2">
-  <!-- Carrusel vertical -->
-  <section class="carousel__outer-container">
-    <div *ngFor="let cat of categorias" (click)="seleccionarCategoria(cat)"
-      [class.bg-yellow-300]="cat.nombre === categoriaSeleccionada"
-      class="carousel__inner-container">
-      <figure class="category__image-container">
-        <img [src]="cat.img" class="category__image"/>
-      </figure>
-      <!-- <p class="category__name">{{ cat.nombre }}</p> -->
-    </div>
+<main>
+  <section class="product__dashboard-container">
+      <!-- Carrusel vertical -->
+    <article class="carousel__outer-container">
+      <div *ngFor="let cat of categorias" (click)="seleccionarCategoria(cat)"
+        [class.bg-yellow-300]="cat.nombre === categoriaSeleccionada" class="carousel__inner-container">
+        <figure class="category__image-container">
+          <img [src]="cat.img" class="category__image" />
+        </figure>
+        <!-- <p class="category__name">{{ cat.nombre }}</p> -->
+      </div>
+    </article>
+    <!-- Productos -->
+    <article class="category__products">
+      <h2 class="category__products-title">Combos y sandwiches</h2>
+      <div class="product__card-container">
+        <figure *ngFor="let prod of productosFiltrados" class="product__card">
+          <img [src]="prod.img" class="product__card-image"/>
+          <div class="product__card-details">
+            <h3 class="product__card-name">{{ prod.nombre }}</h3>
+            <span class="product__card-price">${{ prod.precio }}</span>
+          </div>
+        </figure>
+      </div>
+    </article>
   </section>
-
-  <!-- Productos -->
-  <div class="col-span-3 grid grid-cols-2 gap-4 w-full">
-    <div *ngFor="let prod of productosFiltrados" class="border rounded p-2 text-center w-full max-w-full">
-      <img [src]="prod.img" class="w-full h-32 object-cover mb-2" />
-      <h3 class="font-semibold">{{ prod.nombre }}</h3>
-      <span class="bg-gray-200 text-sm px-2 py-1 rounded-full">${{ prod.precio }}</span>
-    </div>
+  <section class="my-order">
+  <div class="order__divider">
+    <h2 class="order__title">Mi orden</h2>
   </div>
-
-  <!-- Mi orden -->
-  <div class="col-span-1 border border-red-500 p-4 text-white bg-red-500">
-    <h2 class="text-xl">Mi orden</h2>
-    <!-- Aquí podrías poner un resumen simple -->
-  </div>
+  <article class="order__details-container">
+    <div class="order__details">Total: $0 | Productos: 0</div>
+    <button (click)="continuar()" class="continue__button">Continuar</button>
+  </article>
+  </section>
 </main>
-
-<!-- Footer Total + continuar -->
-<footer class="flex justify-between items-center p-4 border-t">
-  <div>Total: $0 | Productos: 0</div>
-  <button (click)="continuar()" class="bg-green-600 text-white px-6 py-2 rounded">Continuar</button>
-</footer>
 
 <!-- Línea horizontal -->
 <hr class="my-4 border-t border-gray-400" />
