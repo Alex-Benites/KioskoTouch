@@ -1,25 +1,27 @@
 <div class="container">
     <header class="header">
-      <h1>Kiosko Go</h1>
-      <p>¿Dónde desea comer?</p>
+      <h1 class="header__title">Kiosko Go</h1>
     </header>
   
-    <section class="opciones">
-      <div class="opcion">
-        <img src="img/cliente/icon-servir.png" alt="Para Servir" />
-        <label>
-          <input type="radio" name="tipoPedido" value="servir" [(ngModel)]="seleccion" />
-          Para Servir
-        </label>
-      </div>
-      <div class="opcion">
-        <img src="img/cliente/icon-llevar.png" alt="Para Llevar" />
-        <label>
-          <input type="radio" name="tipoPedido" value="llevar" [(ngModel)]="seleccion" />
-          Para Llevar
-        </label>
-      </div>
-    </section>
+    <main>
+      <p class="options__title">¿Dónde desea comer?</p>
+      <article class="options__container">
+        <div class="opcion option__servir">
+          <img src="img/cliente/icon-servir.png" alt="Para Servir" />
+          <label class="opcion__selector">
+            <input type="radio" name="tipoPedido" value="servir" [(ngModel)]="seleccion" />
+            Para Servir
+          </label>
+        </div>
+        <div class="opcion option__llevar">
+          <img src="img/cliente/icon-llevar.png" alt="Para Llevar" />
+          <label class="opcion__selector">
+            <input type="radio" name="tipoPedido" value="llevar" [(ngModel)]="seleccion" />
+            Para Llevar
+          </label>
+        </div>
+      </article>
+    </main>
   
     <button class="continuar" [disabled]="!seleccion" (click)="continuar()">Continuar</button>
   
