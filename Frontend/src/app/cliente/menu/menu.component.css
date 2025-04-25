@@ -1,5 +1,4 @@
 /* Encabezado */
-@import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 :host{
@@ -10,6 +9,7 @@
   --light-blue: #D7E4FF;
   --intense-yellow: #FFB62F;
   --light-pink: #FF7A7A;
+  --background-white: #f8f8f8; 
 }
 
 * {
@@ -20,7 +20,11 @@
   transition: all 0.2s ease;
 }
 
-.fondo-home{
+body{
+  margin: 12px;
+}
+
+.fondo-home, main{
   background-color: #f8f8f8;
 }
 
@@ -40,13 +44,13 @@ button:hover {
   align-items: center;
   text-align: center;
   padding: 0px 44px 0 20px;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   background-color: #f8f8f8;
 }
 
 .header__title {
   font-family: "Lobster", sans-serif;
-  font-size: 55px;
+  font-size: 76px;
   font-weight: bold;
 }
 
@@ -54,13 +58,13 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 278px;
-  height: 64px;
+  width: 340px;
+  height: 80px;
   padding: 12px;
   border: none;
   background-color: var(--intense-red);
   color: white;
-  font-size: 32px;
+  font-size: 40px;
   border-radius: 10px;
 }
 
@@ -76,22 +80,23 @@ button:hover {
 
 .home__languages-container{
   padding: 0 64px 0 44px;
-  margin-bottom: 24px;
+  margin-bottom: 36px;
   display: flex;
   justify-content: space-between;
+  background-color: #f8f8f8;
 }
 
 .home__title{
   color: var(--medium-gray);
-  font-size: 40px;
+  font-size: 50px;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
 }
 
 .home__languages{
-  width: 260px;
-  height: 28px;
+  width: 412px;
+  height: 40px;
   display: flex;
   justify-content: space-between;
   gap: 32px;
@@ -100,8 +105,8 @@ button:hover {
 
 .flag{
   display: block;
-  width: 24px;
-  height: 16px;
+  width: 32px;
+  height: 20px;
   border-radius: 0;
   background-position: center;
   background-repeat: no-repeat;
@@ -119,7 +124,7 @@ button:hover {
 .language__selector {
   transform: scale(1.5);
   transform-origin: center;
-  margin-left: 8px;
+  margin-left: 12px;
   cursor: pointer;
   accent-color: var(--dark-red);
 }
@@ -127,11 +132,14 @@ button:hover {
 .home__languages label{
   display: flex;
   justify-content: space-around;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+  font-size: 32px;
 }
 
 .product__dashboard-container{
-  margin-bottom: 32px;
+  margin-bottom: 40px;
+  height: 900px;
   display: grid;
   gap: 12px;
   grid-template-areas: 
@@ -141,14 +149,14 @@ button:hover {
 }
 
 .category__image{
-  width: 104px;
-  height: 98px;
+  width: 100px;
+  height: 100px;
 }
 
 .carousel__outer-container{
   padding: 16px;
   grid-area: carousel;
-  height: 200px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -157,8 +165,11 @@ button:hover {
 }
 
 .category__image-container{
-  width: 116px;
-  height: 108px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 144px;
+  height: 152px;
   background-color: var(--light-gray);
   border-radius: 16px;
   filter: drop-shadow(2px 9px 42px rgba(0, 0, 0, 0.08));
@@ -172,7 +183,7 @@ button:hover {
   padding-bottom: 32px;
   color: var(--medium-gray);
   text-align: center;
-  font-size: 40px;
+  font-size: 50px;
   font-style: normal;
   font-weight: 500;
   line-height: 134.688%;
@@ -186,6 +197,7 @@ button:hover {
 }
 
 .product__card{
+  width: 80%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -194,22 +206,26 @@ button:hover {
 }
 
 .product__card-details{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
 .product__card-image{
-  width: 136px;
-  height: 136px;
+  width: 194px;
+  height: 216px;
 }
 
 .product__card-name{
   padding: 8px;
-  max-width: 200px;
+  width: 80%;
   background-color: var(--light-blue);
   border-radius: 20px;
   color: var(--medium-gray);
   text-align: center;
-  font-size: 25px;
+  font-size: 32px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
@@ -219,22 +235,22 @@ button:hover {
   position: absolute;
   display: grid;
   place-items: center;
-  top: -54px;
-  right: -20px;
-  width: 76px;
-  height: 67px;
+  top: -72px;
+  right: -10px;
+  width: 103px;
+  height: 98px;
   padding: 12px;
   border-radius: 50%;
   background-color: var(--intense-yellow);
   text-align: center;
-  font-size: 20px;
+  font-size: 28px;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
 }
 
 .my-order{
-  margin-bottom: 32px;
+  margin-bottom: 40px;
 }
 
 .order__divider {
@@ -242,31 +258,32 @@ button:hover {
   color: white;
   border-radius: 0.5rem;
   box-shadow: 0px 19px 47px -8px rgba(0, 0, 0, 0.25);
-  margin-bottom: 30px;
+  margin-bottom: 36px;
 }
 
 .order__title{
   text-align: center;
-  font-size: 30px;
+  font-size: 44px;
   font-style: normal;
   font-weight: 600;
   line-height: 134.688%;
 }
 
 .order__details-container {
+  padding-top: 160px;
   display: flex;
   justify-content: space-between;
   border-top: 2px solid #e5e7eb;
-  background-color: #f9f9f9;
+  background-color: var(--background-white);
   font-weight: 500;
 }
 
 .order__details-container button {
-  width: 194px;
-  height: 40px;
+  width: 256px;
+  height: 52px;
   background-color: #38823D;
   border: none;
-  border-radius: 30px;
+  border-radius: 40px;
   color: white;
   font-size: 30px;
   font-style: normal;
@@ -276,7 +293,7 @@ button:hover {
 
 .order__details{
   color: #080808;
-  font-size: 30px;
+  font-size: 40px;
   font-style: normal;
   font-weight: 600;
   line-height: 134.688%;
@@ -284,6 +301,17 @@ button:hover {
 
 .order__details-container button:hover {
   background-color: #15803d;
+}
+
+
+.advertisement__container{
+  width: 100%;
+  height: 300px;
+}
+
+.advertisement__img{
+  width: 100%;
+  height: 100%;
 }
 
 /* Publicidad */
