@@ -13,11 +13,11 @@ urlpatterns = [
     # URLs para admin Django
     path('admin/django', admin.site.urls),
 
-    re_path(r'^cliente/.*$', TemplateView.as_view(template_name='cliente/index.html')),
+    re_path(r'^cliente/.*$', TemplateView.as_view(template_name='index.html')),
 
-    re_path(r'^chef/.*$', TemplateView.as_view(template_name='chef/index.html')),
+    re_path(r'^chef/.*$', TemplateView.as_view(template_name='index.html')),
 
-    re_path(r'^administrador/.*$', TemplateView.as_view(template_name='administrador/index.html')),
+    re_path(r'^administrador/.*$', TemplateView.as_view(template_name='index.html')),
 
 
 ]

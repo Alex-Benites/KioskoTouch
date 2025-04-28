@@ -1,68 +1,127 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  transition: all 0.2s ease;
+}
+
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
-    font-family: Arial, sans-serif;
-    height: 100vh;
-    justify-content: space-between;
-  }
-  
-  .header {
-    text-align: center;
-  }
-  
-  .opciones {
-    display: flex;
-    gap: 3rem;
-    justify-content: center;
-    margin: 2rem 0;
-  }
-  
-  .opcion {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  
-  .opcion img {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 15px;
-    margin-bottom: 1rem;
-  }
-  
-  label {
-    font-size: 1.2rem;
-  }
-  
-  .continuar {
-    align-self: flex-end;
-    margin-right: 2rem;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    background-color: #2196f3;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-  }
-  
-  .continuar:disabled {
-    background-color: #9e9e9e;
-    cursor: not-allowed;
-  }
-  
-  hr {
-    width: 100%;
-    margin-top: 2rem;
-  }
-  
-  .publicidad {
-    text-align: center;
-    color: #555;
-    margin-top: 1rem;
-  }
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  justify-content: space-between;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 20%;
+  background-color: #FF7D7D;
+  border-radius: 50px;
+}
+
+.header__title {
+  font-family: "Lobster", sans-serif;
+  font-size: 100px;
+  color: white;
+}
+
+main {
+  height: 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 10rem;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.options__container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 200px;
+}
+
+.options__title {
+  width: 100%;
+  text-align: center;
+  color: #808080;
+  font-size: 60px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.opcion img {
+  width: 250px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 15px;
+  margin-bottom: 1rem;
+}
+
+.opcion label {
+  font-size: 40px;
+  color: #808080;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.opcion__selector input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none; 
+  width: 60px;
+  height: 40px;
+  border: 3px solid #ccc;
+  border-radius: 4px; /* Opcional: puedes dejarlo en 0 si quieres esquinas cuadradas */
+  background-color: white;
+  cursor: pointer;
+  margin-right: 16px; /* Espacio entre el cuadrado y el texto */
+  vertical-align: middle; /* Alineación con el texto */
+}
+
+.opcion__selector input[type="radio"]:checked {
+  background-color: #ccc;
+}
+
+.continuar {
+  align-self: flex-end;
+  margin-right: 2rem;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.continuar:disabled {
+  background-color: #9e9e9e;
+  cursor: not-allowed;
+}
+
+hr {
+  width: 100%;
+  margin-top: 2rem;
+}
+
+.publicidad {
+  text-align: center;
+  color: #555;
+  margin-top: 1rem;
+}
   

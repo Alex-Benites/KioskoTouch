@@ -1,46 +1,64 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 100vh;
-    padding: 2rem;
-    font-family: 'Arial', sans-serif;
-  }
-  
-  .header {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  
-  button {
-    margin-top: 1rem;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    background-color: #ff9800;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  button:hover {
-    background-color: #e68900;
-  }
-  
-  .imagenes {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-top: auto;
-  }
-  
-  .imagenes img {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  font-family: "Righteous", sans-serif;
+  background: linear-gradient(172deg, #FF939B 0.66%, #EF2A39 64.7%);
+}
+
+.header__container {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header__title {
+  font-family: "Lobster", sans-serif;
+  font-size: 150px;
+  font-weight: bold;
+}
+
+.header__welcome{
+  font-size: 72px;
+}
+
+.header__start{
+  font-size: 60px;
+}
+
+.header__button{
+  height: 120px;
+  width: 266px;
+  margin-top: 1rem;
+  padding: 1rem 2rem;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0px 9px 30px 0px rgba(239, 42, 57, 0.20);
+  border-radius: 20px;
+  border: 3px solid #FFF;
+  font-family: "Righteous", sans-serif;
+  font-size: 50px;
+}
+
+.header__button:hover {
+  transform: scale(1.10);
+  transition: all 200ms ease;
+}
+
+.footer__images{
+  width: 100%;
+  min-height: 412px;
+  background-image: url(../../../../public/img/cliente/homefooter.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  margin-top: 100px;
+}
   

@@ -48,7 +48,9 @@ ROOT_URLCONF = 'KioskoTouch.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'main' / 'templates', BASE_DIR / 'main' / 'templates' / 'cliente', BASE_DIR / 'main' / 'templates' / 'chef', BASE_DIR / 'main' / 'templates' / 'administrador' ],
+        'DIRS': [BASE_DIR / 'main' / 'templates'],
+
+        #'DIRS': [BASE_DIR / 'main' / 'templates', BASE_DIR / 'main' / 'templates' / 'cliente', BASE_DIR / 'main' / 'templates' / 'chef', BASE_DIR / 'main' / 'templates' / 'administrador' ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
