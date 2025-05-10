@@ -1,0 +1,35 @@
+<!-- Encabezado -->
+<div class="usuarios-header">
+    <h1 class="brand-title">KIOSCO GO!</h1>
+    <hr class="header-line" />
+  </div>
+  
+  <!-- Contenido -->
+  <div class="usuarios-container">
+    <p class="breadcrumb">HOME</p>
+    <h2 class="section-title">Gestión de Usuarios</h2>
+  
+    <div class="usuarios-grid">
+      <div class="usuarios-item" (click)="irA('administrador/gestion-usuarios/crear-usuario')">
+        <img src="assets/icons/crear-usuario.png" alt="Crear nuevo usuario" />
+        <span>Crear nuevo usuario</span>
+      </div>
+      <div class="usuarios-item" (click)="irA('administrador/gestion-usuarios/editar-eliminar-usuario')">
+        <img src="assets/icons/editar-usuario.png" alt="Editar/Eliminar usuario" />
+        <span>Editar/Eliminar usuario</span>
+      </div>
+      <div class="usuarios-item" (click)="irA('administrador/gestion-usuarios/crear-rol')">
+        <img src="assets/icons/crear-rol.png" alt="Crear nuevo rol" />
+        <span>Crear nuevo rol</span>
+      </div>
+      <div class="usuarios-item" (click)="irA('administrador/gestion-usuarios/editar-eliminar-rol')">
+        <img src="assets/icons/editar-rol.png" alt="Editar/Eliminar rol" />
+        <span>Editar/Eliminar rol</span>
+      </div>
+    </div>
+  
+    <div class="usuarios-atras" (click)="volver()">
+      <span>&#x2190; Atrás</span>
+    </div>
+  </div>
+  

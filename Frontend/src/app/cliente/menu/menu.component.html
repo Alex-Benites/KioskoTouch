@@ -56,11 +56,14 @@
   <img src="img/cliente/publicidadejemplo.png" class="advertisement__img" alt="Publicidad" />
 </div>
 
+
 <!-- Pop-up para login -->
-<div *ngIf="mostrarPopupLogin" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-  <div class="bg-white p-6 rounded shadow-lg w-80 relative">
-    <button (click)="cerrarPopupLogin()" class="absolute top-2 right-2 text-gray-600">X</button>
-    <h2 class="text-xl mb-4">Escanee el siguiente código QR</h2>
-    <img src="img/cliente/codigoQR.png" alt="QR" class="mx-auto h-40" />
+<div *ngIf="mostrarPopupLogin" class="popup-overlay">
+  <div class="popup">
+    <button (click)="cerrarPopupLogin()" class="popup-close">X</button>
+    <h2>Escanee el siguiente código QR</h2>
+    <img src="img/cliente/codigoQR.png" alt="QR" />
   </div>
 </div>
+
+

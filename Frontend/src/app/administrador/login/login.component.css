@@ -1,0 +1,129 @@
+.login-container {
+    display: flex;
+    height: 100vh;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .login-form-container {
+    width: 40%;
+    padding: 40px;
+  }
+  
+  .welcome-title {
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+  
+  .app-title {
+    font-size: 24px;
+    margin-bottom: 30px;
+  }
+  
+  .input-container {
+    margin-bottom: 20px;
+  }
+  
+  .input-container input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  
+  .forgot-password {
+    text-align: right;
+    margin-bottom: 20px;
+  }
+  
+  .forgot-password button {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  .ingresar-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .ingresar-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .image-container {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .hamburguesa-img {
+    max-width: 90%;
+    height: auto;
+  }
+  
+  /* POPUP STYLES */
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .popup {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 400px; /*ajusto el tamaño del pop-up aqui con width y height*/
+    max-width: 90%;
+    text-align: center;
+    position: relative;
+  }
+  
+  .popup-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
+  .popup-input {
+    width: 100%;
+    padding: 10px;
+    margin: 15px 0;
+    font-size: 16px;
+  }
+  
+  .popup-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .popup-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  
