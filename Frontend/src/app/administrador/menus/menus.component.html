@@ -1,1 +1,29 @@
-<p>menus works admin!</p>
+<!-- Encabezado -->
+<div class="menu-header">
+  <h1 class="brand-title">KIOSCO GO!</h1>
+  <hr class="header-line" />
+</div>
+
+<!-- Contenido -->
+<div class="menu-container">
+  <p class="breadcrumb">HOME</p>
+  <h2 class="section-title">Gestión del Menú</h2>
+
+  <div class="menu-grid">
+    <div class="menu-item" (click)="irA('administrador/gestion-menus/crear')">
+      <img src="assets/icons/crear-menu.png" alt="Crear menú" />
+      <span>Crear menú</span>
+    </div>
+    <div
+      class="menu-item"
+      (click)="irA('administrador/gestion-menus/editar-eliminar')"
+    >
+      <img src="assets/icons/editar-menu.png" alt="Editar/Eliminar menú" />
+      <span>Editar/Eliminar menú</span>
+    </div>
+  </div>
+
+  <div class="menu-atras" (click)="volver()">
+    <span>&#x2190; Atrás</span>
+  </div>
+</div>

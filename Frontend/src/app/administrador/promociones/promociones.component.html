@@ -1,1 +1,42 @@
-<p>promociones works!</p>
+<!-- Encabezado -->
+<div class="promo-header">
+  <h1 class="brand-title">KIOSCO GO!</h1>
+  <hr class="header-line" />
+</div>
+
+<!-- Contenido -->
+<div class="promo-container">
+  <p class="breadcrumb">HOME</p>
+  <h2 class="section-title">Gestión de Promociones</h2>
+
+  <div class="promo-grid">
+    <div
+      class="promo-item"
+      (click)="irA('administrador/gestion-promociones/crear')"
+    >
+      <img src="assets/icons/crear-promocion.png" alt="Crear promoción" />
+      <span>Crear promoción</span>
+    </div>
+    <div
+      class="promo-item"
+      (click)="irA('administrador/gestion-promociones/editar-eliminar')"
+    >
+      <img
+        src="assets/icons/editar-promocion.png"
+        alt="Editar/Eliminar promoción"
+      />
+      <span>Editar/Eliminar promoción</span>
+    </div>
+    <div
+      class="promo-item"
+      (click)="irA('administrador/gestion-promociones/estadisticas')"
+    >
+      <img src="assets/icons/estadisticas-promocion.png" alt="Estadísticas" />
+      <span>Estadísticas</span>
+    </div>
+  </div>
+
+  <div class="promo-atras" (click)="volver()">
+    <span>&#x2190; Atrás</span>
+  </div>
+</div>

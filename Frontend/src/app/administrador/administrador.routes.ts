@@ -14,6 +14,16 @@ import { PantallasCocinaComponent } from './pantallas-cocina/pantallas-cocina.co
 import { EstablecimientosComponent } from './establecimientos/establecimientos.component';
 import { PublicidadComponent } from './publicidad/publicidad.component';
 import { KioskoTouchComponent } from './kiosko-touch/kiosko-touch.component';
+import { EliminarComponent } from './productos/eliminar/eliminar.component';
+import { EditarComponent } from './productos/editar/editar.component';
+import { CrearComponent } from './productos/crear/crear.component';
+import { CrearMenuComponent } from './menus/crear-menu/crear-menu.component';
+import { EditarEliminarMenuComponent } from './menus/editar-eliminar-menu/editar-eliminar-menu.component';
+import { CrearPromocionComponent } from './promociones/crear-promocion/crear-promocion.component';
+import { EditarEliminarPromocionComponent } from './promociones/editar-eliminar-promocion/editar-eliminar-promocion.component';
+import { EstadisticasPromocionComponent } from './promociones/estadisticas-promocion/estadisticas-promocion.component';
+import { CrearPantallaCocinaComponent } from './pantallas-cocina/crear-pantalla-cocina/crear-pantalla-cocina.component';
+import { EditarEliminarPantallaCocinaComponent } from './pantallas-cocina/editar-eliminar-pantalla-cocina/editar-eliminar-pantalla-cocina.component';
 
 
 export const administradorRoutes: Routes = [
@@ -31,12 +41,23 @@ export const administradorRoutes: Routes = [
   { path: 'gestion-usuarios/editar-eliminar-rol', component: EditarEliminarRolComponent },
 
   { path: 'gestion-productos', component: ProductosComponent },
+  { path: 'gestion-productos/crear', component: CrearComponent },
+  { path: 'gestion-productos/editar', component: EditarComponent },
+  { path: 'gestion-productos/eliminar', component: EliminarComponent },
 
   { path: 'gestion-menus', component: MenusComponent },
+  { path: 'gestion-menus/crear', component: CrearMenuComponent },
+  { path: 'gestion-menus/editar-eliminar', component: EditarEliminarMenuComponent },
 
   { path: 'gestion-promociones', component: PromocionesComponent },
+  { path: 'gestion-promociones/crear', component: CrearPromocionComponent },
+  { path: 'gestion-promociones/editar-eliminar', component: EditarEliminarPromocionComponent },
+  { path: 'gestion-promociones/estadisticas', component: EstadisticasPromocionComponent },
+  
 
   { path: 'gestion-pantallas-cocina', component: PantallasCocinaComponent },
+  { path: 'gestion-pantallas-cocina/crear', component: CrearPantallaCocinaComponent },
+  { path: 'gestion-pantallas-cocina/editar-eliminar', component: EditarEliminarPantallaCocinaComponent },
   
   { path: 'gestion-establecimientos', component: EstablecimientosComponent },
 

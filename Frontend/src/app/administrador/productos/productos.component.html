@@ -1,1 +1,39 @@
-<p>productos works!</p>
+<!-- Encabezado -->
+<div class="productos-header">
+  <h1 class="brand-title">KIOSCO GO!</h1>
+  <hr class="header-line" />
+</div>
+
+<!-- Contenido -->
+<div class="productos-container">
+  <p class="breadcrumb">HOME</p>
+  <h2 class="section-title">Gestión de Productos</h2>
+
+  <div class="productos-grid">
+    <div
+      class="productos-item"
+      (click)="irA('administrador/gestion-productos/crear')"
+    >
+      <img src="assets/icons/crear-producto.png" alt="Crear producto" />
+      <span>Crear producto</span>
+    </div>
+    <div
+      class="productos-item"
+      (click)="irA('administrador/gestion-productos/editar')"
+    >
+      <img src="assets/icons/editar-producto.png" alt="Editar producto" />
+      <span>Editar producto</span>
+    </div>
+    <div
+      class="productos-item"
+      (click)="irA('administrador/gestion-productos/eliminar')"
+    >
+      <img src="assets/icons/eliminar-producto.png" alt="Eliminar producto" />
+      <span>Eliminar producto</span>
+    </div>
+  </div>
+
+  <div class="productos-atras" (click)="volver()">
+    <span>&#x2190; Atrás</span>
+  </div>
+</div>

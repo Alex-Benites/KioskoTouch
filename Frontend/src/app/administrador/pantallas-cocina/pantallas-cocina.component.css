@@ -1,0 +1,72 @@
+.cocina-header {
+  background-color: #fff;
+  padding: 25px 50px 0;
+}
+
+.brand-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #d32f2f;
+  margin: 0;
+}
+
+.header-line {
+  border: none;
+  height: 3px;
+  background-color: #d32f2f;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.cocina-container {
+  padding: 0 50px 30px;
+}
+
+.breadcrumb {
+  color: gray;
+  margin-bottom: 5px;
+}
+
+.section-title {
+  font-size: 24px;
+  margin-bottom: 30px;
+}
+
+.cocina-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+}
+
+.cocina-item {
+  background-color: #f2f2f2;
+  padding: 20px;
+  text-align: center;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.cocina-item:hover {
+  transform: scale(1.05);
+}
+
+.cocina-item img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 15px;
+}
+
+.cocina-item span {
+  display: block;
+  font-weight: 500;
+}
+
+.cocina-atras {
+  margin-top: 40px;
+  color: #d32f2f;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 18px;
+}

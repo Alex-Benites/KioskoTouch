@@ -1,1 +1,35 @@
-<p>pantallas-cocina works!</p>
+<!-- Encabezado -->
+<div class="cocina-header">
+  <h1 class="brand-title">KIOSCO GO!</h1>
+  <hr class="header-line" />
+</div>
+
+<!-- Contenido -->
+<div class="cocina-container">
+  <p class="breadcrumb">HOME</p>
+  <h2 class="section-title">Gestión de Pantallas de Cocina</h2>
+
+  <div class="cocina-grid">
+    <div
+      class="cocina-item"
+      (click)="irA('administrador/gestion-pantallas-cocina/crear')"
+    >
+      <img src="assets/icons/crear-pantalla.png" alt="Crear pantalla" />
+      <span>Crear nueva pantalla</span>
+    </div>
+    <div
+      class="cocina-item"
+      (click)="irA('administrador/gestion-pantallas-cocina/editar-eliminar')"
+    >
+      <img
+        src="assets/icons/editar-pantalla.png"
+        alt="Editar/Eliminar pantalla"
+      />
+      <span>Editar/Eliminar pantalla</span>
+    </div>
+  </div>
+
+  <div class="cocina-atras" (click)="volver()">
+    <span>&#x2190; Atrás</span>
+  </div>
+</div>
