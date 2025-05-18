@@ -142,36 +142,52 @@
 }
 
 .popup {
+  position: relative;
+  width: 50%;
+  max-width: 550px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   background-color: #fff;
   padding: 2rem;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 400px;
+  border-radius: 32px;
   text-align: center;
-  position: relative;
+}
+
+.popup span {
+  display: block;
+  width: 140px;
+  height: 140px;
+  margin-bottom: 36px;
+  background-image: url(../../../../public/img/administrador/ADMIN_3.png);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+
 }
 
 .popup h2 {
   margin-bottom: 1rem;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--primary-color);
 }
 
 .popup p {
   margin-bottom: 1.5rem;
+  font-size: 20px;
 }
 
 .popup-btn {
-  background-color: #007bff;
-  color: white;
-  padding: 0.6rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  width: 40%;
+  margin-top: 28px;
 }
 
 .popup-close {
   position: absolute;
-  top: 8px;
-  right: 12px;
+  top: 20px;
+  right: 28px;
   background: none;
   border: none;
   font-size: 1.2rem;

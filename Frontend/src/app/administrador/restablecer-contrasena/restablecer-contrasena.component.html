@@ -9,7 +9,7 @@
       </div>
     </header>
 
-    <h1 class="title">Recuperación de Contraseña</h1>
+    <h1 class="title">Recuperar Contraseña</h1>
     <form>
       <div class="input-container">
         <label for="newPassword">Nueva contraseña</label>
@@ -49,9 +49,10 @@
   <div *ngIf="mostrarPopup" class="popup-overlay">
     <div class="popup">
       <button (click)="continuar()" class="popup-close">X</button>
-      <h2>¡Contraseña restablecida!</h2>
-      <p>Tu contraseña ha sido actualizada correctamente.</p>
-      <button type="button" class="popup-btn" (click)="continuar()">Continuar</button>
+      <span></span>
+      <h2>¡FINALIZADO!</h2>
+      <p>Tu contraseña ha sido actualizada correctamente</p>
+      <button type="button" class="primary__button popup-btn" (click)="continuar()">Continuar</button>
     </div>
   </div>
 </main>
