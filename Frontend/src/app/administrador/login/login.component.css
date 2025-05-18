@@ -1,15 +1,9 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Lato", sans-serif;
-}
-
 .login-container {
   display: flex;
   height: 95vh;
   justify-content: space-between;
   align-items: center;
+  margin: 12px;
 }
 
 .login-form-container {
@@ -101,20 +95,7 @@
 
 .ingresar-btn, .popup-btn {
   width: 40%;
-  padding: 12px;
-  font-size: 18px;
-  background-color: var(--primary-color);
-  border: none;
-  color: white;
-  border-radius: 100px;
-  cursor: pointer;
   align-self: center;
-}
-
-.ingresar-btn:hover, .popup-btn:hover {
-  transform: scale(1.05);
-  background-color: #e96b62;
-  transition: all ease 300ms;
 }
 
 .image-container {
@@ -149,7 +130,7 @@
   flex-direction: column;
   background-color: white;
   padding: 40px;
-  border-radius: 10px;
+  border-radius: 32px;
   width: 50%;
   max-width: 90%;
   text-align: left;
@@ -168,8 +149,8 @@
 
 .popup-close {
   position: absolute;
-  top: 10px;
-  right: 15px;
+  top: 20px;
+  right: 28px;
   background: none;
   border: none;
   font-size: 20px;

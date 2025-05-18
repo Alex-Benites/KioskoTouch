@@ -1,133 +1,179 @@
 .reset-container {
-    display: flex;
-    height: 100vh;
-    background-color: #f4f4f4;
-  }
-  
-  .image-container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #222;
-  }
-  
-  .hamburguesa-img {
-    width: 80%;
-    max-width: 500px;
-    object-fit: cover;
-  }
-  
-  .form-container {
-    flex: 1;
-    padding: 2rem 3rem;
-    background-color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  
-  .title {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .subtitle {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    color: #ff3c00;
-  }
-  
-  .input-container {
-    margin-bottom: 1.5rem;
-  }
-  
-  .input-container label {
-    display: block;
-    margin-bottom: 0.3rem;
-    font-weight: 600;
-  }
-  
-  .input-container input {
-    width: 100%;
-    padding: 0.6rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-  
-  .button-group {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  
-  .cancel-btn,
-  .submit-btn {
-    padding: 0.6rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .cancel-btn {
-    background-color: #ccc;
-    color: #333;
-  }
-  
-  .submit-btn {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  /* Popup */
-  .popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  .popup {
-    background-color: #fff;
-    padding: 2rem;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-    position: relative;
-  }
-  
-  .popup h2 {
-    margin-bottom: 1rem;
-  }
-  
-  .popup p {
-    margin-bottom: 1.5rem;
-  }
-  
-  .popup-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 0.6rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .popup-close {
-    position: absolute;
-    top: 8px;
-    right: 12px;
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-  
+  display: flex;
+  height: 95vh;
+  margin: 12px;
+}
+
+.image-container {
+  width: 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hamburguesa-img {
+  width: 100%;
+  height: 100%;
+}
+
+.form-container {
+  flex: 1;
+  padding: 0 3rem;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.title {
+  font-size: 32px;
+  margin-bottom: 2rem;
+}
+
+.form-container form {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+}
+
+.input-wrapper {
+  width: 100%;
+  margin-top: 8px;
+  padding: 16px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: none;
+  background: var(--input-color);
+  display: flex;
+  justify-content: space-between;
+}
+
+.input-wrapper span {
+  display: block;
+  width: 22px;
+  height: 22px;
+  background-image: url(../../../../public/img/administrador/ADMIN_1_1.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
+
+.input-container {
+  margin-bottom: 2.5rem;
+}
+
+.input-container input {
+  width: 80%;
+  font-size: 16px;
+  border: none;
+  background: var(--input-color);
+}
+
+.input-container input:focus,
+.popup-input:focus {
+  outline: none;
+}
+
+.input-container label {
+  padding-left: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.button-group {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cancel-btn,
+.submit-btn {
+  width: 40%;
+}
+
+
+.header__container img {
+  width: 120px;
+  height: 16px;
+}
+
+.back__btn {
+  width: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 20px;
+  cursor: pointer;
+
+}
+
+.back__btn span {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  background-image: url(../../../../public/img/administrador/ADMIN_2_3.png);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.back__btn p {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* Popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+.popup h2 {
+  margin-bottom: 1rem;
+}
+
+.popup p {
+  margin-bottom: 1.5rem;
+}
+
+.popup-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.popup-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}

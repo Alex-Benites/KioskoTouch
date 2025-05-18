@@ -14,13 +14,31 @@
   font-display: swap;
 }
 
-:root{
+:root {
   --primary-color: #DD453A;
   --normal-text-color: #1A1A1A;
   --input-color: #E6E6E6;
 }
 
-body {
-    background-color: #f8f8f8;
-    margin: 12px;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Lato", sans-serif;
+}
+
+.primary__button {
+  padding: 12px;
+  font-size: 18px;
+  background-color: var(--primary-color);
+  border: none;
+  color: white;
+  border-radius: 100px;
+  cursor: pointer;
+}
+
+.primary__button:hover {
+  transform: scale(1.05);
+  background-color: #e96b62;
+  transition: all ease 300ms;
 }

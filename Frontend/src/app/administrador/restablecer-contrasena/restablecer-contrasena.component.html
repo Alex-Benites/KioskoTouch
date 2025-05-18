@@ -1,47 +1,57 @@
-<div class="reset-container">
-    <!-- Formulario al lado izquierdo -->
-    <div class="form-container">
-      <h1 class="title">Restablecer Contraseña</h1>
-      <h2 class="subtitle">Kiosko Go</h2>
-  
-      <form>
-        <div class="input-container">
-          <label for="newPassword">Nueva contraseña</label>
+<main class="reset-container">
+  <!-- Formulario al lado izquierdo -->
+  <div class="form-container">
+    <header class="header__container">
+      <img src="img/administrador/ADMIN_2_2.png" alt="Kiosko go logo">
+      <div class="back__btn" (click)="volverAlLogin()">
+        <span></span>
+        <p>Atrás</p>
+      </div>
+    </header>
+
+    <h1 class="title">Recuperación de Contraseña</h1>
+    <form>
+      <div class="input-container">
+        <label for="newPassword">Nueva contraseña</label>
+        <div class="input-wrapper">
           <input type="password" id="newPassword" placeholder="Ingrese contraseña" />
+          <span></span>
         </div>
-  
-        <div class="input-container">
-          <label for="repeatPassword">Confirmar contraseña</label>
+      </div>
+
+      <div class="input-container">
+        <label for="repeatPassword">Confirmar contraseña</label>
+        <div class="input-wrapper">
           <input type="password" id="repeatPassword" placeholder="Ingrese contraseña de nuevo" />
         </div>
-  
-        <div class="input-container">
-          <label for="verificationCode">Código de verificación</label>
+      </div>
+
+      <div class="input-container">
+        <label for="verificationCode">Código de verificación</label>
+        <div class="input-wrapper">
           <input type="text" id="verificationCode" placeholder="Ingrese código" />
         </div>
-  
-        <div class="button-group">
-          <button type="button" class="cancel-btn" (click)="volverAlLogin()">Cancelar</button>
-          <button type="button" class="submit-btn" (click)="restablecer()">Restablecer</button>
-        </div>
-      </form>
-    </div>
-  
-    <!-- Imagen al lado derecho -->
-    <div class="image-container">
-      <img src="assets/img/cliente/hamburguesa.png" alt="Hamburguesa" class="hamburguesa-img" />
-    </div>
-  
-    <!-- POP-UP de confirmación -->
-    <div *ngIf="mostrarPopup" class="popup-overlay">
-      <div class="popup">
-        <button (click)="continuar()" class="popup-close">X</button>
-        <h2>¡Contraseña restablecida!</h2>
-        <p>Tu contraseña ha sido actualizada correctamente.</p>
-        <button type="button" class="popup-btn" (click)="continuar()">Continuar</button>
       </div>
+
+      <div class="button-group">
+        <button type="button" class="primary__button submit-btn" (click)="restablecer()">Restablecer</button>
+        <button type="button" class="primary__button cancel-btn" (click)="volverAlLogin()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Imagen al lado derecho -->
+  <div class="image-container">
+    <img src="img/administrador/ADMIN_2.png" alt="Hamburguesa" class="hamburguesa-img" />
+  </div>
+
+  <!-- POP-UP de confirmación -->
+  <div *ngIf="mostrarPopup" class="popup-overlay">
+    <div class="popup">
+      <button (click)="continuar()" class="popup-close">X</button>
+      <h2>¡Contraseña restablecida!</h2>
+      <p>Tu contraseña ha sido actualizada correctamente.</p>
+      <button type="button" class="popup-btn" (click)="continuar()">Continuar</button>
     </div>
   </div>
-  
-  
-  
+</main>
