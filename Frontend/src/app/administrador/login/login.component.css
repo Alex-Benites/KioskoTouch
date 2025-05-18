@@ -75,7 +75,7 @@
   background: var(--input-color);
 }
 
-.input-container input:focus{
+.input-container input:focus, .popup-input:focus{
   outline: none;
 }
 
@@ -99,7 +99,7 @@
   cursor: pointer;
 }
 
-.ingresar-btn {
+.ingresar-btn, .popup-btn {
   width: 40%;
   padding: 12px;
   font-size: 18px;
@@ -111,7 +111,7 @@
   align-self: center;
 }
 
-.ingresar-btn:hover {
+.ingresar-btn:hover, .popup-btn:hover {
   transform: scale(1.05);
   background-color: #e96b62;
   transition: all ease 300ms;
@@ -144,14 +144,26 @@
 }
 
 .popup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   background-color: white;
-  padding: 30px;
+  padding: 40px;
   border-radius: 10px;
   width: 50%;
-  /*ajusto el tamaño del pop-up aqui con width y height*/
   max-width: 90%;
-  text-align: center;
-  position: relative;
+  text-align: left;
+}
+
+.popup h2{
+  font-size: 32px;
+  color: var(--normal-text-color);
+  margin-bottom: 8px;
+}
+
+.popup p{
+  font-size: 18px;
+  margin-bottom: 16px;
 }
 
 .popup-close {
@@ -166,21 +178,16 @@
 
 .popup-input {
   width: 100%;
+  height: 48px;
   padding: 10px;
   margin: 15px 0;
+  margin-bottom: 30px;
   font-size: 16px;
+  background-color: var(--input-color);
+  border: none;
+  border-radius: 8px;
 }
 
 .popup-btn {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.popup-btn:hover {
-  background-color: #0056b3;
+  width: 30%;
 }
