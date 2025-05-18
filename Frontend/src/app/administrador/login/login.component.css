@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Lato", sans-serif;
 }
 
 .login-container {
@@ -14,28 +15,74 @@
 .login-form-container {
   width: 40%;
   padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .welcome-title {
-  font-size: 32px;
+  font-size: 36px;
   margin-bottom: 10px;
+  text-align: center;
 }
 
 .app-title {
-  font-size: 24px;
-  margin-bottom: 30px;
+  margin-bottom: 32px;
+  font-size: 80px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--primary-color);
+}
+
+.form-container {
+  width: 85%;
+  display: flex;
+  flex-direction: column;
 }
 
 .input-container {
   margin-bottom: 20px;
 }
 
-.input-container input {
+.input-wrapper {
   width: 100%;
-  padding: 10px;
+  margin-top: 8px;
+  padding: 16px;
   font-size: 16px;
   border-radius: 5px;
-  border: 1px solid #ccc;
+  border: none;
+  background: var(--input-color);
+  display: flex;
+  justify-content: space-between;
+}
+
+.input-wrapper span{
+  display: block;
+  width: 22px;
+  height: 22px;
+  background-image: url(../../../../public/img/administrador/ADMIN_1_1.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
+
+.input-container input {
+  width: 80%;
+  font-size: 16px;
+  border: none;
+  background: var(--input-color);
+}
+
+.input-container input:focus{
+  outline: none;
+}
+
+.input-container label {
+  padding-left: 12px;
+  font-size: 24px;
+  font-weight: 700;
 }
 
 .forgot-password {
@@ -44,26 +91,30 @@
 }
 
 .forgot-password button {
+  font-size: 16px;
+  font-weight: 700;
   background: none;
   border: none;
-  color: #007bff;
-  text-decoration: underline;
+  color: var(--normal-text-color);
   cursor: pointer;
 }
 
 .ingresar-btn {
-  width: 100%;
+  width: 40%;
   padding: 12px;
   font-size: 18px;
-  background-color: #007bff;
+  background-color: var(--primary-color);
   border: none;
   color: white;
-  border-radius: 5px;
+  border-radius: 100px;
   cursor: pointer;
+  align-self: center;
 }
 
 .ingresar-btn:hover {
-  background-color: #0056b3;
+  transform: scale(1.05);
+  background-color: #e96b62;
+  transition: all ease 300ms;
 }
 
 .image-container {
@@ -96,7 +147,7 @@
   background-color: white;
   padding: 30px;
   border-radius: 10px;
-  width: 400px;
+  width: 50%;
   /*ajusto el tamaño del pop-up aqui con width y height*/
   max-width: 90%;
   text-align: center;

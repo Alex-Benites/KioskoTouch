@@ -7,21 +7,27 @@
 
   <!-- Formulario de inicio de sesión a la derecha -->
   <div class="login-form-container">
-    <h1 class="welcome-title">Bienvenido</h1>
-    <h2 class="app-title">Kiosko Go</h2>
+    <h1 class="welcome-title">¡Bienvenido!</h1>
+    <h2 class="app-title">KIOSKO GO</h2>
 
-    <form (ngSubmit)="ingresar()">
+    <form (ngSubmit)="ingresar()" class="form-container">
       <!-- Campo de Usuario -->
       <div class="input-container">
         <label for="usuario">Usuario</label>
-        <input type="text" id="usuario" name="usuario" placeholder="Ingrese usuario" [(ngModel)]="usuario" required />
+        <div class="input-wrapper">
+          <input type="text" id="usuario" name="usuario" placeholder="Ingrese usuario" [(ngModel)]="usuario" required />
+        </div>
       </div>
 
       <!-- Campo de Contraseña -->
       <div class="input-container">
         <label for="password">Contraseña</label>
-        <input type="password" id="password" name="password" placeholder="Ingrese contraseña" [(ngModel)]="password"
-          required />
+        <div class="input-wrapper">
+          <input type="password" id="password" name="password" placeholder="Ingrese contraseña" [(ngModel)]="password"
+            required />
+          <span></span>
+        </div>
+
       </div>
 
       <!-- Recuperar contraseña -->
