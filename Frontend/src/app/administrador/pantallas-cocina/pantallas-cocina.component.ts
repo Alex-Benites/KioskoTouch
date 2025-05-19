@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 
 @Component({
   selector: 'app-pantallas-cocina',
-  imports: [],
+  imports: [HeaderAdminComponent],
   templateUrl: './pantallas-cocina.component.html',
   styleUrls: ['./pantallas-cocina.component.css']
 })

@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 
 @Component({
   selector: 'app-menus',
-  imports: [],
+  imports: [HeaderAdminComponent],
   templateUrl: './menus.component.html',
   styleUrls: ['./menus.component.css']
 })

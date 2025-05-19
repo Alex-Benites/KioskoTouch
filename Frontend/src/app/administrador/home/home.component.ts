@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 
 @Component({
   selector: 'app-home',
-  imports: [],
+  imports: [HeaderAdminComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
