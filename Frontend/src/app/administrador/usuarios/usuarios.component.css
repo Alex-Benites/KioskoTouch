@@ -20,6 +20,7 @@
   
   .usuarios-container {
     padding: 0 50px 30px;
+    min-height: 85vh;
   }
   
   .breadcrumb {

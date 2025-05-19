@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
+import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
 
 @Component({
   selector: 'app-promociones',
-  imports: [HeaderAdminComponent],
+  imports: [HeaderAdminComponent, FooterAdminComponent],
   templateUrl: './promociones.component.html',
   styleUrls: ['./promociones.component.css']
 })

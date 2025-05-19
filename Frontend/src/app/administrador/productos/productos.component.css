@@ -1,7 +1,7 @@
 .productos-container {
   padding: 30px 50px;
   background-color: #F2F2F2;
-  min-height: 100vh;
+  min-height: 85vh;
   box-sizing: border-box;
 }
 
@@ -15,7 +15,8 @@
 }
 
 .section-title {
-  font-size: 26px;
+  font-size: 35px;
+  font-weight: 900;
   margin-bottom: 30px;
   margin-left: 150px;
   color: #333;
