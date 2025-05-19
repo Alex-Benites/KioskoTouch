@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-editar-eliminar-rol',
   imports: [],
   templateUrl: './editar-eliminar-rol.component.html',
-  styleUrl: './editar-eliminar-rol.component.css'
+  styleUrl: './editar-eliminar-rol.component.scss'
 })
 export class EditarEliminarRolComponent {
 

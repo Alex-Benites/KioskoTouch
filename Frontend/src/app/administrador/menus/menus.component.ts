@@ -7,7 +7,7 @@ import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.com
   selector: 'app-menus',
   imports: [HeaderAdminComponent, FooterAdminComponent],
   templateUrl: './menus.component.html',
-  styleUrls: ['./menus.component.css']
+  styleUrls: ['./menus.component.scss']
 })
 export class MenusComponent {
   constructor(private router: Router) {}

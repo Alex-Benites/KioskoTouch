@@ -6,7 +6,7 @@ import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.com
   selector: 'app-home',
   imports: [HeaderAdminComponent],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
   constructor(private router: Router) {}

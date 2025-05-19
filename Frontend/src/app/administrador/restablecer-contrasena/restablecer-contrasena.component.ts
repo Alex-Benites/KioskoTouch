@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
   standalone: true, // Si quieres mantenerlo como standalone
   imports: [CommonModule, FormsModule],
   templateUrl: './restablecer-contrasena.component.html',
-  styleUrls: ['./restablecer-contrasena.component.css']
+  styleUrls: ['./restablecer-contrasena.component.scss']
 })
 export class RestablecerContrasenaComponent {
   mostrarPopup = false;

@@ -1,0 +1,15 @@
+.primary__button {
+  padding: 12px;
+  font-size: 18px;
+  background-color: $primary-color; // Cambiado de var(--primary-color) a $primary-color
+  border: none;
+  color: white;
+  border-radius: 100px;
+  cursor: pointer;
+  
+  &:hover { // Usando sintaxis de anidamiento de SCSS
+    transform: scale(1.05);
+    background-color: $hover-primary;
+    transition: all ease 300ms;
+  }
+}

@@ -7,7 +7,7 @@ import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.com
   selector: 'app-promociones',
   imports: [HeaderAdminComponent, FooterAdminComponent],
   templateUrl: './promociones.component.html',
-  styleUrls: ['./promociones.component.css']
+  styleUrls: ['./promociones.component.scss']
 })
 export class PromocionesComponent {
   constructor(private router: Router) {}

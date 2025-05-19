@@ -7,7 +7,7 @@ import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.com
   selector: 'app-productos',
   imports: [HeaderAdminComponent, FooterAdminComponent],
   templateUrl: './productos.component.html',
-  styleUrls: ['./productos.component.css']
+  styleUrls: ['./productos.component.scss']
 })
 
 export class ProductosComponent {

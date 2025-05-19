@@ -7,7 +7,7 @@ import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.com
   selector: 'app-pantallas-cocina',
   imports: [HeaderAdminComponent, FooterAdminComponent],
   templateUrl: './pantallas-cocina.component.html',
-  styleUrls: ['./pantallas-cocina.component.css']
+  styleUrls: ['./pantallas-cocina.component.scss']
 })
 export class PantallasCocinaComponent {
   constructor(private router: Router) {}

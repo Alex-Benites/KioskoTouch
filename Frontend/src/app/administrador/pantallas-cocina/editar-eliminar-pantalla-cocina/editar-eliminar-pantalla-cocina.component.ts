@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-editar-eliminar-pantalla-cocina',
   imports: [],
   templateUrl: './editar-eliminar-pantalla-cocina.component.html',
-  styleUrl: './editar-eliminar-pantalla-cocina.component.css'
+  styleUrl: './editar-eliminar-pantalla-cocina.component.scss'
 })
 export class EditarEliminarPantallaCocinaComponent {
 

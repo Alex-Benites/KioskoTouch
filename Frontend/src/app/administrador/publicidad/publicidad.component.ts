@@ -5,7 +5,7 @@ import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.com
   selector: 'app-publicidad',
   imports: [HeaderAdminComponent],
   templateUrl: './publicidad.component.html',
-  styleUrl: './publicidad.component.css'
+  styleUrl: './publicidad.component.scss'
 })
 export class PublicidadComponent {
 

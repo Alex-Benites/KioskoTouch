@@ -1,3 +1,8 @@
+$primary-color: #DD453A;
+$normal-text-color: #1A1A1A;
+$input-color: #E6E6E6;
+$hover-primary: #e96b62;
+
 .login-container {
   display: flex;
   height: 95vh;
@@ -26,7 +31,7 @@
   font-size: 80px;
   font-weight: 700;
   text-align: center;
-  color: var(--primary-color);
+  color: $primary-color;
 }
 
 .form-container {
@@ -37,6 +42,23 @@
 
 .input-container {
   margin-bottom: 20px;
+  
+  label {
+    padding-left: 12px;
+    font-size: 24px;
+    font-weight: 700;
+  }
+  
+  input {
+    width: 100%;
+    font-size: 16px;
+    border: none;
+    background: $input-color;
+    
+    &:focus {
+      outline: none;
+    }
+  }
 }
 
 .input-wrapper {
@@ -46,51 +68,34 @@
   font-size: 16px;
   border-radius: 5px;
   border: none;
-  background: var(--input-color);
+  background: $input-color;
   display: flex;
   justify-content: space-between;
-}
-
-.input-wrapper span{
-  display: block;
-  width: 22px;
-  height: 22px;
-  background-image: url(../../../../public/img/administrador/ADMIN_1_1.png);
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  cursor: pointer;
-}
-
-.input-container input {
-  width: 100%;
-  font-size: 16px;
-  border: none;
-  background: var(--input-color);
-}
-
-.input-container input:focus, .popup-input:focus{
-  outline: none;
-}
-
-.input-container label {
-  padding-left: 12px;
-  font-size: 24px;
-  font-weight: 700;
+  
+  span {
+    display: block;
+    width: 22px;
+    height: 22px;
+    background-image: url(../../../../public/img/administrador/ADMIN_1_1.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+  }
 }
 
 .forgot-password {
   text-align: right;
   margin-bottom: 20px;
-}
-
-.forgot-password button {
-  font-size: 16px;
-  font-weight: 700;
-  background: none;
-  border: none;
-  color: var(--normal-text-color);
-  cursor: pointer;
+  
+  button {
+    font-size: 16px;
+    font-weight: 700;
+    background: none;
+    border: none;
+    color: $normal-text-color;
+    cursor: pointer;
+  }
 }
 
 .ingresar-btn, .popup-btn {
@@ -103,11 +108,11 @@
   height: 100%;
   display: flex;
   align-items: center;
-}
-
-.image-container .hamburguesa-img {
-  width: 100%;
-  height: 100%;
+  
+  .hamburguesa-img {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 /* POPUP STYLES */
@@ -134,17 +139,17 @@
   width: 50%;
   max-width: 90%;
   text-align: left;
-}
-
-.popup h2{
-  font-size: 32px;
-  color: var(--normal-text-color);
-  margin-bottom: 8px;
-}
-
-.popup p{
-  font-size: 18px;
-  margin-bottom: 16px;
+  
+  h2 {
+    font-size: 32px;
+    color: $normal-text-color;
+    margin-bottom: 8px;
+  }
+  
+  p {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
 }
 
 .popup-close {
@@ -164,11 +169,32 @@
   margin: 15px 0;
   margin-bottom: 30px;
   font-size: 16px;
-  background-color: var(--input-color);
+  background-color: $input-color;
   border: none;
   border-radius: 8px;
+  
+  &:focus {
+    outline: none;
+  }
 }
 
 .popup-btn {
   width: 30%;
+}
+
+// Define el botón primario localmente ya que no queremos modificar styles.scss
+.primary__button {
+  padding: 12px;
+  font-size: 18px;
+  background-color: $primary-color;
+  border: none;
+  color: white;
+  border-radius: 100px;
+  cursor: pointer;
+  
+  &:hover {
+    transform: scale(1.05);
+    background-color: $hover-primary;
+    transition: all ease 300ms;
+  }
 }

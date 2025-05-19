@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-editar-eliminar-promocion',
   imports: [],
   templateUrl: './editar-eliminar-promocion.component.html',
-  styleUrl: './editar-eliminar-promocion.component.css'
+  styleUrl: './editar-eliminar-promocion.component.scss'
 })
 export class EditarEliminarPromocionComponent {
 

@@ -5,7 +5,7 @@ import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.com
   selector: 'app-kiosko-touch',
   imports: [HeaderAdminComponent],
   templateUrl: './kiosko-touch.component.html',
-  styleUrl: './kiosko-touch.component.css'
+  styleUrl: './kiosko-touch.component.scss'
 })
 export class KioskoTouchComponent {
 

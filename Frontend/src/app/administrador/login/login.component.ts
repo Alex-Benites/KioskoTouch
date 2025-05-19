@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
   standalone: true, // Si quieres mantenerlo como standalone
   imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
   usuario: string = '';

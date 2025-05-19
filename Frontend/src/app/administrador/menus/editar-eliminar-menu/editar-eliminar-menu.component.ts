@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-editar-eliminar-menu',
   imports: [],
   templateUrl: './editar-eliminar-menu.component.html',
-  styleUrl: './editar-eliminar-menu.component.css'
+  styleUrl: './editar-eliminar-menu.component.scss'
 })
 export class EditarEliminarMenuComponent {
 

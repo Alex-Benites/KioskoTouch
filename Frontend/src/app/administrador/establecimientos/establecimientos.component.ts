@@ -5,7 +5,7 @@ import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.com
   selector: 'app-establecimientos',
   imports: [HeaderAdminComponent],
   templateUrl: './establecimientos.component.html',
-  styleUrl: './establecimientos.component.css'
+  styleUrl: './establecimientos.component.scss'
 })
 export class EstablecimientosComponent {
 

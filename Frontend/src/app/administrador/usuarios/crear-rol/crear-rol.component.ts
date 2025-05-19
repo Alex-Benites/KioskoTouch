@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-crear-rol',
   imports: [],
   templateUrl: './crear-rol.component.html',
-  styleUrl: './crear-rol.component.css'
+  styleUrl: './crear-rol.component.scss'
 })
 export class CrearRolComponent {
 

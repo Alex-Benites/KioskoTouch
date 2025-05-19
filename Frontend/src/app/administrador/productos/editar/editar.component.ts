@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-editar',
   imports: [],
   templateUrl: './editar.component.html',
-  styleUrl: './editar.component.css'
+  styleUrl: './editar.component.scss'
 })
 export class EditarComponent {
 

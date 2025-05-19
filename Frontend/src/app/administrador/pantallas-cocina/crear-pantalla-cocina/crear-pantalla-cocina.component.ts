@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-crear-pantalla-cocina',
   imports: [],
   templateUrl: './crear-pantalla-cocina.component.html',
-  styleUrl: './crear-pantalla-cocina.component.css'
+  styleUrl: './crear-pantalla-cocina.component.scss'
 })
 export class CrearPantallaCocinaComponent {
 

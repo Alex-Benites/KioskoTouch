@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-crear-menu',
   imports: [],
   templateUrl: './crear-menu.component.html',
-  styleUrl: './crear-menu.component.css'
+  styleUrl: './crear-menu.component.scss'
 })
 export class CrearMenuComponent {
 

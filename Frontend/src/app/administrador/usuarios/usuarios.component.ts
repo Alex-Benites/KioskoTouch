@@ -7,7 +7,7 @@ import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.com
   selector: 'app-usuarios',
   imports: [HeaderAdminComponent, FooterAdminComponent],
   templateUrl: './usuarios.component.html',
-  styleUrls: ['./usuarios.component.css']
+  styleUrls: ['./usuarios.component.scss']
 })
 export class UsuariosComponent {
   constructor(private router: Router) {}

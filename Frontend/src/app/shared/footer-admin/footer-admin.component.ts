@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-footer-admin',
   imports: [CommonModule],
   templateUrl: './footer-admin.component.html',
-  styleUrl: './footer-admin.component.css'
+  styleUrl: './footer-admin.component.scss'
 })
 export class FooterAdminComponent {
 

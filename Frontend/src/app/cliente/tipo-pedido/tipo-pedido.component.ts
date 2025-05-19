@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
   selector: 'app-tipo-pedido',
   imports: [CommonModule, FormsModule],
   templateUrl: './tipo-pedido.component.html',
-  styleUrl: './tipo-pedido.component.css'
+  styleUrl: './tipo-pedido.component.scss'
 })
 export class TipoPedidoComponent {
   seleccion: string | null = null;

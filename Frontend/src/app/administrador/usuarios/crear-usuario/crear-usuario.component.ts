@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-crear-usuario',
   imports: [],
   templateUrl: './crear-usuario.component.html',
-  styleUrl: './crear-usuario.component.css'
+  styleUrl: './crear-usuario.component.scss'
 })
 export class CrearUsuarioComponent {
 
