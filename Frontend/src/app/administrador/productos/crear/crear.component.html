@@ -71,7 +71,7 @@
           }
         </div>
         @if (imagePreview) {
-          <button mat-flat-button color="warn" (click)="eliminarImagen()" class="delete-image-button" type="button">
+          <button (click)="eliminarImagen()" class="primary__button delete-image-button" type="button">
             Eliminar
           </button>
         }
@@ -79,7 +79,7 @@
     </div>
 
     <div class="form-actions">
-      <button mat-raised-button color="primary" type="submit" class="create-button">Crear</button>
+      <button type="submit" class="primary__button">Crear</button>
     </div>
   </form>
 </div>

@@ -182,19 +182,3 @@ $hover-primary: #e96b62;
   width: 30%;
 }
 
-// Define el botón primario localmente ya que no queremos modificar styles.scss
-.primary__button {
-  padding: 12px;
-  font-size: 18px;
-  background-color: $primary-color;
-  border: none;
-  color: white;
-  border-radius: 100px;
-  cursor: pointer;
-  
-  &:hover {
-    transform: scale(1.05);
-    background-color: $hover-primary;
-    transition: all ease 300ms;
-  }
-}

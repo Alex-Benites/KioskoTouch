@@ -119,7 +119,8 @@ textarea[matInput] {
 }
 
 .delete-image-button {
-  width: 100%;
+  width: 50%;
+  align-self: center;
 }
 
 .form-actions {
@@ -128,11 +129,6 @@ textarea[matInput] {
   margin-top: auto;
   padding-top: 20px;
   border-top: 1px solid #eee;
-}
-
-.create-button {
-  padding: 10px 30px;
-  font-size: 1em;
 }
 
 mat-error {
