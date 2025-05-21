@@ -1,1 +1,29 @@
 <app-header-admin></app-header-admin>
+
+<!-- Contenido -->
+<div class="publicidad-container">
+  <p class="breadcrumb">HOME</p>
+  <h2 class="section-title">Gestión de Publicidad</h2>
+
+  <div class="publicidad-grid">
+    <div
+      class="publicidad-item"
+      (click)="irA('administrador/gestion-publicidad/crear')"
+    >
+      <img src="assets/admin/ADMIN_26.png" alt="Crear publicidad" />
+      <span>Crear nueva publicidad</span>
+    </div>
+    <div
+      class="publicidad-item"
+      (click)="irA('administrador/gestion-publicidad/editar-eliminar')"
+    >
+      <img
+        src="assets/admin/ADMIN_26_1.png"
+        alt="Editar/Eliminar publicidad"
+      />
+      <span>Editar/Eliminar publicidad</span>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/home'"></app-footer-admin>
