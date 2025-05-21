@@ -16,7 +16,4 @@ export class PantallasCocinaComponent {
     this.router.navigateByUrl(ruta);
   }
 
-  volver() {
-    this.router.navigate(['administrador/home']);
-  }
 }

@@ -1,0 +1,97 @@
+.establecimientos-container {
+  padding: 30px 50px;
+  background-color: #F2F2F2;
+  min-height: 85vh;
+  box-sizing: border-box;
+}
+
+.breadcrumb {
+  color: #888;
+  font-size: 20px;
+  margin-bottom: 5px;
+  margin-left: 150px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: 35px;
+  font-weight: 900;
+  margin-bottom: 30px;
+  margin-top: 0px;
+  margin-left: 150px;
+  color: #333;
+}
+
+.establecimientos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 250px); // 2 columnas, cada una de 250px
+  gap: 40px;
+  justify-items: center;
+  justify-content: center; // Centra la grid
+}
+
+.establecimientos-item {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+  width: 250px;
+  height: 500px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.establecimientos-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+
+.establecimientos-item img {
+  width: 100%;
+  height: 450px;
+  object-fit: contain;
+  padding: 20px;
+  background-color: #E4E4E4; // Fondo gris para la imagen
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.establecimientos-item span {
+  font-weight: 900;
+  font-size: 20px;
+  display: block;
+  color: #333;
+  background-color: #ffffff;
+  width: 100%;
+  padding: 10px 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.establecimientos-atras { // Si tienes un botón de "Atrás" específico para esta vista
+  margin-top: 40px;
+  color: #d32f2f;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.establecimientos-atras:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 670px) { // Aproximadamente (2*250px items) + (1*40px gap) + (2*50px container padding)
+  .establecimientos-grid {
+    grid-template-columns: 250px; // Cambia a 1 columna si 2 no caben
+  }
+}

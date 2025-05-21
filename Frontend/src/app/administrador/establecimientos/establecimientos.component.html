@@ -1,1 +1,29 @@
 <app-header-admin></app-header-admin>
+
+<!-- Contenido -->
+<div class="establecimientos-container">
+  <p class="breadcrumb">HOME</p>
+  <h2 class="section-title">Gestión de Establecimientos</h2>
+
+  <div class="establecimientos-grid">
+    <div
+      class="establecimientos-item"
+      (click)="irA('administrador/gestion-establecimientos/crear')"
+    >
+      <img src="assets/admin/ADMIN_24.png" alt="Crear establecimiento" />
+      <span>Crear nuevo establecimiento</span>
+    </div>
+    <div
+      class="establecimientos-item"
+      (click)="irA('administrador/gestion-establecimientos/editar-eliminar')"
+    >
+      <img
+        src="assets/admin/ADMIN_24_1.png"
+        alt="Editar/Eliminar establecimiento"
+      />
+      <span>Editar/Eliminar establecimiento</span>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/home'"></app-footer-admin>
