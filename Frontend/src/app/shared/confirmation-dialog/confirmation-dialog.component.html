@@ -1,0 +1,18 @@
+<div class="dialog-container confirmation-dialog">
+  <div class="icon-container">
+    <img [src]="imagePath" alt="Confirmación Icono" class="dialog-icon">
+  </div>
+
+  <h2 mat-dialog-title class="dialog-title">
+    {{ articuloDeterminante }} {{ data.itemType | uppercase }} SE ELIMINARÁ
+  </h2>
+
+  <mat-dialog-content class="dialog-content">
+    <p>¿Estás seguro de hacerlo?</p>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <button class="primary__button confirm-button" (click)="onConfirm()" cdkFocusInitial>Aceptar</button>
+    <button class="primary__button cancel-button" (click)="onCancel()">Cancelar</button>
+  </mat-dialog-actions>
+</div>

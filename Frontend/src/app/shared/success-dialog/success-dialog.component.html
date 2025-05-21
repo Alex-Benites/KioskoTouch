@@ -1,0 +1,19 @@
+<div class="dialog-container success-dialog">
+  <div class="icon-container">
+    <img [src]="imagePath" alt="Éxito Icono" class="dialog-icon">
+  </div>
+
+  <h2 mat-dialog-title class="dialog-title">
+    {{ data.title }}
+  </h2>
+
+  <mat-dialog-content class="dialog-content">
+    <p>{{ data.message }}</p>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <button class="primary__button continue-button" (click)="onContinue()" cdkFocusInitial>
+      {{ data.buttonText || 'Continuar' }}
+    </button>
+  </mat-dialog-actions>
+</div>
