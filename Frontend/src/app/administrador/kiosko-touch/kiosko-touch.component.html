@@ -1,1 +1,29 @@
 <app-header-admin></app-header-admin>
+
+<!-- Contenido -->
+<div class="kiosko-touch-container">
+  <p class="breadcrumb">HOME</p>
+  <h2 class="section-title">Gestión de Kiosko Touch</h2>
+
+  <div class="kiosko-touch-grid">
+    <div
+      class="kiosko-touch-item"
+      (click)="irA('administrador/kiosko-touch/')"
+    >
+      <img src="assets/admin/ADMIN_29.png" alt="Crear nuevo Kiosko" />
+      <span>Crear nuevo Kiosko</span>
+    </div>
+    <div
+      class="kiosko-touch-item"
+      (click)="irA('administrador/kiosko-touch/')"
+    >
+      <img
+        src="assets/admin/ADMIN_29_1.png"
+        alt="Editar/Eliminar Kiosko"
+      />
+      <span>Editar/Eliminar Kiosko</span>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/home'"></app-footer-admin>
