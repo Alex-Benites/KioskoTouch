@@ -1,73 +1,103 @@
-.promo-header {
-  background-color: #fff;
-  padding: 25px 50px 0;
-}
-
-.brand-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #d32f2f;
-  margin: 0;
-}
-
-.header-line {
-  border: none;
-  height: 3px;
-  background-color: #d32f2f;
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
-
 .promo-container {
-  padding: 0 50px 30px;
+  padding: 30px 50px;
+  background-color: #F2F2F2;
   min-height: 85vh;
+  box-sizing: border-box;
 }
 
 .breadcrumb {
-  color: gray;
+  color: #888;
+  font-size: 20px;
   margin-bottom: 5px;
+  margin-left: 150px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .section-title {
-  font-size: 24px;
+  font-size: 35px;
+  font-weight: 900;
   margin-bottom: 30px;
+  margin-top: 0px;
+  margin-left: 150px;
+  color: #333;
 }
 
 .promo-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 30px;
+  grid-template-columns: repeat(3, 250px); 
+  gap: 40px;
+  justify-items: center;
+  justify-content: center; 
 }
 
 .promo-item {
-  background-color: #f2f2f2;
-  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 0;
   text-align: center;
-  border-radius: 16px;
   cursor: pointer;
-  transition: transform 0.2s;
+  width: 250px;
+  height: 500px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
 }
 
 .promo-item:hover {
-  transform: scale(1.05);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
 }
 
 .promo-item img {
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  height: 450px;
   object-fit: contain;
-  margin-bottom: 15px;
+  padding: 20px;
+  background-color: #E4E4E4; 
+  box-sizing: border-box;
+  margin: 0;
 }
 
 .promo-item span {
+  font-weight: 900;
+  font-size: 20px;
   display: block;
-  font-weight: 500;
+  color: #333;
+  background-color: #ffffff;
+  width: 100%;
+  padding: 10px 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.promo-atras {
+.promo-atras { 
   margin-top: 40px;
   color: #d32f2f;
   font-weight: bold;
   cursor: pointer;
   font-size: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.promo-atras:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 920px) { // 3*250 (items) + 2*40 (gaps) + 2*50 (container padding) approx
+  .promo-grid {
+    grid-template-columns: repeat(2, 250px);
+  }
+}
+
+@media (max-width: 670px) { // 2*250 (items) + 1*40 (gaps) + 2*50 (container padding) approx
+  .promo-grid {
+    grid-template-columns: 250px;
+  }
 }
