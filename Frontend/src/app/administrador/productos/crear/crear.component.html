@@ -26,8 +26,8 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Categoría</mat-label>
           <mat-select formControlName="categoria">
-            @for (cat of categorias; track cat.value) {
-              <mat-option [value]="cat.value">{{cat.viewValue}}</mat-option>
+            @for (cat of categorias; track cat.id) { <!-- Corregido: track cat.id -->
+              <mat-option [value]="cat.id">{{cat.nombre}}</mat-option> <!-- Corregido: cat.id y cat.nombre -->
             }
           </mat-select>
           @if (productoForm.get('categoria')?.hasError('required')) {
@@ -49,8 +49,8 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Disponibilidad</mat-label>
           <mat-select formControlName="disponibilidad">
-            @for (disp of disponibilidades; track disp.value) {
-              <mat-option [value]="disp.value">{{disp.viewValue}}</mat-option>
+            @for (disp of estados; track disp.id) { <!-- Corregido: usa 'estados' y track disp.id -->
+              <mat-option [value]="disp.id">{{disp.nombre}}</mat-option> <!-- Corregido: disp.id y disp.nombre -->
             }
           </mat-select>
           @if (productoForm.get('disponibilidad')?.hasError('required')) {
@@ -79,7 +79,7 @@
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="primary__button">Crear</button>
+      <button type="submit" class="primary__button" [disabled]="!productoForm.valid">Crear</button> <!-- Añadido [disabled] para mejor UX -->
     </div>
   </form>
 </div>

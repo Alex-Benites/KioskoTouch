@@ -26,9 +26,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    #app main que deberia ser borrada a futuro
     'main',
+
+    # terceros
     'rest_framework',
     'corsheaders',
+
+    # apps
+    'comun.apps.ComunConfig', 
+    'usuarios.apps.UsuariosConfig',
+    'catalogo.apps.CatalogoConfig',
+    'ventas.apps.VentasConfig',
+    'marketing.apps.MarketingConfig',
+    'establecimientos.apps.EstablecimientosConfig',
     
 ]
 
@@ -75,8 +87,8 @@ DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.mysql',
        'NAME': 'kiosko_db',
-       'USER': 'root',
-       'PASSWORD': 'root2002',
+       'USER': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
+       'PASSWORD': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
        'HOST': 'localhost',
        'PORT': '3306',
    }
@@ -119,7 +131,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC' 
+TIME_ZONE = 'America/Guayaquil'  
 
 USE_I18N = True
 
