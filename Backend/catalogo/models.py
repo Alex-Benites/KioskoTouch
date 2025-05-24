@@ -22,12 +22,13 @@ class AppkioskoProductos(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     categoria = models.ForeignKey(AppkioskoCategorias, on_delete=models.SET_NULL, blank=True, null=True) # Proteger categoría
     estado = models.ForeignKey('comun.AppkioskoEstados', on_delete=models.SET_NULL, blank=True, null=True) # Ajustar on_delete
+    imagenProductoUrl = models.URLField(max_length=500, blank=True, null=True) 
     promocion = models.ForeignKey('marketing.AppkioskoPromociones', on_delete=models.SET_NULL, blank=True, null=True) # Ajustar on_delete
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True,blank=True, null=True)
 
     class Meta:
-        managed = False # Manteniendo tu indicación
+        #managed = False # Manteniendo tu indicación
         db_table = 'appkiosko_productos'
         verbose_name = 'Producto'
         verbose_name_plural = 'Productos'
