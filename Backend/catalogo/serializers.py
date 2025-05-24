@@ -2,19 +2,40 @@ from rest_framework import serializers
 from .models import AppkioskoProductos, AppkioskoCategorias
 from comun.models import AppkioskoEstados # Asumiendo que AppkioskoEstados está en la app 'comun'
 from marketing.models import AppkioskoPromociones # Asumiendo que AppkioskoPromociones está en la app 'marketing'
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+
+
 
 class ProductoSerializer(serializers.ModelSerializer):
+    imagen = serializers.ImageField(write_only=True, required=False)
+
     class Meta:
         model = AppkioskoProductos
         fields = [
-            'id', 
+            'id',
             'nombre',
             'descripcion',
             'precio',
-            'categoria', # Se enviará/esperará el ID de la categoría
-            'estado',    # Se enviará/esperará el ID del estado
-            'promocion', # Se enviará/esperará el ID de la promoción
+            'categoria',
+            'estado',
+            'promocion',
+            'imagen',               # solo para carga
+            'imagenProductoUrl',    # campo que sí está en el modelo
             'created_at',
             'updated_at'
         ]
-        read_only_fields = ('created_at', 'updated_at', 'id') # Campos que no se deben modificar directamente al crear/actualizar
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        imagen = validated_data.pop('imagen', None)  # elimina 'imagen' antes de crear
+
+        if imagen and request:
+            filename = f'productos/{imagen.name}'
+            path = default_storage.save(filename, ContentFile(imagen.read()))
+            image_url = request.build_absolute_uri(settings.MEDIA_URL + path)
+            validated_data['imagenProductoUrl'] = image_url
+
+        return AppkioskoProductos.objects.create(**validated_data)

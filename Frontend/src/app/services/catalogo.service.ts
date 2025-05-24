@@ -22,10 +22,10 @@ export class CatalogoService {
       })
     };
   }
-
-  crearProducto(productoData: Producto): Observable<Producto> {
+ 
+  crearProducto(productoData: FormData): Observable<Producto> {
     const url = `${this.apiUrl}catalogo/productos/`;
-    return this.http.post<Producto>(url, productoData, this.getHttpOptions());
+    return this.http.post<Producto>(url, productoData);
   }
 
   getProductos(): Observable<Producto[]> {
