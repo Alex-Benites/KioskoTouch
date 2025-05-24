@@ -16,6 +16,22 @@ class AppkioskoCategorias(models.Model):
     def __str__(self):
         return self.nombre
 
+class AppkioskoIngredientes(models.Model):
+    nombre = models.CharField(max_length=100)
+    precio_adicional = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    estado = models.ForeignKey('comun.AppkioskoEstados', on_delete=models.SET_NULL, blank=True, null=True) 
+    created_at = models.DateTimeField(auto_now_add=True ,blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'appkiosko_ingredientes'
+        verbose_name = 'Ingrediente'
+        verbose_name_plural = 'Ingredientes'
+
+    def __str__(self):
+        return self.nombre
+    
 class AppkioskoProductos(models.Model):
     nombre = models.CharField(max_length=50)
     descripcion = models.TextField(blank=True, null=True)
@@ -27,8 +43,16 @@ class AppkioskoProductos(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True,blank=True, null=True)
 
+    # Nuevo campo para la relación con ingredientes
+    ingredientes = models.ManyToManyField(
+        AppkioskoIngredientes,
+        through='AppkioskoProductoIngredientes',
+        related_name='productos',
+        blank=True, 
+    )
+
     class Meta:
-        #managed = False # Manteniendo tu indicación
+        managed = True 
         db_table = 'appkiosko_productos'
         verbose_name = 'Producto'
         verbose_name_plural = 'Productos'
@@ -42,8 +66,8 @@ class AppkioskoMenus(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     tipo_menu = models.CharField(max_length=50, blank=True, null=True)
     estado = models.ForeignKey('comun.AppkioskoEstados', on_delete=models.SET_NULL, blank=True, null=True) # Ajustar on_delete
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
     productos = models.ManyToManyField(
         AppkioskoProductos,
         through='AppkioskoMenuproductos',
@@ -65,8 +89,8 @@ class AppkioskoMenuproductos(models.Model):
     producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE) # CORREGIDO
     menu = models.ForeignKey(AppkioskoMenus, on_delete=models.CASCADE) # CORREGIDO
     cantidad = models.IntegerField()
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     class Meta:
         managed = False # Manteniendo tu indicación
@@ -77,3 +101,22 @@ class AppkioskoMenuproductos(models.Model):
 
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre} en {self.menu.nombre}"
+    
+class AppkioskoProductoingredientes(models.Model):
+    """Ingredientes incluidos por defecto en el producto (removibles sin costo)"""
+    producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE)
+    ingrediente = models.ForeignKey(AppkioskoIngredientes, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    class Meta:
+        managed = True  # Para permitir migraciones
+        db_table = 'appkiosko_productoingredientes'
+        unique_together = (('producto', 'ingrediente'),)
+        verbose_name = 'Ingrediente Base del Producto'
+        verbose_name_plural = 'Ingredientes Base del Producto'
+
+    def __str__(self):
+        return f"{self.producto.nombre} - {self.ingrediente.nombre}"
+    
+    

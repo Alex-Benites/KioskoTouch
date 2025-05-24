@@ -83,10 +83,13 @@ class AppkioskoDetallefacturaproducto(models.Model):
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
 
+    #Nuevo campo
+    precio_ingredientes_extra = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
+
     class Meta:
-        managed = False # Manteniendo tu indicación
+        managed = True 
         db_table = 'appkiosko_detallefacturaproducto'
-        unique_together = (('factura', 'producto'),)
+         # unique_together = (('factura', 'producto'),)  # COMENTAR para permitir múltiples items
         verbose_name = 'Detalle de Factura'
         verbose_name_plural = 'Detalles de Factura'
 
@@ -110,14 +113,40 @@ class AppkioskoPedidosproductos(models.Model):
     # producto = models.ForeignKey('catalogo.AppkioskoProductos', models.DO_NOTHING) # ANTERIOR
     pedido = models.ForeignKey(AppkioskoPedidos, on_delete=models.CASCADE) # CORREGIDO
     producto = models.ForeignKey('catalogo.AppkioskoProductos', on_delete=models.PROTECT) # CORREGIDO, proteger producto
-    cantidad = models.DecimalField(max_digits=5, decimal_places=2) # O IntegerField
-    precio_unitario = models.DecimalField(max_digits=5, decimal_places=2) # Considerar max_digits=10
+    cantidad = models.IntegerField(max_digits=5, decimal_places=2, default=1) # O IntegerField
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
 
+    # Nuevo campo
+    precio_ingredientes_extra = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+
     class Meta:
-        managed = False # Manteniendo tu indicación
+        managed = True 
         db_table = 'appkiosko_pedidosproductos'
-        unique_together = (('pedido', 'producto'),)
+        #unique_together = (('pedido', 'producto'),)
         verbose_name = 'Producto de Pedido'
         verbose_name_plural = 'Productos de Pedido'
+
+class AppkioskoPedidoproductoingredientes(models.Model):
+    """Personalización de ingredientes por producto en cada pedido"""
+    pedido_producto = models.ForeignKey(AppkioskoPedidosproductos, on_delete=models.CASCADE, related_name='personalizaciones')
+    ingrediente = models.ForeignKey('catalogo.AppkioskoIngredientes', on_delete=models.CASCADE)
+    accion = models.CharField(max_length=10, choices=[
+        ('quitar', 'Quitar'),      # Remover ingrediente base (gratis)
+        ('añadir', 'Añadir'),      # Agregar ingrediente extra (con costo)
+    ])
+    precio_adicional = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # Solo cuando accion='añadir'
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    class Meta:
+        managed = True 
+        db_table = 'appkiosko_pedidoproductoingredientes'
+        unique_together = (('pedido_producto', 'ingrediente'),)
+        verbose_name = 'Personalización de Ingrediente'
+        verbose_name_plural = 'Personalizaciones de Ingredientes'
+
+    def __str__(self):
+        return f"{self.accion.title()} {self.ingrediente.nombre}"
