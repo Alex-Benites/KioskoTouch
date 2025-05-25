@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,6 +35,8 @@ INSTALLED_APPS = [
 
     # terceros
     'rest_framework',
+    'rest_framework_simplejwt',  
+    'rest_framework_simplejwt.token_blacklist', 
     'corsheaders',
 
     # apps
@@ -49,12 +52,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'KioskoTouch.urls'
@@ -112,6 +115,55 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# 🆕 CONFIGURACIÓN DE JWT
+SIMPLE_JWT = {
+    # TIEMPOS DE VIDA
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),     # 60 minutos
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),        # 7 días
+    
+    # SEGURIDAD CON ROTACIÓN
+    'ROTATE_REFRESH_TOKENS': True,                      # Nuevo refresh token cada vez
+    'BLACKLIST_AFTER_ROTATION': True,                   # Invalidar tokens viejos
+    
+    # CONFIGURACIÓN DE SEGURIDAD
+    'UPDATE_LAST_LOGIN': False,                         # No actualizar last_login
+    'ALGORITHM': 'HS256',                               # Algoritmo de encriptación
+    'SIGNING_KEY': SECRET_KEY,                          # Usar SECRET_KEY de Django
+    
+    # CONFIGURACIÓN DE HEADERS
+    'AUTH_HEADER_TYPES': ('Bearer',),                  # "Authorization: Bearer <token>"
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    
+    # CLAIMS DEL TOKEN
+    'USER_ID_FIELD': 'id',                             # Campo del User model
+    'USER_ID_CLAIM': 'user_id',                        # Nombre del claim
+    'TOKEN_TYPE_CLAIM': 'token_type',                  # access/refresh
+    'JTI_CLAIM': 'jti',                                # Para blacklist
+    
+    # CLASES DE TOKEN
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    
+    # REGLAS DE AUTENTICACIÓN
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    
+    # OPCIONALES (valores por defecto)
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+}
+
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -163,6 +215,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
 ]
 
-
+CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
