@@ -46,18 +46,26 @@ export class CrearComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cargarDatosQuemadosParaSelects();
+    //this.cargarDatosQuemadosParaSelects();
+    this.catalogoService.getCategorias().subscribe(data => {
+      this.categorias = data;
+    });
+
+    this.catalogoService.getEstados().subscribe(data => {
+      this.estados = data;
+    });
   }
 
   cargarDatosQuemadosParaSelects(): void {
     // Datos quemados para categorías
+    /*
     this.categorias = [
       { id: 2, nombre: 'Hamburguesas (Prueba)' },
       { id: 3, nombre: 'Bebidas (Prueba)' },
       { id: 4, nombre: 'Postres (Prueba)' },
       { id: 5, nombre: 'Pizzas (Prueba)' } // Añade más si necesitas
     ];
-    console.log('Categorías quemadas cargadas:', this.categorias);
+    console.log('Categorías quemadas cargadas:', this.categorias); */
 
     // Datos quemados para estados (disponibilidad)
     this.estados = [

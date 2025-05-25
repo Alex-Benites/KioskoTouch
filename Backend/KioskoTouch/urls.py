@@ -8,7 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('main.urls')),
     path('api/catalogo/', include('catalogo.urls')),
-
+    path('api/comun/', include('comun.urls')),
 ]
 
 if settings.DEBUG:

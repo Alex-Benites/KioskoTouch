@@ -1,1 +1,40 @@
-<p>editar productos works!</p>
+<app-header-admin></app-header-admin>
+
+
+<div class="form-container">   
+    <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
+    <h1 class="form-main-title">Edición de Producto</h1>
+
+    <div class="categorias">
+        <label>Buscar por categoría</label>
+        <div class="categorias-list">
+        @for (cat of categorias; track cat.id) {
+            <button class="categoria-btn">
+            <i [class]="cat.icon"></i>
+            {{ cat.label }}
+            </button>
+        }
+        </div>
+    </div>
+
+    <div class="buscador">
+        <label>Buscar producto</label>
+        <div class="buscador-input">
+        <input type="text" placeholder="Buscar" [(ngModel)]="search" />
+        <i class="fas fa-search"></i>
+        </div>
+    </div>
+
+    <div class="productos-grid">
+        @for (producto of productosFiltrados; track producto.id) {
+        <div class="producto-card">
+            <img [src]="producto.imagen" [alt]="producto.nombre" />
+            <div class="producto-nombre">{{ producto.nombre }}</div>
+            <button class="editar-btn">Editar</button>
+        </div>
+        }
+    </div>
+    
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-productos'"></app-footer-admin>

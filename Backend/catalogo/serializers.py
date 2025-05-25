@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from .models import AppkioskoProductos, AppkioskoCategorias
-from comun.models import AppkioskoEstados # Asumiendo que AppkioskoEstados está en la app 'comun'
-from marketing.models import AppkioskoPromociones # Asumiendo que AppkioskoPromociones está en la app 'marketing'
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -39,3 +37,10 @@ class ProductoSerializer(serializers.ModelSerializer):
             validated_data['imagenProductoUrl'] = image_url
 
         return AppkioskoProductos.objects.create(**validated_data)
+
+
+class CategoriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AppkioskoCategorias
+        fields = '__all__' 
+
