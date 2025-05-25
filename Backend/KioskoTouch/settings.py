@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     # terceros
     'rest_framework',
     'rest_framework_simplejwt',  
-    'rest_framework_simplejwt.token_blacklist', 
+    #'rest_framework_simplejwt.token_blacklist', 
     'corsheaders',
 
     # apps
@@ -130,9 +130,9 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),     # 60 minutos
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),        # 7 días
     
-    # SEGURIDAD CON ROTACIÓN
-    'ROTATE_REFRESH_TOKENS': True,                      # Nuevo refresh token cada vez
-    'BLACKLIST_AFTER_ROTATION': True,                   # Invalidar tokens viejos
+    # SEGURIDAD CON ROTACIÓN (POR AHORA DESHABILITADA)
+    'ROTATE_REFRESH_TOKENS': False,                      # Nuevo refresh token cada vez
+    'BLACKLIST_AFTER_ROTATION': False,                   # Invalidar tokens viejos
     
     # CONFIGURACIÓN DE SEGURIDAD
     'UPDATE_LAST_LOGIN': False,                         # No actualizar last_login
