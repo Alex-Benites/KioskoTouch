@@ -109,25 +109,36 @@ class AppkioskoPedidosessions(models.Model):
         verbose_name_plural = 'Sesiones de Pedido'
 
 class AppkioskoPedidosproductos(models.Model):
-    # pedido = models.OneToOneField(AppkioskoPedidos, models.DO_NOTHING, primary_key=True) # ANTERIOR
-    # producto = models.ForeignKey('catalogo.AppkioskoProductos', models.DO_NOTHING) # ANTERIOR
-    pedido = models.ForeignKey(AppkioskoPedidos, on_delete=models.CASCADE) # CORREGIDO
-    producto = models.ForeignKey('catalogo.AppkioskoProductos', on_delete=models.PROTECT) # CORREGIDO, proteger producto
-    cantidad = models.IntegerField(max_digits=5, decimal_places=2, default=1) # O IntegerField
+    pedido = models.ForeignKey(AppkioskoPedidos, on_delete=models.CASCADE)
+    producto = models.ForeignKey('catalogo.AppkioskoProductos', on_delete=models.PROTECT)
+    cantidad = models.IntegerField(default=1)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
+    precio_ingredientes_extra = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # CORREGIR: eliminar campo duplicado
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
-
-    # Nuevo campo
-    precio_ingredientes_extra = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-
 
     class Meta:
         managed = True 
         db_table = 'appkiosko_pedidosproductos'
-        #unique_together = (('pedido', 'producto'),)
+        # NO unique_together porque pueden haber múltiples registros del mismo producto con personalizaciones diferentes
         verbose_name = 'Producto de Pedido'
         verbose_name_plural = 'Productos de Pedido'
+
+    @property
+    def precio_total_item(self):
+        """Precio final del item = (precio_unitario + ingredientes_extra) * cantidad"""
+        return (self.precio_unitario + self.precio_ingredientes_extra) * self.cantidad
+
+    @property
+    def es_personalizable(self):
+        """Solo productos con ingredientes son personalizables"""
+        return self.producto.tiene_ingredientes
+
+    def __str__(self):
+        if self.cantidad == 1:
+            return f"{self.producto.nombre} - ${self.precio_total_item}"
+        else:
+            return f"{self.cantidad}x {self.producto.nombre} - ${self.precio_total_item}"
 
 class AppkioskoPedidoproductoingredientes(models.Model):
     """Personalización de ingredientes por producto en cada pedido"""
@@ -137,16 +148,39 @@ class AppkioskoPedidoproductoingredientes(models.Model):
         ('quitar', 'Quitar'),      # Remover ingrediente base (gratis)
         ('añadir', 'Añadir'),      # Agregar ingrediente extra (con costo)
     ])
-    precio_adicional = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # Solo cuando accion='añadir'
+    cantidad = models.IntegerField(default=1)  # Cantidad de este ingrediente 
+    precio_unitario_ingrediente = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  
+    precio_total_ingrediente = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # cantidad * precio_unitario
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     class Meta:
         managed = True 
-        db_table = 'appkiosko_pedidoproductoingredientes'
+        db_table = 'appkiosko_pedido_producto_ingredientes'
         unique_together = (('pedido_producto', 'ingrediente'),)
         verbose_name = 'Personalización de Ingrediente'
         verbose_name_plural = 'Personalizaciones de Ingredientes'
 
+    def save(self, *args, **kwargs):
+        """Calcular precio total automáticamente"""
+        if self.accion == 'añadir':
+            # Guardar precio unitario en el momento de la compra (para histórico)
+            if not self.precio_unitario_ingrediente:
+                self.precio_unitario_ingrediente = self.ingrediente.precio_adicional
+            # Calcular precio total
+            self.precio_total_ingrediente = self.cantidad * self.precio_unitario_ingrediente
+        else:
+            # Si es quitar, no hay costo
+            self.precio_unitario_ingrediente = 0.00
+            self.precio_total_ingrediente = 0.00
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.accion.title()} {self.ingrediente.nombre}"
+        if self.accion == 'quitar':
+            return f"Sin {self.ingrediente.nombre}"
+        else:
+            if self.cantidad == 1:
+                return f"+ {self.ingrediente.nombre} (${self.precio_total_ingrediente})"
+            else:
+                return f"+ {self.cantidad}x {self.ingrediente.nombre} (${self.precio_total_ingrediente})"

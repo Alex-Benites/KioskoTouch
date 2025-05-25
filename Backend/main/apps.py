@@ -3,6 +3,6 @@ from pathlib import Path
 
 
 class MainConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
+    default_auto_field = 'django.db.models.AutoField'
     name = 'main'
     path = str(Path(__file__).resolve().parent)
