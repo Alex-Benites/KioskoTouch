@@ -25,6 +25,7 @@ export class CrearComponent implements OnInit {
   productoForm: FormGroup;
   imagePreview: string | ArrayBuffer | null = null;
   selectedFile: File | null = null;
+  imagenSeleccionada: File | null = null;
 
   // Inicializa con arrays vacíos, se poblarán con datos quemados
   categorias: Categoria[] = [];
@@ -45,24 +46,32 @@ export class CrearComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cargarDatosQuemadosParaSelects();
+    //this.cargarDatosQuemadosParaSelects();
+    this.catalogoService.getCategorias().subscribe(data => {
+      this.categorias = data;
+    });
+
+    this.catalogoService.getEstados().subscribe(data => {
+      this.estados = data;
+    });
   }
 
   cargarDatosQuemadosParaSelects(): void {
     // Datos quemados para categorías
+    /*
     this.categorias = [
-      { id: 1, nombre: 'Hamburguesas (Prueba)' },
-      { id: 2, nombre: 'Bebidas (Prueba)' },
-      { id: 3, nombre: 'Postres (Prueba)' },
-      { id: 4, nombre: 'Pizzas (Prueba)' } // Añade más si necesitas
+      { id: 2, nombre: 'Hamburguesas (Prueba)' },
+      { id: 3, nombre: 'Bebidas (Prueba)' },
+      { id: 4, nombre: 'Postres (Prueba)' },
+      { id: 5, nombre: 'Pizzas (Prueba)' } // Añade más si necesitas
     ];
-    console.log('Categorías quemadas cargadas:', this.categorias);
+    console.log('Categorías quemadas cargadas:', this.categorias); */
 
     // Datos quemados para estados (disponibilidad)
     this.estados = [
-      { id: 1, nombre: 'Disponible (Prueba)' },
-      { id: 2, nombre: 'No Disponible (Prueba)' },
-      { id: 3, nombre: 'Pocas Unidades (Prueba)' } // Añade más si necesitas
+      { id: 4, nombre: 'Disponible (Prueba)' },
+      { id: 5, nombre: 'No Disponible (Prueba)' },
+      { id: 6, nombre: 'Pocas Unidades (Prueba)' } // Añade más si necesitas
     ];
     console.log('Estados quemados cargados:', this.estados);
 
@@ -88,7 +97,7 @@ export class CrearComponent implements OnInit {
   //   });
   // }
 
-  onFileSelected(event: Event): void {
+  /* onFileSelected(event: Event): void { 
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       this.selectedFile = input.files[0];
@@ -96,7 +105,7 @@ export class CrearComponent implements OnInit {
       reader.onload = () => this.imagePreview = reader.result;
       reader.readAsDataURL(this.selectedFile);
     }
-  }
+  } */
 
   eliminarImagen(): void {
     this.imagePreview = null; this.selectedFile = null;
@@ -104,22 +113,39 @@ export class CrearComponent implements OnInit {
     if (fileInput) fileInput.value = '';
   }
 
-  onSubmit(): void {
+  onFileSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    this.imagenSeleccionada = input.files[0];
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
+    };
+    reader.readAsDataURL(this.imagenSeleccionada);
+  }
+}
+
+  /*onSubmit(): void {
     if (this.productoForm.valid) {
       const formValue = this.productoForm.value;
       // Ahora formValue.categoria y formValue.disponibilidad deberían tener los IDs
       // seleccionados de los datos quemados.
-      const productoData: Producto = {
-        nombre: formValue.nombre,
-        descripcion: formValue.descripcion,
-        precio: formValue.precio.toString(),
-        categoria: parseInt(formValue.categoria, 10),
-        estado: parseInt(formValue.disponibilidad, 10),
-      };
+      const formData = new FormData();
+        formData.append('nombre', formValue.nombre);
+        formData.append('descripcion', formValue.descripcion);
+        formData.append('precio', formValue.precio.toString());
+        formData.append('categoria', formValue.categoria);
+        formData.append('estado', formValue.disponibilidad);
 
-      console.log('Enviando datos del producto:', productoData);
+        if (this.imagenSeleccionada) {
+          formData.append('imagenProductoUrl', this.imagenSeleccionada);
+        }
 
-      this.catalogoService.crearProducto(productoData).subscribe({
+
+      console.log('Enviando datos del producto:', formData);
+
+      this.catalogoService.crearProducto(formData).subscribe({
         next: (response) => {
           console.log('Producto creado exitosamente:', response);
           alert('Producto creado exitosamente!');
@@ -143,5 +169,52 @@ export class CrearComponent implements OnInit {
       console.log('Formulario no válido');
       this.productoForm.markAllAsTouched();
     }
+  }*/
+
+  onSubmit(): void {
+  if (this.productoForm.valid) {
+    const formValue = this.productoForm.value;
+
+    const formData = new FormData();
+    formData.append('nombre', formValue.nombre);
+    formData.append('descripcion', formValue.descripcion);
+    formData.append('precio', formValue.precio.toString());
+    formData.append('categoria', formValue.categoria); // ID de la categoría
+    formData.append('estado', formValue.disponibilidad); // ID del estado
+
+    if (this.imagenSeleccionada) {
+      formData.append('imagen', this.imagenSeleccionada); // ✅ nombre correcto del campo
+    }
+
+    // Opcional: revisar qué se está enviando
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    this.catalogoService.crearProducto(formData).subscribe({
+      next: (response) => {
+        console.log('Producto creado exitosamente:', response);
+        alert('Producto creado exitosamente!');
+        this.router.navigate(['/administrador/gestion-productos']);
+      },
+      error: (error) => {
+        console.error('Error al crear el producto:', error);
+        let errorMessage = 'Ocurrió un error al crear el producto.';
+        if (error.error && typeof error.error === 'object') {
+          errorMessage += '\nDetalles:\n';
+          for (const key in error.error) {
+            if (error.error.hasOwnProperty(key)) {
+              errorMessage += `${key}: ${error.error[key].join ? error.error[key].join(', ') : error.error[key]}\n`;
+            }
+          }
+        }
+        alert(errorMessage);
+      }
+    });
+    } else {
+      console.log('Formulario no válido');
+      this.productoForm.markAllAsTouched();
+    }
   }
+
 }
