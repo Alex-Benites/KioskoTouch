@@ -9,7 +9,7 @@
 }
 
 .brand-logo {
-  height: 50px; /* Ajusta según el tamaño de tu logo */
+  height: 50px;
   object-fit: contain;
 }
 
@@ -18,7 +18,20 @@
   top: 15px;
   right: 50px;
   display: flex;
-  gap: 25px;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  
+  .username {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
 }
 
 .action-icon {
@@ -26,6 +39,37 @@
   width: 40px;
   margin-top: 5px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 5px;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.logout-icon {
+  &:hover:not(.logging-out) {
+    background-color: rgba(211, 47, 47, 0.1);
+  }
+  
+  &.logging-out {
+    opacity: 0.5;
+    cursor: not-allowed;
+    animation: pulse 1s infinite;
+    pointer-events: none; 
+  }
+}
+
+.user-icon {
+  &:hover {
+    background-color: rgba(25, 118, 210, 0.1);
+  }
 }
 
 .header-line {
@@ -35,4 +79,31 @@
   margin-top: 10px;
   width: 100%;
   margin-bottom: 0;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@media (max-width: 768px) {
+  .actions-container {
+    right: 20px;
+    gap: 10px;
+  }
+  
+  .user-info {
+    .username {
+      font-size: 14px;
+    }
+  }
+  
+  .action-icon {
+    height: 35px;
+    width: 35px;
+  }
 }

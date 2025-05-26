@@ -2,9 +2,41 @@
   <div class="logo-container">
     <img src="assets/admin/ADMIN_1_2.png" alt="Logo Kiosco Go" class="brand-logo">
   </div>
+  
+  <!-- 👤 Mostrar información del usuario autenticado -->
   <div class="actions-container">
-    <img src="assets/admin/ADMIN_4.png" alt="User Account" class="action-icon">
-    <img src="assets/admin/ADMIN_4_1.png" alt="Settings" class="action-icon">
+    @if (currentUser) {
+      
+      <!-- Icono de cuenta de usuario -->
+      <img 
+      src="assets/admin/ADMIN_4.png" 
+      alt="User Account" 
+      class="action-icon user-icon"
+      (click)="goToProfile()"
+      title="Ver perfil"
+      >
+      
+      <!-- Solo mostrar username -->
+      <div class="user-info">
+        <span class="username">{{ username }}</span>
+      </div>
+
+      <!-- Icono de logout -->
+      <img 
+        src="assets/admin/ADMIN_4_1.png" 
+        alt="Logout" 
+        class="action-icon logout-icon"
+        [class.logging-out]="isLoggingOut"
+        (click)="logout()"
+        title="Cerrar sesión"
+      >
+    } @else {
+      <!-- Si no hay usuario, mostrar placeholder o nada -->
+      <div class="user-info">
+        <span class="username">No autenticado</span>
+      </div>
+    }
   </div>
+  
   <hr class="header-line" />
 </div>

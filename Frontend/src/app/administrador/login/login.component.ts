@@ -12,7 +12,6 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  // ✅ Usar inject() para Angular 19
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -61,7 +60,7 @@ export class LoginComponent {
     });
   }
 
-  // 📧 Métodos del popup (sin cambios)
+  // 📧 Métodos del popup 
   abrirPopupRecuperar() {
     this.mostrarPopupRecuperar = true;
   }
