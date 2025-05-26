@@ -81,7 +81,7 @@ $success-color: #4CAF50;
   transition: all 0.2s ease;
   
   &:focus-within {
-    background-color: darken($input-color, 5%);
+    background-color: #d9d9d9;
     box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
   }
   

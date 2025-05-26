@@ -1,10 +1,31 @@
-    <div class="unauthorized-container">
+<div class="unauthorized-container">
       <div class="content">
         <h1>🚫 Acceso Denegado</h1>
-        <p>No tienes permisos suficientes para acceder a esta página.</p>
+        
+        @if (isAuthenticated) {
+          <!-- Usuario autenticado pero sin permisos -->
+          <p>No tienes permisos suficientes para acceder a esta página.</p>
+          <p>Contacta al administrador si necesitas acceso a esta función.</p>
+        } @else {
+          <!-- Usuario no autenticado -->
+          <p>Necesitas iniciar sesión para acceder a esta página.</p>
+        }
+        
         <div class="actions">
-          <button class="btn-primary" (click)="goHome()">Ir al Inicio</button>
-          <button class="btn-secondary" (click)="logout()">Cerrar Sesión</button>
+          @if (isAuthenticated) {
+            <!-- Usuario autenticado: ir al panel correspondiente -->
+            <button class="btn-primary" (click)="goToUserHome()">
+              Ir al Inicio
+            </button>
+          } @else {
+            <!-- Usuario no autenticado: ir al cliente o login -->
+            <button class="btn-primary" (click)="goToLogin()">
+              Iniciar Sesión
+            </button>
+            <button class="btn-secondary" (click)="goToClientHome()">
+              Ir al Inicio
+            </button>
+          }
         </div>
       </div>
     </div>
