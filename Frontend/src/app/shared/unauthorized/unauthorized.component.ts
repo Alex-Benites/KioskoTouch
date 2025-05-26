@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/usuarios.model';
@@ -9,7 +9,7 @@ import { User } from '../../models/usuarios.model';
   templateUrl: './unauthorized.component.html',
   styleUrl: './unauthorized.component.scss'
 })
-export class UnauthorizedComponent {
+export class UnauthorizedComponent implements OnInit{
 
   private router = inject(Router);
   private authService = inject(AuthService);
