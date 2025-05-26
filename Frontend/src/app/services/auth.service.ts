@@ -185,7 +185,7 @@ export class AuthService {
     return user?.permissions || [];
   }
 
-  private clearStorage(): void {
+  public clearStorage(): void {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
@@ -211,5 +211,10 @@ export class AuthService {
     
     console.error('Error en AuthService:', errorMessage);
     return throwError(() => errorMessage);
+  }
+
+  public clearSession(): void {
+    console.log('🧹 Limpiando sesión...');
+    this.clearStorage();
   }
 }

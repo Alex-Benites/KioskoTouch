@@ -5,14 +5,13 @@ import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-
   const authService = inject(AuthService);
   const router = inject(Router);
 
   const token = authService.getAccessToken();
   
   let authReq = req;
-  if (token && !req.url.includes('/auth/login/')) {
+  if (token && !req.url.includes('/auth/login/') && !req.url.includes('/auth/logout/')) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
@@ -22,10 +21,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
-        console.warn('Token inválido o expirado. Redirigiendo al login...');
-        authService.logout().subscribe();
+      // 🚨 SOLO manejar 401 si NO es login o logout 
+      if (error.status === 401 && 
+          !req.url.includes('/auth/login/') && 
+          !req.url.includes('/auth/logout/')) {
+        
+        console.warn('🔑 Token inválido o expirado. Limpiando sesión...');
+        
+        // Limpiar localStorage directamente 
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        
+        // Redirigir al login
+        router.navigate(['/administrador/login']);
       }
+      
       return throwError(() => error);
     })
   );
