@@ -208,3 +208,153 @@ def logout_empleado(request):
         return Response({
             'error': f'Error en logout: {str(e)}'
         }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_grupos_disponibles(request):
+    """Obtener lista de grupos (roles) disponibles"""
+    grupos = Group.objects.all().values('id', 'name')
+    return Response({
+        'grupos':list(grupos), 
+        'total': len(grupos)}, 
+        status=status.HTTP_200_OK
+    )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_permisos_disponibles(request):
+    """Obtener lista de permisos disponibles organizados por gestión"""
+    
+    # 🎯 Apps relevantes para las gestiones del frontend
+    apps_relevantes = [
+        'usuarios',          # Gestión de usuarios
+        'auth',              # Sistema de autenticación Django
+        'catalogo',          # Productos y menús
+        'marketing',         # Promociones y publicidad
+        'establecimientos',  # Establecimientos, pantallas, kioskos
+        'ventas',            # Pedidos y ventas (opcional)
+        'comun',             # Estados del sistema
+    ]
+    
+    # Obtener permisos filtrados
+    permisos = Permission.objects.filter(
+        content_type__app_label__in=apps_relevantes
+    ).select_related('content_type').values(
+        'id', 'name', 'codename', 'content_type__app_label', 'content_type__model'
+    ).order_by('content_type__app_label', 'codename')
+
+    # 📊 Organizar permisos por gestión para el frontend
+    gestiones = {
+        'usuarios': {
+            'label': 'Gestión de Usuarios',
+            'permisos': [],
+            'models': ['appkioskoempleados', 'appkioskoclientes', 'user', 'group']
+        },
+        'productos': {
+            'label': 'Gestión de Productos', 
+            'permisos': [],
+            'models': ['appkioskoproductos', 'appkioskocategorias', 'appkioskoingredientes']
+        },
+        'menus': {
+            'label': 'Gestión de Menús',
+            'permisos': [],
+            'models': ['appkioskomenus', 'appkioskomenuproductos']
+        },
+        'promociones': {
+            'label': 'Gestión de Promociones',
+            'permisos': [],
+            'models': ['appkioskopromociones', 'appkioskocupon', 'appkioskopromocionproductos', 'appkioskopromocionmenu']
+        },
+        'pantallas_cocina': {
+            'label': 'Gestión de Pantallas de Cocina',
+            'permisos': [],
+            'models': ['appkioskopantallascocina']
+        },
+        'establecimientos': {
+            'label': 'Gestión de Establecimientos',
+            'permisos': [],
+            'models': ['appkioskoestablecimientos', 'appkioskoestablecimientosusuarios']
+        },
+        'publicidad': {
+            'label': 'Gestión de Publicidad',
+            'permisos': [],
+            'models': ['appkioskopublicidades', 'appkioskoimagen', 'appkioskovideo', 'appkioskopublicidadestablecimiento']
+        },
+        'kiosko_touch': {
+            'label': 'Gestión de Kiosko Touch',
+            'permisos': [],
+            'models': ['appkioskokioskostouch']
+        }
+    }
+
+    # Clasificar permisos por gestión
+    for permiso in permisos:
+        modelo = permiso['content_type__model']
+        
+        # Buscar en qué gestión va este permiso
+        for gestion_key, gestion_data in gestiones.items():
+            if modelo in gestion_data['models']:
+                # Organizar por tipo de acción (add, change, delete, view)
+                accion = 'otros'
+                if permiso['codename'].startswith('add_'):
+                    accion = 'crear'
+                elif permiso['codename'].startswith('change_'):
+                    accion = 'modificar'
+                elif permiso['codename'].startswith('delete_'):
+                    accion = 'eliminar'
+                elif permiso['codename'].startswith('view_'):
+                    accion = 'ver'
+                
+                permiso['accion'] = accion
+                gestiones[gestion_key]['permisos'].append(permiso)
+                break
+
+    # 📈 Estadísticas por gestión
+    resumen = {}
+    for gestion_key, gestion_data in gestiones.items():
+        total = len(gestion_data['permisos'])
+        acciones = {}
+        for permiso in gestion_data['permisos']:
+            accion = permiso['accion']
+            acciones[accion] = acciones.get(accion, 0) + 1
+        
+        resumen[gestion_key] = {
+            'label': gestion_data['label'],
+            'total_permisos': total,
+            'acciones': acciones
+        }
+
+    return Response({
+        'gestiones': gestiones,
+        'resumen': resumen,
+        'permisos_raw': list(permisos),
+        'apps_incluidas': apps_relevantes,
+        'total_permisos': len(permisos)
+    })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def asignar_rol_empleado(request):
+    """Asignar rol a un empleado específico"""
+    try:
+        empleado = AppkioskoEmpleados.objects.get(id=request.data['empleado_id'])
+        nombre_grupo = request.data['rol']
+
+        if not nombre_grupo:
+            return Response({
+                'error': 'El nombre del rol es requerido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if empleado.agregar_rol(nombre_grupo):
+            return Response({
+                'message': f'Rol "{nombre_grupo}" asignado a {empleado.nombres} {empleado.apellidos}',
+                'empleado_roles': empleado.nombres_roles
+        }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'error': f'No se pudo asignar el rol "{nombre_grupo}" al empleado'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except AppkioskoEmpleados.DoesNotExist:
+        return Response({
+            'error': 'Empleado no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
