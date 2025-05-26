@@ -21,20 +21,29 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // 🚨 SOLO manejar 401 si NO es login o logout 
+      
+      // 🔑 401 = No autenticado → Ir al LOGIN
       if (error.status === 401 && 
           !req.url.includes('/auth/login/') && 
           !req.url.includes('/auth/logout/')) {
         
-        console.warn('🔑 Token inválido o expirado. Limpiando sesión...');
+        console.warn('🔑 Token inválido o expirado. Redirigiendo al login...');
         
         // Limpiar localStorage directamente 
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
         
-        // Redirigir al login
+        // ✅ 401 → LOGIN (no unauthorized)
         router.navigate(['/administrador/login']);
+      }
+      
+      // 🚫 403 = Sin permisos → Ir a UNAUTHORIZED
+      if (error.status === 403) {
+        console.warn('🚫 Acceso denegado. Sin permisos suficientes...');
+        
+        // ✅ 403 → UNAUTHORIZED (mantener sesión)
+        router.navigate(['/administrador/unauthorized']);
       }
       
       return throwError(() => error);
