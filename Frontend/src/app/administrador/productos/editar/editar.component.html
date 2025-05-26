@@ -10,8 +10,8 @@
         <div class="categorias-list">
         @for (cat of categorias; track cat.id) {
             <button class="categoria-btn">
-            <i [class]="cat.icon"></i>
-            {{ cat.label }}
+            <i ></i>
+            {{ cat.nombre }}
             </button>
         }
         </div>
@@ -26,9 +26,10 @@
     </div>
 
     <div class="productos-grid">
-        @for (producto of productosFiltrados; track producto.id) {
+        @for (producto of productos; track producto.id) {
         <div class="producto-card">
-            <img [src]="producto.imagen" [alt]="producto.nombre" />
+            
+            <img [src]="producto.imagenProductoUrl" [alt]="producto.nombre" />
             <div class="producto-nombre">{{ producto.nombre }}</div>
             <button class="editar-btn">Editar</button>
         </div>
