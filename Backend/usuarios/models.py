@@ -40,3 +40,7 @@ class AppkioskoEmpleados(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
+    
+    @property
+    def full_name(self):
+        return f"{self.nombres} {self.apellidos}"
