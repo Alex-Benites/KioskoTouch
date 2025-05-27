@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
+import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
+import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 
 // 🎨 Angular Material Imports
 import { MatCardModule } from '@angular/material/card';
@@ -33,7 +35,7 @@ import {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,                    // 🆕 Agregado para ngModel
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -43,14 +45,17 @@ import {
     MatIconModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    HeaderAdminComponent,
+    FooterAdminComponent,
+    MatSnackBarModule,
   ],
   templateUrl: './crear-rol.component.html',
   styleUrl: './crear-rol.component.scss'
 })
 export class CrearRolComponent implements OnInit {
   // 📋 Propiedades del componente
-  rolForm!: FormGroup;              // 🆕 Agregado ! para indicar asignación definitiva
+  rolForm!: FormGroup;
   gestiones: GestionUI[] = [];
   loading = true;
   saving = false;
@@ -80,8 +85,163 @@ export class CrearRolComponent implements OnInit {
         Validators.required, 
         Validators.minLength(3),
         Validators.maxLength(50)
-      ]]
+      ]],
+      permisos: this.fb.group({})
     });
+  }
+
+  /**
+   * 🔄 Procesar gestiones y crear controles dinámicos
+   */
+  private procesarGestiones(response: GestionesResponse): void {
+    const gestionesData: GestionesData = response.gestiones;
+    const permisosGroup = this.rolForm.get('permisos') as FormGroup;
+    
+    this.gestiones = Object.keys(gestionesData).map(key => {
+      const gestion = gestionesData[key as keyof GestionesData];
+      
+      // 📋 Organizar permisos por acción
+      const permisosPorAccion = {
+        crear: gestion.permisos.filter(p => p.accion === 'crear'),
+        modificar: gestion.permisos.filter(p => p.accion === 'modificar'),
+        eliminar: gestion.permisos.filter(p => p.accion === 'eliminar'),
+        ver: gestion.permisos.filter(p => p.accion === 'ver'),
+        otros: gestion.permisos.filter(p => p.accion === 'otros')
+      };
+
+      // 🆕 Crear controles para cada gestión
+      const gestionControls = this.fb.group({
+        ver: [{ 
+          value: false, 
+          disabled: permisosPorAccion.ver.length === 0 
+        }],
+        crear: [{ 
+          value: false, 
+          disabled: permisosPorAccion.crear.length === 0 
+        }],
+        modificar: [{ 
+          value: false, 
+          disabled: permisosPorAccion.modificar.length === 0 
+        }],
+        eliminar: [{ 
+          value: false, 
+          disabled: permisosPorAccion.eliminar.length === 0 
+        }],
+        todos: [false]
+      });
+      
+      // Agregar controles al grupo de permisos
+      permisosGroup.addControl(key, gestionControls);
+
+      return {
+        key,
+        label: gestion.label,
+        permisos: permisosPorAccion,
+        seleccionados: {
+          crear: false,
+          modificar: false,
+          eliminar: false,
+          ver: false,
+          todos: false
+        }
+      };
+    });
+  }
+
+  /**
+   * 🔄 Manejar cambio en checkbox - CORREGIDO
+   */
+  onPermisoChange(gestionKey: string, accion: AccionPermiso): void {
+    const permisosGroup = this.rolForm.get('permisos') as FormGroup;
+    const gestionGroup = permisosGroup.get(gestionKey) as FormGroup;
+    
+    if (accion === 'todos') {
+      this.toggleTodosFormControl(gestionGroup);
+    } else {
+      this.actualizarEstadoTodosFormControl(gestionGroup);
+    }
+  }
+
+  /**
+   * 🔄 Toggle "Todos" - CORREGIDO
+   */
+  private toggleTodosFormControl(gestionGroup: FormGroup): void {
+    const todosControl = gestionGroup.get('todos');
+    const nuevoEstado = todosControl?.value;
+    
+    // 🎯 Si "Todos" se marca, marcar todos los disponibles
+    if (nuevoEstado) {
+      // Marcar solo los que están habilitados
+      const controles = ['ver', 'crear', 'modificar', 'eliminar'];
+      controles.forEach(control => {
+        const controlInstance = gestionGroup.get(control);
+        if (controlInstance && !controlInstance.disabled) {
+          controlInstance.setValue(true, { emitEvent: false });
+        }
+      });
+    } else {
+      // Si "Todos" se desmarca, desmarcar todos
+      gestionGroup.patchValue({
+        ver: false,
+        crear: false,
+        modificar: false,
+        eliminar: false
+      }, { emitEvent: false });
+    }
+  }
+
+  /**
+   * 🔄 Actualizar estado de "Todos" - CORREGIDO
+   */
+  private actualizarEstadoTodosFormControl(gestionGroup: FormGroup): void {
+    const valores = gestionGroup.value;
+    
+    // Verificar solo los controles que están habilitados
+    const controlesHabilitados = ['ver', 'crear', 'modificar', 'eliminar'].filter(control => {
+      const controlInstance = gestionGroup.get(control);
+      return controlInstance && !controlInstance.disabled;
+    });
+    
+    // "Todos" está marcado solo si TODOS los controles habilitados están marcados
+    const todosMarcados = controlesHabilitados.length > 0 && 
+                         controlesHabilitados.every(control => valores[control]);
+    
+    gestionGroup.get('todos')?.setValue(todosMarcados, { emitEvent: false });
+  }
+
+  /**
+   * 📊 Obtener IDs de permisos seleccionados
+   */
+  getPermisosSeleccionados(): number[] {
+    const permisosIds: number[] = [];
+    const permisosGroup = this.rolForm.get('permisos') as FormGroup;
+    
+    this.gestiones.forEach(gestion => {
+      const gestionGroup = permisosGroup.get(gestion.key) as FormGroup;
+      const valores = gestionGroup.value;
+      
+      // Solo procesar acciones individuales (no 'todos')
+      Object.keys(valores).forEach(accion => {
+        if (accion !== 'todos' && valores[accion]) {
+          const permisos: Permiso[] = gestion.permisos[accion as keyof typeof gestion.permisos];
+          permisos.forEach(permiso => {
+            if (!permisosIds.includes(permiso.id)) {
+              permisosIds.push(permiso.id);
+            }
+          });
+        }
+      });
+    });
+    
+    return permisosIds;
+  }
+
+  /**
+   * 🎯 Obtener FormGroup de una gestión específica
+   */
+  getGestionFormGroup(gestionKey: string): FormGroup {
+    const permisosGroup = this.rolForm.get('permisos') as FormGroup;
+    return permisosGroup.get(gestionKey) as FormGroup;
   }
 
   /**
@@ -101,96 +261,6 @@ export class CrearRolComponent implements OnInit {
         this.loading = false;
       }
     });
-  }
-
-  /**
-   * 🔄 Procesar gestiones del backend para el UI
-   */
-  private procesarGestiones(response: GestionesResponse): void {
-    const gestionesData: GestionesData = response.gestiones;
-    
-    this.gestiones = Object.keys(gestionesData).map(key => {
-      const gestion = gestionesData[key as keyof GestionesData];
-      
-      // 📋 Organizar permisos por acción
-      const permisosPorAccion = {
-        crear: gestion.permisos.filter(p => p.accion === 'crear'),
-        modificar: gestion.permisos.filter(p => p.accion === 'modificar'),
-        eliminar: gestion.permisos.filter(p => p.accion === 'eliminar'),
-        ver: gestion.permisos.filter(p => p.accion === 'ver'),
-        otros: gestion.permisos.filter(p => p.accion === 'otros')
-      };
-
-      return {
-        key,
-        label: gestion.label,
-        permisos: permisosPorAccion,
-        seleccionados: {
-          crear: false,
-          modificar: false,
-          eliminar: false,
-          ver: false,
-          todos: false
-        }
-      };
-    });
-  }
-
-  /**
-   * 🔄 Manejar cambio en checkbox
-   */
-  onPermisoChange(gestionIndex: number, accion: AccionPermiso): void {
-    if (accion === 'todos') {
-      this.toggleTodos(gestionIndex);
-    } else {
-      this.actualizarEstadoTodos(gestionIndex);
-    }
-  }
-
-  /**
-   * 🔄 Toggle "Todos" para una gestión
-   */
-  private toggleTodos(gestionIndex: number): void {
-    const gestion = this.gestiones[gestionIndex];
-    const nuevoEstado = !gestion.seleccionados.todos;
-    
-    gestion.seleccionados.todos = nuevoEstado;
-    gestion.seleccionados.crear = nuevoEstado;
-    gestion.seleccionados.modificar = nuevoEstado;
-    gestion.seleccionados.eliminar = nuevoEstado;
-    gestion.seleccionados.ver = nuevoEstado;
-  }
-
-  /**
-   * 🔄 Actualizar estado de "Todos" basado en selecciones individuales
-   */
-  private actualizarEstadoTodos(gestionIndex: number): void {
-    const gestion = this.gestiones[gestionIndex];
-    const { crear, modificar, eliminar, ver } = gestion.seleccionados;
-    
-    gestion.seleccionados.todos = crear && modificar && eliminar && ver;
-  }
-
-  /**
-   * 📊 Obtener IDs de permisos seleccionados
-   */
-  getPermisosSeleccionados(): number[] {
-    const permisosIds: number[] = [];
-    
-    this.gestiones.forEach(gestion => {
-      Object.keys(gestion.seleccionados).forEach(accion => {
-        if (accion !== 'todos' && gestion.seleccionados[accion as keyof typeof gestion.seleccionados]) {
-          const permisos: Permiso[] = gestion.permisos[accion as keyof typeof gestion.permisos];
-          permisos.forEach(permiso => {
-            if (!permisosIds.includes(permiso.id)) {
-              permisosIds.push(permiso.id);
-            }
-          });
-        }
-      });
-    });
-    
-    return permisosIds;
   }
 
   /**

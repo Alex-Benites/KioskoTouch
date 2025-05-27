@@ -1,207 +1,197 @@
+<app-header-admin></app-header-admin>
+
+<!-- Contenido directo sin contenedor -->
 <div class="crear-rol-container">
-  <!-- 📋 Header -->
-  <mat-card class="header-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>add_circle</mat-icon>
-        Crear Nuevo Rol
-      </mat-card-title>
-      <mat-card-subtitle>
-        Define un nuevo rol y asigna los permisos correspondientes
-      </mat-card-subtitle>
-    </mat-card-header>
-  </mat-card>
+  <p class="breadcrumb">Gestión de Roles</p>
+  <h2 class="section-title">Crear Nuevo Rol</h2>
 
-  <!-- 📝 Formulario Principal -->
-  <mat-card class="form-card">
-    <mat-card-content>
-      <form [formGroup]="rolForm" (ngSubmit)="guardarRol()">
-        
-        <!-- 🏷️ Nombre del Rol -->
-        <div class="form-section">
-          <h3>
-            <mat-icon>badge</mat-icon>
-            Información del Rol
-          </h3>
+  <!-- 📝 Formulario directo al mismo nivel -->
+  <form [formGroup]="rolForm" (ngSubmit)="guardarRol()">
+    
+    <!-- 🏷️ Nombre del Rol -->
+    <div class="form-section">
+      <h3 class="form-subtitle">
+        <mat-icon>badge</mat-icon>
+        Información del Rol
+      </h3>
+      
+      <mat-form-field appearance="outline" class="nombre-field">
+        <mat-label>Nombre del Rol</mat-label>
+        <input matInput 
+               formControlName="nombre" 
+               placeholder="Ej: Supervisor de Ventas"
+               maxlength="50">
+        <mat-icon matSuffix>edit</mat-icon>
+        <mat-hint>Ingresa un nombre descriptivo para el rol</mat-hint>
+        <mat-error *ngIf="rolForm.get('nombre')?.hasError('required')">
+          El nombre del rol es requerido
+        </mat-error>
+        <mat-error *ngIf="rolForm.get('nombre')?.hasError('minlength')">
+          El nombre debe tener al menos 3 caracteres
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- 🔑 Permisos -->
+    <div class="permisos-section">
+      <div class="section-header">
+        <h3 class="form-subtitle">
+          <mat-icon>security</mat-icon>
+          Asignación de Permisos
+        </h3>
+        <div class="contador-permisos">
+          <mat-icon>info</mat-icon>
+          <span>{{ getContadorPermisos() }}</span>
+        </div>
+      </div>
+
+      <!-- 🔄 Loading -->
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Cargando permisos...</p>
+      </div>
+
+      <!-- 📊 Tabla de Permisos -->
+      <div *ngIf="!loading" class="permisos-table-wrapper">
+        <table mat-table [dataSource]="gestiones" class="permisos-table">
           
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Nombre del Rol</mat-label>
-            <input matInput 
-                   formControlName="nombre" 
-                   placeholder="Ej: Supervisor de Ventas"
-                   maxlength="50">
-            <mat-icon matSuffix>edit</mat-icon>
-            <mat-hint>Ingresa un nombre descriptivo para el rol</mat-hint>
-            <mat-error *ngIf="rolForm.get('nombre')?.hasError('required')">
-              El nombre del rol es requerido
-            </mat-error>
-            <mat-error *ngIf="rolForm.get('nombre')?.hasError('minlength')">
-              El nombre debe tener al menos 3 caracteres
-            </mat-error>
-          </mat-form-field>
-        </div>
+          <!-- 🏷️ Columna Gestión -->
+          <ng-container matColumnDef="gestion">
+            <th mat-header-cell *matHeaderCellDef class="gestion-header">
+              <strong>Área de Gestión</strong>
+            </th>
+            <td mat-cell *matCellDef="let gestion" class="gestion-cell">
+              <div class="gestion-info">
+                <mat-icon class="gestion-icon">folder_open</mat-icon>
+                <span class="gestion-label">{{ gestion.label }}</span>
+              </div>
+            </td>
+          </ng-container>
 
-        <mat-divider></mat-divider>
+          <!-- 👁️ Columna Ver -->
+          <ng-container matColumnDef="ver">
+            <th mat-header-cell *matHeaderCellDef class="action-header">
+              <div class="header-content">
+                <mat-icon matTooltip="Permisos de visualización">visibility</mat-icon>
+                <span>Ver</span>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let gestion" class="action-cell">
+              <div class="checkbox-container" [formGroup]="getGestionFormGroup(gestion.key)">
+                <mat-checkbox 
+                  formControlName="ver"
+                  (change)="onPermisoChange(gestion.key, 'ver')"
+                  color="primary">
+                </mat-checkbox>
+              </div>
+            </td>
+          </ng-container>
 
-        <!-- 🔑 Permisos -->
-        <div class="permisos-section">
-          <div class="section-header">
-            <h3>
-              <mat-icon>security</mat-icon>
-              Asignación de Permisos
-            </h3>
-            <div class="contador-permisos">
-              <mat-icon>info</mat-icon>
-              {{ getContadorPermisos() }}
-            </div>
-          </div>
+          <!-- ➕ Columna Crear -->
+          <ng-container matColumnDef="crear">
+            <th mat-header-cell *matHeaderCellDef class="action-header">
+              <div class="header-content">
+                <mat-icon matTooltip="Permisos de creación">add_circle</mat-icon>
+                <span>Crear</span>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let gestion" class="action-cell">
+              <div class="checkbox-container" [formGroup]="getGestionFormGroup(gestion.key)">
+                <mat-checkbox 
+                  formControlName="crear"
+                  (change)="onPermisoChange(gestion.key, 'crear')"
+                  color="primary">
+                </mat-checkbox>
+              </div>
+            </td>
+          </ng-container>
 
-          <!-- 🔄 Loading -->
-          <div *ngIf="loading" class="loading-container">
-            <mat-spinner diameter="40"></mat-spinner>
-            <p>Cargando permisos...</p>
-          </div>
+          <!-- ✏️ Columna Modificar -->
+          <ng-container matColumnDef="modificar">
+            <th mat-header-cell *matHeaderCellDef class="action-header">
+              <div class="header-content">
+                <mat-icon matTooltip="Permisos de modificación">edit</mat-icon>
+                <span>Modificar</span>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let gestion" class="action-cell">
+              <div class="checkbox-container" [formGroup]="getGestionFormGroup(gestion.key)">
+                <mat-checkbox 
+                  formControlName="modificar"
+                  (change)="onPermisoChange(gestion.key, 'modificar')"
+                  color="primary">
+                </mat-checkbox>
+              </div>
+            </td>
+          </ng-container>
 
-          <!-- 📊 Tabla de Permisos -->
-          <div *ngIf="!loading" class="permisos-table-container">
-            <table mat-table [dataSource]="gestiones" class="permisos-table">
-              
-              <!-- 🏷️ Columna Gestión -->
-              <ng-container matColumnDef="gestion">
-                <th mat-header-cell *matHeaderCellDef class="gestion-header">
-                  <strong>Gestión</strong>
-                </th>
-                <td mat-cell *matCellDef="let gestion" class="gestion-cell">
-                  <div class="gestion-info">
-                    <mat-icon class="gestion-icon">folder</mat-icon>
-                    <span class="gestion-label">{{ gestion.label }}</span>
-                  </div>
-                </td>
-              </ng-container>
+          <!-- 🗑️ Columna Eliminar -->
+          <ng-container matColumnDef="eliminar">
+            <th mat-header-cell *matHeaderCellDef class="action-header">
+              <div class="header-content">
+                <mat-icon matTooltip="Permisos de eliminación">delete</mat-icon>
+                <span>Eliminar</span>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let gestion" class="action-cell">
+              <div class="checkbox-container" [formGroup]="getGestionFormGroup(gestion.key)">
+                <mat-checkbox 
+                  formControlName="eliminar"
+                  (change)="onPermisoChange(gestion.key, 'eliminar')"
+                  color="primary">
+                </mat-checkbox>
+              </div>
+            </td>
+          </ng-container>
 
-              <!-- 👁️ Columna Ver -->
-              <ng-container matColumnDef="ver">
-                <th mat-header-cell *matHeaderCellDef class="action-header">
-                  <mat-icon matTooltip="Permisos de visualización">visibility</mat-icon>
-                  <span>Ver</span>
-                </th>
-                <td mat-cell *matCellDef="let gestion; let i = index" class="action-cell">
-                  <mat-checkbox 
-                    [(ngModel)]="gestion.seleccionados.ver"
-                    (change)="onPermisoChange(i, 'ver')"
-                    [disabled]="gestion.permisos.ver.length === 0"
-                    color="primary">
-                  </mat-checkbox>
-                  <span class="count-badge" *ngIf="gestion.permisos.ver.length > 0">
-                    {{ gestion.permisos.ver.length }}
-                  </span>
-                </td>
-              </ng-container>
+          <!-- ✅ Columna Todos -->
+          <ng-container matColumnDef="todos">
+            <th mat-header-cell *matHeaderCellDef class="action-header todos-header">
+              <div class="header-content">
+                <mat-icon matTooltip="Seleccionar todos los permisos">select_all</mat-icon>
+                <span>Todos</span>
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let gestion" class="action-cell">
+              <div class="checkbox-container" [formGroup]="getGestionFormGroup(gestion.key)">
+                <mat-checkbox 
+                  formControlName="todos"
+                  (change)="onPermisoChange(gestion.key, 'todos')"
+                  color="accent"
+                  class="todos-checkbox">
+                </mat-checkbox>
+              </div>
+            </td>
+          </ng-container>
 
-              <!-- ➕ Columna Crear -->
-              <ng-container matColumnDef="crear">
-                <th mat-header-cell *matHeaderCellDef class="action-header">
-                  <mat-icon matTooltip="Permisos de creación">add</mat-icon>
-                  <span>Crear</span>
-                </th>
-                <td mat-cell *matCellDef="let gestion; let i = index" class="action-cell">
-                  <mat-checkbox 
-                    [(ngModel)]="gestion.seleccionados.crear"
-                    (change)="onPermisoChange(i, 'crear')"
-                    [disabled]="gestion.permisos.crear.length === 0"
-                    color="primary">
-                  </mat-checkbox>
-                  <span class="count-badge" *ngIf="gestion.permisos.crear.length > 0">
-                    {{ gestion.permisos.crear.length }}
-                  </span>
-                </td>
-              </ng-container>
+          <!-- 📋 Header y Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="gestion-row"></tr>
+        </table>
+      </div>
+    </div>
 
-              <!-- ✏️ Columna Modificar -->
-              <ng-container matColumnDef="modificar">
-                <th mat-header-cell *matHeaderCellDef class="action-header">
-                  <mat-icon matTooltip="Permisos de modificación">edit</mat-icon>
-                  <span>Modificar</span>
-                </th>
-                <td mat-cell *matCellDef="let gestion; let i = index" class="action-cell">
-                  <mat-checkbox 
-                    [(ngModel)]="gestion.seleccionados.modificar"
-                    (change)="onPermisoChange(i, 'modificar')"
-                    [disabled]="gestion.permisos.modificar.length === 0"
-                    color="primary">
-                  </mat-checkbox>
-                  <span class="count-badge" *ngIf="gestion.permisos.modificar.length > 0">
-                    {{ gestion.permisos.modificar.length }}
-                  </span>
-                </td>
-              </ng-container>
-
-              <!-- 🗑️ Columna Eliminar -->
-              <ng-container matColumnDef="eliminar">
-                <th mat-header-cell *matHeaderCellDef class="action-header">
-                  <mat-icon matTooltip="Permisos de eliminación">delete</mat-icon>
-                  <span>Eliminar</span>
-                </th>
-                <td mat-cell *matCellDef="let gestion; let i = index" class="action-cell">
-                  <mat-checkbox 
-                    [(ngModel)]="gestion.seleccionados.eliminar"
-                    (change)="onPermisoChange(i, 'eliminar')"
-                    [disabled]="gestion.permisos.eliminar.length === 0"
-                    color="primary">
-                  </mat-checkbox>
-                  <span class="count-badge" *ngIf="gestion.permisos.eliminar.length > 0">
-                    {{ gestion.permisos.eliminar.length }}
-                  </span>
-                </td>
-              </ng-container>
-
-              <!-- ✅ Columna Todos -->
-              <ng-container matColumnDef="todos">
-                <th mat-header-cell *matHeaderCellDef class="action-header todos-header">
-                  <mat-icon matTooltip="Seleccionar todos los permisos">select_all</mat-icon>
-                  <span>Todos</span>
-                </th>
-                <td mat-cell *matCellDef="let gestion; let i = index" class="action-cell">
-                  <mat-checkbox 
-                    [(ngModel)]="gestion.seleccionados.todos"
-                    (change)="onPermisoChange(i, 'todos')"
-                    color="accent"
-                    class="todos-checkbox">
-                  </mat-checkbox>
-                </td>
-              </ng-container>
-
-              <!-- 📋 Header y Rows -->
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="gestion-row"></tr>
-            </table>
-          </div>
-        </div>
-
-        <!-- 🎯 Botones de Acción -->
-        <mat-divider></mat-divider>
-        
-        <div class="actions-section">
-          <div class="actions-buttons">
-            <button mat-stroked-button 
-                    type="button" 
-                    (click)="cancelar()"
-                    [disabled]="saving">
-              <mat-icon>cancel</mat-icon>
-              Cancelar
-            </button>
-            
-            <button mat-raised-button 
-                    color="primary" 
-                    type="submit"
-                    [disabled]="saving || rolForm.invalid">
-              <mat-icon *ngIf="!saving">save</mat-icon>
-              <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
-              {{ saving ? 'Guardando...' : 'Crear Rol' }}
-            </button>
-          </div>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
+    <!-- 🎯 Botones de Acción -->
+    <div class="actions-section">
+      <button mat-stroked-button 
+              type="button" 
+              (click)="cancelar()"
+              class="btn-cancelar">
+        <mat-icon>cancel</mat-icon>
+        Cancelar
+      </button>
+      
+      <button mat-raised-button 
+              color="primary" 
+              type="submit"
+              [disabled]="saving || rolForm.invalid"
+              class="btn-crear">
+        <mat-icon *ngIf="!saving">save</mat-icon>
+        <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
+        {{ saving ? 'Guardando...' : 'Crear Rol' }}
+      </button>
+    </div>
+  </form>
 </div>
+
+<app-footer-admin [backRoute]="'/administrador/usuarios/roles'"></app-footer-admin>
