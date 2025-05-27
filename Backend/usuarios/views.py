@@ -307,6 +307,7 @@ def get_permisos_disponibles(request):
     total_permisos = sum(len(g['permisos']) for g in gestiones.values())
     
     print(f"\n🎯 TOTAL EXACTO: {total_permisos} permisos (debería ser 32)")
+    print(gestiones[gestion_key]['permisos'])
     
     return Response({
         'gestiones': gestiones,
@@ -339,3 +340,83 @@ def asignar_rol_empleado(request):
         return Response({
             'error': 'Empleado no encontrado'
         }, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def crear_rol(request):
+    """Crear un nuevo rol (grupo) con permisos específicos"""
+    print("\n" + "="*60)
+    print("🎯 DATOS RECIBIDOS PARA CREAR ROL:")
+    print("="*60)
+    print(f"Nombre: {request.data.get('nombre')}")
+    print(f"Descripción: {request.data.get('descripcion')}")
+    print(f"Permisos recibidos: {request.data.get('permisos')}")
+    print(f"Cantidad de permisos: {len(request.data.get('permisos', []))}")
+    print("="*60 + "\n")
+    
+    try:
+        nombre = request.data.get('nombre')
+        descripcion = request.data.get('descripcion', '')
+        permisos_ids = request.data.get('permisos', [])
+        
+        # Validaciones
+        if not nombre:
+            return Response({
+                'error': 'El nombre del rol es requerido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not permisos_ids:
+            return Response({
+                'error': 'Debe seleccionar al menos un permiso'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar si el grupo ya existe
+        if Group.objects.filter(name=nombre).exists():
+            return Response({
+                'error': f'Ya existe un rol con el nombre "{nombre}"'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que los permisos existen
+        permisos = Permission.objects.filter(id__in=permisos_ids)
+        if len(permisos) != len(permisos_ids):
+            return Response({
+                'error': 'Algunos permisos seleccionados no son válidos'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Crear el grupo en una transacción
+        with transaction.atomic():
+            # Crear el grupo
+            grupo = Group.objects.create(name=nombre)
+            
+            # Asignar permisos
+            grupo.permissions.set(permisos)
+            
+            # Log de éxito
+            print(f"✅ ROL CREADO: {nombre}")
+            print(f"   Permisos asignados: {len(permisos)}")
+            for permiso in permisos:
+                print(f"   - {permiso.content_type.app_label}.{permiso.codename}")
+        
+        return Response({
+            'message': f'Rol "{nombre}" creado exitosamente',
+            'rol': {
+                'id': grupo.id,
+                'nombre': grupo.name,
+                'descripcion': descripcion,
+                'permisos_count': len(permisos),
+                'permisos': [
+                    {
+                        'id': p.id,
+                        'name': p.name,
+                        'codename': p.codename,
+                        'app_label': p.content_type.app_label
+                    } for p in permisos
+                ]
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        print(f"❌ ERROR CREANDO ROL: {str(e)}")
+        return Response({
+            'error': f'Error interno del servidor: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
