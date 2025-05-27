@@ -223,113 +223,94 @@ def get_grupos_disponibles(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_permisos_disponibles(request):
-    """Obtener lista de permisos disponibles organizados por gestión"""
+    """Obtener SOLO los permisos de modelos específicos (sin main)"""
     
-    # 🎯 Apps relevantes para las gestiones del frontend
-    apps_relevantes = [
-        'usuarios',          # Gestión de usuarios
-        'auth',              # Sistema de autenticación Django
-        'catalogo',          # Productos y menús
-        'marketing',         # Promociones y publicidad
-        'establecimientos',  # Establecimientos, pantallas, kioskos
-        'ventas',            # Pedidos y ventas (opcional)
-        'comun',             # Estados del sistema
-    ]
-    
-    # Obtener permisos filtrados
-    permisos = Permission.objects.filter(
-        content_type__app_label__in=apps_relevantes
-    ).select_related('content_type').values(
-        'id', 'name', 'codename', 'content_type__app_label', 'content_type__model'
-    ).order_by('content_type__app_label', 'codename')
-
-    # 📊 Organizar permisos por gestión para el frontend
-    gestiones = {
+    # 🎯 Mapeo EXACTO: gestión -> modelo específico (SIN app main)
+    modelos_por_gestion = {
         'usuarios': {
             'label': 'Gestión de Usuarios',
-            'permisos': [],
-            'models': ['appkioskoempleados', 'appkioskoclientes', 'user', 'group']
+            'modelo': 'user',
+            'app_preferida': 'auth'  # NO main
         },
         'productos': {
             'label': 'Gestión de Productos', 
-            'permisos': [],
-            'models': ['appkioskoproductos', 'appkioskocategorias', 'appkioskoingredientes']
+            'modelo': 'appkioskoproductos',
+            'app_preferida': 'catalogo'  # NO main
         },
         'menus': {
             'label': 'Gestión de Menús',
-            'permisos': [],
-            'models': ['appkioskomenus', 'appkioskomenuproductos']
+            'modelo': 'appkioskomenus', 
+            'app_preferida': 'catalogo'  # NO main
         },
         'promociones': {
             'label': 'Gestión de Promociones',
-            'permisos': [],
-            'models': ['appkioskopromociones', 'appkioskocupon', 'appkioskopromocionproductos', 'appkioskopromocionmenu']
+            'modelo': 'appkioskopromociones',
+            'app_preferida': 'marketing'  # NO main
         },
         'pantallas_cocina': {
             'label': 'Gestión de Pantallas de Cocina',
-            'permisos': [],
-            'models': ['appkioskopantallascocina']
+            'modelo': 'appkioskopantallascocina',
+            'app_preferida': 'establecimientos'  # NO main
         },
         'establecimientos': {
             'label': 'Gestión de Establecimientos',
-            'permisos': [],
-            'models': ['appkioskoestablecimientos', 'appkioskoestablecimientosusuarios']
+            'modelo': 'appkioskoestablecimientos',
+            'app_preferida': 'establecimientos'  # NO main
         },
         'publicidad': {
             'label': 'Gestión de Publicidad',
-            'permisos': [],
-            'models': ['appkioskopublicidades', 'appkioskoimagen', 'appkioskovideo', 'appkioskopublicidadestablecimiento']
+            'modelo': 'appkioskopublicidades',
+            'app_preferida': 'marketing'  # NO main
         },
         'kiosko_touch': {
             'label': 'Gestión de Kiosko Touch',
-            'permisos': [],
-            'models': ['appkioskokioskostouch']
+            'modelo': 'appkioskokioskostouch',
+            'app_preferida': 'establecimientos'  # NO main
         }
     }
-
-    # Clasificar permisos por gestión
-    for permiso in permisos:
-        modelo = permiso['content_type__model']
+    
+    gestiones = {}
+    
+    for gestion_key, config in modelos_por_gestion.items():
+        # 🎯 Buscar permisos de este modelo específico EN la app correcta (NO main)
+        permisos_modelo = Permission.objects.filter(
+            content_type__model=config['modelo'],
+            content_type__app_label=config['app_preferida']  # 🚫 Excluir main implícitamente
+        ).select_related('content_type').values(
+            'id', 'name', 'codename', 'content_type__model', 'content_type__app_label'
+        ).order_by('codename')
         
-        # Buscar en qué gestión va este permiso
-        for gestion_key, gestion_data in gestiones.items():
-            if modelo in gestion_data['models']:
-                # Organizar por tipo de acción (add, change, delete, view)
-                accion = 'otros'
-                if permiso['codename'].startswith('add_'):
-                    accion = 'crear'
-                elif permiso['codename'].startswith('change_'):
-                    accion = 'modificar'
-                elif permiso['codename'].startswith('delete_'):
-                    accion = 'eliminar'
-                elif permiso['codename'].startswith('view_'):
-                    accion = 'ver'
-                
+        gestiones[gestion_key] = {
+            'label': config['label'],
+            'permisos': []
+        }
+        
+        # Solo permisos CRUD
+        for permiso in permisos_modelo:
+            accion = None
+            if permiso['codename'].startswith('add_'):
+                accion = 'crear'
+            elif permiso['codename'].startswith('change_'):
+                accion = 'modificar'  
+            elif permiso['codename'].startswith('delete_'):
+                accion = 'eliminar'
+            elif permiso['codename'].startswith('view_'):
+                accion = 'ver'
+            
+            if accion:
                 permiso['accion'] = accion
                 gestiones[gestion_key]['permisos'].append(permiso)
-                break
-
-    # 📈 Estadísticas por gestión
-    resumen = {}
-    for gestion_key, gestion_data in gestiones.items():
-        total = len(gestion_data['permisos'])
-        acciones = {}
-        for permiso in gestion_data['permisos']:
-            accion = permiso['accion']
-            acciones[accion] = acciones.get(accion, 0) + 1
         
-        resumen[gestion_key] = {
-            'label': gestion_data['label'],
-            'total_permisos': total,
-            'acciones': acciones
-        }
+        # Debug por gestión
+        print(f"✅ {gestion_key}: {len(gestiones[gestion_key]['permisos'])} permisos de {config['app_preferida']}.{config['modelo']}")
 
+    total_permisos = sum(len(g['permisos']) for g in gestiones.values())
+    
+    print(f"\n🎯 TOTAL EXACTO: {total_permisos} permisos (debería ser 32)")
+    
     return Response({
         'gestiones': gestiones,
-        'resumen': resumen,
-        'permisos_raw': list(permisos),
-        'apps_incluidas': apps_relevantes,
-        'total_permisos': len(permisos)
+        'total_permisos': total_permisos
     })
 
 @api_view(['POST'])
