@@ -289,7 +289,6 @@ export class CrearRolComponent implements OnInit {
     this.rolesService.crearRol(data).subscribe({
       next: (response) => {
         this.mostrarExito('Rol creado exitosamente');
-        this.navegarARoles();
       },
       error: (error) => {
         console.error('Error creando rol:', error);
@@ -339,6 +338,6 @@ export class CrearRolComponent implements OnInit {
    * 🔄 Navegar a la lista de roles
    */
   private navegarARoles(): void {
-    this.router.navigate(['/administrador/usuarios/roles']);
+    this.router.navigate(['/administrador/gestion-usuarios']);
   }
 }
