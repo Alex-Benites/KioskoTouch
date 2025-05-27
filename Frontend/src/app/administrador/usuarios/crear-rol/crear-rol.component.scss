@@ -26,7 +26,7 @@
 
 // 🏷️ Secciones del formulario al mismo nivel
 .form-section {
-  margin-bottom: 40px;
+  margin-bottom: 20px; // 🆕 Reducido de 40px a 20px
   margin-left: 150px;
 }
 
@@ -41,39 +41,81 @@
 
   mat-icon {
     color: #DD453A;
-    font-size: 28px;
   }
 }
 
-// 📝 Campo nombre con fondo blanco
-.nombre-field {
+// 🆕 Campo personalizado sin Angular Material
+.nombre-field-custom {
   width: 100%;
   max-width: 500px;
-  background-color: white;
-  border-radius: 8px;
 
-  ::ng-deep .mat-form-field-wrapper {
-    background-color: white;
-    border-radius: 8px;
+  .field-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-family: 'Lato', sans-serif;
   }
 
-  ::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline {
-    color: #ddd;
-  }
-
-  ::ng-deep .mat-form-field-appearance-outline.mat-focused .mat-form-field-outline-thick {
-    color: #DD453A;
-  }
-
-  ::ng-deep .mat-input-element {
+  .field-input {
+    width: 100%;
+    padding: 16px 20px;
     font-size: 16px;
     font-weight: 500;
+    font-family: 'Lato', sans-serif;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #E4E4E4; // 🆕 Color solicitado
+    color: #333;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: #888;
+      font-weight: 400;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #DD453A;
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(221, 69, 58, 0.1);
+    }
+
+    &.ng-invalid.ng-touched {
+      border-color: #f44336;
+      background-color: #ffebee;
+    }
+
+    &.ng-valid.ng-touched {
+      border-color: #4caf50;
+    }
+  }
+
+  .field-hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    font-family: 'Lato', sans-serif;
+  }
+
+  .field-errors {
+    margin-top: 8px;
+
+    .error-message {
+      font-size: 12px;
+      color: #f44336;
+      margin-bottom: 4px;
+      font-family: 'Lato', sans-serif;
+      font-weight: 500;
+    }
   }
 }
 
 // 🔑 Sección de permisos
 .permisos-section {
-  margin-top: 40px;
+  margin-top: 20px; // 🆕 Reducido de 40px a 20px
   margin-left: 150px;
 
   .section-header {
@@ -92,7 +134,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background-color: #ffffff;
+      background-color: #E4E4E4; // 🆕 Cambiado de #ffffff a #E4E4E4
       padding: 12px 20px;
       border-radius: 25px;
       color: #555;
@@ -102,7 +144,6 @@
 
       mat-icon {
         color: #DD453A;
-        font-size: 20px;
       }
     }
   }
@@ -169,10 +210,9 @@
         }
 
         &.todos-header {
-          background-color: #fff3e0 !important;
 
           .header-content mat-icon {
-            color: #ff9800;
+            color: #DD453A;
           }
         }
       }
@@ -211,13 +251,6 @@
           align-items: center;
           justify-content: center;
           min-height: 40px;
-
-          // 🎯 Estilos para checkbox "todos"
-          .todos-checkbox {
-            ::ng-deep .mat-checkbox-checked .mat-checkbox-background {
-              background-color: #ff9800 !important;
-            }
-          }
 
           // 🎯 Estilos generales para checkboxes
           ::ng-deep .mat-checkbox {
@@ -262,53 +295,62 @@
   margin-left: 150px;
   display: flex;
   gap: 20px;
-  justify-content: flex-start;
+  justify-content: center;
   padding-top: 30px;
 
-  .btn-cancelar {
-    min-width: 150px;
-    height: 50px;
+  // 🆕 Botón cancelar personalizado
+  .cancel__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+
+    padding: 12px 24px; 
     font-size: 16px;
-    font-weight: 600;
-    border: 2px solid #ccc;
+    font-family: 'Lato', sans-serif;
+    font-weight: 600; 
+    line-height: 1.75;
     color: #666;
-    background-color: #ffffff;
+
+    background-color: #E4E4E4; // 🎯 Mismo color del campo nombre
+
+    border: 2px solid #ccc;
+    border-radius: 100px;
+    cursor: pointer;
+
+    min-width: 150px;   
+    max-height: 40px;  
+
+    text-decoration: none;
+    outline: none;
+
     transition: all 0.3s ease;
 
     &:hover {
-      background-color: #f5f5f5;
+      background-color: #d0d0d0;
       border-color: #999;
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
-    mat-icon {
-      margin-right: 8px;
-    }
-  }
-
-  .btn-crear {
-    min-width: 150px;
-    height: 50px;
-    font-size: 16px;
-    font-weight: 600;
-    background-color: #DD453A;
-    transition: all 0.3s ease;
-
-    &:hover:not(:disabled) {
-      background-color: #c23934;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(221, 69, 58, 0.3);
+    &:active {
+      transform: translateY(0);
     }
 
     &:disabled {
-      opacity: 0.6;
+      background-color: rgba(0, 0, 0, 0.12);
+      color: rgba(0, 0, 0, 0.38);
       cursor: not-allowed;
+      transform: none;
     }
+  }
 
-    mat-icon {
-      margin-right: 8px;
-    }
+  // 🎯 Ajustes para el botón primary existente
+  .primary__button {
+    max-height: 40px;
+    padding: 12px 24px;
+    font-size: 16px;
   }
 }
 

@@ -15,21 +15,26 @@
         Información del Rol
       </h3>
       
-      <mat-form-field appearance="outline" class="nombre-field">
-        <mat-label>Nombre del Rol</mat-label>
-        <input matInput 
-               formControlName="nombre" 
-               placeholder="Ej: Supervisor de Ventas"
-               maxlength="50">
-        <mat-icon matSuffix>edit</mat-icon>
-        <mat-hint>Ingresa un nombre descriptivo para el rol</mat-hint>
-        <mat-error *ngIf="rolForm.get('nombre')?.hasError('required')">
-          El nombre del rol es requerido
-        </mat-error>
-        <mat-error *ngIf="rolForm.get('nombre')?.hasError('minlength')">
-          El nombre debe tener al menos 3 caracteres
-        </mat-error>
-      </mat-form-field>
+      <!-- 🆕 Campo personalizado sin Angular Material -->
+      <div class="nombre-field-custom">
+        <label for="nombre-rol" class="field-label">Nombre del Rol</label>
+        <input 
+          id="nombre-rol"
+          type="text" 
+          formControlName="nombre" 
+          placeholder="Ej: Supervisor de Ventas"
+          maxlength="50"
+          class="field-input">
+        <div class="field-hint">Ingresa un nombre descriptivo para el rol</div>
+        <div class="field-errors" *ngIf="rolForm.get('nombre')?.invalid && rolForm.get('nombre')?.touched">
+          <div *ngIf="rolForm.get('nombre')?.hasError('required')" class="error-message">
+            El nombre del rol es requerido
+          </div>
+          <div *ngIf="rolForm.get('nombre')?.hasError('minlength')" class="error-message">
+            El nombre debe tener al menos 3 caracteres
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 🔑 Permisos -->
@@ -173,23 +178,18 @@
 
     <!-- 🎯 Botones de Acción -->
     <div class="actions-section">
-      <button mat-stroked-button 
-              type="button" 
-              (click)="cancelar()"
-              class="btn-cancelar">
-        <mat-icon>cancel</mat-icon>
+    <button type="button" 
+            (click)="cancelar()"
+            class="cancel__button">
         Cancelar
-      </button>
-      
-      <button mat-raised-button 
-              color="primary" 
-              type="submit"
-              [disabled]="saving || rolForm.invalid"
-              class="btn-crear">
-        <mat-icon *ngIf="!saving">save</mat-icon>
-        <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
-        {{ saving ? 'Guardando...' : 'Crear Rol' }}
-      </button>
+    </button>
+    
+    <button type="submit"
+            [disabled]="saving || rolForm.invalid"
+            class="primary__button">
+        <span *ngIf="saving">Guardando...</span>
+        <span *ngIf="!saving">Crear Rol</span>
+    </button>
     </div>
   </form>
 </div>
