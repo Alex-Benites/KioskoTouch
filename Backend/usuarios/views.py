@@ -6,7 +6,12 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User, Permission, Group
-from .models import AppkioskoEmpleados
+from .models import AppkioskoEmpleados, AppkioskoClientes
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
 from django.db import transaction
 
 # Create your views here.
@@ -209,6 +214,120 @@ def logout_empleado(request):
             'error': f'Error en logout: {str(e)}'
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+#recuperación de contraseña
+# ...existing code...
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Permitir acceso sin autenticación
+def password_reset_request(request):
+    """
+    API endpoint para solicitar reset de contraseña
+    Solo verifica que el usuario exista en auth_user
+    """
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({
+            'error': 'El email es requerido'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Solo verificar que el usuario existe en auth_user
+        user = User.objects.get(email=email)
+        
+        # Generar token
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        
+        # URL del frontend Angular
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
+        reset_url = f"{frontend_url}/reset-password/{uid}/{token}"
+        
+        # Enviar email
+        send_mail(
+            'Recuperación de Contraseña - KioskoTouch',
+            f'''Hola {user.username},
+
+Has solicitado restablecer tu contraseña en KioskoTouch.
+
+Para crear una nueva contraseña, haz clic en el siguiente enlace:
+{reset_url}
+
+O copia y pega este código en la aplicación:
+{uid}/{token}
+
+Si no solicitaste este cambio, puedes ignorar este email.
+
+Este enlace expirará en 24 horas por seguridad.
+
+Gracias,
+Equipo de KioskoTouch''',
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        
+        return Response({
+            'success': True,
+            'message': 'Se ha enviado un email con las instrucciones de recuperación'
+        }, status=status.HTTP_200_OK)
+            
+    except User.DoesNotExist:
+        return Response({
+            'error': 'No existe un usuario registrado con este email'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        print(f"Error al enviar email: {e}")  # Para debug
+        return Response({
+            'error': 'Error al enviar el email de recuperación'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Permitir acceso sin autenticación
+def password_reset_confirm(request, uidb64, token):
+    """
+    API endpoint para confirmar reset de contraseña
+    """
+    new_password = request.data.get('new_password')
+    
+    if not new_password:
+        return Response({
+            'error': 'La nueva contraseña es requerida'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if len(new_password) < 8:
+        return Response({
+            'error': 'La contraseña debe tener al menos 8 caracteres'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+        
+        if default_token_generator.check_token(user, token):
+            user.set_password(new_password)
+            user.save()
+            
+            return Response({
+                'success': True,
+                'message': 'Contraseña actualizada exitosamente'
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'error': 'El enlace de recuperación es inválido o ha expirado'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({
+            'error': 'Enlace de recuperación inválido'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        print(f"Error al actualizar contraseña: {e}")  # Para debug
+        return Response({
+            'error': 'Error al actualizar la contraseña'
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_grupos_disponibles(request):

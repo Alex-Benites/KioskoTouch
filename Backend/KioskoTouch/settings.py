@@ -218,3 +218,15 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+
+FRONTEND_URL = 'http://localhost:4200'  # Para que coincida con CORS
+
+# Email configuration - CONSOLA (para pruebas)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'samuellindaochoez2021@gmail.com'
+EMAIL_HOST_PASSWORD = 'iphc gdzl xljc gtuo'
+DEFAULT_FROM_EMAIL = 'samuellindaochoez2021@gmail.com'
