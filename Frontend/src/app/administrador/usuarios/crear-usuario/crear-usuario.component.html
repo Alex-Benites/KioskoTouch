@@ -1,1 +1,122 @@
-<p>crear-usuario works!</p>
+<app-header-admin></app-header-admin>
+
+<div class="form-container">
+  <p class="breadcrumb-title">GESTIÓN DE USUARIOS</p>
+  <h1 class="form-main-title">Creación de nuevo Usuario</h1>
+
+  <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" class="user-form">
+    <div class="form-layout">
+      <!-- Parte izquierda: Campos del formulario -->
+      <div class="form-fields">
+        <div class="form-grid">
+          <!-- Nombre Completo -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Nombre Completo</mat-label>
+            <input matInput formControlName="nombreCompleto" placeholder="Ej: Juan Pérez">
+            <mat-error *ngIf="usuarioForm.get('nombreCompleto')?.hasError('required')">
+              El nombre completo es requerido.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Correo Electrónico -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Correo Electrónico</mat-label>
+            <input matInput type="email" formControlName="correoElectronico" placeholder="Ej: ejemplo@gmail.com">
+            <mat-error *ngIf="usuarioForm.get('correoElectronico')?.hasError('required')">
+              El correo electrónico es requerido.
+            </mat-error>
+            <mat-error *ngIf="usuarioForm.get('correoElectronico')?.hasError('email')">
+              Formato de correo inválido.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Número de Teléfono -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Número de Teléfono</mat-label>
+            <input matInput type="tel" formControlName="numeroTelefono" placeholder="Ej: 555-123-4567">
+          </mat-form-field>
+
+          <!-- Fecha de Nacimiento -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Fecha de Nacimiento</mat-label>
+            <input matInput [matDatepicker]="nacimientoPicker" formControlName="fechaNacimiento" placeholder="dd/mm/aaaa">
+            <mat-datepicker-toggle matSuffix [for]="nacimientoPicker"></mat-datepicker-toggle>
+            <mat-datepicker #nacimientoPicker></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Usuario -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Usuario</mat-label>
+            <input matInput formControlName="usuario" placeholder="Ej: jperez">
+            <mat-error *ngIf="usuarioForm.get('usuario')?.hasError('required')">
+              El nombre de usuario es requerido.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Contraseña -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Contraseña</mat-label>
+            <input matInput type="password" formControlName="contrasena" placeholder="********">
+            <mat-error *ngIf="usuarioForm.get('contrasena')?.hasError('required')">
+              La contraseña es requerida.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Fecha de Creación -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Fecha de Creación</mat-label>
+            <input matInput [matDatepicker]="creacionPicker" formControlName="fechaCreacion" placeholder="dd/mm/aaaa">
+            <mat-datepicker-toggle matSuffix [for]="creacionPicker"></mat-datepicker-toggle>
+            <mat-datepicker #creacionPicker></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Establecimiento Asignado -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Establecimiento Asignado</mat-label>
+            <mat-select formControlName="establecimientoAsignado">
+              <mat-option *ngFor="let establecimiento of establecimientos" [value]="establecimiento.id">
+                {{ establecimiento.nombre }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Turno de Trabajo -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Turno de Trabajo</mat-label>
+            <mat-select formControlName="turnoTrabajo">
+              <mat-option value="mañana">Mañana</mat-option>
+              <mat-option value="tarde">Tarde</mat-option>
+              <mat-option value="noche">Noche</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Rol Asignado -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Rol Asignado</mat-label>
+            <mat-select formControlName="rolAsignado">
+              <mat-option *ngFor="let rol of roles" [value]="rol.id">
+                {{ rol.nombre }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Estado de Cuenta -->
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Estado de Cuenta</mat-label>
+            <mat-select formControlName="estadoCuenta">
+              <mat-option value="activa">Activa</mat-option>
+              <mat-option value="inactiva">Inactiva</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Parte derecha: Imagen -->
+      <div class="image-container">
+        <img src="assets/admin/ADMIN_6.png" alt="Imagen de usuario" class="user-image">
+      </div>
+    </div>
+  </form>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-usuarios'"></app-footer-admin>

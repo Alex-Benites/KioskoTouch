@@ -1,0 +1,66 @@
+/* filepath: c:\Users\Abeni\OneDrive\Documentos\ProyectoKiosko\KioskoTouch\Frontend\src\app\administrador\usuarios\editar-eliminar-usuario\editar-eliminar-usuario.component.scss */
+.usuarios-container {
+  padding: 20px 40px;
+  background-color: #F2F2F2;
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.breadcrumb-title {
+  font-size: 20px;
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 0px;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+.usuarios-table-container {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.usuarios-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    background-color: #d32f2f;
+    color: white;
+    font-weight: bold;
+    text-align: left;
+    padding: 10px;
+  }
+
+  td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  tr:hover {
+    background-color: #f9f9f9;
+  }
+
+  .action-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: transform 0.2s ease;
+  }
+
+  .action-icon:hover {
+    transform: scale(1.1);
+  }
+}

@@ -1,1 +1,66 @@
-<p>editar-eliminar-usuario works!</p>
+<app-header-admin></app-header-admin>
+
+<div class="usuarios-container">
+  <p class="breadcrumb-title">GESTIÓN DE USUARIOS</p>
+  <h1 class="section-title">Edición/Eliminación de Usuarios</h1>
+
+  <div class="usuarios-table-container">
+    <table mat-table [dataSource]="usuarios" class="usuarios-table">
+      <!-- Nombres -->
+      <ng-container matColumnDef="nombres">
+        <th mat-header-cell *matHeaderCellDef>Nombres</th>
+        <td mat-cell *matCellDef="let usuario">{{ usuario.nombres }}</td>
+      </ng-container>
+
+      <!-- Apellidos -->
+      <ng-container matColumnDef="apellidos">
+        <th mat-header-cell *matHeaderCellDef>Apellidos</th>
+        <td mat-cell *matCellDef="let usuario">{{ usuario.apellidos }}</td>
+      </ng-container>
+
+      <!-- Usuario -->
+      <ng-container matColumnDef="usuario">
+        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+        <td mat-cell *matCellDef="let usuario">{{ usuario.usuario }}</td>
+      </ng-container>
+
+      <!-- Correo -->
+      <ng-container matColumnDef="correo">
+        <th mat-header-cell *matHeaderCellDef>Correo</th>
+        <td mat-cell *matCellDef="let usuario">{{ usuario.correo }}</td>
+      </ng-container>
+
+      <!-- Rol -->
+      <ng-container matColumnDef="rol">
+        <th mat-header-cell *matHeaderCellDef>Rol</th>
+        <td mat-cell *matCellDef="let usuario">{{ usuario.rol }}</td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let usuario">
+          <!-- Icono de editar -->
+          <img
+            src="assets/admin/ADMIN_7.png"
+            alt="Editar"
+            class="action-icon"
+            (click)="editarUsuario(usuario)"
+          />
+          <!-- Icono de eliminar -->
+          <img
+            src="assets/admin/ADMIN_7_1.png"
+            alt="Eliminar"
+            class="action-icon"
+            (click)="abrirDialogoEliminar(usuario)"
+          />
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-usuarios'"></app-footer-admin>
