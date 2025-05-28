@@ -327,7 +327,8 @@ def password_reset_confirm(request, uidb64, token):
     except Exception as e:
         print(f"Error al actualizar contraseña: {e}")  # Para debug
         return Response({
-            'error': 'Error al actualizar la contraseña'
+            'error': 'Error al actualizar la contraseña'})
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_grupos_disponibles(request):

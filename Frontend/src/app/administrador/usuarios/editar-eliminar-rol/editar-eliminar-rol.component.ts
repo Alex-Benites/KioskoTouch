@@ -31,7 +31,6 @@ import { GruposResponse, Grupo } from '../../../models/roles.model'; // Import G
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatError,
   ],
   templateUrl: './editar-eliminar-rol.component.html',
   styleUrls: ['./editar-eliminar-rol.component.scss']
