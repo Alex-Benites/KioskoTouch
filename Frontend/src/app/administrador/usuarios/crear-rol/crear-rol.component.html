@@ -1,11 +1,11 @@
 <app-header-admin></app-header-admin>
 
-<!-- Contenido directo sin contenedor -->
 <div class="crear-rol-container">
   <p class="breadcrumb">Gestión de Roles</p>
-  <h2 class="section-title">Crear Nuevo Rol</h2>
+  <h2 class="section-title">
+    {{ isEditMode ? 'Editar Rol' : 'Crear Nuevo Rol' }}
+  </h2>
 
-  <!-- 📝 Formulario directo al mismo nivel -->
   <form [formGroup]="rolForm" (ngSubmit)="guardarRol()">
     
     <!-- 🏷️ Nombre del Rol -->
@@ -15,7 +15,6 @@
         Información del Rol
       </h3>
       
-      <!-- 🆕 Campo personalizado sin Angular Material -->
       <div class="nombre-field-custom">
         <label for="nombre-rol" class="field-label">Nombre del Rol</label>
         <input 
@@ -53,7 +52,7 @@
       <!-- 🔄 Loading -->
       <div *ngIf="loading" class="loading-container">
         <mat-spinner diameter="50"></mat-spinner>
-        <p>Cargando permisos...</p>
+        <p>{{ isEditMode ? 'Cargando datos del rol...' : 'Cargando permisos...' }}</p>
       </div>
 
       <!-- 📊 Tabla de Permisos -->
@@ -178,20 +177,24 @@
 
     <!-- 🎯 Botones de Acción -->
     <div class="actions-section">
-    <button type="button" 
-            (click)="cancelar()"
-            class="cancel__button">
-        Cancelar
-    </button>
-    
-    <button type="submit"
-            [disabled]="saving || rolForm.invalid"
-            class="primary__button">
-        <span *ngIf="saving">Guardando...</span>
-        <span *ngIf="!saving">Crear Rol</span>
-    </button>
+      <button type="button" 
+              (click)="cancelar()"
+              class="cancel__button">
+          Cancelar
+      </button>
+      
+      <button type="submit"
+              [disabled]="saving || rolForm.invalid"
+              class="primary__button">
+          <span *ngIf="saving">{{ isEditMode ? 'Actualizando...' : 'Guardando...' }}</span>
+          <span *ngIf="!saving">{{ isEditMode ? 'Actualizar Rol' : 'Crear Rol' }}</span>
+      </button>
     </div>
   </form>
 </div>
 
+@if(isEditMode){
+<app-footer-admin [backRoute]="'/administrador/gestion-usuarios/editar-eliminar-rol'"></app-footer-admin>
+} @else {
 <app-footer-admin [backRoute]="'/administrador/gestion-usuarios'"></app-footer-admin>
+}

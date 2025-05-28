@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregado ActivatedRoute
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
@@ -25,6 +25,8 @@ import {
   GestionUI,
   AccionPermiso,
   CrearRolRequest,
+  EditarRolRequest, // 🆕 Agregado
+  DetalleRol, // 🆕 Agregado
   Permiso,
   GestionesData
 } from '../../../models/roles.model';
@@ -60,6 +62,10 @@ export class CrearRolComponent implements OnInit {
   loading = true;
   saving = false;
   
+  // 🆕 Propiedades para modo edición
+  rolId: number | null = null;
+  isEditMode: boolean = false;
+  
   // 📊 Configuración de la tabla
   displayedColumns: string[] = ['gestion', 'ver', 'crear', 'modificar', 'eliminar', 'todos'];
 
@@ -67,13 +73,22 @@ export class CrearRolComponent implements OnInit {
     private fb: FormBuilder,
     private rolesService: RolesService,
     private router: Router,
+    private route: ActivatedRoute, // 🆕 Agregado
     private snackBar: MatSnackBar
   ) {
     this.inicializarFormulario();
   }
 
   ngOnInit(): void {
-    this.cargarGestiones();
+    // 🔍 Verificar si estamos en modo edición
+    this.rolId = Number(this.route.snapshot.paramMap.get('id'));
+    this.isEditMode = !!this.rolId && !isNaN(this.rolId);
+    
+    if (this.isEditMode) {
+      this.cargarRolParaEditar();
+    } else {
+      this.cargarGestiones();
+    }
   }
 
   /**
@@ -87,6 +102,65 @@ export class CrearRolComponent implements OnInit {
         Validators.maxLength(50)
       ]],
       permisos: this.fb.group({})
+    });
+  }
+
+  /**
+   * 📥 Cargar rol para editar
+   */
+  private cargarRolParaEditar(): void {
+    this.loading = true;
+    
+    this.rolesService.getDetalleRol(this.rolId!).subscribe({
+      next: (detalleRol: DetalleRol) => {
+        // Primero cargar las gestiones
+        this.cargarGestiones().then(() => {
+          // Luego llenar el formulario con los datos del rol
+          this.rolForm.patchValue({
+            nombre: detalleRol.grupo.name
+          });
+          
+          // Marcar los permisos seleccionados
+          this.marcarPermisosSeleccionados(detalleRol.grupo.permisos);
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar rol:', error);
+        this.mostrarError('Error al cargar el rol para editar');
+        this.router.navigate(['/administrador/usuarios/editar-eliminar-rol']);
+        this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * ✅ Marcar permisos seleccionados en modo edición
+   */
+  private marcarPermisosSeleccionados(permisosDelRol: Permiso[]): void {
+    const permisosGroup = this.rolForm.get('permisos') as FormGroup;
+    const idsPermisosDelRol = permisosDelRol.map(p => p.id);
+    
+    this.gestiones.forEach(gestion => {
+      const gestionGroup = permisosGroup.get(gestion.key) as FormGroup;
+      
+      // Verificar cada acción
+      Object.keys(gestion.permisos).forEach(accion => {
+        if (accion !== 'otros') { // Omitir 'otros' por ahora
+          const permisosDeEstaAccion = gestion.permisos[accion as keyof typeof gestion.permisos];
+          
+          // Si algún permiso de esta acción está en el rol, marcar la acción
+          const tienePermisoDeEstaAccion = permisosDeEstaAccion.some(p => 
+            idsPermisosDelRol.includes(p.id)
+          );
+          
+          if (tienePermisoDeEstaAccion) {
+            gestionGroup.get(accion)?.setValue(true, { emitEvent: false });
+          }
+        }
+      });
+      
+      // Actualizar el estado de "Todos"
+      this.actualizarEstadoTodosFormControl(gestionGroup);
     });
   }
 
@@ -149,7 +223,7 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * 🔄 Manejar cambio en checkbox - CORREGIDO
+   * 🔄 Manejar cambio en checkbox
    */
   onPermisoChange(gestionKey: string, accion: AccionPermiso): void {
     const permisosGroup = this.rolForm.get('permisos') as FormGroup;
@@ -163,15 +237,13 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * 🔄 Toggle "Todos" - CORREGIDO
+   * 🔄 Toggle "Todos"
    */
   private toggleTodosFormControl(gestionGroup: FormGroup): void {
     const todosControl = gestionGroup.get('todos');
     const nuevoEstado = todosControl?.value;
     
-    // 🎯 Si "Todos" se marca, marcar todos los disponibles
     if (nuevoEstado) {
-      // Marcar solo los que están habilitados
       const controles = ['ver', 'crear', 'modificar', 'eliminar'];
       controles.forEach(control => {
         const controlInstance = gestionGroup.get(control);
@@ -180,7 +252,6 @@ export class CrearRolComponent implements OnInit {
         }
       });
     } else {
-      // Si "Todos" se desmarca, desmarcar todos
       gestionGroup.patchValue({
         ver: false,
         crear: false,
@@ -191,18 +262,16 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * 🔄 Actualizar estado de "Todos" - CORREGIDO
+   * 🔄 Actualizar estado de "Todos"
    */
   private actualizarEstadoTodosFormControl(gestionGroup: FormGroup): void {
     const valores = gestionGroup.value;
     
-    // Verificar solo los controles que están habilitados
     const controlesHabilitados = ['ver', 'crear', 'modificar', 'eliminar'].filter(control => {
       const controlInstance = gestionGroup.get(control);
       return controlInstance && !controlInstance.disabled;
     });
     
-    // "Todos" está marcado solo si TODOS los controles habilitados están marcados
     const todosMarcados = controlesHabilitados.length > 0 && 
                          controlesHabilitados.every(control => valores[control]);
     
@@ -220,7 +289,6 @@ export class CrearRolComponent implements OnInit {
       const gestionGroup = permisosGroup.get(gestion.key) as FormGroup;
       const valores = gestionGroup.value;
       
-      // Solo procesar acciones individuales (no 'todos')
       Object.keys(valores).forEach(accion => {
         if (accion !== 'todos' && valores[accion]) {
           const permisos: Permiso[] = gestion.permisos[accion as keyof typeof gestion.permisos];
@@ -247,24 +315,28 @@ export class CrearRolComponent implements OnInit {
   /**
    * 📥 Cargar gestiones desde el backend
    */
-  cargarGestiones(): void {
+  cargarGestiones(): Promise<void> {
     this.loading = true;
     
-    this.rolesService.getGestiones().subscribe({
-      next: (response: GestionesResponse) => {
-        this.procesarGestiones(response);
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error cargando gestiones:', error);
-        this.mostrarError('Error al cargar los permisos');
-        this.loading = false;
-      }
+    return new Promise((resolve, reject) => {
+      this.rolesService.getGestiones().subscribe({
+        next: (response: GestionesResponse) => {
+          this.procesarGestiones(response);
+          this.loading = false;
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error cargando gestiones:', error);
+          this.mostrarError('Error al cargar los permisos');
+          this.loading = false;
+          reject(error);
+        }
+      });
     });
   }
 
   /**
-   * 💾 Guardar nuevo rol
+   * 💾 Guardar rol (crear o actualizar)
    */
   guardarRol(): void {
     if (this.rolForm.invalid) {
@@ -281,6 +353,17 @@ export class CrearRolComponent implements OnInit {
 
     this.saving = true;
     
+    if (this.isEditMode) {
+      this.actualizarRol(permisosSeleccionados);
+    } else {
+      this.crearRol(permisosSeleccionados);
+    }
+  }
+
+  /**
+   * 🆕 Crear nuevo rol
+   */
+  private crearRol(permisosSeleccionados: number[]): void {
     const data: CrearRolRequest = {
       nombre: this.rolForm.get('nombre')?.value.trim(),
       permisos: permisosSeleccionados
@@ -289,10 +372,34 @@ export class CrearRolComponent implements OnInit {
     this.rolesService.crearRol(data).subscribe({
       next: (response) => {
         this.mostrarExito('Rol creado exitosamente');
+        this.navegarARoles();
       },
       error: (error) => {
         console.error('Error creando rol:', error);
         const mensaje = error.error?.error || 'Error al crear el rol';
+        this.mostrarError(mensaje);
+        this.saving = false;
+      }
+    });
+  }
+
+  /**
+   * ✏️ Actualizar rol existente
+   */
+  private actualizarRol(permisosSeleccionados: number[]): void {
+    const data: EditarRolRequest = {
+      nombre: this.rolForm.get('nombre')?.value.trim(),
+      permisos: permisosSeleccionados
+    };
+
+    this.rolesService.editarRol(this.rolId!, data).subscribe({
+      next: (response) => {
+        this.mostrarExito('Rol actualizado exitosamente');
+        this.navegarARoles();
+      },
+      error: (error) => {
+        console.error('Error actualizando rol:', error);
+        const mensaje = error.error?.error || 'Error al actualizar el rol';
         this.mostrarError(mensaje);
         this.saving = false;
       }
@@ -338,6 +445,10 @@ export class CrearRolComponent implements OnInit {
    * 🔄 Navegar a la lista de roles
    */
   private navegarARoles(): void {
-    this.router.navigate(['/administrador/gestion-usuarios']);
+    if(this.isEditMode){
+      this.router.navigate(['/administrador/gestion-usuarios/editar-eliminar-rol']); 
+    } else{
+      this.router.navigate(['/administrador/gestion-usuarios']);
+    }
   }
 }

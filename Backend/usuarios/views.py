@@ -540,3 +540,121 @@ def crear_rol(request):
         return Response({
             'error': f'Error interno del servidor: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_detalle_grupo(request, grupo_id):
+    """Obtener detalles de un grupo específico con sus permisos"""
+    try:
+        grupo = Group.objects.get(id=grupo_id)
+        permisos = grupo.permissions.select_related('content_type').all()
+        
+        return Response({
+            'grupo': {
+                'id': grupo.id,
+                'name': grupo.name,
+                'permisos': [
+                    {
+                        'id': p.id,
+                        'name': p.name,
+                        'codename': p.codename,
+                        'accion': _get_accion_from_codename(p.codename),
+                        'content_type__app_label': p.content_type.app_label,
+                        'content_type__model': p.content_type.model
+                    } for p in permisos
+                ],
+                'permisos_count': len(permisos)
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Group.DoesNotExist:
+        return Response({
+            'error': 'Grupo no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def editar_grupo(request, grupo_id):
+    """Editar un grupo existente"""
+    try:
+        grupo = Group.objects.get(id=grupo_id)
+        nombre = request.data.get('nombre')
+        permisos_ids = request.data.get('permisos', [])
+        
+        # Validaciones
+        if nombre and nombre != grupo.name:
+            if Group.objects.filter(name=nombre).exists():
+                return Response({
+                    'error': f'Ya existe un rol con el nombre "{nombre}"'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            grupo.name = nombre
+        
+        if not permisos_ids:
+            return Response({
+                'error': 'Debe seleccionar al menos un permiso'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que los permisos existen
+        permisos = Permission.objects.filter(id__in=permisos_ids)
+        if len(permisos) != len(permisos_ids):
+            return Response({
+                'error': 'Algunos permisos seleccionados no son válidos'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Actualizar en una transacción
+        with transaction.atomic():
+            grupo.save()
+            grupo.permissions.set(permisos)
+        
+        return Response({
+            'message': f'Rol "{grupo.name}" actualizado exitosamente',
+            'grupo': {
+                'id': grupo.id,
+                'name': grupo.name,
+                'permisos_count': len(permisos)
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except Group.DoesNotExist:
+        return Response({
+            'error': 'Grupo no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def eliminar_grupo(request, grupo_id):
+    """Eliminar un grupo específico"""
+    try:
+        grupo = Group.objects.get(id=grupo_id)
+        
+        # Verificar si el grupo tiene usuarios asignados
+        usuarios_count = grupo.user_set.count()
+        if usuarios_count > 0:
+            return Response({
+                'error': f'No se puede eliminar: El rol "{grupo.name}" está asignado a {usuarios_count} usuario(s)'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        nombre_grupo = grupo.name
+        grupo.delete()
+        
+        return Response({
+            'message': f'Rol "{nombre_grupo}" eliminado exitosamente'
+        }, status=status.HTTP_200_OK)
+        
+    except Group.DoesNotExist:
+        return Response({
+            'error': 'Grupo no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+def _get_accion_from_codename(codename):
+    """Helper para obtener la acción del codename"""
+    if codename.startswith('add_'):
+        return 'crear'
+    elif codename.startswith('change_'):
+        return 'modificar'
+    elif codename.startswith('delete_'):
+        return 'eliminar'
+    elif codename.startswith('view_'):
+        return 'ver'
+    else:
+        return 'otros'

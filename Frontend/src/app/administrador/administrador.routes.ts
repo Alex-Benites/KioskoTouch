@@ -38,6 +38,7 @@ export const administradorRoutes: Routes = [
   { path: 'gestion-usuarios/crear-usuario', component: CrearUsuarioComponent },
   { path: 'gestion-usuarios/editar-eliminar-usuario', component: EditarEliminarUsuarioComponent },
   { path: 'gestion-usuarios/crear-rol', component: CrearRolComponent },
+  { path: 'gestion-usuarios/crear-rol/:id', component: CrearRolComponent },
   { path: 'gestion-usuarios/editar-eliminar-rol', component: EditarEliminarRolComponent },
 
   { path: 'gestion-productos', component: ProductosComponent },

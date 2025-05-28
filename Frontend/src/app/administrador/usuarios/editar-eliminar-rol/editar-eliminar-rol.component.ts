@@ -89,9 +89,8 @@ export class EditarEliminarRolComponent implements OnInit {
   }
 
   editarRol(rol: Grupo): void {
-    this.router.navigate(['/administrador/usuarios/crear-rol'], { queryParams: { editarId: rol.id } });
-  }
-
+    this.router.navigate(['/administrador/gestion-usuarios/crear-rol', rol.id]);
+  } 
   confirmarEliminarRol(rol: Grupo): void {
     // usuarios_count should now be available on the rol (Grupo) object
     this.rolAEliminar = rol;

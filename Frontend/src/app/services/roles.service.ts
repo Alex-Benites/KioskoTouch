@@ -50,6 +50,13 @@ export class RolesService {
   }
 
   /**
+   * 🔍 Alias para mantener compatibilidad con el componente
+   */
+  obtenerDetalleRol(rolId: number): Observable<DetalleRol> {
+    return this.getDetalleRol(rolId);
+  }
+
+  /**
    * ✏️ Editar rol existente
    */
   editarRol(rolId: number, data: EditarRolRequest): Observable<RolResponse> {
