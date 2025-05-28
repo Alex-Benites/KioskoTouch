@@ -1,1 +1,99 @@
-<p>editar-eliminar-rol works!</p>
+<app-header-admin></app-header-admin>
+
+<div class="gestionar-roles-container">
+  <p class="breadcrumb">GESTIÓN DE USUARIOS</p>
+  <h2 class="section-title">Modificar/Eliminar rol de Usuarios</h2>
+
+  <div class="toolbar-section">
+    <div class="search-container">
+      <label for="buscar-rol" class="search-label">Buscar Rol:</label>
+      <div class="search-input-wrapper">
+        <input
+          id="buscar-rol"
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="filtrarRoles()"
+          placeholder="Secretaria"
+          class="search-input">
+        <mat-icon class="search-icon">search</mat-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando roles...</p>
+  </div>
+
+  <!-- Roles List Card -->
+  <div *ngIf="!loading && filteredRoles.length > 0" class="roles-list-card">
+    <div class="roles-list-header">
+      Roles
+    </div>
+    <ul class="roles-list">
+      <li *ngFor="let rol of filteredRoles" class="rol-item">
+        <span class="rol-name">{{ rol.name }}</span> <!-- Changed from rol.nombre -->
+        <div class="rol-actions">
+          <button mat-icon-button (click)="editarRol(rol)" matTooltip="Editar Rol">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            (click)="confirmarEliminarRol(rol)"
+            matTooltip="Eliminar Rol"
+            [matTooltipShowDelay]="500"
+            [matTooltipHideDelay]="500"
+            [matTooltipPosition]="'above'">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Empty State: No roles at all -->
+  <div *ngIf="!loading && roles.length === 0" class="empty-state">
+    <mat-icon class="empty-icon">admin_panel_settings</mat-icon>
+    <h3>No hay roles creados en el sistema</h3>
+    <p>Comienza creando un nuevo rol para asignar permisos.</p>
+    <button
+      class="primary__button"
+      routerLink="/administrador/usuarios/crear-rol">
+      <mat-icon>add</mat-icon>
+      Crear Primer Rol
+    </button>
+  </div>
+
+  <!-- Empty State: No roles match search -->
+  <div *ngIf="!loading && roles.length > 0 && filteredRoles.length === 0" class="empty-state">
+    <mat-icon class="empty-icon">search_off</mat-icon>
+    <h3>No se encontraron roles</h3>
+    <p>No hay roles que coincidan con "{{ searchTerm }}". Intenta con otro término de búsqueda.</p>
+  </div>
+</div>
+
+<!-- Confirmation Dialog for Deletion -->
+<div *ngIf="rolAEliminar" class="dialog-overlay" (click)="cancelarEliminarRol()">
+  <div class="dialog-content" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <mat-icon class="dialog-icon warning">warning</mat-icon>
+      <h3>Confirmar Eliminación</h3>
+    </div>
+    <div class="dialog-body">
+      <p>¿Estás seguro de que deseas eliminar el rol <strong>"{{ rolAEliminar.name }}"</strong>?</p> <!-- Changed from rolAEliminar.nombre -->
+      <p class="warning-text">Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="cancel__button" (click)="cancelarEliminarRol()">
+        Cancelar
+      </button>
+      <button class="delete__button" (click)="procederEliminarRol()" [disabled]="eliminando">
+        <span *ngIf="eliminando">Eliminando...</span>
+        <span *ngIf="!eliminando">Eliminar Rol</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-usuarios'"></app-footer-admin>
