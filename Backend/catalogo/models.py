@@ -4,6 +4,7 @@ from django.db import models
 
 class AppkioskoCategorias(models.Model):
     nombre = models.CharField(max_length=50)
+    ImagenCategoriaURL = models.URLField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 

@@ -20,3 +20,4 @@ urlpatterns = [
     path('permisos/', views.get_permisos_disponibles, name='permisos_disponibles'),
     path('empleados/<int:empleado_id>/asignar-rol/', views.asignar_rol_empleado, name='asignar_rol_empleado'),
 ]
+
