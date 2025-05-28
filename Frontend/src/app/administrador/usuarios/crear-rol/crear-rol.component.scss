@@ -1,0 +1,449 @@
+// 🎨 Mantener el mismo fondo gris de la página
+.crear-rol-container {
+  padding: 30px 50px;
+  background-color: #F2F2F2;
+  min-height: 85vh;
+  box-sizing: border-box;
+}
+
+.breadcrumb {
+  color: #888;
+  font-size: 20px;
+  margin-bottom: 5px;
+  margin-left: 150px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: 35px;
+  font-weight: 900;
+  margin-bottom: 30px;
+  margin-top: 0px;
+  margin-left: 150px;
+  color: #333;
+}
+
+// 🏷️ Secciones del formulario al mismo nivel
+.form-section {
+  margin-bottom: 20px; // 🆕 Reducido de 40px a 20px
+  margin-left: 150px;
+}
+
+.form-subtitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  mat-icon {
+    color: #DD453A;
+  }
+}
+
+// 🆕 Campo personalizado sin Angular Material
+.nombre-field-custom {
+  width: 100%;
+  max-width: 500px;
+
+  .field-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-family: 'Lato', sans-serif;
+  }
+
+  .field-input {
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'Lato', sans-serif;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #E4E4E4; // 🆕 Color solicitado
+    color: #333;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: #888;
+      font-weight: 400;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #DD453A;
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(221, 69, 58, 0.1);
+    }
+
+    &.ng-invalid.ng-touched {
+      border-color: #f44336;
+      background-color: #ffebee;
+    }
+
+    &.ng-valid.ng-touched {
+      border-color: #4caf50;
+    }
+  }
+
+  .field-hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    font-family: 'Lato', sans-serif;
+  }
+
+  .field-errors {
+    margin-top: 8px;
+
+    .error-message {
+      font-size: 12px;
+      color: #f44336;
+      margin-bottom: 4px;
+      font-family: 'Lato', sans-serif;
+      font-weight: 500;
+    }
+  }
+}
+
+// 🔑 Sección de permisos
+.permisos-section {
+  margin-top: 20px; // 🆕 Reducido de 40px a 20px
+  margin-left: 150px;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+
+    .form-subtitle {
+      margin-bottom: 0;
+    }
+
+    .contador-permisos {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #E4E4E4; // 🆕 Cambiado de #ffffff a #E4E4E4
+      padding: 12px 20px;
+      border-radius: 25px;
+      color: #555;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+      mat-icon {
+        color: #DD453A;
+      }
+    }
+  }
+
+  .loading-container {
+    text-align: center;
+    padding: 60px;
+    color: #666;
+
+    p {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+
+  // 📊 Tabla de permisos con fondo blanco
+  .permisos-table-wrapper {
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e0e0e0;
+
+    .permisos-table {
+      width: 100%;
+
+      // 🎨 Headers
+      ::ng-deep .mat-header-cell {
+        background-color: #f8f9fa;
+        color: #333;
+        font-weight: 700;
+        font-size: 16px;
+        border-bottom: 3px solid #DD453A;
+        padding: 20px 16px;
+        text-align: center;
+      }
+
+      .gestion-header {
+        text-align: left !important;
+        width: 30%;
+        font-size: 18px;
+      }
+
+      .action-header {
+        width: 14%;
+
+        .header-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+
+          mat-icon {
+            font-size: 24px;
+            color: #DD453A;
+          }
+
+          span {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+          }
+        }
+
+        &.todos-header {
+
+          .header-content mat-icon {
+            color: #DD453A;
+          }
+        }
+      }
+
+      // 🎨 Celdas
+      ::ng-deep .mat-cell {
+        border-bottom: 1px solid #e0e0e0;
+        padding: 20px 16px;
+        font-size: 16px;
+      }
+
+      .gestion-cell {
+        .gestion-info {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+
+          .gestion-icon {
+            color: #DD453A;
+            font-size: 24px;
+          }
+
+          .gestion-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+          }
+        }
+      }
+
+      .action-cell {
+        text-align: center;
+
+        .checkbox-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+
+          // 🎯 Estilos generales para checkboxes
+          ::ng-deep .mat-checkbox {
+            margin: 0;
+            
+            .mat-checkbox-frame {
+              border-color: #ccc;
+            }
+            
+            &.mat-checkbox-disabled {
+              .mat-checkbox-frame {
+                border-color: #e0e0e0;
+              }
+              
+              .mat-checkbox-label {
+                color: #999;
+              }
+            }
+          }
+        }
+      }
+
+      // 🎨 Filas
+      ::ng-deep .gestion-row {
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: #f9f9f9;
+        }
+
+        &:nth-child(even) {
+          background-color: #fafafa;
+        }
+      }
+    }
+  }
+}
+
+// 🎯 Botones de acción al mismo nivel
+.actions-section {
+  margin-top: 50px;
+  margin-left: 150px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  padding-top: 30px;
+
+  // 🆕 Botón cancelar personalizado
+  .cancel__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+
+    padding: 12px 24px; 
+    font-size: 16px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 600; 
+    line-height: 1.75;
+    color: #666;
+
+    background-color: #E4E4E4; // 🎯 Mismo color del campo nombre
+
+    border: 2px solid #ccc;
+    border-radius: 100px;
+    cursor: pointer;
+
+    min-width: 150px;   
+    max-height: 40px;  
+
+    text-decoration: none;
+    outline: none;
+
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: #d0d0d0;
+      border-color: #999;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      background-color: rgba(0, 0, 0, 0.12);
+      color: rgba(0, 0, 0, 0.38);
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+
+  // 🎯 Ajustes para el botón primary existente
+  .primary__button {
+    max-height: 40px;
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+}
+
+// 🎨 Snackbars
+::ng-deep {
+  .error-snackbar {
+    background-color: #f44336 !important;
+    color: white !important;
+    
+    .mat-simple-snackbar-action {
+      color: white !important;
+    }
+  }
+
+  .success-snackbar {
+    background-color: #4caf50 !important;
+    color: white !important;
+    
+    .mat-simple-snackbar-action {
+      color: white !important;
+    }
+  }
+}
+
+// 📱 Responsive Design
+@media (max-width: 1200px) {
+  .crear-rol-container {
+    padding: 20px 30px;
+  }
+
+  .breadcrumb,
+  .section-title,
+  .form-section,
+  .permisos-section,
+  .actions-section {
+    margin-left: 50px;
+  }
+}
+
+@media (max-width: 900px) {
+  .crear-rol-container {
+    padding: 20px;
+  }
+
+  .breadcrumb,
+  .section-title,
+  .form-section,
+  .permisos-section,
+  .actions-section {
+    margin-left: 20px;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .permisos-section {
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .permisos-table-wrapper {
+      overflow-x: auto;
+      
+      .permisos-table {
+        min-width: 600px;
+      }
+    }
+  }
+
+  .actions-section {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .btn-cancelar,
+    .btn-crear {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+}
+
+@media (max-width: 500px) {
+  .breadcrumb {
+    font-size: 16px;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .form-subtitle {
+    font-size: 20px;
+  }
+}

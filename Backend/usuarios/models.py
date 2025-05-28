@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
 # from apps.comun.models import AppkioskoEstados # Descomenta si estos modelos usan AppkioskoEstados
 
 class AppkioskoClientes(models.Model):
@@ -42,5 +42,56 @@ class AppkioskoEmpleados(models.Model):
         return f"{self.nombres} {self.apellidos}"
     
     @property
-    def full_name(self):
-        return f"{self.nombres} {self.apellidos}"
+    def roles(self):
+        """Obtener roles (grupos) del empleado"""
+        if self.user:
+            return self.user.groups.all()
+        return Group.objects.none()
+    
+    @property
+    def rol_principal(self):
+        """Obtener el rol principal del empleado"""
+        return self.roles.first()
+    
+    @property
+    def nombres_roles(self):
+        """Obtener nombres de roles como lista"""
+        return [grupo.name for grupo in self.roles]
+    
+    def tiene_permiso(self, permiso_codigo):
+        """Verificar si tiene un permiso específico"""
+        if self.user:
+            return self.user.has_perm(permiso_codigo)
+        return False
+    
+    def agregar_rol(self, nombre_grupo):
+        """Agregar rol al empleado"""
+        if self.user:
+            try:
+                grupo = Group.objects.get(name=nombre_grupo)
+                self.user.groups.add(grupo)
+                return True
+            except Group.DoesNotExist:
+                return False
+        return False
+    
+    def remover_rol(self, nombre_grupo):
+        """Remover rol del empleado"""
+        if self.user:
+            try:
+                grupo = Group.objects.get(name=nombre_grupo)
+                self.user.groups.remove(grupo)
+                return True
+            except Group.DoesNotExist:
+                return False
+        return False
+    
+    def establecer_roles(self, nombres_grupos):
+        """Establecer roles específicos (reemplaza todos los existentes)"""
+        if self.user:
+            grupos = Group.objects.filter(name__in=nombres_grupos)
+            self.user.groups.set(grupos)
+            return True
+        return False
+    
+    

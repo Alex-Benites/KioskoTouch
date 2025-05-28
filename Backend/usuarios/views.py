@@ -328,4 +328,214 @@ def password_reset_confirm(request, uidb64, token):
         print(f"Error al actualizar contraseña: {e}")  # Para debug
         return Response({
             'error': 'Error al actualizar la contraseña'
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_grupos_disponibles(request):
+    """Obtener lista de grupos (roles) disponibles"""
+    grupos = Group.objects.all().values('id', 'name')
+    return Response({
+        'grupos':list(grupos), 
+        'total': len(grupos)}, 
+        status=status.HTTP_200_OK
+    )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_permisos_disponibles(request):
+    """Obtener SOLO los permisos de modelos específicos (sin main)"""
+    
+    # 🎯 Mapeo EXACTO: gestión -> modelo específico (SIN app main)
+    modelos_por_gestion = {
+        'usuarios': {
+            'label': 'Gestión de Usuarios',
+            'modelo': 'user',
+            'app_preferida': 'auth'  # NO main
+        },
+        'productos': {
+            'label': 'Gestión de Productos', 
+            'modelo': 'appkioskoproductos',
+            'app_preferida': 'catalogo'  # NO main
+        },
+        'menus': {
+            'label': 'Gestión de Menús',
+            'modelo': 'appkioskomenus', 
+            'app_preferida': 'catalogo'  # NO main
+        },
+        'promociones': {
+            'label': 'Gestión de Promociones',
+            'modelo': 'appkioskopromociones',
+            'app_preferida': 'marketing'  # NO main
+        },
+        'pantallas_cocina': {
+            'label': 'Gestión de Pantallas de Cocina',
+            'modelo': 'appkioskopantallascocina',
+            'app_preferida': 'establecimientos'  # NO main
+        },
+        'establecimientos': {
+            'label': 'Gestión de Establecimientos',
+            'modelo': 'appkioskoestablecimientos',
+            'app_preferida': 'establecimientos'  # NO main
+        },
+        'publicidad': {
+            'label': 'Gestión de Publicidad',
+            'modelo': 'appkioskopublicidades',
+            'app_preferida': 'marketing'  # NO main
+        },
+        'kiosko_touch': {
+            'label': 'Gestión de Kiosko Touch',
+            'modelo': 'appkioskokioskostouch',
+            'app_preferida': 'establecimientos'  # NO main
+        }
+    }
+    
+    gestiones = {}
+    
+    for gestion_key, config in modelos_por_gestion.items():
+        # 🎯 Buscar permisos de este modelo específico EN la app correcta (NO main)
+        permisos_modelo = Permission.objects.filter(
+            content_type__model=config['modelo'],
+            content_type__app_label=config['app_preferida']  # 🚫 Excluir main implícitamente
+        ).select_related('content_type').values(
+            'id', 'name', 'codename', 'content_type__model', 'content_type__app_label'
+        ).order_by('codename')
+        
+        gestiones[gestion_key] = {
+            'label': config['label'],
+            'permisos': []
+        }
+        
+        # Solo permisos CRUD
+        for permiso in permisos_modelo:
+            accion = None
+            if permiso['codename'].startswith('add_'):
+                accion = 'crear'
+            elif permiso['codename'].startswith('change_'):
+                accion = 'modificar'  
+            elif permiso['codename'].startswith('delete_'):
+                accion = 'eliminar'
+            elif permiso['codename'].startswith('view_'):
+                accion = 'ver'
+            
+            if accion:
+                permiso['accion'] = accion
+                gestiones[gestion_key]['permisos'].append(permiso)
+        
+        # Debug por gestión
+        print(f"✅ {gestion_key}: {len(gestiones[gestion_key]['permisos'])} permisos de {config['app_preferida']}.{config['modelo']}")
+
+    total_permisos = sum(len(g['permisos']) for g in gestiones.values())
+    
+    print(f"\n🎯 TOTAL EXACTO: {total_permisos} permisos (debería ser 32)")
+    print(gestiones[gestion_key]['permisos'])
+    
+    return Response({
+        'gestiones': gestiones,
+        'total_permisos': total_permisos
+    })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def asignar_rol_empleado(request):
+    """Asignar rol a un empleado específico"""
+    try:
+        empleado = AppkioskoEmpleados.objects.get(id=request.data['empleado_id'])
+        nombre_grupo = request.data['rol']
+
+        if not nombre_grupo:
+            return Response({
+                'error': 'El nombre del rol es requerido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if empleado.agregar_rol(nombre_grupo):
+            return Response({
+                'message': f'Rol "{nombre_grupo}" asignado a {empleado.nombres} {empleado.apellidos}',
+                'empleado_roles': empleado.nombres_roles
+        }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'error': f'No se pudo asignar el rol "{nombre_grupo}" al empleado'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except AppkioskoEmpleados.DoesNotExist:
+        return Response({
+            'error': 'Empleado no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def crear_rol(request):
+    """Crear un nuevo rol (grupo) con permisos específicos"""
+    print("\n" + "="*60)
+    print("🎯 DATOS RECIBIDOS PARA CREAR ROL:")
+    print("="*60)
+    print(f"Nombre: {request.data.get('nombre')}")
+    print(f"Descripción: {request.data.get('descripcion')}")
+    print(f"Permisos recibidos: {request.data.get('permisos')}")
+    print(f"Cantidad de permisos: {len(request.data.get('permisos', []))}")
+    print("="*60 + "\n")
+    
+    try:
+        nombre = request.data.get('nombre')
+        descripcion = request.data.get('descripcion', '')
+        permisos_ids = request.data.get('permisos', [])
+        
+        # Validaciones
+        if not nombre:
+            return Response({
+                'error': 'El nombre del rol es requerido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not permisos_ids:
+            return Response({
+                'error': 'Debe seleccionar al menos un permiso'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar si el grupo ya existe
+        if Group.objects.filter(name=nombre).exists():
+            return Response({
+                'error': f'Ya existe un rol con el nombre "{nombre}"'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que los permisos existen
+        permisos = Permission.objects.filter(id__in=permisos_ids)
+        if len(permisos) != len(permisos_ids):
+            return Response({
+                'error': 'Algunos permisos seleccionados no son válidos'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Crear el grupo en una transacción
+        with transaction.atomic():
+            # Crear el grupo
+            grupo = Group.objects.create(name=nombre)
+            
+            # Asignar permisos
+            grupo.permissions.set(permisos)
+            
+            # Log de éxito
+            print(f"✅ ROL CREADO: {nombre}")
+            print(f"   Permisos asignados: {len(permisos)}")
+            for permiso in permisos:
+                print(f"   - {permiso.content_type.app_label}.{permiso.codename}")
+        
+        return Response({
+            'message': f'Rol "{nombre}" creado exitosamente',
+            'rol': {
+                'id': grupo.id,
+                'nombre': grupo.name,
+                'descripcion': descripcion,
+                'permisos_count': len(permisos),
+                'permisos': [
+                    {
+                        'id': p.id,
+                        'name': p.name,
+                        'codename': p.codename,
+                        'app_label': p.content_type.app_label
+                    } for p in permisos
+                ]
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        print(f"❌ ERROR CREANDO ROL: {str(e)}")
+        return Response({
+            'error': f'Error interno del servidor: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
