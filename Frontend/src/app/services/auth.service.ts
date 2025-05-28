@@ -28,6 +28,19 @@ export class AuthService {
 
   constructor() {}
 
+  requestPasswordReset(email: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/password-reset/`, { email });
+  }
+
+  // 🔐 Confirmar reset de contraseña
+  confirmPasswordReset(uid: string, token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/password-reset-confirm/${uid}/${token}/`, {
+      new_password: newPassword
+    });
+  }
+
+
+  // 📝 Login del usuario
   login(emailOrUsername: string, password: string): Observable<LoginResponse> {
     const loginData: LoginRequest = {
       email_or_username: emailOrUsername,

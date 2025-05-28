@@ -18,41 +18,34 @@ export class LoginComponent {
   // 📝 Datos del formulario
   usuario: string = '';
   password: string = '';
-  
+  emailRecuperacion: string = '';
+  loadingRecuperacion: boolean = false;
+  mensajeRecuperacion: string = '';
+  errorRecuperacion: string = '';
+
   // 🎭 Estados del componente
   mostrarPopupRecuperar: boolean = false;
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  // 🚪 Método de login actualizado
+  // 🚪 Método de login (agrega este si no lo tienes)
   ingresar() {
-    // Limpiar errores previos
     this.errorMessage = '';
     
-    // Validaciones básicas
     if (!this.usuario || !this.password) {
       this.errorMessage = 'Por favor, complete todos los campos';
       return;
     }
 
-    // Mostrar loading
     this.isLoading = true;
 
-    // 🔐 Llamar al AuthService
     this.authService.login(this.usuario, this.password).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log('✅ Login exitoso:', response);
-        
-        // Mostrar información del usuario logueado
-        if (response.user.empleado) {
-          console.log(`👤 Empleado: ${response.user.empleado.nombres} ${response.user.empleado.apellidos}`);
-        }
-        
-        // 🎉 Redirigir al dashboard
         this.router.navigate(['/administrador/home']);
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('❌ Error en login:', error);
         this.errorMessage = error || 'Error al iniciar sesión. Intente nuevamente.';
         this.isLoading = false;
@@ -60,24 +53,71 @@ export class LoginComponent {
     });
   }
 
-  // 📧 Métodos del popup 
+  // 📧 Abrir popup de recuperación
   abrirPopupRecuperar() {
     this.mostrarPopupRecuperar = true;
+    this.emailRecuperacion = '';
+    this.mensajeRecuperacion = '';
+    this.errorRecuperacion = '';
+    this.loadingRecuperacion = false;
   }
 
-  cerrarPopupRecuperar() {
-    this.mostrarPopupRecuperar = false;
+  // 📨 Solicitar recuperación de contraseña
+  solicitarRecuperacion() {
+    if (!this.emailRecuperacion) {
+      this.errorRecuperacion = 'Por favor, ingrese un email válido';
+      return;
+    }
+
+    this.loadingRecuperacion = true;
+    this.errorRecuperacion = '';
+    this.mensajeRecuperacion = '';
+
+    this.authService.requestPasswordReset(this.emailRecuperacion).subscribe({
+      next: (response: any) => {
+        console.log('✅ Solicitud de recuperación enviada:', response);
+        this.mensajeRecuperacion = response.message;
+        this.loadingRecuperacion = false;
+        
+        // Redirigir al componente de restablecer contraseña después de 2 segundos
+        setTimeout(() => {
+          this.redirigirRecuperacion();
+        }, 2000);
+      },
+      error: (error: any) => {
+        console.error('❌ Error en recuperación:', error);
+        this.errorRecuperacion = error.error?.error || 'Error al enviar el email';
+        this.loadingRecuperacion = false;
+      }
+    });
   }
 
-  redirigirRecuperacion() {
-    this.cerrarPopupRecuperar();
-    this.router.navigate(['/administrador/restablecer-contrasena']);
+  // 🧹 Limpiar errores de recuperación
+  onRecuperacionInputChange() {
+    if (this.errorRecuperacion) {
+      this.errorRecuperacion = '';
+    }
   }
 
-  // 🧹 Limpiar errores cuando el usuario empiece a escribir
+  // 🧹 Limpiar errores de login
   onInputChange() {
     if (this.errorMessage) {
       this.errorMessage = '';
     }
+  }
+
+  // Cerrar popup de recuperación
+  cerrarPopupRecuperar() {
+    this.mostrarPopupRecuperar = false;
+    this.emailRecuperacion = '';
+    this.mensajeRecuperacion = '';
+    this.errorRecuperacion = '';
+    this.loadingRecuperacion = false;
+  }
+
+  // Redirigir a restablecer contraseña
+  redirigirRecuperacion() {
+    this.cerrarPopupRecuperar();
+    this.router.navigate(['/administrador/restablecer-contrasena']);
   }
 }

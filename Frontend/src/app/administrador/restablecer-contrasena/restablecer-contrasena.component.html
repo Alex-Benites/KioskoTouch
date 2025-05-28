@@ -10,31 +10,94 @@
     </header>
 
     <h1 class="title">Recuperar Contraseña</h1>
-    <form>
+    
+    <!-- Mostrar si viene del enlace del email -->
+    <p *ngIf="vieneDeEnlace" style="text-align: center; color: #666; margin-bottom: 20px;">
+      📧 Llegaste desde el enlace del email. Ingresa tu nueva contraseña.
+    </p>
+    
+    <!-- Mostrar errores -->
+    <div *ngIf="error" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+      {{ error }}
+    </div>
+
+    <!-- Mostrar mensaje de éxito -->
+    <div *ngIf="mensaje && !mostrarPopup" style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #c3e6cb;">
+      {{ mensaje }}
+    </div>
+
+    <form (ngSubmit)="restablecer()">
       <div class="input-container">
         <label for="newPassword">Nueva contraseña</label>
         <div class="input-wrapper">
-          <input type="password" id="newPassword" placeholder="Ingrese contraseña" /> 
+          <input 
+            type="password" 
+            id="newPassword" 
+            placeholder="Ingrese contraseña (mínimo 8 caracteres)"
+            [(ngModel)]="nuevaPassword"
+            name="nuevaPassword"
+            (input)="onInputChange()"
+            [disabled]="loading"
+            required
+          /> 
         </div>
       </div>
 
       <div class="input-container">
         <label for="repeatPassword">Confirmar contraseña</label>
         <div class="input-wrapper">
-          <input type="password" id="repeatPassword" placeholder="Ingrese contraseña de nuevo" />
+          <input 
+            type="password" 
+            id="repeatPassword" 
+            placeholder="Ingrese contraseña de nuevo"
+            [(ngModel)]="confirmarPassword"
+            name="confirmarPassword"
+            (input)="onInputChange()"
+            [disabled]="loading"
+            required
+          />
         </div>
       </div>
 
       <div class="input-container">
         <label for="verificationCode">Código de verificación</label>
         <div class="input-wrapper">
-          <input type="text" id="verificationCode" placeholder="Ingrese código" />
+          <input 
+            type="text" 
+            id="verificationCode" 
+            [placeholder]="vieneDeEnlace ? 'Detectado automáticamente desde el email' : 'Ingrese código del email'"
+            [(ngModel)]="codigoValidacion"
+            name="codigoValidacion"
+            (input)="onInputChange()"
+            [disabled]="loading || vieneDeEnlace"
+            [readonly]="vieneDeEnlace"
+            [style.background-color]="vieneDeEnlace ? '#f8f9fa' : 'white'"
+            [style.color]="vieneDeEnlace ? '#6c757d' : 'black'"
+            required
+          />
         </div>
+        <small *ngIf="!vieneDeEnlace" style="display: block; color: #666; font-size: 12px; margin-top: 5px;">
+          Copia el código que aparece en el email después de "código en la aplicación:"
+        </small>
       </div>
 
       <div class="button-group">
-        <button type="button" class="primary__button submit-btn" (click)="restablecer()">Restablecer</button>
-        <button type="button" class="primary__button cancel-btn" (click)="volverAlLogin()">Cancelar</button>
+        <button 
+          type="submit" 
+          class="primary__button submit-btn"
+          [disabled]="loading || !nuevaPassword || !confirmarPassword || (!codigoValidacion && !vieneDeEnlace)"
+        >
+          <span *ngIf="loading">Actualizando...</span>
+          <span *ngIf="!loading">Restablecer</span>
+        </button>
+        <button 
+          type="button" 
+          class="primary__button cancel-btn" 
+          (click)="volverAlLogin()"
+          [disabled]="loading"
+        >
+          Cancelar
+        </button>
       </div>
     </form>
   </div>
@@ -48,9 +111,10 @@
   <div *ngIf="mostrarPopup" class="popup-overlay">
     <div class="popup">
       <button (click)="continuar()" class="popup-close">X</button>
-      <span></span>
+      <span>✅</span>
       <h2>¡FINALIZADO!</h2>
       <p>Tu contraseña ha sido actualizada correctamente</p>
+      <p style="color: #666; font-size: 14px;">Ya puedes iniciar sesión con tu nueva contraseña</p>
       <button type="button" class="primary__button popup-btn" (click)="continuar()">Continuar</button>
     </div>
   </div>

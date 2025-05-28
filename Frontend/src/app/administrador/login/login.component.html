@@ -57,7 +57,7 @@
           Recuperar contraseña
         </button>
       </div>
-
+ 
       <!-- Botón ingresar con loading -->
       <button 
         type="submit" 
@@ -76,15 +76,40 @@
   </div>
 </div>
 
-<!-- POP-UP de recuperación (sin cambios) -->
-<div *ngIf="mostrarPopupRecuperar" class="popup-overlay">
-  <div class="popup">
-    <button (click)="cerrarPopupRecuperar()" class="popup-close">X</button>
-    <h2>Recuperar contraseña</h2>
-    <p>Ingrese su correo electrónico para recibir instrucciones.</p>
-    <input type="email" placeholder="example@domain.com" class="popup-input" />
-    <button type="button" class="primary__button popup-btn" (click)="redirigirRecuperacion()">
-      Continuar
-    </button>
+<!-- POP-UP de recuperación - Solo solicitar email -->
+  <div *ngIf="mostrarPopupRecuperar" class="popup-overlay">
+    <div class="popup">
+      <button (click)="cerrarPopupRecuperar()" class="popup-close">X</button>
+      <h2>Recuperar contraseña</h2>
+      <p>Ingrese su correo electrónico para recibir instrucciones.</p>
+      
+      <!-- Mostrar errores -->
+      <div *ngIf="errorRecuperacion" class="error-message" style="margin-bottom: 10px; color: #e74c3c;">
+        {{ errorRecuperacion }}
+      </div>
+      
+      <!-- Mostrar mensaje de éxito -->
+      <div *ngIf="mensajeRecuperacion" class="success-message" style="margin-bottom: 10px; color: #27ae60;">
+        {{ mensajeRecuperacion }}
+      </div>
+      
+      <input 
+        type="email" 
+        placeholder="example@domain.com" 
+        class="popup-input"
+        [(ngModel)]="emailRecuperacion"
+        (input)="onRecuperacionInputChange()"
+        [disabled]="loadingRecuperacion"
+      />
+      
+      <button 
+        type="button" 
+        class="primary__button popup-btn" 
+        (click)="solicitarRecuperacion()"
+        [disabled]="!emailRecuperacion || loadingRecuperacion"
+      >
+        <span *ngIf="loadingRecuperacion">Enviando...</span>
+        <span *ngIf="!loadingRecuperacion">Continuar</span>
+      </button>
+    </div>
   </div>
-</div>
