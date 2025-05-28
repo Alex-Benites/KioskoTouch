@@ -331,6 +331,7 @@ def password_reset_confirm(request, uidb64, token):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_grupos_disponibles(request):
