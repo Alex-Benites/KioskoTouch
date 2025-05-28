@@ -1,113 +1,216 @@
 <app-header-admin></app-header-admin>
 
-<div class="form-container">
-  <p class="breadcrumb-title">GESTIÓN DE USUARIOS</p>
-  <h1 class="form-main-title">Creación de nuevo Usuario</h1>
+<div class="crear-usuario-container">
+  <p class="breadcrumb">GESTIÓN DE USUARIOS</p>
+  <h1 class="section-title">{{ isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}</h1>
 
   <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" class="user-form">
     <div class="form-layout">
       <!-- Parte izquierda: Campos del formulario -->
       <div class="form-fields">
-        <div class="form-grid">
-          <!-- Nombre Completo -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Nombre Completo</mat-label>
-            <input matInput formControlName="nombreCompleto" placeholder="Ej: Juan Pérez">
-            <mat-error *ngIf="usuarioForm.get('nombreCompleto')?.hasError('required')">
-              El nombre completo es requerido.
-            </mat-error>
-          </mat-form-field>
+        
+        <!-- 🆕 Sección: Información Personal -->
+        <div class="form-section">
+          <h3 class="section-subtitle">
+            <mat-icon>person</mat-icon>
+            Información Personal
+          </h3>
+          
+          <div class="form-grid">
+            <!-- Cédula -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Cédula</mat-label>
+              <input matInput formControlName="cedula" placeholder="1234567890" maxlength="10">
+              <mat-error *ngIf="usuarioForm.get('cedula')?.hasError('required')">
+                La cédula es requerida.
+              </mat-error>
+              <mat-error *ngIf="usuarioForm.get('cedula')?.hasError('pattern')">
+                La cédula debe tener 10 dígitos.
+              </mat-error>
+              <mat-error *ngIf="usuarioForm.get('cedula')?.hasError('cedulaInvalida')">
+                Cédula ecuatoriana inválida.
+              </mat-error>
+            </mat-form-field>
 
-          <!-- Correo Electrónico -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Correo Electrónico</mat-label>
-            <input matInput type="email" formControlName="correoElectronico" placeholder="Ej: ejemplo@gmail.com">
-            <mat-error *ngIf="usuarioForm.get('correoElectronico')?.hasError('required')">
-              El correo electrónico es requerido.
-            </mat-error>
-            <mat-error *ngIf="usuarioForm.get('correoElectronico')?.hasError('email')">
-              Formato de correo inválido.
-            </mat-error>
-          </mat-form-field>
+            <!-- Nombres -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Nombres</mat-label>
+              <input matInput formControlName="nombres" placeholder="Ej: Juan Carlos">
+              <mat-error *ngIf="usuarioForm.get('nombres')?.hasError('required')">
+                Los nombres son requeridos.
+              </mat-error>
+            </mat-form-field>
 
-          <!-- Número de Teléfono -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Número de Teléfono</mat-label>
-            <input matInput type="tel" formControlName="numeroTelefono" placeholder="Ej: 555-123-4567">
-          </mat-form-field>
+            <!-- Apellidos -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Apellidos</mat-label>
+              <input matInput formControlName="apellidos" placeholder="Ej: Pérez González">
+              <mat-error *ngIf="usuarioForm.get('apellidos')?.hasError('required')">
+                Los apellidos son requeridos.
+              </mat-error>
+            </mat-form-field>
 
-          <!-- Fecha de Nacimiento -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Fecha de Nacimiento</mat-label>
-            <input matInput [matDatepicker]="nacimientoPicker" formControlName="fechaNacimiento" placeholder="dd/mm/aaaa">
-            <mat-datepicker-toggle matSuffix [for]="nacimientoPicker"></mat-datepicker-toggle>
-            <mat-datepicker #nacimientoPicker></mat-datepicker>
-          </mat-form-field>
+            <!-- Fecha de Nacimiento -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Fecha de Nacimiento</mat-label>
+              <input matInput [matDatepicker]="nacimientoPicker" formControlName="fechaNacimiento" placeholder="dd/mm/aaaa">
+              <mat-datepicker-toggle matSuffix [for]="nacimientoPicker"></mat-datepicker-toggle>
+              <mat-datepicker #nacimientoPicker></mat-datepicker>
+            </mat-form-field>
 
-          <!-- Usuario -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Usuario</mat-label>
-            <input matInput formControlName="usuario" placeholder="Ej: jperez">
-            <mat-error *ngIf="usuarioForm.get('usuario')?.hasError('required')">
-              El nombre de usuario es requerido.
-            </mat-error>
-          </mat-form-field>
+            <!-- Teléfono -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Número de Teléfono</mat-label>
+              <input matInput formControlName="telefono" placeholder="0987654321" maxlength="10">
+              <mat-error *ngIf="usuarioForm.get('telefono')?.hasError('pattern')">
+                El teléfono debe tener 10 dígitos.
+              </mat-error>
+            </mat-form-field>
 
-          <!-- Contraseña -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Contraseña</mat-label>
-            <input matInput type="password" formControlName="contrasena" placeholder="********">
-            <mat-error *ngIf="usuarioForm.get('contrasena')?.hasError('required')">
-              La contraseña es requerida.
-            </mat-error>
-          </mat-form-field>
+            <!-- Sexo -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Sexo</mat-label>
+              <mat-select formControlName="sexo">
+                <mat-option value="">Seleccionar...</mat-option>
+                <mat-option value="Masculino">Masculino</mat-option>
+                <mat-option value="Femenino">Femenino</mat-option>
+                <mat-option value="Otro">Otro</mat-option>
+                <mat-option value="Prefiero no decir">Prefiero no decir</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
 
-          <!-- Fecha de Creación -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Fecha de Creación</mat-label>
-            <input matInput [matDatepicker]="creacionPicker" formControlName="fechaCreacion" placeholder="dd/mm/aaaa">
-            <mat-datepicker-toggle matSuffix [for]="creacionPicker"></mat-datepicker-toggle>
-            <mat-datepicker #creacionPicker></mat-datepicker>
-          </mat-form-field>
+        <!-- 🆕 Sección: Credenciales de Acceso -->
+        <div class="form-section">
+          <h3 class="section-subtitle">
+            <mat-icon>security</mat-icon>
+            Credenciales de Acceso
+          </h3>
+          
+          <div class="form-grid">
+            <!-- Username -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Nombre de Usuario</mat-label>
+              <input matInput formControlName="username" placeholder="Ej: jperez">
+              <mat-error *ngIf="usuarioForm.get('username')?.hasError('required')">
+                El nombre de usuario es requerido.
+              </mat-error>
+              <mat-error *ngIf="usuarioForm.get('username')?.hasError('minlength')">
+                Mínimo 4 caracteres.
+              </mat-error>
+            </mat-form-field>
 
-          <!-- Establecimiento Asignado -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Establecimiento Asignado</mat-label>
-            <mat-select formControlName="establecimientoAsignado">
-              <mat-option *ngFor="let establecimiento of establecimientos" [value]="establecimiento.id">
-                {{ establecimiento.nombre }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+            <!-- Email -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Correo Electrónico</mat-label>
+              <input matInput type="email" formControlName="email" placeholder="usuario@empresa.com">
+              <mat-error *ngIf="usuarioForm.get('email')?.hasError('required')">
+                El correo electrónico es requerido.
+              </mat-error>
+              <mat-error *ngIf="usuarioForm.get('email')?.hasError('email')">
+                Formato de correo inválido.
+              </mat-error>
+            </mat-form-field>
 
-          <!-- Turno de Trabajo -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Turno de Trabajo</mat-label>
-            <mat-select formControlName="turnoTrabajo">
-              <mat-option value="mañana">Mañana</mat-option>
-              <mat-option value="tarde">Tarde</mat-option>
-              <mat-option value="noche">Noche</mat-option>
-            </mat-select>
-          </mat-form-field>
+            <!-- Contraseña (solo en creación) -->
+            <mat-form-field appearance="outline" class="form-field" *ngIf="!isEditMode">
+              <mat-label>Contraseña</mat-label>
+              <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+              <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
+              <mat-error *ngIf="usuarioForm.get('password')?.hasError('required')">
+                La contraseña es requerida.
+              </mat-error>
+              <mat-error *ngIf="usuarioForm.get('password')?.hasError('minlength')">
+                Mínimo 8 caracteres.
+              </mat-error>
+            </mat-form-field>
 
-          <!-- Rol Asignado -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Rol Asignado</mat-label>
-            <mat-select formControlName="rolAsignado">
-              <mat-option *ngFor="let rol of roles" [value]="rol.id">
-                {{ rol.nombre }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+            <!-- Confirmar contraseña (solo en creación) -->
+            <mat-form-field appearance="outline" class="form-field" *ngIf="!isEditMode">
+              <mat-label>Confirmar Contraseña</mat-label>
+              <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
+              <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button">
+                <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
+              <mat-error *ngIf="usuarioForm.get('confirmPassword')?.hasError('required')">
+                Confirme la contraseña.
+              </mat-error>
+              <mat-error *ngIf="usuarioForm.get('confirmPassword')?.hasError('passwordMismatch')">
+                Las contraseñas no coinciden.
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
 
-          <!-- Estado de Cuenta -->
-          <mat-form-field appearance="outline" class="form-field">
-            <mat-label>Estado de Cuenta</mat-label>
-            <mat-select formControlName="estadoCuenta">
-              <mat-option value="activa">Activa</mat-option>
-              <mat-option value="inactiva">Inactiva</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <!-- 🆕 Sección: Información Laboral -->
+        <div class="form-section">
+          <h3 class="section-subtitle">
+            <mat-icon>work</mat-icon>
+            Información Laboral
+          </h3>
+          
+          <div class="form-grid">
+            <!-- Establecimiento -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Establecimiento Asignado</mat-label>
+              <mat-select formControlName="establecimiento">
+                <mat-option value="">Seleccionar...</mat-option>
+                <mat-option *ngFor="let establecimiento of establecimientos" [value]="establecimiento.id">
+                  {{ establecimiento.nombre }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="usuarioForm.get('establecimiento')?.hasError('required')">
+                Debe seleccionar un establecimiento.
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Turno de Trabajo -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Turno de Trabajo</mat-label>
+              <mat-select formControlName="turnoTrabajo">
+                <mat-option value="">Seleccionar...</mat-option>
+                <mat-option value="mañana">Mañana</mat-option>
+                <mat-option value="tarde">Tarde</mat-option>
+                <mat-option value="noche">Noche</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Roles múltiples -->
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Roles Asignados</mat-label>
+              <mat-select formControlName="grupos" multiple>
+                <mat-option *ngFor="let rol of rolesDisponibles" [value]="rol.id">
+                  {{ rol.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="usuarioForm.get('grupos')?.hasError('required')">
+                Debe asignar al menos un rol.
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Estado activo/inactivo -->
+            <div class="form-field estado-field">
+              <mat-slide-toggle formControlName="isActive" color="primary">
+                <span class="toggle-label">Usuario Activo</span>
+              </mat-slide-toggle>
+              <div class="field-hint">Determina si el usuario puede acceder al sistema</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🎯 Botones de acción -->
+        <div class="actions-section">
+          <button type="button" class="cancel__button" (click)="cancelar()">
+            Cancelar
+          </button>
+          
+          <button type="submit" class="primary__button" [disabled]="usuarioForm.invalid || saving">
+            <span *ngIf="!saving">{{ isEditMode ? 'Actualizar Usuario' : 'Crear Usuario' }}</span>
+            <span *ngIf="saving">{{ isEditMode ? 'Actualizando...' : 'Creando...' }}</span>
+          </button>
         </div>
       </div>
 
@@ -119,4 +222,4 @@
   </form>
 </div>
 
-<app-footer-admin [backRoute]="'/administrador/gestion-usuarios'"></app-footer-admin>
+<app-footer-admin [backRoute]="'/administrador/usuarios'"></app-footer-admin>

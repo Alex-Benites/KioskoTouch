@@ -23,17 +23,31 @@ class AppkioskoClientes(models.Model):
         return f"{self.nombres} {self.apellidos}"
 
 class AppkioskoEmpleados(models.Model):
+
+    TURNOS_CHOICES = [
+        ('mañana', 'Mañana'),
+        ('tarde', 'Tarde'),
+        ('noche', 'Noche'),
+    ]
+    
+    SEXO_CHOICES = [
+        ('Masculino', 'Masculino'),
+        ('Femenino', 'Femenino'),
+    ]
+    
     cedula = models.CharField(unique=True, max_length=10)
     nombres = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
+    fecha_nacimiento = models.DateField(blank=True, null=True)  
     telefono = models.CharField(max_length=10, blank=True, null=True)
-    sexo = models.CharField(max_length=50, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, blank=True, null=True) # on_delete ajustado
+    sexo = models.CharField(max_length=50, choices=SEXO_CHOICES, blank=True, null=True)
+    turno_trabajo = models.CharField(max_length=20, choices=TURNOS_CHOICES, blank=True, null=True)  
+    created_at = models.DateTimeField(auto_now_add=True) 
+    updated_at = models.DateTimeField(auto_now=True)     
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, blank=True, null=True)
 
     class Meta:
-        managed = False # Manteniendo tu indicación
+        managed = True # Manteniendo tu indicación
         db_table = 'appkiosko_empleados'
         verbose_name = 'Empleado'
         verbose_name_plural = 'Empleados'
@@ -48,6 +62,12 @@ class AppkioskoEmpleados(models.Model):
             return self.user.groups.all()
         return Group.objects.none()
     
+    @property
+    def establecimiento_actual(self):
+        """Obtener el establecimiento actual del empleado"""
+        # TODO: Implementar cuando se tenga el modelo de la tabla intermedia
+        pass
+
     @property
     def rol_principal(self):
         """Obtener el rol principal del empleado"""
