@@ -71,8 +71,8 @@ class AppkioskoFacturas(models.Model):
 class AppkioskoDetallefacturaproducto(models.Model):
     # factura = models.OneToOneField(AppkioskoFacturas, models.DO_NOTHING, primary_key=True) # ANTERIOR
     # producto = models.ForeignKey('catalogo.AppkioskoProductos', models.DO_NOTHING) # ANTERIOR
-    factura = models.ForeignKey(AppkioskoFacturas, on_delete=models.CASCADE) # CORREGIDO
-    producto = models.ForeignKey('catalogo.AppkioskoProductos', on_delete=models.PROTECT) # CORREGIDO, proteger producto
+    factura = models.ForeignKey(AppkioskoFacturas, on_delete=models.CASCADE, null=True, blank=True) # CORREGIDO
+    producto = models.ForeignKey('catalogo.AppkioskoProductos', on_delete=models.PROTECT, null=True, blank=True) # CORREGIDO, proteger producto
     cantidad = models.IntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     iva = models.DecimalField(db_column='IVA', max_digits=5, decimal_places=2)
@@ -109,8 +109,8 @@ class AppkioskoPedidosessions(models.Model):
         verbose_name_plural = 'Sesiones de Pedido'
 
 class AppkioskoPedidosproductos(models.Model):
-    pedido = models.ForeignKey(AppkioskoPedidos, on_delete=models.CASCADE)
-    producto = models.ForeignKey('catalogo.AppkioskoProductos', on_delete=models.PROTECT)
+    pedido = models.ForeignKey(AppkioskoPedidos, on_delete=models.CASCADE, null=True, blank=True)
+    producto = models.ForeignKey('catalogo.AppkioskoProductos', on_delete=models.PROTECT, null=True, blank=True)
     cantidad = models.IntegerField(default=1)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
     precio_ingredientes_extra = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # CORREGIR: eliminar campo duplicado
