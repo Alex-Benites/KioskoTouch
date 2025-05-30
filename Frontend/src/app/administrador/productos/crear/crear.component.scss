@@ -134,3 +134,94 @@ textarea[matInput] {
 mat-error {
   font-size: 0.75em;
 }
+
+
+.ingredientes-section {
+  margin-top: 2rem;
+  
+  h2 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.5rem;
+  }
+}
+
+.ingredientes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ingrediente-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+  }
+  
+  .ingrediente-checkbox {
+    width: 100%;
+    
+    ::ng-deep .mat-checkbox-layout {
+      width: 100%;
+      white-space: normal;
+    }
+  }
+}
+
+.ingrediente-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.ingrediente-image {
+  width: 50px;          /* ← Reducido de 60px a 50px */
+  height: 50px;         /* ← Reducido de 60px a 50px */
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  border: 2px solid #f0f0f0;
+  flex-shrink: 0;       /* ← Evita que se deforme */
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-width: 50px;     /* ← Fuerza el tamaño máximo */
+    max-height: 50px;    /* ← Fuerza el tamaño máximo */
+  }
+}
+
+.ingrediente-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ingrediente-nombre {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.85rem;   /* ← Reducido ligeramente */
+  line-height: 1.2;
+}
+
+.ingrediente-precio {
+  font-size: 0.75rem;   /* ← Reducido de 0.8rem */
+  color: #28a745;
+  font-weight: 600;
+}
+
+.no-ingredientes {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+

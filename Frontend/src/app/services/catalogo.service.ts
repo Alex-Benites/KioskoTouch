@@ -46,4 +46,13 @@ export class CatalogoService {
   getProductoImagen(productoId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}catalogo/productos/${productoId}/imagen/`);
   }
+
+  getIngredientesPorCategoria(categoria: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}catalogo/ingredientes/${categoria}/`);
+  }
+
+  getFullImageUrl(imagenUrl: string | undefined): string {
+    if (!imagenUrl) return 'assets/images/no-image.png'; // Imagen por defecto
+    return `http://127.0.0.1:8000${imagenUrl}`;
+  }
 }

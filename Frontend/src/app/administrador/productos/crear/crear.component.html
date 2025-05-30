@@ -1,37 +1,39 @@
 <app-header-admin></app-header-admin>
 
-<div class="form-container"> 
+<div class="form-container">
+  
   <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
   <h1 class="form-main-title">Creación de nuevo Producto</h1>
 
   <form [formGroup]="productoForm" (ngSubmit)="onSubmit()" class="product-form">
-    <div class="form-grid"> 
+    <div class="form-grid">
       <div class="form-fields-column">
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Nombre del producto</mat-label>
           <input matInput formControlName="nombre" placeholder="Ej: Hamburguesa Clásica">
           @if (productoForm.get('nombre')?.hasError('required')) {
-            <mat-error>El nombre es requerido.</mat-error>
+          <mat-error>El nombre es requerido.</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Descripción del producto</mat-label>
-          <textarea matInput formControlName="descripcion" placeholder="Ej: Deliciosa carne con queso cheddar..." rows="3"></textarea>
+          <textarea matInput formControlName="descripcion" placeholder="Ej: Deliciosa carne con queso cheddar..."
+            rows="3"></textarea>
           @if (productoForm.get('descripcion')?.hasError('required')) {
-            <mat-error>La descripción es requerida.</mat-error>
+          <mat-error>La descripción es requerida.</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Categoría</mat-label>
-          <mat-select formControlName="categoria">
-            @for (cat of categorias; track cat.id) { <!-- Corregido: track cat.id -->
-              <mat-option [value]="cat.id">{{cat.nombre}}</mat-option> <!-- Corregido: cat.id y cat.nombre -->
+          <mat-select formControlName="categoria" (selectionChange)="onCategoriaSeleccionada($event)">
+            @for (cat of categorias; track cat.id) {
+            <mat-option [value]="cat.id">{{cat.nombre}}</mat-option>
             }
           </mat-select>
           @if (productoForm.get('categoria')?.hasError('required')) {
-            <mat-error>La categoría es requerida.</mat-error>
+          <mat-error>La categoría es requerida.</mat-error>
           }
         </mat-form-field>
 
@@ -39,22 +41,22 @@
           <mat-label>Precio del producto</mat-label>
           <input matInput type="number" formControlName="precio" placeholder="Ej: 9.99">
           @if (productoForm.get('precio')?.hasError('required')) {
-            <mat-error>El precio es requerido.</mat-error>
+          <mat-error>El precio es requerido.</mat-error>
           }
           @if (productoForm.get('precio')?.hasError('pattern')) {
-            <mat-error>Formato de precio inválido (ej: 10 o 10.99).</mat-error>
+          <mat-error>Formato de precio inválido (ej: 10 o 10.99).</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Disponibilidad</mat-label>
           <mat-select formControlName="disponibilidad">
-            @for (disp of estados; track disp.id) { <!-- Corregido: usa 'estados' y track disp.id -->
-              <mat-option [value]="disp.id">{{disp.nombre}}</mat-option> <!-- Corregido: disp.id y disp.nombre -->
+            @for (disp of estados; track disp.id) {
+            <mat-option [value]="disp.id">{{disp.nombre}}</mat-option>
             }
           </mat-select>
           @if (productoForm.get('disponibilidad')?.hasError('required')) {
-            <mat-error>La disponibilidad es requerida.</mat-error>
+          <mat-error>La disponibilidad es requerida.</mat-error>
           }
         </mat-form-field>
       </div>
@@ -62,24 +64,58 @@
       <div class="image-upload-column">
         <p class="image-upload-label">Imagen del producto</p>
         <div class="image-upload-container" (click)="fileInput.click()">
-          <input hidden type="file" #fileInput id="fileInput" (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif">
+          <input hidden type="file" #fileInput id="fileInput" (change)="onFileSelected($event)"
+            accept="image/png, image/jpeg, image/gif">
           @if (!imagePreview) {
-            <img src="assets/admin/ADMIN_27.png" alt="Subir Imagen Icono" class="upload-placeholder-icon">
-            <p>Subir Imagen</p>
+          <img src="assets/admin/ADMIN_27.png" alt="Subir Imagen Icono" class="upload-placeholder-icon">
+          <p>Subir Imagen</p>
           } @else {
-            <img [src]="imagePreview" alt="Vista previa de la imagen" class="image-preview">
+          <img [src]="imagePreview" alt="Vista previa de la imagen" class="image-preview">
           }
         </div>
         @if (imagePreview) {
-          <button (click)="eliminarImagen()" class="primary__button delete-image-button" type="button">
-            Eliminar
-          </button>
+        <button (click)="eliminarImagen()" class="primary__button delete-image-button" type="button">
+          Eliminar
+        </button>
         }
       </div>
     </div>
 
+    <!-- Sección de Ingredientes -->
+    <div class="ingredientes-section">
+      <h2>Ingredientes Disponibles</h2>
+      @if (ingredientes.length > 0) {
+      <div class="ingredientes-grid">
+        @for (ingrediente of ingredientes; track ingrediente.id; let i = $index) {
+        <div class="ingrediente-card">
+          <mat-checkbox [formControl]="$any(ingredientesSeleccionadosFormArray.controls[i])" 
+                        class="ingrediente-checkbox">
+            <div class="ingrediente-content">
+              <div class="ingrediente-image">
+                <img [src]="getFullImageUrl(ingrediente.imagen_url)" 
+                     [alt]="ingrediente.nombre"
+                     onerror="this.src='assets/images/no-ingredient.png'">
+              </div>
+              <div class="ingrediente-info">
+                <span class="ingrediente-nombre">{{ ingrediente.nombre }}</span>
+                @if (ingrediente.precio_adicional > 0) {
+                <span class="ingrediente-precio">+${{ ingrediente.precio_adicional }}</span>
+                }
+              </div>
+            </div>
+          </mat-checkbox>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="no-ingredientes">
+        <p>Selecciona una categoría para ver los ingredientes disponibles</p>
+      </div>
+      }
+    </div>
+
     <div class="form-actions">
-      <button type="submit" class="primary__button" [disabled]="!productoForm.valid">Crear</button> <!-- Añadido [disabled] para mejor UX -->
+      <button type="submit" class="primary__button" [disabled]="!productoForm.valid">Crear Producto</button>
     </div>
   </form>
 </div>

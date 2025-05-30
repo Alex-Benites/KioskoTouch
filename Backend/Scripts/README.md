@@ -68,3 +68,17 @@ Elimina todos los estados existentes. Se solicita confirmación.
 python Scripts/estados.py limpiar_crear
 ```
 Elimina todos los estados y luego crea los iniciales. Se solicita confirmación.
+
+
+
+
+
+
+# Crear ingredientes iniciales
+python Scripts/ingredientes.py crear
+
+# Ver ingredientes por categoría
+python Scripts/ingredientes.py listar_categorias
+
+# Migrar imágenes
+python Scripts/ingredientes.py migrar_imagenes

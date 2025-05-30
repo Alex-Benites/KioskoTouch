@@ -16,7 +16,23 @@ class AppkioskoCategorias(models.Model):
         return self.nombre
 
 class AppkioskoIngredientes(models.Model):
+    CATEGORIA_INGREDIENTE_CHOICES = [
+        ('hamburguesas', 'Hamburguesas'),
+        ('pizzas', 'Pizzas'),
+        ('ensaladas', 'Ensaladas'),
+        ('pollo', 'Pollo'),
+        ('postres', 'Postres'),
+        ('bebidas', 'Bebidas'),
+        ('general', 'General'),  # Para ingredientes que van en varios productos
+    ]
+    
     nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True)
+    categoria_producto = models.CharField(
+        max_length=20,
+        choices=CATEGORIA_INGREDIENTE_CHOICES,
+        default='general'
+    )
     precio_adicional = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -29,7 +45,8 @@ class AppkioskoIngredientes(models.Model):
         verbose_name_plural = 'Ingredientes'
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre} ({self.get_categoria_producto_display()})"
+
 
 class AppkioskoProductos(models.Model):
     nombre = models.CharField(max_length=50)
@@ -102,3 +119,5 @@ class AppkioskoProductosIngredientes(models.Model):
     def __str__(self):
         tipo = "Base" if self.es_base else "Adicional"
         return f"{self.producto.nombre} - {self.ingrediente.nombre} ({tipo})"
+
+
