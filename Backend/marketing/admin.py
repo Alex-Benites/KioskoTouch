@@ -1,24 +1,18 @@
 from django.contrib import admin
 from .models import (
     AppkioskoPromociones,
-    AppkioskoCupon,
-    AppkioskoPublicidades,
-    AppkioskoImagen,
-    AppkioskoVideo,
-    AppkioskoPromocioncategoria,
+    AppkioskoPromocionproductos,  # ESTE modelo SÍ va en marketing
     AppkioskoPromocionmenu,
-    AppkioskoPromocionproductos,
+    AppkioskoPublicidades,
     AppkioskoPublicidadestablecimiento,
-    AppkioskoPublicidadkioskotouch
+    AppkioskoPublicidadkioskotouch,
+    AppkioskoVideo
 )
 
 admin.site.register(AppkioskoPromociones)
-admin.site.register(AppkioskoCupon)
-admin.site.register(AppkioskoPublicidades)
-admin.site.register(AppkioskoImagen)
-admin.site.register(AppkioskoVideo)
-admin.site.register(AppkioskoPromocioncategoria)
-admin.site.register(AppkioskoPromocionmenu)
 admin.site.register(AppkioskoPromocionproductos)
+admin.site.register(AppkioskoPromocionmenu)
+admin.site.register(AppkioskoPublicidades)
 admin.site.register(AppkioskoPublicidadestablecimiento)
 admin.site.register(AppkioskoPublicidadkioskotouch)
+admin.site.register(AppkioskoVideo)

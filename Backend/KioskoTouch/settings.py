@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #app main que deberia ser borrada a futuro
-    'main',
+    #'main',
 
     # terceros
     'rest_framework',
@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'KioskoTouch.wsgi.application'
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'kiosko_db',
+       'NAME': 'kioskoGo_db',
        'USER': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
        'PASSWORD': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
        'HOST': 'localhost',

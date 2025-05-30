@@ -1,16 +1,18 @@
 from django.contrib import admin
 from .models import (
-    AppkioskoTipopago,
+    AppkioskoCupon,
     AppkioskoPedidos,
+    AppkioskoDetallepedido,  # Era AppkioskoPedidosproductos
+    AppkioskoPedidosessions,
     AppkioskoFacturas,
     AppkioskoDetallefacturaproducto,
-    AppkioskoPedidosessions,
-    AppkioskoPedidosproductos
+    AppkioskoPedidoProductoIngredientes
 )
 
-admin.site.register(AppkioskoTipopago)
+admin.site.register(AppkioskoCupon)
 admin.site.register(AppkioskoPedidos)
+admin.site.register(AppkioskoDetallepedido)
+admin.site.register(AppkioskoPedidosessions)
 admin.site.register(AppkioskoFacturas)
 admin.site.register(AppkioskoDetallefacturaproducto)
-admin.site.register(AppkioskoPedidosessions)
-admin.site.register(AppkioskoPedidosproductos)
+admin.site.register(AppkioskoPedidoProductoIngredientes)
