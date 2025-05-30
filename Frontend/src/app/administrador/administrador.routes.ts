@@ -24,10 +24,15 @@ import { EditarEliminarPromocionComponent } from './promociones/editar-eliminar-
 import { EstadisticasPromocionComponent } from './promociones/estadisticas-promocion/estadisticas-promocion.component';
 import { CrearPantallaCocinaComponent } from './pantallas-cocina/crear-pantalla-cocina/crear-pantalla-cocina.component';
 import { EditarEliminarPantallaCocinaComponent } from './pantallas-cocina/editar-eliminar-pantalla-cocina/editar-eliminar-pantalla-cocina.component';
+import { loginGuard } from '../guards/login.guard';
 
 
 export const administradorRoutes: Routes = [
-  { path: 'login', component: LoginComponent },
+  { 
+    path: 'login', 
+    component: LoginComponent,
+    canActivate: [loginGuard]
+  },
 
   { path: 'home',component: HomeComponent },
 
