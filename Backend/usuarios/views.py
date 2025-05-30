@@ -346,59 +346,69 @@ def get_grupos_disponibles(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_permisos_disponibles(request):
-    """Obtener SOLO los permisos de modelos específicos (sin main)"""
+    """Obtener SOLO los permisos de modelos específicos"""
     
-    # 🎯 Mapeo EXACTO: gestión -> modelo específico (SIN app main)
+    # 🎯 Mapeo SIMPLE: gestión -> modelo específico
     modelos_por_gestion = {
         'usuarios': {
             'label': 'Gestión de Usuarios',
             'modelo': 'user',
-            'app_preferida': 'auth'  # NO main
+            'app_label': 'auth'
+        },
+        'grupos': {
+            'label': 'Gestión de Roles',
+            'modelo': 'group',
+            'app_label': 'auth'
         },
         'productos': {
             'label': 'Gestión de Productos', 
             'modelo': 'appkioskoproductos',
-            'app_preferida': 'catalogo'  # NO main
+            'app_label': 'catalogo'
+        },
+        'ingredientes': {
+            'label': 'Gestión de Ingredientes',
+            'modelo': 'appkioskoingredientes',
+            'app_label': 'catalogo'
         },
         'menus': {
             'label': 'Gestión de Menús',
             'modelo': 'appkioskomenus', 
-            'app_preferida': 'catalogo'  # NO main
+            'app_label': 'catalogo'
         },
         'promociones': {
             'label': 'Gestión de Promociones',
             'modelo': 'appkioskopromociones',
-            'app_preferida': 'marketing'  # NO main
+            'app_label': 'marketing'
         },
         'pantallas_cocina': {
             'label': 'Gestión de Pantallas de Cocina',
             'modelo': 'appkioskopantallascocina',
-            'app_preferida': 'establecimientos'  # NO main
+            'app_label': 'establecimientos'
         },
         'establecimientos': {
             'label': 'Gestión de Establecimientos',
             'modelo': 'appkioskoestablecimientos',
-            'app_preferida': 'establecimientos'  # NO main
+            'app_label': 'establecimientos'
         },
         'publicidad': {
             'label': 'Gestión de Publicidad',
             'modelo': 'appkioskopublicidades',
-            'app_preferida': 'marketing'  # NO main
+            'app_label': 'marketing'
         },
         'kiosko_touch': {
             'label': 'Gestión de Kiosko Touch',
             'modelo': 'appkioskokioskostouch',
-            'app_preferida': 'establecimientos'  # NO main
+            'app_label': 'establecimientos'
         }
     }
     
     gestiones = {}
     
     for gestion_key, config in modelos_por_gestion.items():
-        # 🎯 Buscar permisos de este modelo específico EN la app correcta (NO main)
+        # 🎯 Buscar permisos de este modelo específico
         permisos_modelo = Permission.objects.filter(
             content_type__model=config['modelo'],
-            content_type__app_label=config['app_preferida']  # 🚫 Excluir main implícitamente
+            content_type__app_label=config['app_label']
         ).select_related('content_type').values(
             'id', 'name', 'codename', 'content_type__model', 'content_type__app_label'
         ).order_by('codename')
@@ -425,12 +435,13 @@ def get_permisos_disponibles(request):
                 gestiones[gestion_key]['permisos'].append(permiso)
         
         # Debug por gestión
-        print(f"✅ {gestion_key}: {len(gestiones[gestion_key]['permisos'])} permisos de {config['app_preferida']}.{config['modelo']}")
+        print(f"✅ {gestion_key}: {len(gestiones[gestion_key]['permisos'])} permisos de {config['app_label']}.{config['modelo']}")
 
     total_permisos = sum(len(g['permisos']) for g in gestiones.values())
     
-    print(f"\n🎯 TOTAL EXACTO: {total_permisos} permisos (debería ser 32)")
-    print(gestiones[gestion_key]['permisos'])
+    print(f"\n🎯 TOTAL EXACTO: {total_permisos} permisos (debería ser 40 con grupos e ingredientes)")
+    if gestiones:
+        print(f"Última gestión procesada: {gestion_key}")
     
     return Response({
         'gestiones': gestiones,
