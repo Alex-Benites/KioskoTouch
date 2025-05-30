@@ -36,7 +36,14 @@ python Scripts/categorias.py limpiar_crear
 ```
 Elimina todas las categorías y luego crea las iniciales. Se solicita confirmación.
 
+
+```bash
+python Scripts/categorias.py migrar_imagenes
+```
+Crear las imagenes de categorias en la db
 ---
+
+
 
 ### Script: `estados.py`
 
