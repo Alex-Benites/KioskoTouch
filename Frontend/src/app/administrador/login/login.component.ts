@@ -42,7 +42,7 @@ export class LoginComponent {
     this.authService.login(this.usuario, this.password).subscribe({
       next: (response: any) => {
         console.log('✅ Login exitoso:', response);
-        this.router.navigate(['/administrador/home']);
+        this.router.navigate(['/administrador/home'], { replaceUrl: true });
         this.isLoading = false;
       },
       error: (error: any) => {

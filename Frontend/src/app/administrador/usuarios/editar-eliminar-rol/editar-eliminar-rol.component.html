@@ -54,12 +54,11 @@
 
   <!-- Empty State: No roles at all -->
   <div *ngIf="!loading && roles.length === 0" class="empty-state">
-    <mat-icon class="empty-icon">admin_panel_settings</mat-icon>
     <h3>No hay roles creados en el sistema</h3>
     <p>Comienza creando un nuevo rol para asignar permisos.</p>
     <button
       class="primary__button"
-      routerLink="/administrador/usuarios/crear-rol">
+      routerLink="/administrador/gestion-usuarios/crear-rol">
       <mat-icon>add</mat-icon>
       Crear Primer Rol
     </button>
@@ -81,7 +80,7 @@
       <h3>Confirmar Eliminación</h3>
     </div>
     <div class="dialog-body">
-      <p>¿Estás seguro de que deseas eliminar el rol <strong>"{{ rolAEliminar.name }}"</strong>?</p> <!-- Changed from rolAEliminar.nombre -->
+      <p>¿Estás seguro de que deseas eliminar el rol <strong>"{{ rolAEliminar.name }}"</strong>?</p> 
       <p class="warning-text">Esta acción no se puede deshacer.</p>
     </div>
     <div class="dialog-actions">

@@ -34,8 +34,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
         
-        // ✅ 401 → LOGIN (no unauthorized)
-        router.navigate(['/administrador/login']);
+        // ✅ 401 → LOGIN (usar replaceUrl para limpiar historial)
+        router.navigate(['/administrador/login'], { replaceUrl: true });
       }
       
       // 🚫 403 = Sin permisos → Ir a UNAUTHORIZED
