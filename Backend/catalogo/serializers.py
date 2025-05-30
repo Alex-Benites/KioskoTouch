@@ -1,10 +1,9 @@
 from rest_framework import serializers
 from .models import AppkioskoProductos, AppkioskoCategorias
+from comun.models import AppkioskoImagen
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
-
-
 
 class ProductoSerializer(serializers.ModelSerializer):
     imagen = serializers.ImageField(write_only=True, required=False)
@@ -18,9 +17,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             'precio',
             'categoria',
             'estado',
-            'promocion',
             'imagen',               # solo para carga
-            'imagenProductoUrl',    # campo que sí está en el modelo
             'created_at',
             'updated_at'
         ]
@@ -30,17 +27,77 @@ class ProductoSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         imagen = validated_data.pop('imagen', None)  # elimina 'imagen' antes de crear
 
-        if imagen and request:
+        # Crear el producto primero
+        producto = AppkioskoProductos.objects.create(**validated_data)
+
+        # Si hay imagen, guardarla en AppkioskoImagen
+        if imagen:
             filename = f'productos/{imagen.name}'
             path = default_storage.save(filename, ContentFile(imagen.read()))
-            image_url = request.build_absolute_uri(settings.MEDIA_URL + path)
-            validated_data['imagenProductoUrl'] = image_url
+            # Guardar solo la ruta relativa con /media/
+            relative_path = f'{settings.MEDIA_URL}{path}'
+            
+            # Crear registro en AppkioskoImagen
+            AppkioskoImagen.objects.create(
+                ruta=relative_path,
+                categoria_imagen='productos',
+                entidad_relacionada_id=producto.id
+            )
 
-        return AppkioskoProductos.objects.create(**validated_data)
-
+        return producto
 
 class CategoriaSerializer(serializers.ModelSerializer):
+    imagen = serializers.ImageField(write_only=True, required=False)
+    imagen_url = serializers.SerializerMethodField(read_only=True)  # Nuevo campo para obtener la imagen
+
     class Meta:
         model = AppkioskoCategorias
-        fields = '__all__' 
+        fields = [
+            'id',
+            'nombre',
+            'imagen',      # solo para carga
+            'imagen_url',  # para obtener la URL de la imagen
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ('id', 'created_at', 'updated_at', 'imagen_url')
 
+    def get_imagen_url(self, obj):
+        """Obtiene la URL de la imagen desde AppkioskoImagen"""
+        try:
+            imagen = AppkioskoImagen.objects.get(
+                categoria_imagen='categorias',
+                entidad_relacionada_id=obj.id
+            )
+            return imagen.ruta
+        except AppkioskoImagen.DoesNotExist:
+            return None
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        imagen = validated_data.pop('imagen', None)
+
+        # Crear la categoría primero
+        categoria = AppkioskoCategorias.objects.create(**validated_data)
+        print(f"✅ Categoría creada: ID={categoria.id}, Nombre={categoria.nombre}")
+
+        # Si hay imagen, guardarla en AppkioskoImagen
+        if imagen:
+            filename = f'categorias/{imagen.name}'
+            path = default_storage.save(filename, ContentFile(imagen.read()))
+            relative_path = f'{settings.MEDIA_URL}{path}'
+            
+            # Crear registro en AppkioskoImagen
+            imagen_obj = AppkioskoImagen.objects.create(
+                ruta=relative_path,
+                categoria_imagen='categorias',
+                entidad_relacionada_id=categoria.id
+            )
+            
+            print(f"🖼️  IMAGEN CATEGORÍA GUARDADA:")
+            print(f"   - Categoría: {categoria.nombre}")
+            print(f"   - Ruta: {relative_path}")
+            print(f"   - ID Imagen: {imagen_obj.id}")
+            print("─" * 50)
+
+        return categoria

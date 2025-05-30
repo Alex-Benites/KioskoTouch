@@ -21,20 +21,35 @@ export class EditarComponent implements OnInit {
   search: string = '';
   
   constructor(
-    private catalogoService: CatalogoService, // Lo mantenemos por si quieres usarlo para crearProducto
+    private catalogoService: CatalogoService,
     private router: Router
-  ) {
-  }
+  ) {}
 
   ngOnInit(): void {
+    // Las categorías ya vienen con imagen_url integrado
     this.catalogoService.getCategorias().subscribe(data => {
       this.categorias = data;
+      console.log('Categorías cargadas:', this.categorias); // Para debug
     });
 
     this.catalogoService.getProductos().subscribe(data => {
       this.productos = data;
+      this.loadProductImages(); // Solo para productos
     });
   }
 
-
+  loadProductImages(): void {
+    this.productos.forEach(producto => {
+      if (producto.id) {
+        this.catalogoService.getProductoImagen(producto.id).subscribe(response => {
+          producto.imagenUrl = response.imagen_url;
+        });
+      }
+    });
+  }
+  
+  getFullImageUrl(imagenUrl: string | undefined): string {
+    if (!imagenUrl) return '';
+    return `http://127.0.0.1:8000${imagenUrl}`;
+  }
 }

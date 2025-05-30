@@ -11,6 +11,7 @@
         @for (cat of categorias; track cat.id) {
             <button class="categoria-btn">
             <i ></i>
+            <img [src]="getFullImageUrl(cat.imagen_url)" [alt]="cat.nombre" />
             {{ cat.nombre }}
             </button>
         }
@@ -29,7 +30,7 @@
         @for (producto of productos; track producto.id) {
         <div class="producto-card">
             
-            <img [src]="producto.imagenProductoUrl" [alt]="producto.nombre" />
+            <img [src]="getFullImageUrl(producto.imagenUrl)" [alt]="producto.nombre" />
             <div class="producto-nombre">{{ producto.nombre }}</div>
             <button class="editar-btn">Editar</button>
         </div>

@@ -38,8 +38,12 @@ export class CatalogoService {
     return this.http.get<Categoria[]>(url, this.getHttpOptions());
   }
 
-    getEstados(): Observable<Estado[]> {
-      const url = `${this.apiUrl}comun/estados/`; 
-      return this.http.get<Estado[]>(url, this.getHttpOptions());
-    }
+  getEstados(): Observable<Estado[]> {
+    const url = `${this.apiUrl}comun/estados/`; 
+    return this.http.get<Estado[]>(url, this.getHttpOptions());
+  }
+
+  getProductoImagen(productoId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}catalogo/productos/${productoId}/imagen/`);
+  }
 }

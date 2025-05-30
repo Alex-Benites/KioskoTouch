@@ -34,8 +34,21 @@ class AppkioskoTipopago(models.Model):
         return self.nombre
 
 class AppkioskoImagen(models.Model):
+    CATEGORIA_CHOICES = [
+        ('productos', 'Productos'),
+        ('ingredientes', 'Ingredientes'),
+        ('menu', 'Menú'),
+        ('publicidad', 'Publicidad'),
+        ('categorias', 'Categorías'),
+    ]
+    
     ruta = models.CharField(max_length=500)
-    categoria_imagen = models.CharField(max_length=100, blank=True, null=True)
+    categoria_imagen = models.CharField(
+        max_length=100, 
+        choices=CATEGORIA_CHOICES,
+        blank=True, 
+        null=True
+    )
     entidad_relacionada_id = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
@@ -47,4 +60,4 @@ class AppkioskoImagen(models.Model):
         verbose_name_plural = 'Imágenes'
 
     def __str__(self):
-        return f"Imagen {self.id} - {self.categoria_imagen}"
+        return f"Imagen {self.id} - {self.get_categoria_imagen_display()}"

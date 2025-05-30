@@ -134,3 +134,16 @@
     }
   }
 }
+
+
+.categorias-list {
+  .categoria-btn {
+    img {
+      width: 60px;        // Ajusta el ancho que quieras
+      height: 60px;       // Ajusta la altura que quieras
+      object-fit: cover;  // Para mantener proporciones
+      border-radius: 4px; // Opcional: esquinas redondeadas
+      margin-right: 8px;  // Espacio entre imagen y texto
+    }
+  }
+}
