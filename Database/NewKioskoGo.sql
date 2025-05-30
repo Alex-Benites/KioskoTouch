@@ -202,18 +202,6 @@ CREATE TABLE IF NOT EXISTS appKiosko_PromocionMenu (
     FOREIGN KEY (promocion_id) REFERENCES appKiosko_Promociones(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ✅ PromocionCategoria CON ID
-CREATE TABLE IF NOT EXISTS appKiosko_PromocionCategoria (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    categoria_id INT,
-    promocion_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_categoria_promocion (categoria_id, promocion_id),
-    FOREIGN KEY (categoria_id) REFERENCES appKiosko_Categorias(id) ON DELETE CASCADE,
-    FOREIGN KEY (promocion_id) REFERENCES appKiosko_Promociones(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- ✅ Publicidades SIN imagen_or_video_URL
 CREATE TABLE IF NOT EXISTS appKiosko_Publicidades (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -391,7 +379,6 @@ CREATE TABLE IF NOT EXISTS appKiosko_DetalleFacturaProducto (
 -- Imagen
 CREATE TABLE IF NOT EXISTS appKiosko_Imagen (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
     ruta VARCHAR(500) NOT NULL,
     categoria_imagen VARCHAR(100),
     entidad_relacionada_id INT,
