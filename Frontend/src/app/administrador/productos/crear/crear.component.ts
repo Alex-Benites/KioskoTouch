@@ -46,11 +46,46 @@ export class CrearComponent implements OnInit {
       nombre: ['', Validators.required],
       descripcion: ['', Validators.required],
       categoria: ['', Validators.required],
-      precio: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
+      precio: ['', [
+      Validators.required, 
+      Validators.pattern(/^\d+(\.\d{1,2})?$/),
+      Validators.min(0.01)  // Mínimo 0.01 (1 centavo)
+    ]],
       disponibilidad: ['', Validators.required],
-      imagen: [null],
+      imagen: [null, Validators.required],
       ingredientesSeleccionados: this.fb.array([])
     });
+  }
+
+  onFileSelected(event: any): void {
+    this.selectedFile = event.target.files[0] as File;
+    if (this.selectedFile) {
+      // ← VALIDAR TIPO DE ARCHIVO
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(this.selectedFile.type)) {
+        alert('⚠️ Solo se permiten archivos de imagen (JPG, PNG, GIF)');
+        this.eliminarImagen();
+        return;
+      }
+
+      // ← VALIDAR TAMAÑO (máximo 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (this.selectedFile.size > maxSize) {
+        alert('⚠️ La imagen no puede ser mayor a 5MB');
+        this.eliminarImagen();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagePreview = reader.result as string;
+      }
+      reader.readAsDataURL(this.selectedFile);
+      
+      // ← ACTUALIZAR EL CONTROL DEL FORMULARIO
+      this.productoForm.get('imagen')?.setValue(this.selectedFile);
+      this.productoForm.get('imagen')?.markAsTouched();
+    }
   }
 
   ngOnInit(): void {
@@ -103,21 +138,60 @@ export class CrearComponent implements OnInit {
     return this.productoForm.get('ingredientesSeleccionados') as FormArray;
   }
 
-  onFileSelected(event: any): void {
-    this.selectedFile = event.target.files[0] as File;
-    if (this.selectedFile) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imagePreview = reader.result as string;
-      }
-      reader.readAsDataURL(this.selectedFile)
-    }
-  }
 
   eliminarImagen(): void {
     this.imagePreview = null;
     this.selectedFile = null;
+    // ← LIMPIAR EL CONTROL Y MARCARLO COMO TOCADO PARA MOSTRAR ERROR
     this.productoForm.get('imagen')?.setValue(null);
+    this.productoForm.get('imagen')?.markAsTouched();
+  }
+
+  // ← AGREGAR MÉTODOS PARA MOSTRAR ERRORES
+  get nombreError(): string {
+    const control = this.productoForm.get('nombre');
+    if (control?.hasError('required') && control?.touched) {
+      return 'El nombre es obligatorio';
+    }
+    return '';
+  }
+
+  get descripcionError(): string {
+    const control = this.productoForm.get('descripcion');
+    if (control?.hasError('required') && control?.touched) {
+      return 'La descripción es obligatoria';
+    }
+    return '';
+  }
+
+  get categoriaError(): string {
+    const control = this.productoForm.get('categoria');
+    if (control?.hasError('required') && control?.touched) {
+      return 'La categoría es obligatoria';
+    }
+    return '';
+  }
+
+  get precioError(): string {
+    const control = this.productoForm.get('precio');
+    if (control?.hasError('required') && control?.touched) {
+      return 'El precio es obligatorio';
+    }
+    if (control?.hasError('pattern') && control?.touched) {
+      return 'El precio debe ser un número válido';
+    }
+    if (control?.hasError('min') && control?.touched) {
+      return 'El precio debe ser mayor a 0';
+    }
+    return '';
+  }
+
+  get disponibilidadError(): string {
+    const control = this.productoForm.get('disponibilidad');
+    if (control?.hasError('required') && control?.touched) {
+      return 'La disponibilidad es obligatoria';
+    }
+    return '';
   }
 
   onSubmit(): void {
@@ -133,7 +207,6 @@ export class CrearComponent implements OnInit {
         formData.append('imagen', this.selectedFile, this.selectedFile.name);
       }
 
-      // Corregir tipos explícitos
       const ingredientesSeleccionados = this.ingredientesSeleccionadosFormArray.value
         .map((seleccionado: boolean, index: number) => seleccionado ? this.ingredientes[index].id : null)
         .filter((val: any) => val !== null);
@@ -142,13 +215,50 @@ export class CrearComponent implements OnInit {
 
       this.catalogoService.crearProducto(formData).subscribe({
         next: (response) => {
-          console.log('Producto creado exitosamente', response);
-          this.router.navigate(['/administrador/gestion-productos']);
+          console.log('✅ Producto creado exitosamente', response);
+          
+          // ← MOSTRAR MENSAJE DE ÉXITO Y LIMPIAR FORMULARIO EN LUGAR DE REDIRIGIR
+          alert('🎉 Producto creado exitosamente!');
+          
+          // Limpiar el formulario para crear otro producto
+          this.limpiarFormulario();
+          
+          // ← COMENTAR O ELIMINAR LA REDIRECCIÓN
+          // this.router.navigate(['/administrador/gestion-productos']);
         },
         error: (error) => {
-          console.error('Error al crear el producto', error);
+          console.error('❌ Error al crear el producto', error);
+          alert('❌ Error al crear el producto. Revisa los datos e intenta nuevamente.');
         }
       });
+    } else {
+      // ← AGREGAR VALIDACIÓN CUANDO EL FORMULARIO NO ES VÁLIDO
+      alert('⚠️ Por favor completa todos los campos requeridos');
+      this.marcarCamposComoTocados();
     }
+  }
+
+  // ← AGREGAR MÉTODO PARA LIMPIAR EL FORMULARIO
+  private limpiarFormulario(): void {
+    this.productoForm.reset();
+    this.imagePreview = null;
+    this.selectedFile = null;
+    this.ingredientes = [];
+    this.ingredientesSeleccionadosFormArray.clear();
+    
+    // Resetear valores por defecto si es necesario
+    this.productoForm.patchValue({
+      ingredientesSeleccionados: this.fb.array([])
+    });
+  }
+
+  // ← AGREGAR MÉTODO PARA MARCAR CAMPOS COMO TOCADOS (MOSTRAR ERRORES)
+  private marcarCamposComoTocados(): void {
+    Object.keys(this.productoForm.controls).forEach(key => {
+      const control = this.productoForm.get(key);
+      if (control) {
+        control.markAsTouched();
+      }
+    });
   }
 }

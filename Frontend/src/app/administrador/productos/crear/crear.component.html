@@ -12,7 +12,7 @@
           <mat-label>Nombre del producto</mat-label>
           <input matInput formControlName="nombre" placeholder="Ej: Hamburguesa Clásica">
           @if (productoForm.get('nombre')?.hasError('required')) {
-          <mat-error>El nombre es requerido.</mat-error>
+          <mat-error *ngIf="nombreError">{{ nombreError }}</mat-error>
           }
         </mat-form-field>
 
@@ -21,7 +21,7 @@
           <textarea matInput formControlName="descripcion" placeholder="Ej: Deliciosa carne con queso cheddar..."
             rows="3"></textarea>
           @if (productoForm.get('descripcion')?.hasError('required')) {
-          <mat-error>La descripción es requerida.</mat-error>
+          <mat-error *ngIf="descripcionError">{{ descripcionError }}</mat-error>
           }
         </mat-form-field>
 
@@ -33,19 +33,14 @@
             }
           </mat-select>
           @if (productoForm.get('categoria')?.hasError('required')) {
-          <mat-error>La categoría es requerida.</mat-error>
+          <mat-error *ngIf="categoriaError">{{ categoriaError }}</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Precio del producto</mat-label>
           <input matInput type="number" formControlName="precio" placeholder="Ej: 9.99">
-          @if (productoForm.get('precio')?.hasError('required')) {
-          <mat-error>El precio es requerido.</mat-error>
-          }
-          @if (productoForm.get('precio')?.hasError('pattern')) {
-          <mat-error>Formato de precio inválido (ej: 10 o 10.99).</mat-error>
-          }
+          <mat-error *ngIf="precioError">{{ precioError }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -56,7 +51,7 @@
             }
           </mat-select>
           @if (productoForm.get('disponibilidad')?.hasError('required')) {
-          <mat-error>La disponibilidad es requerida.</mat-error>
+          <mat-error *ngIf="disponibilidadError">{{ disponibilidadError }}</mat-error>
           }
         </mat-form-field>
       </div>
@@ -68,7 +63,7 @@
             accept="image/png, image/jpeg, image/gif">
           @if (!imagePreview) {
           <img src="assets/admin/ADMIN_27.png" alt="Subir Imagen Icono" class="upload-placeholder-icon">
-          <p>Subir Imagen</p>
+          <p>Formato de imagen 90x90</p>
           } @else {
           <img [src]="imagePreview" alt="Vista previa de la imagen" class="image-preview">
           }

@@ -124,7 +124,6 @@ def migrar_imagenes_ingredientes():
         'mayonesa': 'mayonesa',
         'mostaza': 'mostaza',
         'mozzarella': 'mozzarella',
-        
     }
     
     imagenes_migradas = 0

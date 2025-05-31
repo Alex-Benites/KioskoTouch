@@ -69,6 +69,22 @@ export class LoginComponent {
       return;
     }
 
+    // ← AGREGAR VALIDACIÓN DE DOMINIO .COM
+    const emailLimpio = this.emailRecuperacion.toLowerCase().trim();
+    
+    // Validar formato básico de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailLimpio)) {
+      this.errorRecuperacion = 'El formato del email no es válido';
+      return;
+    }
+
+    // ← VALIDAR QUE TERMINE EN .COM
+    if (!emailLimpio.endsWith('.com')) {
+      this.errorRecuperacion = 'El email debe tener dominio .com (ejemplo: usuario@empresa.com)';
+      return;
+    }
+
     this.loadingRecuperacion = true;
     this.errorRecuperacion = '';
     this.mensajeRecuperacion = '';
@@ -86,7 +102,16 @@ export class LoginComponent {
       },
       error: (error: any) => {
         console.error('❌ Error en recuperación:', error);
-        this.errorRecuperacion = error.error?.error || 'Error al enviar el email';
+        
+        // ← MANEJAR ERRORES ESPECÍFICOS
+        if (error.status === 404) {
+          this.errorRecuperacion = 'El email no está registrado en nuestro sistema';
+        } else if (error.status === 400) {
+          this.errorRecuperacion = error.error?.error || 'Email inválido o no termina en .com';
+        } else {
+          this.errorRecuperacion = 'Error al enviar el email. Intente nuevamente';
+        }
+        
         this.loadingRecuperacion = false;
       }
     });

@@ -57,6 +57,13 @@ class AppkioskoProductos(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
+    ingredientes = models.ManyToManyField(
+        AppkioskoIngredientes, 
+        through='AppkioskoProductosIngredientes',
+        blank=True,
+        related_name='productos'
+    )
+
     class Meta:
         managed = True
         db_table = 'appkiosko_productos'
