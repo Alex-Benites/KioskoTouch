@@ -9,6 +9,10 @@ import os
 def serve_angular_app(request):
     """Servir la aplicación Angular desde static files"""
     try:
+        # NO servir Angular para rutas que empiecen con static/, media/, o admin/
+        if request.path.startswith('/static/') or request.path.startswith('/media/') or request.path.startswith('/admin/'):
+            raise Http404("Not found")
+            
         # Buscar index.html en staticfiles
         index_path = os.path.join(settings.STATIC_ROOT, 'index.html')
         
