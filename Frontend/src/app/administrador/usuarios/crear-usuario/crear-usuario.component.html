@@ -21,33 +21,33 @@
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Cédula</mat-label>
               <input matInput formControlName="cedula" placeholder="1234567890" maxlength="10">
-              <mat-error *ngIf="usuarioForm.get('cedula')?.hasError('required')">
-                La cédula es requerida.
-              </mat-error>
-              <mat-error *ngIf="usuarioForm.get('cedula')?.hasError('pattern')">
-                La cédula debe tener 10 dígitos.
-              </mat-error>
-              <mat-error *ngIf="usuarioForm.get('cedula')?.hasError('cedulaInvalida')">
-                Cédula ecuatoriana inválida.
-              </mat-error>
+              @if (usuarioForm.get('cedula')?.hasError('required')) {
+                <mat-error>La cédula es requerida.</mat-error>
+              }
+              @if (usuarioForm.get('cedula')?.hasError('pattern')) {
+                <mat-error>La cédula debe tener 10 dígitos.</mat-error>
+              }
+              @if (usuarioForm.get('cedula')?.hasError('cedulaInvalida')) {
+                <mat-error>Cédula ecuatoriana inválida.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Nombres -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Nombres</mat-label>
               <input matInput formControlName="nombres" placeholder="Ej: Juan Carlos">
-              <mat-error *ngIf="usuarioForm.get('nombres')?.hasError('required')">
-                Los nombres son requeridos.
-              </mat-error>
+              @if (usuarioForm.get('nombres')?.hasError('required')) {
+                <mat-error>Los nombres son requeridos.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Apellidos -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Apellidos</mat-label>
               <input matInput formControlName="apellidos" placeholder="Ej: Pérez González">
-              <mat-error *ngIf="usuarioForm.get('apellidos')?.hasError('required')">
-                Los apellidos son requeridos.
-              </mat-error>
+              @if (usuarioForm.get('apellidos')?.hasError('required')) {
+                <mat-error>Los apellidos son requeridos.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Fecha de Nacimiento -->
@@ -62,9 +62,9 @@
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Número de Teléfono</mat-label>
               <input matInput formControlName="telefono" placeholder="0987654321" maxlength="10">
-              <mat-error *ngIf="usuarioForm.get('telefono')?.hasError('pattern')">
-                El teléfono debe tener 10 dígitos.
-              </mat-error>
+              @if (usuarioForm.get('telefono')?.hasError('pattern')) {
+                <mat-error>El teléfono debe tener 10 dígitos.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Sexo -->
@@ -74,8 +74,6 @@
                 <mat-option value="">Seleccionar...</mat-option>
                 <mat-option value="Masculino">Masculino</mat-option>
                 <mat-option value="Femenino">Femenino</mat-option>
-                <mat-option value="Otro">Otro</mat-option>
-                <mat-option value="Prefiero no decir">Prefiero no decir</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
@@ -93,55 +91,57 @@
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Nombre de Usuario</mat-label>
               <input matInput formControlName="username" placeholder="Ej: jperez">
-              <mat-error *ngIf="usuarioForm.get('username')?.hasError('required')">
-                El nombre de usuario es requerido.
-              </mat-error>
-              <mat-error *ngIf="usuarioForm.get('username')?.hasError('minlength')">
-                Mínimo 4 caracteres.
-              </mat-error>
+              @if (usuarioForm.get('username')?.hasError('required')) {
+                <mat-error>El nombre de usuario es requerido.</mat-error>
+              }
+              @if (usuarioForm.get('username')?.hasError('minlength')) {
+                <mat-error>Mínimo 4 caracteres.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Email -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Correo Electrónico</mat-label>
               <input matInput type="email" formControlName="email" placeholder="usuario@empresa.com">
-              <mat-error *ngIf="usuarioForm.get('email')?.hasError('required')">
-                El correo electrónico es requerido.
-              </mat-error>
-              <mat-error *ngIf="usuarioForm.get('email')?.hasError('email')">
-                Formato de correo inválido.
-              </mat-error>
+              @if (usuarioForm.get('email')?.hasError('required')) {
+                <mat-error>El correo electrónico es requerido.</mat-error>
+              }
+              @if (usuarioForm.get('email')?.hasError('email')) {
+                <mat-error>Formato de correo inválido.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Contraseña (solo en creación) -->
-            <mat-form-field appearance="outline" class="form-field" *ngIf="!isEditMode">
-              <mat-label>Contraseña</mat-label>
-              <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
-              <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
-                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-              </button>
-              <mat-error *ngIf="usuarioForm.get('password')?.hasError('required')">
-                La contraseña es requerida.
-              </mat-error>
-              <mat-error *ngIf="usuarioForm.get('password')?.hasError('minlength')">
-                Mínimo 8 caracteres.
-              </mat-error>
-            </mat-form-field>
+            @if (!isEditMode) {
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Contraseña</mat-label>
+                <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+                <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+                  <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                </button>
+                @if (usuarioForm.get('password')?.hasError('required')) {
+                  <mat-error>La contraseña es requerida.</mat-error>
+                }
+                @if (usuarioForm.get('password')?.hasError('minlength')) {
+                  <mat-error>Mínimo 8 caracteres.</mat-error>
+                }
+              </mat-form-field>
 
-            <!-- Confirmar contraseña (solo en creación) -->
-            <mat-form-field appearance="outline" class="form-field" *ngIf="!isEditMode">
-              <mat-label>Confirmar Contraseña</mat-label>
-              <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
-              <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button">
-                <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-              </button>
-              <mat-error *ngIf="usuarioForm.get('confirmPassword')?.hasError('required')">
-                Confirme la contraseña.
-              </mat-error>
-              <mat-error *ngIf="usuarioForm.get('confirmPassword')?.hasError('passwordMismatch')">
-                Las contraseñas no coinciden.
-              </mat-error>
-            </mat-form-field>
+              <!-- Confirmar contraseña (solo en creación) -->
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Confirmar Contraseña</mat-label>
+                <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
+                <button mat-icon-button matSuffix (click)="hideConfirmPassword = !hideConfirmPassword" type="button">
+                  <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                </button>
+                @if (usuarioForm.get('confirmPassword')?.hasError('required')) {
+                  <mat-error>Confirme la contraseña.</mat-error>
+                }
+                @if (usuarioForm.get('confirmPassword')?.hasError('passwordMismatch')) {
+                  <mat-error>Las contraseñas no coinciden.</mat-error>
+                }
+              </mat-form-field>
+            }
           </div>
         </div>
 
@@ -158,13 +158,15 @@
               <mat-label>Establecimiento Asignado</mat-label>
               <mat-select formControlName="establecimiento">
                 <mat-option value="">Seleccionar...</mat-option>
-                <mat-option *ngFor="let establecimiento of establecimientos" [value]="establecimiento.id">
-                  {{ establecimiento.nombre }}
-                </mat-option>
+                @for (establecimiento of establecimientos; track establecimiento.id) {
+                  <mat-option [value]="establecimiento.id">
+                    {{ establecimiento.nombre }}
+                  </mat-option>
+                }
               </mat-select>
-              <mat-error *ngIf="usuarioForm.get('establecimiento')?.hasError('required')">
-                Debe seleccionar un establecimiento.
-              </mat-error>
+              @if (usuarioForm.get('establecimiento')?.hasError('required')) {
+                <mat-error>Debe seleccionar un establecimiento.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Turno de Trabajo -->
@@ -178,17 +180,20 @@
               </mat-select>
             </mat-form-field>
 
-            <!-- Roles múltiples -->
+            <!-- Rol -->
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Roles Asignados</mat-label>
-              <mat-select formControlName="grupos" multiple>
-                <mat-option *ngFor="let rol of rolesDisponibles" [value]="rol.id">
-                  {{ rol.name }}
-                </mat-option>
+              <mat-label>Rol Asignado</mat-label>
+              <mat-select formControlName="grupos">
+                <mat-option value="">Seleccionar...</mat-option>
+                @for (rol of rolesDisponibles; track rol.id) {
+                  <mat-option [value]="rol.id">
+                    {{ rol.name }}
+                  </mat-option>
+                }
               </mat-select>
-              <mat-error *ngIf="usuarioForm.get('grupos')?.hasError('required')">
-                Debe asignar al menos un rol.
-              </mat-error>
+              @if (usuarioForm.get('grupos')?.hasError('required')) {
+                <mat-error>Debe asignar un rol.</mat-error>
+              }
             </mat-form-field>
 
             <!-- Estado activo/inactivo -->
@@ -208,8 +213,11 @@
           </button>
           
           <button type="submit" class="primary__button" [disabled]="usuarioForm.invalid || saving">
-            <span *ngIf="!saving">{{ isEditMode ? 'Actualizar Usuario' : 'Crear Usuario' }}</span>
-            <span *ngIf="saving">{{ isEditMode ? 'Actualizando...' : 'Creando...' }}</span>
+            @if (!saving) {
+              <span>{{ isEditMode ? 'Actualizar Usuario' : 'Crear Usuario' }}</span>
+            } @else {
+              <span>{{ isEditMode ? 'Actualizando...' : 'Creando...' }}</span>
+            }
           </button>
         </div>
       </div>

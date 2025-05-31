@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog'; // 🆕 Para dialogs
 
 // Angular Material imports
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,17 +18,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // Shared components
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component'; // 🆕
 
-// Services (para cuando los implementes)
-// import { UsuariosService } from '../../../services/usuarios.service';
-// import { EstablecimientosService } from '../../../services/establecimientos.service';
-// import { RolesService } from '../../../services/roles.service';
+// Services
+import { UsuariosService } from '../../../services/usuarios.service';
+import { RolesService } from '../../../services/roles.service';
+
+// Models
+import { GruposResponse, Grupo } from '../../../models/roles.model';
 
 @Component({
   selector: 'app-crear-usuario',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -47,10 +49,20 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
   styleUrls: ['./crear-usuario.component.scss']
 })
 export class CrearUsuarioComponent implements OnInit {
+  
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog); // 🆕 Dialog service
+  private usuariosService = inject(UsuariosService);
+  private rolesService = inject(RolesService);
+
   usuarioForm!: FormGroup;
   isEditMode = false;
   userId: number | null = null;
   saving = false;
+  loading = false;
   hidePassword = true;
   hideConfirmPassword = true;
 
@@ -61,21 +73,9 @@ export class CrearUsuarioComponent implements OnInit {
     { id: 3, nombre: 'Sucursal Sur' }
   ];
 
-  rolesDisponibles = [
-    { id: 1, name: 'Administrador' },
-    { id: 2, name: 'Supervisor' },
-    { id: 3, name: 'Cajero' }
-  ];
+  rolesDisponibles: Grupo[] = [];
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private snackBar: MatSnackBar
-    // private usuariosService: UsuariosService,
-    // private establecimientosService: EstablecimientosService,
-    // private rolesService: RolesService
-  ) {
+  constructor() {
     this.initializeForm();
   }
 
@@ -89,7 +89,6 @@ export class CrearUsuarioComponent implements OnInit {
     }
 
     // Cargar datos necesarios
-    this.cargarEstablecimientos();
     this.cargarRoles();
   }
 
@@ -110,9 +109,9 @@ export class CrearUsuarioComponent implements OnInit {
       confirmPassword: ['', this.isEditMode ? [] : [Validators.required]],
 
       // Información laboral
-      establecimiento: ['', [Validators.required]],
+      establecimiento: [null], // Siempre null por ahora
       turnoTrabajo: [''],
-      grupos: [[], [Validators.required]],
+      grupos: [null, [Validators.required]], 
       isActive: [true]
     }, {
       validators: this.isEditMode ? [] : [this.passwordMatchValidator()]
@@ -120,24 +119,56 @@ export class CrearUsuarioComponent implements OnInit {
   }
 
   private cargarUsuarioParaEditar(): void {
-    // TODO: Implementar cuando tengas el servicio
-    console.log('Cargando usuario para editar:', this.userId);
-    
-    // Remover validaciones de contraseña en modo edición
-    this.usuarioForm.get('password')?.clearValidators();
-    this.usuarioForm.get('confirmPassword')?.clearValidators();
-    this.usuarioForm.get('password')?.updateValueAndValidity();
-    this.usuarioForm.get('confirmPassword')?.updateValueAndValidity();
-  }
+    if (!this.userId) return;
 
-  private cargarEstablecimientos(): void {
-    // TODO: Implementar servicio de establecimientos
-    console.log('Cargando establecimientos...');
+    this.loading = true;
+    this.usuariosService.obtenerEmpleado(this.userId).subscribe({
+      next: (response) => {
+        const empleado = response.empleado;
+        
+        this.usuarioForm.patchValue({
+          cedula: empleado.cedula,
+          nombres: empleado.nombres,
+          apellidos: empleado.apellidos,
+          fechaNacimiento: empleado.fecha_nacimiento ? new Date(empleado.fecha_nacimiento) : null,
+          telefono: empleado.telefono,
+          sexo: empleado.sexo,
+          username: empleado.username,
+          email: empleado.email,
+          turnoTrabajo: empleado.turno_trabajo,
+          grupos: empleado.roles.length > 0 ? empleado.roles[0].id : null, // 🔥 CAMBIO: Solo el primer rol
+          isActive: empleado.is_active,
+          establecimiento: null
+        });
+
+        // Remover validaciones de contraseña en modo edición
+        this.usuarioForm.get('password')?.clearValidators();
+        this.usuarioForm.get('confirmPassword')?.clearValidators();
+        this.usuarioForm.get('password')?.updateValueAndValidity();
+        this.usuarioForm.get('confirmPassword')?.updateValueAndValidity();
+
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar usuario:', error);
+        this.mostrarError('Error al cargar los datos del usuario');
+        this.loading = false;
+        this.navegarAListaUsuarios();
+      }
+    });
   }
 
   private cargarRoles(): void {
-    // TODO: Implementar servicio de roles
-    console.log('Cargando roles...');
+    this.rolesService.getRoles().subscribe({
+      next: (response: GruposResponse) => {
+        this.rolesDisponibles = response.grupos;
+        console.log('✅ Roles cargados:', this.rolesDisponibles);
+      },
+      error: (error) => {
+        console.error('Error al cargar roles:', error);
+        this.mostrarError('Error al cargar los roles disponibles');
+      }
+    });
   }
 
   // Validador personalizado para cédula ecuatoriana
@@ -150,7 +181,6 @@ export class CrearUsuarioComponent implements OnInit {
         return { cedulaInvalida: true };
       }
 
-      // Validación del dígito verificador
       const digits = cedula.split('').map(Number);
       const province = parseInt(cedula.substring(0, 2));
 
@@ -173,7 +203,6 @@ export class CrearUsuarioComponent implements OnInit {
     };
   }
 
-  // Validador para confirmar contraseña
   private passwordMatchValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const password = control.get('password');
@@ -188,10 +217,11 @@ export class CrearUsuarioComponent implements OnInit {
   }
 
   onSubmit(): void {
+    // 🚫 Si el formulario es inválido, NO se envía
     if (this.usuarioForm.invalid) {
       this.mostrarError('Por favor completa todos los campos requeridos correctamente');
       this.usuarioForm.markAllAsTouched();
-      return;
+      return; // ❌ Bloquea el envío
     }
 
     this.saving = true;
@@ -204,25 +234,94 @@ export class CrearUsuarioComponent implements OnInit {
   }
 
   private crearUsuario(): void {
-    const formData = this.usuarioForm.value;
-    console.log('Creando usuario:', formData);
+    const formData = { ...this.usuarioForm.value };
+    
+    if (formData.fechaNacimiento) {
+      const fecha = new Date(formData.fechaNacimiento);
+      formData.fechaNacimiento = fecha.toISOString().split('T')[0]; // Convierte a YYYY-MM-DD
+    }
+    
+    // Convertir el rol único a array para el backend
+    if (formData.grupos) {
+      formData.grupos = [formData.grupos];
+    }
+    
+    formData.establecimiento = null;
+    delete formData.confirmPassword;
 
-    // TODO: Implementar llamada al servicio
-    setTimeout(() => {
-      this.mostrarExito('Usuario creado exitosamente');
-      this.navegarAListaUsuarios();
-    }, 2000);
+    console.log('🎯 Datos a enviar para crear usuario:', formData);
+
+    this.usuariosService.crearUsuario(formData).subscribe({
+      next: (response) => {
+        console.log('✅ Usuario creado:', response);
+        this.saving = false;
+        
+        // 🎉 Mostrar dialog de éxito
+        this.mostrarDialogExito(
+          'Registro exitoso',
+          'El usuario se ha creado exitosamente',
+          'Continuar'
+        );
+      },
+      error: (error) => {
+        console.error('❌ Error al crear usuario:', error);
+        const mensaje = error.error?.error || 'Error al crear el usuario';
+        this.mostrarError(mensaje);
+        this.saving = false;
+      }
+    });
   }
 
   private actualizarUsuario(): void {
-    const formData = this.usuarioForm.value;
-    console.log('Actualizando usuario:', formData);
+    const formData = { ...this.usuarioForm.value };
+    
+    if (formData.fechaNacimiento) {
+      const fecha = new Date(formData.fechaNacimiento);
+      formData.fechaNacimiento = fecha.toISOString().split('T')[0]; // Convierte a YYYY-MM-DD
+    }
+    
+    // Convertir el rol único a array para el backend
+    if (formData.grupos) {
+      formData.grupos = [formData.grupos];
+    }
+    
+    formData.establecimiento = null;
+    delete formData.confirmPassword;
+    if (!formData.password) {
+      delete formData.password;
+    }
 
-    // TODO: Implementar llamada al servicio
+    console.log('🎯 Datos a enviar para actualizar usuario:', formData);
+
+    // TODO: Implementar endpoint de actualización
+    console.log('Actualizando usuario:', formData);
     setTimeout(() => {
-      this.mostrarExito('Usuario actualizado exitosamente');
-      this.navegarAListaUsuarios();
+      this.saving = false;
+      this.mostrarDialogExito(
+        'Actualización exitosa',
+        'El usuario se ha actualizado exitosamente',
+        'Continuar'
+      );
     }, 2000);
+  }
+
+  // 🎉 Método para mostrar dialog de éxito
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true, // No se puede cerrar clickeando afuera
+      data: dialogData
+    });
+
+    // Cuando se cierre el dialog, navegar a la lista
+    dialogRef.afterClosed().subscribe(() => {
+      this.navegarAListaUsuarios();
+    });
   }
 
   cancelar(): void {
@@ -230,7 +329,7 @@ export class CrearUsuarioComponent implements OnInit {
   }
 
   private navegarAListaUsuarios(): void {
-    this.router.navigate(['/administrador/usuarios']);
+    this.router.navigate(['/administrador/gestion-usuarios']);
   }
 
   private mostrarError(mensaje: string): void {
@@ -246,4 +345,5 @@ export class CrearUsuarioComponent implements OnInit {
       panelClass: ['success-snackbar']
     });
   }
+
 }

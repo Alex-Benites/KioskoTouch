@@ -76,6 +76,10 @@ logout() {
   });
 }
 
+  goToHome(){
+    this.router.navigate(['/administrador/home']);
+  }
+
   goToProfile() {
     console.log('📝 Ir al perfil del usuario:', this.currentUser?.username);
   }
