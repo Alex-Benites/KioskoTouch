@@ -963,3 +963,57 @@ def empleado_detalle_actualizar(request, empleado_id):
         return Response({
             'error': f'Error: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def eliminar_empleado(request, empleado_id):
+    """Eliminar un empleado de la base de datos"""
+    
+    # Verificar permisos (implementar después)
+    if not request.user.has_perm('auth.delete_user'):
+        return Response({
+            'error': 'No tienes permisos para eliminar usuarios'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        user = User.objects.get(id=empleado_id)
+        
+        # Verificar que no se elimine a sí mismo
+        if user.id == request.user.id:
+            return Response({
+                'error': 'No puedes eliminar tu propia cuenta'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar que no sea superuser
+        if user.is_superuser:
+            return Response({
+                'error': 'No se puede eliminar una cuenta de superusuario'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Guardar info para respuesta
+        username = user.username
+        nombre_completo = f"{user.first_name} {user.last_name}".strip()
+        
+        # Eliminar empleado relacionado si existe
+        try:
+            empleado = AppkioskoEmpleados.objects.get(user=user)
+            nombre_completo = f"{empleado.nombres} {empleado.apellidos}".strip()
+            empleado.delete()
+        except AppkioskoEmpleados.DoesNotExist:
+            pass
+        
+        # Eliminar usuario
+        user.delete()
+        
+        return Response({
+            'message': f'Usuario {nombre_completo or username} eliminado exitosamente'
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response({
+            'error': 'Usuario no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': f'Error al eliminar usuario: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

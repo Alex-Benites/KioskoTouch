@@ -101,7 +101,6 @@ export class EditarEliminarUsuarioComponent implements OnInit {
     };
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
       disableClose: true,
       data: dialogData
     });
@@ -118,12 +117,19 @@ export class EditarEliminarUsuarioComponent implements OnInit {
   private eliminarUsuario(usuario: EmpleadoDisplay): void {
     console.log('🗑️ Eliminando usuario:', usuario);
     
-    // TODO: Implementar endpoint de eliminación en UsuariosService
-    // this.usuariosService.eliminarEmpleado(usuario.id).subscribe({...});
+    this.loading = true;
     
-    // Por ahora simulamos la eliminación
-    this.usuarios = this.usuarios.filter(u => u.id !== usuario.id);
-    this.mostrarExito(`Usuario ${usuario.nombres} ${usuario.apellidos} eliminado exitosamente`);
+    this.usuariosService.eliminarEmpleado(usuario.id).subscribe({
+      next: (response) => {
+        this.mostrarExito(response.message);
+        this.cargarUsuarios(); // Recargar lista
+      },
+      error: (error) => {
+        const mensaje = error.error?.error || 'Error al eliminar el usuario';
+        this.mostrarError(mensaje);
+        this.loading = false;
+      }
+    });
   }
 
   // 🔄 Método para recargar la lista

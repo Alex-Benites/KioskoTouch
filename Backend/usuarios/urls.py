@@ -28,6 +28,7 @@ urlpatterns = [
     path('empleados/crear/', views.crear_usuario, name='crear_usuario'),
     path('empleados/lista/', views.get_empleados_lista, name='empleados_lista'),
     path('empleados/<int:empleado_id>/', views.empleado_detalle_actualizar, name='empleado_detalle_actualizar'),
+    path('empleados/<int:empleado_id>/eliminar/', views.eliminar_empleado, name='eliminar_empleado'),
 ]
 
 

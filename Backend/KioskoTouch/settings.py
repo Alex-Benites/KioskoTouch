@@ -93,7 +93,7 @@ DATABASES = {
        'ENGINE': 'django.db.backends.mysql',
        'NAME': 'kioskoGo_db',
        'USER': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
-       'PASSWORD': 'root2002',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
+       'PASSWORD': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
        'HOST': 'localhost',
        'PORT': '3306',
    }

@@ -30,5 +30,9 @@ obtenerEmpleado(id: number): Observable<any> {
   return this.http.put<any>(`${this.baseUrl}/empleados/${id}/`, empleadoData);
   }
 
+  eliminarEmpleado(id: number): Observable<any> {
+  return this.http.delete<any>(`${this.baseUrl}/empleados/${id}/eliminar/`);
+  }
+
 
 }
