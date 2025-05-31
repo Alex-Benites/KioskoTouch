@@ -1,8 +1,18 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse
+import os
 
+def serve_angular(request):
+    """Servir index.html de Angular para rutas del frontend"""
+    try:
+        index_path = os.path.join(settings.BASE_DIR, '../Frontend/dist/frontend/browser/index.html')
+        return FileResponse(open(index_path, 'rb'))
+    except FileNotFoundError:
+        from django.http import HttpResponse
+        return HttpResponse("Frontend no encontrado. Ejecuta 'ng build --configuration production' primero.", status=404)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -10,6 +20,11 @@ urlpatterns = [
     path('api/catalogo/', include('catalogo.urls')),
     path('api/comun/', include('comun.urls')),
     path('api/usuarios/', include('usuarios.urls')),
+    path('api/ventas/', include('ventas.urls')),               
+    path('api/marketing/', include('marketing.urls')),        
+    path('api/establecimientos/', include('establecimientos.urls')), 
+
+    re_path(r'^(?!api/|admin/|static/|media/).*$', serve_angular, name='angular'),
 ]
 
 if settings.DEBUG:
