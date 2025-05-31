@@ -15,10 +15,52 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-va0!@(g=u78w+lo7_1-(*zu1cd)nssw!bvu@xbgik0ko&b(brn'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-#ALLOWED_HOSTS = ['KioskoGo.pythonanywhere.com']
-ALLOWED_HOSTS = [] #esto para trabajar de manera remota
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+
+if DEBUG:
+    # 🏠 CONFIGURACIÓN PARA DESARROLLO LOCAL
+    ALLOWED_HOSTS = []
+    
+    # Base de datos local
+    DATABASES = {
+       'default': {
+           'ENGINE': 'django.db.backends.mysql',
+           'NAME': 'kioskoGo_db',
+           'USER': 'root',
+           'PASSWORD': 'root', # YA ALEX NO CAMBIES ESTO JAJAJAJ
+           'HOST': 'localhost',
+           'PORT': '3306',
+       }
+    }
+    
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:4200",
+    ]
+    
+    FRONTEND_URL = 'http://localhost:4200'
+    
+else:
+    # 🌐 CONFIGURACIÓN PARA PYTHONANYWHERE
+    ALLOWED_HOSTS = ['johrespi.pythonanywhere.com']
+    
+    # ⚠️ CONFIGURAR CON TUS CREDENCIALES REALES DE PYTHONANYWHERE
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'johrespi$kioskoGo_db',  
+            'USER': 'johrespi',              
+            'PASSWORD': 'kioskogo', 
+            'HOST': 'johrespi.mysql.pythonanywhere-services.com', 
+            'PORT': '3306',
+        }
+    }
+    
+    CORS_ALLOWED_ORIGINS = [
+        "https://johrespi.pythonanywhere.com",
+    ]
+    
+    FRONTEND_URL = 'https://johrespi.pythonanywhere.com'
 
 # Application definition
 
@@ -86,31 +128,6 @@ WSGI_APPLICATION = 'KioskoTouch.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# base de datos local
-
-DATABASES = {
-   'default': {
-       'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'kioskoGo_db',
-       'USER': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
-       'PASSWORD': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
-       'HOST': 'localhost',
-       'PORT': '3306',
-   }
-}
-
-#Para comentar codigo ctrl+k luego ctrl+c y para descomentar ctrl+k luego ctrl+u
-# Base de datos para usar en pythonAnywhere
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'KioskoGo$db',  # Usa el nombre completo de la base de datos
-#         'USER': 'KioskoGo',
-#         'PASSWORD': 'root2002',
-#         'HOST': 'KioskoGo.mysql.pythonanywhere-services.com',
-#         'PORT': '3306',
-#     }
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -197,30 +214,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    os.path.join(BASE_DIR, '../Frontend/dist/frontend'),
+
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
-STATICFILES_DIRS = [
-    BASE_DIR / STATIC_URL,
-    os.path.join(BASE_DIR, 'frontend/dist/frontend/browser'),
-
-]
-
-#STATIC_ROOT = "assets/"
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-]
 
 CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-
-FRONTEND_URL = 'http://localhost:4200'  # Para que coincida con CORS
 
 # Email configuration - CONSOLA (para pruebas)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

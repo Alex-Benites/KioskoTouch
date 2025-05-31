@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu_usuario.pythonanywhere.com/api'  
+  apiUrl: 'https://johrespi.pythonanywhere.com/api'  
 };
