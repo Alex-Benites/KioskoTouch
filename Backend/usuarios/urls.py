@@ -23,6 +23,11 @@ urlpatterns = [
     path('grupos/<int:grupo_id>/', views.get_detalle_grupo, name='detalle_grupo'),
     path('grupos/<int:grupo_id>/editar/', views.editar_grupo, name='editar_grupo'),
     path('grupos/<int:grupo_id>/eliminar/', views.eliminar_grupo, name='eliminar_grupo'),
+
+
+    path('empleados/crear/', views.crear_usuario, name='crear_usuario'),
+    path('empleados/lista/', views.get_empleados_lista, name='empleados_lista'),
+    path('empleados/<int:empleado_id>/', views.get_empleado_detalle, name='empleado_detalle'),
 ]
 
 

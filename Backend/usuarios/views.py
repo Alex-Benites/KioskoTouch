@@ -672,3 +672,226 @@ def _get_accion_from_codename(codename):
         return 'ver'
     else:
         return 'otros'
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def crear_usuario(request):
+    """Crear un nuevo usuario empleado con permisos específicos"""
+    
+    # 🔐 Verificar permisos
+    if not request.user.has_perm('auth.add_user'):
+        return Response({
+            'error': 'No tienes permisos para crear usuarios'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    print("\n" + "="*60)
+    print("🎯 DATOS RECIBIDOS PARA CREAR USUARIO:")
+    print("="*60)
+    print(f"Cédula: {request.data.get('cedula')}")
+    print(f"Nombres: {request.data.get('nombres')}")
+    print(f"Apellidos: {request.data.get('apellidos')}")
+    print(f"Username: {request.data.get('username')}")
+    print(f"Email: {request.data.get('email')}")
+    print(f"Grupos: {request.data.get('grupos')}")
+    print(f"Establecimiento: {request.data.get('establecimiento')}")
+    print("="*60 + "\n")
+    
+    try:
+        # Obtener datos del request
+        cedula = request.data.get('cedula')
+        nombres = request.data.get('nombres')
+        apellidos = request.data.get('apellidos')
+        fecha_nacimiento = request.data.get('fechaNacimiento')
+        telefono = request.data.get('telefono')
+        sexo = request.data.get('sexo')
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        turno_trabajo = request.data.get('turnoTrabajo')
+        grupos_ids = request.data.get('grupos', [])
+        is_active = request.data.get('isActive', True)
+        establecimiento_id = request.data.get('establecimiento')
+        
+        # 🔍 Validaciones básicas
+        if not cedula or not nombres or not apellidos or not username or not email or not password:
+            return Response({
+                'error': 'Campos requeridos: cédula, nombres, apellidos, username, email, password'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar cédula única
+        if AppkioskoEmpleados.objects.filter(cedula=cedula).exists():
+            return Response({
+                'error': f'Ya existe un empleado con la cédula {cedula}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar username único
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'error': f'Ya existe un usuario con el username {username}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar email único
+        if User.objects.filter(email=email).exists():
+            return Response({
+                'error': f'Ya existe un usuario con el email {email}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar grupos
+        if grupos_ids:
+            grupos = Group.objects.filter(id__in=grupos_ids)
+            if len(grupos) != len(grupos_ids):
+                return Response({
+                    'error': 'Algunos roles seleccionados no son válidos'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 🏗️ Crear en una transacción
+        with transaction.atomic():
+            # 1. Crear usuario Django
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=nombres,
+                last_name=apellidos,
+                is_active=is_active
+            )
+            
+            # 2. Crear empleado
+            empleado = AppkioskoEmpleados.objects.create(
+                cedula=cedula,
+                nombres=nombres,
+                apellidos=apellidos,
+                fecha_nacimiento=fecha_nacimiento if fecha_nacimiento else None,
+                telefono=telefono,
+                sexo=sexo,
+                turno_trabajo=turno_trabajo,
+                user=user
+            )
+            
+            # 3. Asignar grupos/roles
+            if grupos_ids:
+                user.groups.set(grupos)
+            
+            # Log de éxito
+            print(f"✅ USUARIO CREADO:")
+            print(f"   - User ID: {user.id}")
+            print(f"   - Empleado ID: {empleado.id}")
+            print(f"   - Cédula: {empleado.cedula}")
+            print(f"   - Username: {user.username}")
+            print(f"   - Email: {user.email}")
+            print(f"   - Grupos: {[g.name for g in user.groups.all()]}")
+        
+        return Response({
+            'message': f'Usuario {nombres} {apellidos} creado exitosamente',
+            'usuario': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'nombres': nombres,
+                'apellidos': apellidos,
+                'cedula': cedula,
+                'empleado_id': empleado.id,
+                'grupos': [{'id': g.id, 'name': g.name} for g in user.groups.all()],
+                'is_active': user.is_active
+            }
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        print(f"❌ ERROR CREANDO USUARIO: {str(e)}")
+        return Response({
+            'error': f'Error interno del servidor: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_empleados_lista(request):
+    """Obtener lista de empleados con información básica"""
+    
+    # 🔐 Verificar permisos
+    if not request.user.has_perm('auth.view_user'):
+        return Response({
+            'error': 'No tienes permisos para ver usuarios'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        # Obtener empleados con información del usuario
+        empleados = AppkioskoEmpleados.objects.select_related('user').all()
+        
+        empleados_data = []
+        for empleado in empleados:
+            if empleado.user:
+                empleados_data.append({
+                    'id': empleado.id,
+                    'user_id': empleado.user.id,
+                    'cedula': empleado.cedula,
+                    'nombres': empleado.nombres,
+                    'apellidos': empleado.apellidos,
+                    'email': empleado.user.email,
+                    'username': empleado.user.username,
+                    'telefono': empleado.telefono,
+                    'turno_trabajo': empleado.turno_trabajo,
+                    'is_active': empleado.user.is_active,
+                    'roles': [{'id': g.id, 'name': g.name} for g in empleado.user.groups.all()],
+                    'fecha_registro': empleado.created_at.strftime('%Y-%m-%d') if empleado.created_at else None
+                })
+        
+        return Response({
+            'empleados': empleados_data,
+            'total': len(empleados_data)
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': f'Error al obtener empleados: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_empleado_detalle(request, empleado_id):
+    """Obtener detalles de un empleado específico"""
+    
+    # 🔐 Verificar permisos
+    if not request.user.has_perm('auth.view_user'):
+        return Response({
+            'error': 'No tienes permisos para ver usuarios'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        empleado = AppkioskoEmpleados.objects.select_related('user').get(id=empleado_id)
+        
+        if not empleado.user:
+            return Response({
+                'error': 'El empleado no tiene usuario asociado'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({
+            'empleado': {
+                'id': empleado.id,
+                'user_id': empleado.user.id,
+                'cedula': empleado.cedula,
+                'nombres': empleado.nombres,
+                'apellidos': empleado.apellidos,
+                'fecha_nacimiento': empleado.fecha_nacimiento.strftime('%Y-%m-%d') if empleado.fecha_nacimiento else None,
+                'telefono': empleado.telefono,
+                'sexo': empleado.sexo,
+                'turno_trabajo': empleado.turno_trabajo,
+                'username': empleado.user.username,
+                'email': empleado.user.email,
+                'is_active': empleado.user.is_active,
+                'is_staff': empleado.user.is_staff,
+                'roles': [{'id': g.id, 'name': g.name} for g in empleado.user.groups.all()],
+                'permisos': get_user_permissions(empleado.user),
+                'fecha_registro': empleado.created_at.strftime('%Y-%m-%d %H:%M') if empleado.created_at else None,
+                'ultima_actualizacion': empleado.updated_at.strftime('%Y-%m-%d %H:%M') if empleado.updated_at else None
+            }
+        }, status=status.HTTP_200_OK)
+        
+    except AppkioskoEmpleados.DoesNotExist:
+        return Response({
+            'error': 'Empleado no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': f'Error al obtener empleado: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
