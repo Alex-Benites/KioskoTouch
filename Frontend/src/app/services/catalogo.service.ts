@@ -2,16 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Producto, Categoria, Estado } from '../models/catalogo.model'; 
+import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root' // Angular CLI añade esto por defecto
+  providedIn: 'root' 
 })
 export class CatalogoService {
 
-  private apiUrl = 'http://127.0.0.1:8000/api/'; // URL para desarrollo
-
-  // Ejemplo para producción:
-  // private apiUrl = 'https://tu-dominio-de-produccion.com/api/';
+  private apiUrl = `${environment.apiUrl}`;
 
   constructor(private http: HttpClient) { } 
 
@@ -52,7 +50,24 @@ export class CatalogoService {
   }
 
   getFullImageUrl(imagenUrl: string | undefined): string {
-    if (!imagenUrl) return 'assets/images/no-image.png'; // Imagen por defecto
+    if (!imagenUrl) return 'assets/images/no-image.png'; 
     return `http://127.0.0.1:8000${imagenUrl}`;
   }
+
+  //   // ⚠️ CAMBIAR: Método para URL completa de imagen dinámico
+  // getFullImageUrl(imagenUrl: string | undefined): string {
+  //   if (!imagenUrl) return 'assets/images/no-image.png';
+    
+  //   // Si ya es una URL completa, devolverla tal como está
+  //   if (imagenUrl.startsWith('http')) {
+  //     return imagenUrl;
+  //   }
+    
+  //   // Construir URL base dinámicamente
+  //   const baseUrl = environment.production 
+  //     ? environment.apiUrl.replace('/api', '')  // Remover /api para imágenes
+  //     : 'http://127.0.0.1:8000';
+    
+  //   return `${baseUrl}${imagenUrl}`;
+  // }
 }

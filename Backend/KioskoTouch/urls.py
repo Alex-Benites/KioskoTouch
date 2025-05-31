@@ -27,6 +27,12 @@ urlpatterns = [
     re_path(r'^(?!api/|admin/|static/|media/).*$', serve_angular, name='angular'),
 ]
 
+# Archivos estáticos
 if settings.DEBUG:
+    # Desarrollo local
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # Producción (PythonAnywhere)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
