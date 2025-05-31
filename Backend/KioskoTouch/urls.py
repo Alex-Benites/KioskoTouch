@@ -3,17 +3,24 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import FileResponse
+from django.http import HttpResponse, Http404
 import os
 
-def serve_angular(request):
-    """Servir index.html de Angular para rutas del frontend"""
+def serve_angular_app(request):
+    """Servir la aplicación Angular desde static files"""
     try:
-        # ⚠️ AGREGAR /browser al path
-        index_path = os.path.join(settings.BASE_DIR, '../Frontend/dist/frontend/browser/index.html')
-        return FileResponse(open(index_path, 'rb'))
-    except FileNotFoundError:
-        from django.http import HttpResponse
-        return HttpResponse("Frontend no encontrado. Ejecuta 'ng build --configuration production' primero.", status=404)
+        # Buscar index.html en staticfiles
+        index_path = os.path.join(settings.STATIC_ROOT, 'index.html')
+        
+        if os.path.exists(index_path):
+            with open(index_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return HttpResponse(content, content_type='text/html')
+        else:
+            return HttpResponse(f"index.html no encontrado en: {index_path}", status=404)
+            
+    except Exception as e:
+        return HttpResponse(f"Error al cargar frontend: {str(e)}", status=500)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,7 +32,7 @@ urlpatterns = [
     path('api/marketing/', include('marketing.urls')),        
     path('api/establecimientos/', include('establecimientos.urls')), 
 
-    re_path(r'^(?!api/|admin/|static/|media/).*$', serve_angular, name='angular'),
+    re_path(r'^.*$', serve_angular_app, name='angular_app'),
 ]
 
 # Archivos estáticos
