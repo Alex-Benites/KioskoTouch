@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog'; // 🆕 Para dialogs
+import { MatDialog } from '@angular/material/dialog';
 
 // Angular Material imports
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,7 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // Shared components
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
-import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component'; // 🆕
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
 // Services
 import { UsuariosService } from '../../../services/usuarios.service';
@@ -54,7 +54,7 @@ export class CrearUsuarioComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog); // 🆕 Dialog service
+  private dialog = inject(MatDialog);
   private usuariosService = inject(UsuariosService);
   private rolesService = inject(RolesService);
 
@@ -109,7 +109,7 @@ export class CrearUsuarioComponent implements OnInit {
       confirmPassword: ['', this.isEditMode ? [] : [Validators.required]],
 
       // Información laboral
-      establecimiento: [null], // Siempre null por ahora
+      establecimiento: [null],
       turnoTrabajo: [''],
       grupos: [null, [Validators.required]], 
       isActive: [true]
@@ -124,7 +124,9 @@ export class CrearUsuarioComponent implements OnInit {
     this.loading = true;
     this.usuariosService.obtenerEmpleado(this.userId).subscribe({
       next: (response) => {
-        const empleado = response.empleado;
+              console.log('✅ Datos recibidos del backend:', response);
+      const empleado = response.empleado;
+      console.log('✅ Datos del empleado:', empleado);
         
         this.usuarioForm.patchValue({
           cedula: empleado.cedula,
@@ -136,7 +138,7 @@ export class CrearUsuarioComponent implements OnInit {
           username: empleado.username,
           email: empleado.email,
           turnoTrabajo: empleado.turno_trabajo,
-          grupos: empleado.roles.length > 0 ? empleado.roles[0].id : null, // 🔥 CAMBIO: Solo el primer rol
+          grupos: empleado.roles.length > 0 ? empleado.roles[0].id : null,
           isActive: empleado.is_active,
           establecimiento: null
         });
@@ -217,11 +219,10 @@ export class CrearUsuarioComponent implements OnInit {
   }
 
   onSubmit(): void {
-    // 🚫 Si el formulario es inválido, NO se envía
     if (this.usuarioForm.invalid) {
       this.mostrarError('Por favor completa todos los campos requeridos correctamente');
       this.usuarioForm.markAllAsTouched();
-      return; // ❌ Bloquea el envío
+      return;
     }
 
     this.saving = true;
@@ -238,10 +239,9 @@ export class CrearUsuarioComponent implements OnInit {
     
     if (formData.fechaNacimiento) {
       const fecha = new Date(formData.fechaNacimiento);
-      formData.fechaNacimiento = fecha.toISOString().split('T')[0]; // Convierte a YYYY-MM-DD
+      formData.fechaNacimiento = fecha.toISOString().split('T')[0];
     }
     
-    // Convertir el rol único a array para el backend
     if (formData.grupos) {
       formData.grupos = [formData.grupos];
     }
@@ -256,7 +256,6 @@ export class CrearUsuarioComponent implements OnInit {
         console.log('✅ Usuario creado:', response);
         this.saving = false;
         
-        // 🎉 Mostrar dialog de éxito
         this.mostrarDialogExito(
           'Registro exitoso',
           'El usuario se ha creado exitosamente',
@@ -277,10 +276,9 @@ export class CrearUsuarioComponent implements OnInit {
     
     if (formData.fechaNacimiento) {
       const fecha = new Date(formData.fechaNacimiento);
-      formData.fechaNacimiento = fecha.toISOString().split('T')[0]; // Convierte a YYYY-MM-DD
+      formData.fechaNacimiento = fecha.toISOString().split('T')[0];
     }
     
-    // Convertir el rol único a array para el backend
     if (formData.grupos) {
       formData.grupos = [formData.grupos];
     }
@@ -293,19 +291,27 @@ export class CrearUsuarioComponent implements OnInit {
 
     console.log('🎯 Datos a enviar para actualizar usuario:', formData);
 
-    // TODO: Implementar endpoint de actualización
-    console.log('Actualizando usuario:', formData);
-    setTimeout(() => {
-      this.saving = false;
-      this.mostrarDialogExito(
-        'Actualización exitosa',
-        'El usuario se ha actualizado exitosamente',
-        'Continuar'
-      );
-    }, 2000);
+    // ✅ Usar el endpoint real de actualización
+    this.usuariosService.actualizarEmpleado(this.userId!, formData).subscribe({
+      next: (response) => {
+        console.log('✅ Usuario actualizado:', response);
+        this.saving = false;
+        
+        this.mostrarDialogExito(
+          'Actualización exitosa',
+          'El usuario se ha actualizado exitosamente',
+          'Continuar'
+        );
+      },
+      error: (error) => {
+        console.error('❌ Error al actualizar usuario:', error);
+        const mensaje = error.error?.error || 'Error al actualizar el usuario';
+        this.mostrarError(mensaje);
+        this.saving = false;
+      }
+    });
   }
 
-  // 🎉 Método para mostrar dialog de éxito
   private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
     const dialogData: SuccessDialogData = {
       title,
@@ -314,11 +320,10 @@ export class CrearUsuarioComponent implements OnInit {
     };
 
     const dialogRef = this.dialog.open(SuccessDialogComponent, {
-      disableClose: true, // No se puede cerrar clickeando afuera
+      disableClose: true,
       data: dialogData
     });
 
-    // Cuando se cierre el dialog, navegar a la lista
     dialogRef.afterClosed().subscribe(() => {
       this.navegarAListaUsuarios();
     });
@@ -345,5 +350,4 @@ export class CrearUsuarioComponent implements OnInit {
       panelClass: ['success-snackbar']
     });
   }
-
 }

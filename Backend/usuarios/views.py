@@ -845,53 +845,121 @@ def get_empleados_lista(request):
         return Response({
             'error': f'Error al obtener empleados: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-@api_view(['GET'])
+        
+@api_view(['GET', 'PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
-def get_empleado_detalle(request, empleado_id):
-    """Obtener detalles de un empleado específico"""
-    
-    # 🔐 Verificar permisos
-    if not request.user.has_perm('auth.view_user'):
-        return Response({
-            'error': 'No tienes permisos para ver usuarios'
-        }, status=status.HTTP_403_FORBIDDEN)
-    
+def empleado_detalle_actualizar(request, empleado_id):
+    """
+    GET: Obtener detalles de un empleado
+    PUT/PATCH: Actualizar información de un empleado
+    """
     try:
-        empleado = AppkioskoEmpleados.objects.select_related('user').get(id=empleado_id)
+        print(f"🔍 empleado_id recibido: {empleado_id}")  # DEBUG
+        print(f"🔍 tipo de empleado_id: {type(empleado_id)}")  # DEBUG
         
-        if not empleado.user:
+        # 🔥 ASEGURAR que busque por el ID correcto
+        user = User.objects.get(id=empleado_id)  # Debe usar empleado_id de la URL
+        print(f"🔍 Usuario encontrado: {user.username} (ID: {user.id})")  # DEBUG
+        
+        # Buscar el empleado relacionado si existe
+        try:
+            empleado = AppkioskoEmpleados.objects.get(user=user)
+        except AppkioskoEmpleados.DoesNotExist:
+            empleado = None
+        
+        if request.method == 'GET':
+            # 🔐 Verificar permisos
+            if not request.user.has_perm('auth.view_user'):
+                return Response({
+                    'error': 'No tienes permisos para ver usuarios'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
             return Response({
-                'error': 'El empleado no tiene usuario asociado'
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'empleado': {
+                    'id': user.id,  
+                    'cedula': empleado.cedula if empleado else '',
+                    'nombres': empleado.nombres if empleado else user.first_name,
+                    'apellidos': empleado.apellidos if empleado else user.last_name,
+                    'fecha_nacimiento': empleado.fecha_nacimiento if empleado else None,
+                    'telefono': empleado.telefono if empleado else '',
+                    'sexo': empleado.sexo if empleado else '',
+                    'username': user.username,
+                    'email': user.email,
+                    'turno_trabajo': empleado.turno_trabajo if empleado else '',
+                    'is_active': user.is_active,
+                    'date_joined': user.date_joined,
+                    'roles': [{'id': grupo.id, 'name': grupo.name} for grupo in user.groups.all()]
+                }
+            }, status=status.HTTP_200_OK)
         
-        return Response({
-            'empleado': {
-                'id': empleado.id,
-                'user_id': empleado.user.id,
-                'cedula': empleado.cedula,
-                'nombres': empleado.nombres,
-                'apellidos': empleado.apellidos,
-                'fecha_nacimiento': empleado.fecha_nacimiento.strftime('%Y-%m-%d') if empleado.fecha_nacimiento else None,
-                'telefono': empleado.telefono,
-                'sexo': empleado.sexo,
-                'turno_trabajo': empleado.turno_trabajo,
-                'username': empleado.user.username,
-                'email': empleado.user.email,
-                'is_active': empleado.user.is_active,
-                'is_staff': empleado.user.is_staff,
-                'roles': [{'id': g.id, 'name': g.name} for g in empleado.user.groups.all()],
-                'permisos': get_user_permissions(empleado.user),
-                'fecha_registro': empleado.created_at.strftime('%Y-%m-%d %H:%M') if empleado.created_at else None,
-                'ultima_actualizacion': empleado.updated_at.strftime('%Y-%m-%d %H:%M') if empleado.updated_at else None
-            }
-        }, status=status.HTTP_200_OK)
-        
-    except AppkioskoEmpleados.DoesNotExist:
+        elif request.method in ['PUT', 'PATCH']:
+            # 🔐 Verificar permisos
+            if not request.user.has_perm('auth.change_user'):
+                return Response({
+                    'error': 'No tienes permisos para actualizar usuarios'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            data = request.data
+            
+            # Actualizar campos del User
+            user.username = data.get('username', user.username)
+            user.email = data.get('email', user.email)
+            user.first_name = data.get('nombres', user.first_name)
+            user.last_name = data.get('apellidos', user.last_name)
+            user.is_active = data.get('isActive', user.is_active)
+            
+            # Actualizar contraseña solo si se proporciona
+            if 'password' in data and data['password']:
+                user.set_password(data['password'])
+            
+            # Actualizar grupos/roles
+            if 'grupos' in data:
+                grupos_ids = data['grupos']
+                if grupos_ids:
+                    grupos = Group.objects.filter(id__in=grupos_ids)
+                    user.groups.set(grupos)
+            
+            user.save()
+            
+            if empleado:
+                empleado.cedula = data.get('cedula', empleado.cedula)
+                empleado.nombres = data.get('nombres', empleado.nombres)
+                empleado.apellidos = data.get('apellidos', empleado.apellidos)
+                empleado.fecha_nacimiento = data.get('fechaNacimiento', empleado.fecha_nacimiento)
+                empleado.telefono = data.get('telefono', empleado.telefono)
+                empleado.sexo = data.get('sexo', empleado.sexo)
+                empleado.turno_trabajo = data.get('turnoTrabajo', empleado.turno_trabajo)
+                empleado.save()
+            else:
+                # Crear empleado si no existe y se proporcionan datos
+                if data.get('cedula'):
+                    empleado = AppkioskoEmpleados.objects.create(
+                        user=user,
+                        cedula=data.get('cedula'),
+                        nombres=data.get('nombres', user.first_name),
+                        apellidos=data.get('apellidos', user.last_name),
+                        fecha_nacimiento=data.get('fechaNacimiento'),
+                        telefono=data.get('telefono', ''),
+                        sexo=data.get('sexo', ''),
+                        turno_trabajo=data.get('turnoTrabajo', '')
+                    )
+            
+            return Response({
+                'mensaje': 'Empleado actualizado exitosamente',
+                'empleado': {
+                    'id': user.id,
+                    'nombres': empleado.nombres if empleado else user.first_name,
+                    'apellidos': empleado.apellidos if empleado else user.last_name,
+                    'username': user.username,
+                    'email': user.email
+                }
+            }, status=status.HTTP_200_OK)
+            
+    except User.DoesNotExist:  
         return Response({
             'error': 'Empleado no encontrado'
         }, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({
-            'error': f'Error al obtener empleado: {str(e)}'
+            'error': f'Error: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

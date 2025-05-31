@@ -63,6 +63,11 @@ export const administradorRoutes: Routes = [
     canActivate: [authGuard, permissionGuard(['auth.add_user'])]
   },
   { 
+  path: 'gestion-usuarios/crear-usuario/:id', 
+  component: CrearUsuarioComponent,
+  canActivate: [authGuard, permissionGuard(['auth.change_user'])]
+  },
+  { 
     path: 'gestion-usuarios/editar-eliminar-usuario', 
     component: EditarEliminarUsuarioComponent,
     canActivate: [authGuard, permissionGuard(['auth.change_user', 'auth.delete_user'])]

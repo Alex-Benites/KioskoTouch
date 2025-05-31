@@ -27,7 +27,7 @@ urlpatterns = [
 
     path('empleados/crear/', views.crear_usuario, name='crear_usuario'),
     path('empleados/lista/', views.get_empleados_lista, name='empleados_lista'),
-    path('empleados/<int:empleado_id>/', views.get_empleado_detalle, name='empleado_detalle'),
+    path('empleados/<int:empleado_id>/', views.empleado_detalle_actualizar, name='empleado_detalle_actualizar'),
 ]
 
 
