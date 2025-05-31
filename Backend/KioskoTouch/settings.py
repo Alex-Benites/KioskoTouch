@@ -17,8 +17,8 @@ SECRET_KEY = 'django-insecure-va0!@(g=u78w+lo7_1-(*zu1cd)nssw!bvu@xbgik0ko&b(brn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['KioskoGo.pythonanywhere.com'] 
-ALLOWED_HOSTS = [] #esto para trabajar de manera remota 
+#ALLOWED_HOSTS = ['KioskoGo.pythonanywhere.com']
+ALLOWED_HOSTS = [] #esto para trabajar de manera remota
 
 # Application definition
 
@@ -29,24 +29,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     #app main que deberia ser borrada a futuro
     #'main',
 
     # terceros
     'rest_framework',
-    'rest_framework_simplejwt',  
-    #'rest_framework_simplejwt.token_blacklist', 
+    'rest_framework_simplejwt',
+    #'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
     # apps
-    'comun.apps.ComunConfig', 
+    'comun.apps.ComunConfig',
     'usuarios.apps.UsuariosConfig',
     'catalogo.apps.CatalogoConfig',
     'ventas.apps.VentasConfig',
     'marketing.apps.MarketingConfig',
     'establecimientos.apps.EstablecimientosConfig',
-    
+
 ]
 
 MIDDLEWARE = [
@@ -93,7 +93,7 @@ DATABASES = {
        'ENGINE': 'django.db.backends.mysql',
        'NAME': 'kioskoGo_db',
        'USER': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
-       'PASSWORD': 'root',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
+       'PASSWORD': 'root2002',  # Tratar de tener las mismas credenciales para no tener que cambiar nada cada vez que se haga un commit
        'HOST': 'localhost',
        'PORT': '3306',
    }
@@ -129,32 +129,32 @@ SIMPLE_JWT = {
     # TIEMPOS DE VIDA
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),     # 60 minutos
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),        # 7 días
-    
+
     # SEGURIDAD CON ROTACIÓN (POR AHORA DESHABILITADA)
     'ROTATE_REFRESH_TOKENS': False,                      # Nuevo refresh token cada vez
     'BLACKLIST_AFTER_ROTATION': False,                   # Invalidar tokens viejos
-    
+
     # CONFIGURACIÓN DE SEGURIDAD
     'UPDATE_LAST_LOGIN': False,                         # No actualizar last_login
     'ALGORITHM': 'HS256',                               # Algoritmo de encriptación
     'SIGNING_KEY': SECRET_KEY,                          # Usar SECRET_KEY de Django
-    
+
     # CONFIGURACIÓN DE HEADERS
     'AUTH_HEADER_TYPES': ('Bearer',),                  # "Authorization: Bearer <token>"
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    
+
     # CLAIMS DEL TOKEN
     'USER_ID_FIELD': 'id',                             # Campo del User model
     'USER_ID_CLAIM': 'user_id',                        # Nombre del claim
     'TOKEN_TYPE_CLAIM': 'token_type',                  # access/refresh
     'JTI_CLAIM': 'jti',                                # Para blacklist
-    
+
     # CLASES DE TOKEN
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    
+
     # REGLAS DE AUTENTICACIÓN
     'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-    
+
     # OPCIONALES (valores por defecto)
     'VERIFYING_KEY': None,
     'AUDIENCE': None,
@@ -185,8 +185,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-# TIME_ZONE = 'UTC' 
-TIME_ZONE = 'America/Guayaquil'  
+# TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Guayaquil'
 
 USE_I18N = True
 
@@ -209,7 +209,7 @@ STATICFILES_DIRS = [
 
 #STATIC_ROOT = "assets/"
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",

@@ -1,1 +1,72 @@
-<p>eliminar productos works!</p>
+<app-header-admin></app-header-admin>
+
+<div class="productos-container">
+  <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
+  <h1 class="section-title">Eliminar Producto</h1>
+
+  <div class="productos-table-container">
+    <!-- Barra de búsqueda -->
+    <div class="search-bar">
+      <label for="buscarProducto">Buscar Producto:</label>
+      <input id="buscarProducto" type="text" placeholder="Buscar" />
+      <button>
+        <img src="assets/admin/ADMIN_9.png" alt="Buscar" />
+      </button>
+    </div>
+
+    <table mat-table [dataSource]="productos" class="productos-table">
+      <!-- Nombre -->
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+        <td mat-cell *matCellDef="let producto">{{ producto.nombre }}</td>
+      </ng-container>
+
+      <!-- Categoría -->
+      <ng-container matColumnDef="categoria">
+        <th mat-header-cell *matHeaderCellDef>Categoría</th>
+        <td mat-cell *matCellDef="let producto">{{ producto.categoria }}</td>
+      </ng-container>
+
+      <!-- Precio -->
+      <ng-container matColumnDef="precio">
+        <th mat-header-cell *matHeaderCellDef>Precio</th>
+        <td mat-cell *matCellDef="let producto">{{ producto.precio | currency }}</td>
+      </ng-container>
+
+      <!-- Estado -->
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let producto">
+          <span [class]="producto.estado === 'Activo' ? 'estado-activo' : 'estado-inactivo'">
+            {{ producto.estado }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let producto">
+          <img
+            src="assets/admin/ADMIN_7.png"
+            alt="Editar"
+            class="action-icon"
+            (click)="editarProducto(producto)"
+          />
+          <img
+            src="assets/admin/ADMIN_7_1.png"
+            alt="Eliminar"
+            class="action-icon"
+            (click)="abrirDialogoEliminar(producto)"
+          />
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-productos'"></app-footer-admin>
+
