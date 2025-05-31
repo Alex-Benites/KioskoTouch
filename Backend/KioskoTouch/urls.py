@@ -6,8 +6,10 @@ from django.http import FileResponse
 import os
 
 def serve_angular(request):
+    """Servir index.html de Angular para rutas del frontend"""
     try:
-        index_path = os.path.join(settings.BASE_DIR, '../Frontend/dist/frontend/index.html')  
+        # ⚠️ AGREGAR /browser al path
+        index_path = os.path.join(settings.BASE_DIR, '../Frontend/dist/frontend/browser/index.html')
         return FileResponse(open(index_path, 'rb'))
     except FileNotFoundError:
         from django.http import HttpResponse
