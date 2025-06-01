@@ -12,6 +12,7 @@ from django.conf import settings
 import json
 import os
 import uuid
+from django.db import connection
 
 class ProductoSerializer(serializers.ModelSerializer):
     categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
@@ -120,33 +121,336 @@ class ProductoSerializer(serializers.ModelSerializer):
         
         return producto
 
-    def _crear_ingredientes_producto(self, producto, ingredientes_ids):
-        """Crea las relaciones producto-ingrediente"""
-        count = 0
-        for ingrediente_id in ingredientes_ids:
+
+    def update(self, instance, validated_data):
+        """Actualizar producto con ingredientes e imagen"""
+        print(f"🔄 Actualizando producto: {instance.nombre}")
+        
+        # 🔧 GUARDAR CATEGORÍA ORIGINAL ANTES DE ACTUALIZAR
+        categoria_original = instance.categoria.nombre if instance.categoria else None
+        
+        # Extraer datos especiales ANTES de actualizar el producto
+        ingredientes_ids = validated_data.pop('ingredientes', None)
+        imagen = validated_data.pop('imagen', None)
+        
+        print(f"🥗 Ingredientes recibidos para actualizar: {ingredientes_ids}")
+        
+        # Actualizar campos básicos del producto
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        print(f"✅ Campos básicos actualizados")
+        
+        # 🔧 DETECTAR CAMBIO DE CATEGORÍA COMPARANDO ANTES/DESPUÉS
+        categoria_nueva = instance.categoria.nombre if instance.categoria else None
+        cambio_categoria = (
+            categoria_original != categoria_nueva and 
+            categoria_original in ['hamburguesas', 'pizzas'] and 
+            categoria_nueva in ['hamburguesas', 'pizzas']
+        )
+        
+        if cambio_categoria:
+            print(f"🔄 CAMBIO DE CATEGORÍA DETECTADO: {categoria_original} → {categoria_nueva}")
+        
+        # 🆕 ACTUALIZACIÓN INTELIGENTE DE INGREDIENTES
+        if ingredientes_ids is not None:
+            print(f"🥗 Actualizando ingredientes de forma inteligente...")
+            self._actualizar_ingredientes_inteligente(instance, ingredientes_ids, cambio_categoria)
+        else:
+            print(f"🥗 No se enviaron ingredientes para actualizar")
+        
+        # Actualizar imagen si se proporcionó
+        if imagen:
+            print(f"📸 Actualizando imagen...")
+            self._actualizar_imagen(instance, imagen)
+        
+        print(f"✅ Producto {instance.nombre} actualizado completamente")
+        return instance
+    
+
+    def _obtener_siguiente_id_disponible(self):
+        """Busca el próximo ID disponible en toda la tabla"""
+        ultimo_id = AppkioskoProductosIngredientes.objects.aggregate(
+            max_id=models.Max('id')
+        )['max_id'] or 0
+        
+        # Buscar huecos en la secuencia
+        for i in range(1, ultimo_id + 2):
+            if not AppkioskoProductosIngredientes.objects.filter(id=i).exists():
+                return i
+        
+        return ultimo_id + 1
+
+    def _crear_relacion_con_id_optimizado(self, producto, ingrediente):
+        """Crea relación reutilizando IDs eliminados"""
+        try:
+            # Intentar usar un ID específico (requiere SQL crudo)
+            next_id = self._obtener_siguiente_id_disponible()
+            
+            # Crear la relación
+            relacion = AppkioskoProductosIngredientes.objects.create(
+                producto=producto,
+                ingrediente=ingrediente,
+                es_base=True,
+                permite_extra=False
+            )
+            
+            return relacion
+        except Exception as e:
+            print(f"❌ Error creando con ID optimizado: {e}")
+            return None
+
+
+    def _inferir_categoria_anterior(self, ingredientes_actuales_ids):
+        """Infiere la categoría anterior basándose en los ingredientes actuales"""
+        if not ingredientes_actuales_ids:
+            return None
+        
+        try:
+            ingredientes = AppkioskoIngredientes.objects.filter(id__in=ingredientes_actuales_ids)
+            categorias = ingredientes.values_list('categoria_producto', flat=True)
+            
+            # Contar ocurrencias de cada categoría
+            conteo_categorias = {}
+            for cat in categorias:
+                conteo_categorias[cat] = conteo_categorias.get(cat, 0) + 1
+            
+            # Retornar la categoría más común
+            if conteo_categorias:
+                return max(conteo_categorias, key=conteo_categorias.get)
+            
+            return None
+        except Exception:
+            return None
+
+
+    def _actualizar_ingredientes_inteligente(self, producto, nuevos_ingredientes_ids, forzar_cambio_categoria=False):
+        """Actualiza ingredientes reutilizando IDs de relaciones eliminadas"""
+        print(f"🧠 Actualizacion inteligente de ingredientes para {producto.nombre}")
+        print(f"   Nuevos ingredientes solicitados: {nuevos_ingredientes_ids}")
+        
+        # 🔧 ORDENAR relaciones por ID para reutilizar desde el más bajo
+        relaciones_actuales = list(AppkioskoProductosIngredientes.objects.filter(producto=producto).order_by('id'))
+        ingredientes_actuales_ids = set([rel.ingrediente_id for rel in relaciones_actuales])
+        nuevos_ingredientes_ids_set = set(nuevos_ingredientes_ids)
+        
+        print(f"   Ingredientes actuales: {ingredientes_actuales_ids}")
+        print(f"   Ingredientes nuevos: {nuevos_ingredientes_ids_set}")
+        print(f"   🔍 IDs de relaciones disponibles: {[rel.id for rel in relaciones_actuales]}")
+        
+        # 🆕 USAR EL PARÁMETRO DE CAMBIO DE CATEGORÍA
+        if forzar_cambio_categoria:
+            print(f"   🔄 CAMBIO DE CATEGORÍA FORZADO - Eliminando todos los ingredientes anteriores")
+            # Si cambió la categoría, eliminar TODOS los ingredientes anteriores
+            if relaciones_actuales:
+                eliminados = AppkioskoProductosIngredientes.objects.filter(producto=producto).delete()
+                print(f"   🗑️ Eliminados todos los ingredientes anteriores: {eliminados[0]} relaciones")
+                relaciones_actuales = []
+                ingredientes_actuales_ids = set()
+        
+        # 📊 DIAGNÓSTICO: Encontrar IDs faltantes GLOBALMENTE
+        ids_faltantes_globales = []
+        if relaciones_actuales:
+            ids_actuales = [rel.id for rel in relaciones_actuales]
+            min_id = min(ids_actuales)
+            max_id = max(ids_actuales)
+            
+            for i in range(min_id, max_id + 1):
+                if i not in ids_actuales:
+                    ids_faltantes_globales.append(i)
+            
+            if ids_faltantes_globales:
+                print(f"   📈 IDs faltantes en el rango {min_id}-{max_id}: {ids_faltantes_globales}")
+            else:
+                print(f"   ✅ Sin huecos en el rango {min_id}-{max_id}")
+        
+        # 🔍 Determinar qué hacer
+        ingredientes_mantener = ingredientes_actuales_ids & nuevos_ingredientes_ids_set
+        ingredientes_eliminar = ingredientes_actuales_ids - nuevos_ingredientes_ids_set
+        ingredientes_agregar = nuevos_ingredientes_ids_set - ingredientes_actuales_ids
+        
+        print(f"   📋 Mantener: {ingredientes_mantener}")
+        print(f"   🗑️ Eliminar: {ingredientes_eliminar}")  
+        print(f"   ➕ Agregar: {ingredientes_agregar}")
+        
+        # 🔄 REUTILIZAR RELACIONES EXISTENTES (solo si NO cambió la categoría)
+        if not forzar_cambio_categoria and ingredientes_eliminar and ingredientes_agregar:
+            relaciones_eliminables = [rel for rel in relaciones_actuales if rel.ingrediente_id in ingredientes_eliminar]
+            relaciones_eliminables.sort(key=lambda x: x.id)
+            
+            ingredientes_a_agregar_list = list(ingredientes_agregar)
+            
+            print(f"   🔍 Relaciones a reutilizar (ordenadas): {[f'ID:{rel.id}' for rel in relaciones_eliminables]}")
+            
+            # Reutilizar tantas relaciones como sea posible
+            reutilizaciones = min(len(relaciones_eliminables), len(ingredientes_a_agregar_list))
+            
+            for i in range(reutilizaciones):
+                relacion_antigua = relaciones_eliminables[i]
+                nuevo_ingrediente_id = ingredientes_a_agregar_list[i]
+                
+                try:
+                    nuevo_ingrediente = AppkioskoIngredientes.objects.get(id=nuevo_ingrediente_id)
+                    
+                    ingrediente_id_original = relacion_antigua.ingrediente_id
+                    nombre_original = relacion_antigua.ingrediente.nombre
+                    
+                    relacion_antigua.ingrediente = nuevo_ingrediente
+                    relacion_antigua.save()
+                    
+                    print(f"   🔄 Reutilizado ID {relacion_antigua.id}: {nombre_original} → {nuevo_ingrediente.nombre}")
+                    
+                    ingredientes_eliminar.remove(ingrediente_id_original)
+                    ingredientes_agregar.remove(nuevo_ingrediente_id)
+                    
+                except AppkioskoIngredientes.DoesNotExist:
+                    print(f"   ❌ Ingrediente ID {nuevo_ingrediente_id} no existe")
+                except Exception as e:
+                    print(f"   ❌ Error reutilizando relación: {str(e)}")
+        
+        # 🗑️ Eliminar relaciones restantes (solo si NO cambió la categoría)
+        if not forzar_cambio_categoria and ingredientes_eliminar:
+            eliminados = AppkioskoProductosIngredientes.objects.filter(
+                producto=producto,
+                ingrediente_id__in=ingredientes_eliminar
+            ).delete()
+            print(f"   🗑️ Eliminados: {eliminados[0]} relaciones")
+        
+        # 🆕 CREAR NUEVAS RELACIONES
+        count_agregados = 0
+        if forzar_cambio_categoria:
+            # Si cambió categoría, crear TODOS los ingredientes como nuevos
+            ingredientes_a_crear = nuevos_ingredientes_ids_set
+            print(f"   🆕 Creando TODOS los ingredientes debido a cambio de categoría")
+        else:
+            # Si no cambió categoría, solo crear los faltantes
+            ingredientes_a_crear = ingredientes_agregar
+        
+        # 🔧 OBTENER NOMBRE CORRECTO DE LA TABLA
+        table_name = AppkioskoProductosIngredientes._meta.db_table
+        
+        # 🔧 CREAR RELACIONES
+        for ingrediente_id in ingredientes_a_crear:
             try:
                 ingrediente = AppkioskoIngredientes.objects.get(id=ingrediente_id)
                 
-                # Evitar duplicados
-                if not AppkioskoProductosIngredientes.objects.filter(
-                    producto=producto, ingrediente=ingrediente
-                ).exists():
-                    AppkioskoProductosIngredientes.objects.create(
+                # Si hay IDs faltantes y NO cambió categoría, usar el primero disponible
+                if not forzar_cambio_categoria and ids_faltantes_globales:
+                    id_a_usar = ids_faltantes_globales.pop(0)  # Tomar el más bajo
+                    
+                    # 🔧 CREAR CON ID ESPECÍFICO usando nombre correcto de tabla
+                    with connection.cursor() as cursor:
+                        cursor.execute(f"""
+                            INSERT INTO {table_name} 
+                            (id, producto_id, ingrediente_id, es_base, permite_extra) 
+                            VALUES (%s, %s, %s, %s, %s)
+                        """, [id_a_usar, producto.id, ingrediente.id, True, False])
+                    
+                    print(f"   🔧 Rellenó hueco ID {id_a_usar}: {ingrediente.nombre}")
+                    count_agregados += 1
+                else:
+                    # Crear normalmente
+                    relacion = AppkioskoProductosIngredientes.objects.create(
                         producto=producto,
                         ingrediente=ingrediente,
                         es_base=True,
                         permite_extra=False
                     )
-                    print(f"   ✅ {ingrediente.nombre}")
-                    count += 1
-                else:
-                    print(f"   ⚠️ {ingrediente.nombre} (ya existe)")
+                    print(f"   ➕ Nueva relación: {ingrediente.nombre} (ID relación: {relacion.id})")
+                    count_agregados += 1
                     
+            except AppkioskoIngredientes.DoesNotExist:
+                print(f"   ❌ Ingrediente ID {ingrediente_id} no existe")
+            except Exception as e:
+                print(f"   ❌ Error creando relación: {str(e)}")
+        
+        # 📊 Resumen
+        print(f"   ✅ Mantenidos: {len(ingredientes_mantener)} ingredientes")
+        print(f"   🔄 Reutilizados: {reutilizaciones if 'reutilizaciones' in locals() else 0} IDs de relación")
+        print(f"   🗑️ Eliminados: {len(ingredientes_eliminar)} ingredientes") 
+        print(f"   ➕ Nuevos: {count_agregados} ingredientes")
+        print(f"   🎯 Total final: {len(nuevos_ingredientes_ids)} ingredientes")
+
+
+    def _detectar_cambio_categoria(self, producto, ingredientes_actuales_ids, nuevos_ingredientes_ids_set):
+        """Detecta si hubo un cambio de categoría basándose en los ingredientes"""
+        if not ingredientes_actuales_ids:
+            return False  # No hay ingredientes anteriores, no es cambio de categoría
+        
+        try:
+            # Obtener categorías de los ingredientes actuales
+            ingredientes_actuales = AppkioskoIngredientes.objects.filter(id__in=ingredientes_actuales_ids)
+            categorias_actuales = set(ingredientes_actuales.values_list('categoria_producto', flat=True))
+            
+            # Obtener categorías de los nuevos ingredientes
+            ingredientes_nuevos = AppkioskoIngredientes.objects.filter(id__in=nuevos_ingredientes_ids_set)
+            categorias_nuevas = set(ingredientes_nuevos.values_list('categoria_producto', flat=True))
+            
+            print(f"   🔍 Categorías actuales de ingredientes: {categorias_actuales}")
+            print(f"   🔍 Categorías nuevas de ingredientes: {categorias_nuevas}")
+            
+            # Si las categorías son completamente diferentes, es un cambio
+            if categorias_actuales and categorias_nuevas and not (categorias_actuales & categorias_nuevas):
+                return True
+                
+            return False
+            
+        except Exception as e:
+            print(f"   ❌ Error detectando cambio de categoría: {str(e)}")
+            return False
+
+            
+
+    def _actualizar_imagen(self, instance, imagen):
+        """Actualiza la imagen del producto"""
+        try:
+            # Eliminar imagen anterior
+            imagen_anterior = AppkioskoImagen.objects.get(
+                categoria_imagen='productos',
+                entidad_relacionada_id=instance.id
+            )
+            # Eliminar archivo físico anterior
+            if imagen_anterior.ruta:
+                ruta_fisica = os.path.join(settings.MEDIA_ROOT, imagen_anterior.ruta.lstrip('/media/'))
+                if os.path.exists(ruta_fisica):
+                    os.remove(ruta_fisica)
+                    print(f"   🗑️ Archivo físico anterior eliminado")
+            imagen_anterior.delete()
+            print(f"   🗑️ Registro de imagen anterior eliminado")
+        except AppkioskoImagen.DoesNotExist:
+            print(f"   📝 No había imagen anterior")
+        
+        # Crear nueva imagen
+        imagen_url = self._crear_imagen_producto(instance, imagen)
+        if imagen_url:
+            print(f"   📸 Nueva imagen guardada: {imagen_url}")
+
+    def _crear_ingredientes_producto(self, producto, ingredientes_ids):
+        """Crea las relaciones producto-ingrediente"""
+        print(f"🔧 Creando relaciones para producto {producto.nombre}")
+        print(f"   IDs de ingredientes a procesar: {ingredientes_ids}")
+        
+        count = 0
+        for ingrediente_id in ingredientes_ids:
+            try:
+                ingrediente = AppkioskoIngredientes.objects.get(id=ingrediente_id)
+                
+                # Crear la relación (no verificar duplicados porque ya eliminamos todas)
+                relacion = AppkioskoProductosIngredientes.objects.create(
+                    producto=producto,
+                    ingrediente=ingrediente,
+                    es_base=True,
+                    permite_extra=False
+                )
+                print(f"   ✅ {ingrediente.nombre} (ID: {ingrediente.id}) - Relación creada: {relacion.id}")
+                count += 1
+                        
             except AppkioskoIngredientes.DoesNotExist:
                 print(f"   ❌ Ingrediente ID {ingrediente_id} no existe")
             except Exception as e:
                 print(f"   ❌ Error con ingrediente {ingrediente_id}: {str(e)}")
         
+        print(f"🎯 Total de relaciones creadas: {count}")
         return count
 
     def _crear_imagen_producto(self, producto, imagen):
@@ -243,3 +547,6 @@ class IngredienteSerializer(serializers.ModelSerializer):
             return imagen.ruta
         except AppkioskoImagen.DoesNotExist:
             return None
+
+
+

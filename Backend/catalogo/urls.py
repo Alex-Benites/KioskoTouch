@@ -4,18 +4,24 @@ from .views import (
     CategoriaListView,
     get_ingredientes_por_categoria, 
     get_producto_imagen,
-    get_producto_con_ingredientes,      # ← FALTA
-    listar_productos_con_ingredientes,  # ← FALTA
-    get_estados,                        # ← FALTA
-    eliminar_producto                   # ← FALTA (si la tienes en views.py)
+    get_producto_con_ingredientes,
+    listar_productos_con_ingredientes,  
+    get_estados,
+    eliminar_producto,
 )
+from . import views  
 
 urlpatterns = [
     # === PRODUCTOS ===
     path('productos/', ProductoListCreateAPIView.as_view(), name='producto-list-create'),
-    path('productos/<int:producto_id>/', get_producto_con_ingredientes, name='producto-detalle'),  # ← FALTA
+    
+    # 🔧 CAMBIAR: Usar solo UNA ruta para detalle de producto
+    path('productos/<int:pk>/', views.ProductoDetailAPIView.as_view(), name='producto-detail'),
+    
+    # 🔄 RENOMBRAR las otras para evitar conflictos
+    path('productos/<int:producto_id>/detalle-funcion/', get_producto_con_ingredientes, name='producto-detalle-funcion'),
     path('productos/<int:producto_id>/imagen/', get_producto_imagen, name='producto-imagen'),
-    path('productos/con-ingredientes/', listar_productos_con_ingredientes, name='productos-con-ingredientes'),  # ← FALTA
+    path('productos/listado-completo/', listar_productos_con_ingredientes, name='productos-con-ingredientes'),
     
     # === CATEGORÍAS ===
     path('categorias/', CategoriaListView.as_view(), name='lista-categorias'),
@@ -24,8 +30,8 @@ urlpatterns = [
     path('ingredientes/<str:categoria>/', get_ingredientes_por_categoria, name='ingredientes-categoria'),
     
     # === ESTADOS ===
-    path('estados/', get_estados, name='estados-list'),  # ← FALTA
+    path('estados/', get_estados, name='estados-list'),
     
-    # === ELIMINAR (opcional) ===
-    # path('productos/<int:producto_id>/eliminar/', eliminar_producto, name='producto-eliminar'),  # ← FALTA (si existe)
+    # === ELIMINAR ===
+    path('productos/<int:producto_id>/eliminar/', eliminar_producto, name='producto-eliminar'),
 ]

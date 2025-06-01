@@ -17,6 +17,7 @@ export class ProductosComponent {
     this.router.navigateByUrl(ruta);
   }
 
+  
   volver() {
     this.router.navigate(['administrador/home']);
   }

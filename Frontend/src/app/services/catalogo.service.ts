@@ -70,4 +70,12 @@ export class CatalogoService {
     
   //   return `${baseUrl}${imagenUrl}`;
   // }
+  obtenerProductoPorId(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}catalogo/productos/${id}/`);
+  }
+
+  actualizarProducto(id: number, formData: FormData): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}catalogo/productos/${id}/`, formData);
+  }
+
 }

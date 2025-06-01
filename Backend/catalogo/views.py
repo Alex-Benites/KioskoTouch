@@ -229,3 +229,42 @@ def eliminar_producto(request, producto_id):
         return Response({'error': 'Producto no encontrado'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
+
+class ProductoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Vista para obtener, actualizar y eliminar un producto específico"""
+    queryset = AppkioskoProductos.objects.select_related('categoria', 'estado').all()
+    serializer_class = ProductoSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+    
+    def update(self, request, *args, **kwargs):
+        """Actualizar producto - maneja imagen e ingredientes"""
+        print(f"\n🔄 ACTUALIZANDO PRODUCTO ID: {kwargs.get('pk')}")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
+        
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            producto = serializer.save()
+            
+            print(f"✅ PRODUCTO ACTUALIZADO:")
+            print(f"   ID: {producto.id}")
+            print(f"   Nombre: {producto.nombre}")
+            print("─" * 50)
+            
+            return Response({
+                'mensaje': '✅ Producto actualizado exitosamente',
+                'producto': serializer.data
+            })
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            print("─" * 50)
+            
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
