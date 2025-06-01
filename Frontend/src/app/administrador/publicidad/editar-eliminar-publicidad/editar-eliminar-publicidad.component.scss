@@ -1,0 +1,178 @@
+.page-container {
+  padding: 20px 40px;
+  background-color: #F2F2F2;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: calc(100vh - 120px); // Ajusta según altura de header/footer
+}
+
+.breadcrumb-title {
+  font-size: 18px;
+  color: #888;
+  font-weight: normal;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.page-main-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+.content-layout {
+  display: flex;
+  flex-direction: column; // Apilado en móvil
+  gap: 30px;
+}
+
+@media (min-width: 992px) { // Punto de quiebre para dos columnas
+  .content-layout {
+    flex-direction: row;
+  }
+}
+
+.filters-column {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 0 0 280px; // Ancho fijo para la columna de filtros en desktop
+  height: fit-content; // Para que no se estire innecesariamente
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.filter-section {
+  .filter-title {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); // Responsive para checkboxes
+    gap: 10px;
+
+    mat-checkbox {
+      font-size: 0.9em;
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+
+  .filter-button {
+    flex-grow: 1;
+    height: 40px;
+  }
+}
+
+.content-column {
+  flex-grow: 1; // Ocupa el espacio restante
+  position: relative; // Para el loading indicator
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px; // Asegura que el spinner sea visible
+}
+
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #777;
+  padding: 40px;
+  background-color: #fff;
+  border-radius: 8px;
+  min-height: 200px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 15px;
+  }
+  p {
+    font-size: 1.1em;
+  }
+}
+
+.publicidad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); // Columnas responsivas para las tarjetas
+  gap: 20px;
+}
+
+.publicidad-card {
+  display: flex;
+  flex-direction: column;
+
+  mat-card-header {
+    padding-bottom: 8px; // Menos espacio si no hay subtítulo
+  }
+
+  mat-card-title {
+    font-size: 1.2em;
+    font-weight: 500;
+  }
+
+  .image-container {
+    width: 100%;
+    padding-top: 56.25%; // Aspect ratio 16:9 para la imagen
+    position: relative;
+    background-color: #e0e0e0; // Placeholder color
+    overflow: hidden; // Para que la imagen no se desborde
+
+    img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; // Cubre el contenedor manteniendo el aspect ratio
+    }
+  }
+
+  mat-card-content {
+    padding-top: 16px;
+    flex-grow: 1; // Para que el contenido empuje las acciones hacia abajo
+
+    .descripcion-publicidad {
+      font-size: 0.9em;
+      color: #555;
+      line-height: 1.4;
+      // Limitar texto a X líneas con elipsis (opcional, requiere más CSS)
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: calc(0.9em * 1.4 * 3); // Altura mínima para 3 líneas
+    }
+  }
+
+  mat-card-actions {
+    padding: 8px 16px 16px; // Ajustar padding
+    button {
+      min-width: 80px;
+    }
+  }
+}

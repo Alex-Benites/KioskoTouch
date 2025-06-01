@@ -1,0 +1,121 @@
+<app-header-admin></app-header-admin>
+
+<div class="form-container">
+  <p class="breadcrumb-title">GESTIÓN DE PUBLICIDAD</p>
+  <h1 class="form-main-title">Creación de Publicidad</h1>
+
+  <form [formGroup]="publicidadForm" (ngSubmit)="onSubmit()" class="publicidad-form">
+    <div class="form-grid">
+      <!-- Columna Izquierda: Campos del Formulario -->
+      <div class="form-fields-column">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Nombre de la publicidad</mat-label>
+          <input matInput formControlName="nombre" placeholder="Ej: Publicidad Hamburguesa">
+          <!-- <mat-error *ngIf="nombre?.invalid && nombre?.touched">Nombre es requerido.</mat-error> -->
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput formControlName="descripcion" placeholder="Ej: Publicidad en patrocinio con..." rows="3"></textarea>
+          <!-- <mat-error *ngIf="descripcion?.invalid && descripcion?.touched">Descripción es requerida.</mat-error> -->
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Tipo de publicidad</mat-label>
+          <mat-select formControlName="tipoPublicidad">
+            <mat-option value="banner">Banner</mat-option>
+            <mat-option value="video">Video</mat-option>
+            <mat-option value="popup">Popup</mat-option>
+          </mat-select>
+          <!-- <mat-error *ngIf="tipoPublicidad?.invalid && tipoPublicidad?.touched">Tipo es requerido.</mat-error> -->
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Fecha inicial</mat-label>
+          <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicial" placeholder="dd/mm/aaaa">
+          <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+          <mat-datepicker #pickerInicio></mat-datepicker>
+          <!-- <mat-error *ngIf="fechaInicial?.invalid && fechaInicial?.touched">Fecha inicial es requerida.</mat-error> -->
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Fecha Final</mat-label>
+          <input matInput [matDatepicker]="pickerFin" formControlName="fechaFinal" placeholder="dd/mm/aaaa">
+          <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+          <mat-datepicker #pickerFin></mat-datepicker>
+          <!-- <mat-error *ngIf="fechaFinal?.invalid && fechaFinal?.touched">Fecha final es requerida.</mat-error> -->
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Estado del Establecimiento</mat-label>
+          <mat-select formControlName="estado">
+            <mat-option value="activo">Activo</mat-option>
+            <mat-option value="inactivo">Inactivo</mat-option>
+          </mat-select>
+          <!-- <mat-error *ngIf="estado?.invalid && estado?.touched">Estado es requerido.</mat-error> -->
+        </mat-form-field>
+      </div>
+
+      <!-- Columna Derecha: Carga de Imagen y Configuración Adicional -->
+      <div class="media-config-column">
+        <p class="image-upload-label">Publicidad</p>
+        <div class="image-upload-container">
+          <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif, video/mp4">
+          @if (!imagePreview) {
+          <div class="upload-placeholder" (click)="fileInput.click()">
+            <mat-icon class="upload-placeholder-icon">cloud_upload</mat-icon>
+            <p>Arrastra o haz clic para subir</p>
+          </div>
+          } @else {
+          <div class="preview-container">
+            <img [src]="imagePreview" alt="Vista previa de la publicidad" class="image-preview">
+            <p class="filename-preview">{{ selectedFileName }}</p>
+          </div>
+          }
+        </div>
+        <div class="image-buttons-container">
+          <button mat-stroked-button color="primary" (click)="fileInput.click()" class="image-action-button">
+            <mat-icon>add_photo_alternate</mat-icon>
+            Agregar Imagen
+          </button>
+          @if (imagePreview) {
+          <button mat-stroked-button color="warn" (click)="eliminarImagen()" class="image-action-button">
+            Eliminar
+          </button>
+          }
+        </div>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Frecuencia finalización</mat-label>
+          <mat-select formControlName="frecuenciaFinalizacion">
+            <mat-option value="intervalo">Intervalo</mat-option>
+            <mat-option value="fecha_especifica">Fecha Específica</mat-option>
+            <mat-option value="manual">Manual</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <p class="form-field-sublabel">Tiempo de intervalo</p>
+        <div class="tiempo-intervalo-group">
+          <mat-form-field appearance="outline" class="form-field tiempo-valor">
+            <input matInput type="number" formControlName="tiempoIntervaloValor" placeholder="5">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="form-field tiempo-unidad">
+            <mat-select formControlName="tiempoIntervaloUnidad">
+              <mat-option value="segundos">Segundos</mat-option>
+              <mat-option value="minutos">Minutos</mat-option>
+              <mat-option value="horas">Horas</mat-option>
+              <mat-option value="dias">Días</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" mat-stroked-button color="primary" (click)="onCancel()" class="action-button cancel-button">Cancelar</button>
+      <button type="submit" mat-flat-button color="primary" class="action-button save-button" [disabled]="publicidadForm.invalid">Guardar cambios</button>
+    </div>
+  </form>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-publicidad'"></app-footer-admin>

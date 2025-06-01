@@ -31,6 +31,8 @@ import { permissionGuard } from '../guards/permission.guard';
 import { IngredientesComponent } from './ingredientes/ingredientes.component';
 import { CrearIngredienteComponent } from './ingredientes/crear-ingrediente/crear-ingrediente.component';
 import { EditarEliminarIngredienteComponent } from './ingredientes/editar-eliminar-ingrediente/editar-eliminar-ingrediente.component';
+import { CrearPublicidadComponent } from './publicidad/crear-publicidad/crear-publicidad.component';
+import { EditarEliminarPublicidadComponent } from './publicidad/editar-eliminar-publicidad/editar-eliminar-publicidad.component';
 
 export const administradorRoutes: Routes = [
   // 🔓 Rutas públicas (sin autenticación)
@@ -202,6 +204,17 @@ export const administradorRoutes: Routes = [
     path: 'gestion-publicidad', 
     component: PublicidadComponent,
     canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopublicidades'])]
+  },
+  { 
+    path: 'gestion-publicidad/crear', 
+    component: CrearPublicidadComponent,
+    canActivate: [authGuard, permissionGuard(['marketing.add_appkioskopublicidades'])]
+  },
+
+  { 
+    path: 'gestion-publicidad/editar-eliminar', 
+    component: EditarEliminarPublicidadComponent,
+    canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopublicidades', 'marketing.delete_appkioskopublicidades'])]
   },
 
   // 🖥️ Gestión de kiosko touch - Permisos: establecimientos.appkioskokioskostouch

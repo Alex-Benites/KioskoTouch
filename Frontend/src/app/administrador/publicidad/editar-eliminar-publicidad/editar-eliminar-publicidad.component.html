@@ -1,0 +1,75 @@
+<app-header-admin></app-header-admin>
+
+<div class="page-container">
+  <p class="breadcrumb-title">GESTIÓN DE PUBLICIDAD</p>
+  <h1 class="page-main-title">Edición/Eliminación de Publicidad</h1>
+
+  <div class="content-layout">
+    <!-- Columna de Filtros -->
+    <div class="filters-column">
+      <form [formGroup]="filtroForm" (ngSubmit)="aplicarFiltros()">
+        <div class="filter-section">
+          <h3 class="filter-title">Buscar por tipo</h3>
+          <div class="checkbox-group">
+            <mat-checkbox formControlName="tipoBanner">Banner</mat-checkbox>
+            <mat-checkbox formControlName="tipoSlider">Slider</mat-checkbox>
+            <mat-checkbox formControlName="tipoVideo">Video</mat-checkbox>
+            <mat-checkbox formControlName="tipoPopUp">Pop Up</mat-checkbox>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3 class="filter-title">Buscar por estado</h3>
+          <div class="checkbox-group">
+            <mat-checkbox formControlName="estadoActivo">Activo</mat-checkbox>
+            <mat-checkbox formControlName="estadoInactivo">Inactivo</mat-checkbox>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button mat-flat-button color="primary" type="submit" class="filter-button">Buscar</button>
+          <button mat-stroked-button type="button" (click)="limpiarFiltros()" class="filter-button">Limpiar</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Columna de Contenido (Tarjetas de Publicidad) -->
+    <div class="content-column">
+      @if (isLoading) {
+        <div class="loading-indicator">
+          <mat-spinner diameter="50"></mat-spinner>
+        </div>
+      } @else if (publicidadesFiltradas.length === 0) {
+        <div class="no-results">
+          <mat-icon>search_off</mat-icon>
+          <p>No se encontraron publicidades que coincidan con los filtros.</p>
+        </div>
+      } @else {
+        <div class="publicidad-grid">
+          @for (publi of publicidadesFiltradas; track publi.id) {
+            <mat-card class="publicidad-card">
+              <mat-card-header>
+                <mat-card-title>{{ publi.nombre }}</mat-card-title>
+                <!-- <mat-card-subtitle>{{ publi.tipo }} - {{ publi.estado }}</mat-card-subtitle> -->
+              </mat-card-header>
+              <div class="image-container">
+                <img mat-card-image [src]="publi.imagenUrl || 'assets/images/placeholder-image.png'" [alt]="publi.nombre">
+              </div>
+              <mat-card-content>
+                <p class="descripcion-publicidad">
+                  {{ publi.descripcion || 'Sin descripción disponible.' }}
+                </p>
+              </mat-card-content>
+              <mat-card-actions align="end">
+                <button mat-stroked-button color="primary" (click)="editarPublicidad(publi.id)">Editar</button>
+                <button mat-flat-button color="warn" (click)="confirmarEliminacion(publi.id, publi.nombre)">Eliminar</button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/dashboard'"></app-footer-admin> <!-- Ajusta la ruta de regreso -->
