@@ -71,11 +71,28 @@ export class CatalogoService {
   //   return `${baseUrl}${imagenUrl}`;
   // }
   obtenerProductoPorId(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}catalogo/productos/${id}/`);
+    return this.http.get<any>(`${this.apiUrl}/catalogo/productos/${id}/`);
   }
 
   actualizarProducto(id: number, formData: FormData): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}catalogo/productos/${id}/`, formData);
+    return this.http.put<any>(`${this.apiUrl}/catalogo/productos/${id}/`, formData);
   }
 
+  eliminarProducto(id: number): Observable<any> {
+    const url = `${this.apiUrl}/catalogo/productos/${id}/`;
+    return this.http.delete<any>(url, this.getHttpOptions());
+  }
+
+  obtenerProductos(): Observable<Producto[]> {
+    return this.getProductos();
+  }
+
+  verificarProductoExiste(id: number): Observable<boolean> {
+    return new Observable(observer => {
+      this.obtenerProductoPorId(id).subscribe({
+        next: () => observer.next(true),
+        error: () => observer.next(false)
+      });
+    });
+  }
 }
