@@ -1,1 +1,91 @@
-<p>editar-eliminar-pantalla-cocina works!</p>
+<app-header-admin></app-header-admin>
+
+<div class="pantallas-container">
+  <p class="breadcrumb-title">GESTIÓN DE PANTALLAS DE COCINA</p>
+  <h1 class="section-title">Edición/Eliminación de Pantallas de Cocina</h1>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Estado</label>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-select [(value)]="filtroEstado" (selectionChange)="aplicarFiltros()">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="activo">Activo</mat-option>
+          <mat-option value="inactivo">Inactivo</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="filter-group">
+      <label>Kiosco</label>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-select [(value)]="filtroKiosco" (selectionChange)="aplicarFiltros()">
+          <mat-option value="">Seleccione kiosco</mat-option>
+          <mat-option value="kiosco1">Kiosco 1</mat-option>
+          <mat-option value="kiosco2">Kiosco 2</mat-option>
+          <mat-option value="kiosco3">Kiosco 3</mat-option>
+          <mat-option value="kiosco4">Kiosco 4</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Tabla de pantallas -->
+  <div class="table-container">
+    <table class="pantallas-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Token</th>
+          <th>Kiosco</th>
+          <th>Estado de pantalla</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pantalla of pantallasFiltradas" [class.inactive-row]="pantalla.estado === 'inactivo'">
+          <td>{{ pantalla.nombre }}</td>
+          <td>{{ pantalla.token }}</td>
+          <td>{{ pantalla.kiosco }}</td>
+          <td>
+            <span class="estado-badge" [class.activo]="pantalla.estado === 'activo'" [class.inactivo]="pantalla.estado === 'inactivo'">
+              {{ pantalla.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <!-- Toggle Switch para cambiar estado -->
+            <mat-slide-toggle
+              [checked]="pantalla.estado === 'activo'"
+              (change)="cambiarEstado(pantalla, $event)"
+              [color]="'primary'">
+            </mat-slide-toggle>
+
+            <!-- Botón Editar con imagen personalizada -->
+            <button mat-icon-button
+                    class="action-button edit-button"
+                    (click)="editarPantalla(pantalla)"
+                    matTooltip="Editar pantalla">
+              <img src="assets/admin/ADMIN_7.png" alt="Editar" class="custom-icon">
+            </button>
+
+            <!-- Botón Eliminar con imagen personalizada -->
+            <button mat-icon-button
+                    class="action-button delete-button"
+                    (click)="abrirDialogoEliminar(pantalla)"
+                    matTooltip="Eliminar pantalla">
+              <img src="assets/admin/ADMIN_7_1.png" alt="Eliminar" class="custom-icon">
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Mensaje cuando no hay datos -->
+    <div class="no-data" *ngIf="pantallasFiltradas.length === 0">
+      <p>No se encontraron pantallas con los filtros aplicados.</p>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin></app-footer-admin>
