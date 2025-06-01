@@ -22,31 +22,31 @@ export class CatalogoService {
   }
  
   crearProducto(productoData: FormData): Observable<Producto> {
-    const url = `${this.apiUrl}catalogo/productos/`;
+    const url = `${this.apiUrl}/catalogo/productos/`;
     return this.http.post<Producto>(url, productoData);
   }
 
   getProductos(): Observable<Producto[]> {
-    const url = `${this.apiUrl}catalogo/productos/`;
+    const url = `${this.apiUrl}/catalogo/productos/`;
     return this.http.get<Producto[]>(url, this.getHttpOptions());
   }
 
   getCategorias(): Observable<Categoria[]> {
-    const url = `${this.apiUrl}catalogo/categorias/`;
+    const url = `${this.apiUrl}/catalogo/categorias/`;
     return this.http.get<Categoria[]>(url, this.getHttpOptions());
   }
 
   getEstados(): Observable<Estado[]> {
-    const url = `${this.apiUrl}comun/estados/`; 
+    const url = `${this.apiUrl}/comun/estados/`; 
     return this.http.get<Estado[]>(url, this.getHttpOptions());
   }
 
   getProductoImagen(productoId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}catalogo/productos/${productoId}/imagen/`);
+    return this.http.get<any>(`${this.apiUrl}/catalogo/productos/${productoId}/imagen/`);
   }
 
   getIngredientesPorCategoria(categoria: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}catalogo/ingredientes/${categoria}/`);
+    return this.http.get<any[]>(`${this.apiUrl}/catalogo/ingredientes/${categoria}/`);
   }
 
   getFullImageUrl(imagenUrl: string | undefined): string {
