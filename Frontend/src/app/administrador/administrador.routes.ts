@@ -105,7 +105,12 @@ export const administradorRoutes: Routes = [
   },
   { 
     path: 'gestion-productos/editar', 
-    component: EditarComponent,
+    component: EditarComponent, 
+    canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskoproductos'])]
+  },
+  { 
+    path: 'gestion-productos/crear/:id', 
+    component: CrearComponent,
     canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskoproductos'])]
   },
   { 

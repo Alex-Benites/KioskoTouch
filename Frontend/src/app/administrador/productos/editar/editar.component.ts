@@ -38,6 +38,12 @@ export class EditarComponent implements OnInit {
     });
   }
 
+   editarProducto(producto: any): void {
+    console.log('🔧 Editando producto:', producto);
+    // Navegar al formulario de edición con el ID del producto
+    this.router.navigate(['/administrador/gestion-productos/crear', producto.id]);
+  }
+  
   loadProductImages(): void {
     this.productos.forEach(producto => {
       if (producto.id) {

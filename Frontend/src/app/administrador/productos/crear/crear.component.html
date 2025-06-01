@@ -3,7 +3,9 @@
 <div class="form-container">
   
   <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
-  <h1 class="form-main-title">Creación de nuevo Producto</h1>
+  <h1 class="form-main-title">
+    {{ isEditMode ? 'Editar Producto' : 'Creación de nuevo Producto' }}
+  </h1>
 
   <form [formGroup]="productoForm" (ngSubmit)="onSubmit()" class="product-form">
     <div class="form-grid">
@@ -79,12 +81,16 @@
     <!-- Sección de Ingredientes -->
     <div class="ingredientes-section">
       <h2>Ingredientes Disponibles</h2>
-      @if (ingredientes.length > 0) {
+      @if (ingredientesDisponibles.length > 0) {
       <div class="ingredientes-grid">
-        @for (ingrediente of ingredientes; track ingrediente.id; let i = $index) {
-        <div class="ingrediente-card">
-          <mat-checkbox [formControl]="$any(ingredientesSeleccionadosFormArray.controls[i])" 
-                        class="ingrediente-checkbox">
+        @for (ingrediente of ingredientesDisponibles; track ingrediente.id) {
+        <div class="ingrediente-card"
+          [class.selected]="ingrediente.seleccionado"
+          
+        >
+          <mat-checkbox [checked]="ingrediente.seleccionado" 
+                    class="ingrediente-checkbox"
+                    (change)="toggleIngrediente(ingrediente)">
             <div class="ingrediente-content">
               <div class="ingrediente-image">
                 <img [src]="getFullImageUrl(ingrediente.imagen_url)" 
@@ -104,13 +110,14 @@
       </div>
       } @else {
       <div class="no-ingredientes">
-        <p>Selecciona una categoría para ver los ingredientes disponibles</p>
+        <p>Esta categoría no tiene ingredientes disponibles</p>
       </div>
       }
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="primary__button" [disabled]="!productoForm.valid">Crear Producto</button>
+      <button type="submit" class="primary__button" [disabled]="!productoForm.valid">{{ isEditMode ? 'Actualizar Producto' : 'Crear Producto' }}</button>
+      
     </div>
   </form>
 </div>

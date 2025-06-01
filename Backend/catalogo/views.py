@@ -197,35 +197,121 @@ def get_estados(request):
     except Exception as e:
         return Response({'error': str(e)}, status=400)
 
-@api_view(['DELETE'])
-@permission_classes([AllowAny])  # En producción cambiar por IsAuthenticated
-def eliminar_producto(request, producto_id):
-    """Elimina un producto y sus relaciones"""
-    try:
-        producto = AppkioskoProductos.objects.get(id=producto_id)
+
+
+class ProductoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Vista para obtener, actualizar y eliminar un producto específico"""
+    queryset = AppkioskoProductos.objects.select_related('categoria', 'estado').all()
+    serializer_class = ProductoSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+    
+    def update(self, request, *args, **kwargs):
+        """Actualizar producto - maneja imagen e ingredientes"""
+        print(f"\n🔄 ACTUALIZANDO PRODUCTO ID: {kwargs.get('pk')}")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
         
-        # Eliminar imagen asociada
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            producto = serializer.save()
+            
+            print(f"✅ PRODUCTO ACTUALIZADO:")
+            print(f"   ID: {producto.id}")
+            print(f"   Nombre: {producto.nombre}")
+            print("─" * 50)
+            
+            return Response({
+                'mensaje': '✅ Producto actualizado exitosamente',
+                'producto': serializer.data
+            })
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            print("─" * 50)
+            
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # 🆕 AGREGAR MÉTODO DE ELIMINACIÓN FÍSICA
+    def destroy(self, request, *args, **kwargs):
+        """Eliminación física - borrar completamente de la base de datos"""
         try:
-            imagen = AppkioskoImagen.objects.get(
-                categoria_imagen='productos',
-                entidad_relacionada_id=producto_id
-            )
-            # Eliminar archivo físico
-            if imagen.ruta and os.path.exists(imagen.ruta):
-                os.remove(imagen.ruta)
-            imagen.delete()
-        except AppkioskoImagen.DoesNotExist:
-            pass
-        
-        # Eliminar relaciones con ingredientes (se hace automáticamente por CASCADE)
-        nombre_producto = producto.nombre
-        producto.delete()
-        
-        return Response({
-            'mensaje': f'Producto "{nombre_producto}" eliminado exitosamente'
-        })
-        
-    except AppkioskoProductos.DoesNotExist:
-        return Response({'error': 'Producto no encontrado'}, status=404)
-    except Exception as e:
-        return Response({'error': str(e)}, status=400)
+            producto_id = kwargs.get('pk')
+            print(f"\n🗑️ ELIMINACIÓN FÍSICA PRODUCTO ID: {producto_id}")
+            
+            # Obtener el producto
+            producto = self.get_object()
+            producto_nombre = producto.nombre
+            print(f"   Producto a eliminar: {producto_nombre}")
+            
+            # 🔗 ELIMINAR RELACIONES CON INGREDIENTES PRIMERO
+            relaciones_ingredientes = AppkioskoProductosIngredientes.objects.filter(producto=producto)
+            count_relaciones = relaciones_ingredientes.count()
+            
+            if count_relaciones > 0:
+                relaciones_ingredientes.delete()
+                print(f"   🗑️ Eliminadas {count_relaciones} relaciones de ingredientes")
+            
+            # 🖼️ ELIMINAR IMAGEN FÍSICA si existe
+            try:
+                imagen = AppkioskoImagen.objects.get(
+                    categoria_imagen='productos',
+                    entidad_relacionada_id=producto_id
+                )
+                
+                # Eliminar archivo físico del sistema
+                if imagen.ruta:
+                    # Construir la ruta completa del archivo
+                    ruta_completa = os.path.join(settings.MEDIA_ROOT, imagen.ruta.lstrip('/media/'))
+                    
+                    if os.path.exists(ruta_completa):
+                        os.remove(ruta_completa)
+                        print(f"   🖼️ Archivo de imagen eliminado: {ruta_completa}")
+                    else:
+                        print(f"   ⚠️ Archivo de imagen no encontrado: {ruta_completa}")
+                
+                # Eliminar registro de imagen de la DB
+                imagen.delete()
+                print(f"   🗑️ Registro de imagen eliminado de la DB")
+                
+            except AppkioskoImagen.DoesNotExist:
+                print(f"   ℹ️ No se encontró imagen asociada al producto")
+            except Exception as e:
+                print(f"   ⚠️ Error eliminando imagen: {str(e)}")
+            
+            # 🗑️ ELIMINAR EL PRODUCTO DE LA BASE DE DATOS
+            producto.delete()
+            
+            print(f"✅ PRODUCTO ELIMINADO COMPLETAMENTE:")
+            print(f"   Nombre: {producto_nombre}")
+            print(f"   ID: {producto_id}")
+            print(f"   Relaciones eliminadas: {count_relaciones}")
+            print("─" * 50)
+            
+            # 📊 RESPUESTA EXITOSA
+            return Response({
+                'success': True,
+                'mensaje': f'Producto "{producto_nombre}" eliminado completamente',
+                'id': int(producto_id),
+                'tipo_eliminacion': 'fisica',
+                'relaciones_eliminadas': count_relaciones
+            }, status=status.HTTP_200_OK)
+            
+        except AppkioskoProductos.DoesNotExist:
+            print(f"❌ Producto ID {producto_id} no encontrado")
+            return Response({
+                'success': False,
+                'error': 'Producto no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+            
+        except Exception as e:
+            print(f"❌ Error eliminando producto: {str(e)}")
+            return Response({
+                'success': False,
+                'error': f'Error al eliminar producto: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

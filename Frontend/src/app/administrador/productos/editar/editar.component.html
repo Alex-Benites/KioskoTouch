@@ -32,7 +32,7 @@
             
             <img [src]="getFullImageUrl(producto.imagenUrl)" [alt]="producto.nombre" />
             <div class="producto-nombre">{{ producto.nombre }}</div>
-            <button class="editar-btn">Editar</button>
+            <button class="editar-btn" (click)="editarProducto(producto)">Editar</button>
         </div>
         }
     </div>
