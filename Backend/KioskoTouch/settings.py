@@ -21,7 +21,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 if DEBUG:
     # 🏠 CONFIGURACIÓN PARA DESARROLLO LOCAL
     ALLOWED_HOSTS = []
-    
+
     # Base de datos local
     DATABASES = {
        'default': {
@@ -33,33 +33,33 @@ if DEBUG:
            'PORT': '3306',
        }
     }
-    
+
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:4200",
     ]
-    
+
     FRONTEND_URL = 'http://localhost:4200'
-    
+
 else:
     # 🌐 CONFIGURACIÓN PARA PYTHONANYWHERE
     ALLOWED_HOSTS = ['johrespi.pythonanywhere.com']
-    
+
     # ⚠️ CONFIGURAR CON TUS CREDENCIALES REALES DE PYTHONANYWHERE
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'johrespi$kioskoGo_db',  
-            'USER': 'johrespi',              
-            'PASSWORD': 'kioskogo', 
-            'HOST': 'johrespi.mysql.pythonanywhere-services.com', 
+            'NAME': 'johrespi$kioskoGo_db',
+            'USER': 'johrespi',
+            'PASSWORD': 'kioskogo',
+            'HOST': 'johrespi.mysql.pythonanywhere-services.com',
             'PORT': '3306',
         }
     }
-    
+
     CORS_ALLOWED_ORIGINS = [
         "https://johrespi.pythonanywhere.com",
     ]
-    
+
     FRONTEND_URL = 'https://johrespi.pythonanywhere.com'
 
 # Application definition
