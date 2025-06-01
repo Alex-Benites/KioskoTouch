@@ -1,0 +1,187 @@
+.form-container {
+  padding: 20px 40px;
+  background-color: #F2F2F2; // Consistent background
+  width: 100%;
+  box-sizing: border-box;
+  min-height: calc(100vh - 120px); // Adjust based on header/footer height
+  display: flex;
+  flex-direction: column;
+}
+
+.breadcrumb-title {
+  font-size: 18px; // Slightly smaller for breadcrumb
+  color: #888;
+  font-weight: normal; // Less emphasis than main title
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.form-main-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+.publicidad-form {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; // Allows form-actions to be at the bottom
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr; // Default for mobile
+  gap: 30px;
+  margin-bottom: 30px; // Space before form actions
+}
+
+@media (min-width: 992px) { // Adjusted breakpoint for two columns
+  .form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.form-fields-column,
+.media-config-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; // Space between elements in a column
+}
+
+.form-field {
+  width: 100%;
+}
+
+textarea[matInput] {
+  min-height: 80px;
+  resize: vertical;
+}
+
+// Consistent Material Form Field appearance
+::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-flex {
+  background-color: #fff !important;
+  border-radius: 4px !important;
+}
+
+::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+  background-color: #fff !important;
+}
+
+.image-upload-label,
+.form-field-sublabel {
+  font-size: 1em; // Standard label size
+  color: black;
+  font-weight: bold; // Medium weight for labels
+  margin-bottom: 8px;
+  margin-top: 0px;
+}
+
+.form-field-sublabel {
+  margin-top: 10px; // Space above sublabel
+}
+
+.image-upload-container {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff;
+  min-height: 250px; // Adjust for banner aspect ratio
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 10px;
+  position: relative;
+
+  .upload-placeholder {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+    .upload-placeholder-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 10px;
+    }
+  }
+
+  .preview-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .image-preview {
+    max-width: 100%;
+    max-height: 200px; // Max height for preview within container
+    object-fit: contain;
+    border-radius: 4px;
+    margin-bottom: 5px;
+  }
+
+  .filename-preview {
+    font-size: 0.8em;
+    color: #555;
+    word-break: break-all;
+  }
+}
+
+.image-upload-container:hover {
+  border-color: #d32f2f; // Theme primary or accent color
+}
+
+.image-buttons-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px; // Space before next section
+
+  .image-action-button {
+    flex-grow: 1;
+    mat-icon {
+      margin-right: 5px;
+    }
+  }
+}
+
+.tiempo-intervalo-group {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start; // Align to top if labels differ
+
+  .tiempo-valor {
+    flex: 1; // Smaller part for number
+  }
+  .tiempo-unidad {
+    flex: 2; // Larger part for unit select
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center; // Align to the right as per many designs
+  gap: 15px;
+  margin-top: auto; // Pushes to the bottom if form has flex-grow
+  padding-top: 20px;
+  border-top: 1px solid #eee; // Separator line
+
+  .action-button {
+    min-width: 120px; // Ensure buttons have a decent size
+    padding: 0 20px;
+    height: 40px;
+    font-size: 0.95em;
+  }
+
+}
+
+mat-error {
+  font-size: 0.75em;
+}
