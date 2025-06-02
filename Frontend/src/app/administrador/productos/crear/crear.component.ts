@@ -8,22 +8,22 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
-import { CatalogoService } from '../../../services/catalogo.service'; 
-import { Producto, Categoria, Estado } from '../../../models/catalogo.model'; 
+import { CatalogoService } from '../../../services/catalogo.service';
+import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregar ActivatedRoute
 
 @Component({
   selector: 'app-crear-producto',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
-    MatFormFieldModule, 
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
     MatInputModule,
-    MatSelectModule, 
-    MatButtonModule, 
+    MatSelectModule,
+    MatButtonModule,
     MatCheckboxModule,
-    HeaderAdminComponent, 
+    HeaderAdminComponent,
     FooterAdminComponent
   ],
   templateUrl: './crear.component.html',
@@ -55,13 +55,13 @@ export class CrearComponent implements OnInit {
       descripcion: ['', Validators.required],
       categoria: ['', Validators.required],
       precio: ['', [
-      Validators.required, 
+      Validators.required,
       Validators.pattern(/^\d+(\.\d{1,2})?$/),
       Validators.min(0.01)  // Mínimo 0.01 (1 centavo)
     ]],
       disponibilidad: ['', Validators.required],
       imagen: [null, Validators.required],
-      
+
     });
   }
 
@@ -89,7 +89,7 @@ export class CrearComponent implements OnInit {
         this.imagePreview = reader.result as string;
       }
       reader.readAsDataURL(this.selectedFile);
-      
+
       // ← ACTUALIZAR EL CONTROL DEL FORMULARIO
       this.productoForm.get('imagen')?.setValue(this.selectedFile);
       this.productoForm.get('imagen')?.markAsTouched();
@@ -126,7 +126,7 @@ export class CrearComponent implements OnInit {
     this.catalogoService.obtenerProductoPorId(this.productoId).subscribe({
       next: (producto) => {
         console.log('✅ Producto cargado completo:', producto);
-        
+
         // 📝 Llenar formulario con datos básicos
         this.productoForm.patchValue({
           nombre: producto.nombre,
@@ -152,7 +152,7 @@ export class CrearComponent implements OnInit {
           this.currentImageUrl = this.catalogoService.getFullImageUrl(producto.imagen_url);
           this.imagePreview = this.currentImageUrl;
           console.log('🖼️ Imagen cargada:', this.currentImageUrl);
-          
+
           // Quitar validación obligatoria de imagen para edición
           this.productoForm.get('imagen')?.clearValidators();
           this.productoForm.get('imagen')?.updateValueAndValidity();
@@ -161,12 +161,12 @@ export class CrearComponent implements OnInit {
         // 🥗 Cargar ingredientes - usar "hamburguesas" directamente
         console.log('🥗 Categoria del producto:', producto.categoria_nombre);
         console.log('🥗 Ingredientes actuales:', producto.ingredientes_detalle);
-        
+
         // Convertir categoria_nombre a la categoría de ingredientes
         let categoriaIngredientes = '';
         if (producto.categoria_nombre === 'Hamburguesa') {
           categoriaIngredientes = 'hamburguesas';
-        } else if (producto.categoria_nombre === 'Pizza') {
+        } else if (producto.categoria_nombre === 'Pizza' || producto.categoria_nombre === 'Pizzas') {
           categoriaIngredientes = 'pizzas';
         } else if (producto.categoria_nombre === 'Ensalada') {
           categoriaIngredientes = 'ensaladas';
@@ -187,7 +187,7 @@ export class CrearComponent implements OnInit {
         alert('❌ Error al cargar el producto. Redirigiendo...');
         this.router.navigate(['/administrador/gestion-productos']);
       }
-    }); 
+    });
   }
 
   private cargarIngredientesYMarcarSeleccionados(categoria: string, ingredientesSeleccionados: any[]): void {
@@ -197,12 +197,12 @@ export class CrearComponent implements OnInit {
     this.catalogoService.getIngredientesPorCategoria(categoria).subscribe({
       next: (ingredientesDisponibles) => {
         console.log('✅ [EDICIÓN] Ingredientes disponibles cargados:', ingredientesDisponibles);
-        
+
         // 🔄 Mapear ingredientes disponibles y marcar los seleccionados
         this.ingredientesDisponibles = ingredientesDisponibles.map(ingrediente => {
           // Verificar si este ingrediente está en la lista de seleccionados
           const estaSeleccionado = ingredientesSeleccionados.some(sel => sel.id === ingrediente.id);
-          
+
           return {
             ...ingrediente,
             seleccionado: estaSeleccionado
@@ -272,10 +272,10 @@ export class CrearComponent implements OnInit {
     if (categoria) {
       // 🔧 CORREGIR: Usar mapeo consistente
       let categoriaIngredientes = '';
-      
+
       if (categoria.nombre === 'Hamburguesa') {
         categoriaIngredientes = 'hamburguesas';
-      } else if (categoria.nombre === 'Pizza') {
+      } else if (categoria.nombre === 'Pizzas') {
         categoriaIngredientes = 'pizzas';
       } else if (categoria.nombre === 'Ensalada') {
         categoriaIngredientes = 'ensaladas';
@@ -302,16 +302,16 @@ export class CrearComponent implements OnInit {
 
   cargarIngredientesPorCategoria(categoriaNombre: string): void {
     console.log('🥗 Cargando ingredientes para:', categoriaNombre);
-    
+
     // Limpiar selección anterior cuando se cambia de categoría (solo en modo creación)
     if (!this.isEditMode) {
       this.ingredientesSeleccionados = [];
     }
-    
+
     this.catalogoService.getIngredientesPorCategoria(categoriaNombre).subscribe({
       next: (ingredientes) => {
         console.log('✅ Ingredientes cargados:', ingredientes);
-        
+
         // En modo creación: todos empiezan como no seleccionados
         // En modo edición: mantener el estado actual
         this.ingredientesDisponibles = ingredientes.map(ing => ({
@@ -340,7 +340,7 @@ export class CrearComponent implements OnInit {
     this.imagePreview = null;
     this.selectedFile = null;
     this.currentImageUrl = null; // Limpiar imagen actual también
-    
+
     //Solo marcar como error si estamos en modo creación
     this.productoForm.get('imagen')?.setValue(null);
     if (!this.isEditMode) {
@@ -418,13 +418,13 @@ export class CrearComponent implements OnInit {
     }
 
     // 🔧 VALIDACIÓN PERSONALIZADA para modo edición
-    const formValid = this.isEditMode ? 
-      this.validarFormularioParaEdicion() : 
+    const formValid = this.isEditMode ?
+      this.validarFormularioParaEdicion() :
       this.productoForm.valid;
 
     if (formValid) {
       this.saving = true;
-      
+
       const formData = new FormData();
       formData.append('nombre', this.productoForm.get('nombre')?.value);
       formData.append('descripcion', this.productoForm.get('descripcion')?.value);
@@ -467,7 +467,7 @@ export class CrearComponent implements OnInit {
 
     // Validar que todos los campos requeridos estén completos
     const camposCompletos = nombre && descripcion && precio && disponibilidad && categoria;
-    
+
     // Validar formato de precio
     const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
 
@@ -522,18 +522,18 @@ export class CrearComponent implements OnInit {
     });
   }
 
-  
+
 
   private limpiarFormulario(): void {
     this.productoForm.reset();
     this.imagePreview = null;
     this.selectedFile = null;
     this.currentImageUrl = null;
-    
+
     // 🔧 CORREGIR: Limpiar arrays de ingredientes
     this.ingredientesDisponibles = [];
     this.ingredientesSeleccionados = [];
-    
+
     // Resetear valores por defecto
     this.productoForm.patchValue({
       disponibilidad: '',
