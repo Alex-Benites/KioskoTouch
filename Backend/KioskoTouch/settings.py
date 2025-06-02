@@ -238,3 +238,10 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'samuellindaochoez2021@gmail.com'
 EMAIL_HOST_PASSWORD = 'iphc gdzl xljc gtuo'
 DEFAULT_FROM_EMAIL = 'samuellindaochoez2021@gmail.com'
+
+
+
+
+# Configuración Tamaño de Archivos
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB por archivo
+DATA_UPLOAD_MAX_MEMORY_SIZE = 60 * 1024 * 1024  # 60 MB (archivo + datos del form)
