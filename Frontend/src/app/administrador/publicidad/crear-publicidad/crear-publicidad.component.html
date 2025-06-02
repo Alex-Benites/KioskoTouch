@@ -47,7 +47,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Estado del Establecimiento</mat-label>
+          <mat-label>Estado</mat-label>
           <mat-select formControlName="estado">
             <mat-option value="activo">Activo</mat-option>
             <mat-option value="inactivo">Inactivo</mat-option>
@@ -56,45 +56,46 @@
         </mat-form-field>
       </div>
 
-      <!-- Columna Derecha: Carga de Imagen y Configuración Adicional -->
+      <!-- Columna Derecha: Carga de Media y Configuración Adicional -->
       <div class="media-config-column">
-        <p class="image-upload-label">Publicidad</p>
+        <p class="image-upload-label">Publicidad (Video o Imagen)</p>
+        <p class="media-dimensions-label">Dimensiones recomendadas: Pendiente por definir</p>
         <div class="image-upload-container">
-          <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif, video/mp4">
-          @if (!imagePreview) {
+          <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm, video/ogg">
+          @if (!mediaPreview) {
           <div class="upload-placeholder" (click)="fileInput.click()">
             <mat-icon class="upload-placeholder-icon">cloud_upload</mat-icon>
             <p>Arrastra o haz clic para subir</p>
+            <p class="upload-subtitle">Imágenes: PNG, JPEG, GIF | Videos: MP4, WebM, OGG</p>
           </div>
           } @else {
           <div class="preview-container">
-            <img [src]="imagePreview" alt="Vista previa de la publicidad" class="image-preview">
+            @if (selectedMediaType === 'image') {
+              <img [src]="mediaPreview" alt="Vista previa de la publicidad" class="image-preview">
+            } @else if (selectedMediaType === 'video') {
+              <video [src]="mediaPreview" class="video-preview" controls muted>
+                Tu navegador no soporta el elemento video.
+              </video>
+            }
             <p class="filename-preview">{{ selectedFileName }}</p>
+            <p class="media-type-indicator">Tipo: {{ selectedMediaType === 'image' ? 'Imagen' : 'Video' }}</p>
           </div>
           }
         </div>
         <div class="image-buttons-container">
           <button mat-stroked-button color="primary" (click)="fileInput.click()" class="image-action-button">
             <mat-icon>add_photo_alternate</mat-icon>
-            Agregar Imagen
+            Agregar Media
           </button>
-          @if (imagePreview) {
-          <button mat-stroked-button color="warn" (click)="eliminarImagen()" class="image-action-button">
+          @if (mediaPreview) {
+          <button mat-stroked-button color="warn" (click)="eliminarMedia()" class="image-action-button">
             Eliminar
           </button>
           }
         </div>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Frecuencia finalización</mat-label>
-          <mat-select formControlName="frecuenciaFinalizacion">
-            <mat-option value="intervalo">Intervalo</mat-option>
-            <mat-option value="fecha_especifica">Fecha Específica</mat-option>
-            <mat-option value="manual">Manual</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <p class="form-field-sublabel">Tiempo de intervalo</p>
+        @if (selectedMediaType === 'image') {
+        <p class="form-field-sublabel">Tiempo de intervalo (para imágenes)</p>
         <div class="tiempo-intervalo-group">
           <mat-form-field appearance="outline" class="form-field tiempo-valor">
             <input matInput type="number" formControlName="tiempoIntervaloValor" placeholder="5">
@@ -104,10 +105,10 @@
               <mat-option value="segundos">Segundos</mat-option>
               <mat-option value="minutos">Minutos</mat-option>
               <mat-option value="horas">Horas</mat-option>
-              <mat-option value="dias">Días</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
+        }
       </div>
     </div>
 

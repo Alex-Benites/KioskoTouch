@@ -51,9 +51,10 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
 export class CrearPublicidadComponent implements OnInit {
 
   publicidadForm!: FormGroup;
-  imagePreview: string | ArrayBuffer | null = null;
+  mediaPreview: string | ArrayBuffer | null = null;
   selectedFile: File | null = null;
   selectedFileName: string | null = null;
+  selectedMediaType: 'image' | 'video' | null = null;
   isLoading: boolean = false; // Para mostrar spinner
 
   // Inyección de dependencias (estilo moderno con inject)
@@ -77,52 +78,79 @@ export class CrearPublicidadComponent implements OnInit {
       fechaInicial: [null, Validators.required],
       fechaFinal: [null, Validators.required],
       estado: ['activo', Validators.required],
-      // imagen: [null, Validators.required], // El archivo se manejará por separado
       frecuenciaFinalizacion: ['intervalo', Validators.required],
       tiempoIntervaloValor: [5, [Validators.min(1)]],
-      tiempoIntervaloUnidad: ['dias', Validators.required]
+      tiempoIntervaloUnidad: ['segundos', Validators.required],
+      mediaType: [null] // Nueva propiedad para almacenar el tipo de media
     });
 
-    // Validaciones condicionales para tiempoIntervalo si es necesario
+    // Validaciones condicionales para tiempoIntervalo según el tipo de media
     this.publicidadForm.get('frecuenciaFinalizacion')?.valueChanges.subscribe(value => {
-      const valorControl = this.publicidadForm.get('tiempoIntervaloValor');
-      const unidadControl = this.publicidadForm.get('tiempoIntervaloUnidad');
-      if (value === 'intervalo') {
-        valorControl?.setValidators([Validators.required, Validators.min(1)]);
-        unidadControl?.setValidators(Validators.required);
-      } else {
-        valorControl?.clearValidators();
-        unidadControl?.clearValidators();
-      }
-      valorControl?.updateValueAndValidity();
-      unidadControl?.updateValueAndValidity();
+      this.updateIntervalValidations();
     });
+  }
+
+  private updateIntervalValidations(): void {
+    const valorControl = this.publicidadForm.get('tiempoIntervaloValor');
+    const unidadControl = this.publicidadForm.get('tiempoIntervaloUnidad');
+    const frecuencia = this.publicidadForm.get('frecuenciaFinalizacion')?.value;
+    
+    // Solo requerir tiempo de intervalo para imágenes con frecuencia de intervalo
+    if (frecuencia === 'intervalo' && this.selectedMediaType === 'image') {
+      valorControl?.setValidators([Validators.required, Validators.min(1)]);
+      unidadControl?.setValidators(Validators.required);
+    } else {
+      valorControl?.clearValidators();
+      unidadControl?.clearValidators();
+    }
+    valorControl?.updateValueAndValidity();
+    unidadControl?.updateValueAndValidity();
   }
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
+      // Determinar el tipo de archivo
+      const fileType = file.type;
+      if (fileType.startsWith('image/')) {
+        this.selectedMediaType = 'image';
+      } else if (fileType.startsWith('video/')) {
+        this.selectedMediaType = 'video';
+      } else {
+        this.mostrarError('Tipo de archivo no soportado. Por favor selecciona una imagen o video.');
+        return;
+      }
+
       this.selectedFile = file;
       this.selectedFileName = file.name;
+      this.publicidadForm.patchValue({ mediaType: this.selectedMediaType });
+      
       const reader = new FileReader();
       reader.onload = () => {
-        this.imagePreview = reader.result;
+        this.mediaPreview = reader.result;
       };
       reader.readAsDataURL(file);
-      // this.publicidadForm.patchValue({ imagen: file }); // No es necesario si usas FormData
+
+      // Actualizar validaciones basadas en el tipo de media
+      this.updateIntervalValidations();
     }
   }
 
-  eliminarImagen(): void {
-    this.imagePreview = null;
+  eliminarMedia(): void {
+    this.mediaPreview = null;
     this.selectedFile = null;
     this.selectedFileName = null;
-    // this.publicidadForm.patchValue({ imagen: null });
-    // También resetea el input file para permitir seleccionar el mismo archivo de nuevo si se desea
+    this.selectedMediaType = null;
+    this.publicidadForm.patchValue({ mediaType: null });
+    
+    // Resetear el input file
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
+
+    // Actualizar validaciones
+    this.updateIntervalValidations();
   }
 
   onSubmit(): void {
@@ -132,7 +160,7 @@ export class CrearPublicidadComponent implements OnInit {
       return;
     }
     if (!this.selectedFile) {
-      this.mostrarError('Por favor, selecciona una imagen para la publicidad.');
+      this.mostrarError('Por favor, selecciona una imagen o video para la publicidad.');
       return;
     }
 
@@ -149,10 +177,11 @@ export class CrearPublicidadComponent implements OnInit {
     });
 
     if (this.selectedFile) {
-      formData.append('imagen', this.selectedFile, this.selectedFile.name);
+      formData.append('media', this.selectedFile, this.selectedFile.name);
     }
 
     console.log('Enviando datos:', this.publicidadForm.value);
+    console.log('Tipo de media:', this.selectedMediaType);
     console.log('FormData:', formData); // Puedes inspeccionar FormData en la consola del navegador
 
     // Aquí llamarías a tu servicio para enviar los datos

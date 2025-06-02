@@ -78,6 +78,14 @@ textarea[matInput] {
   margin-top: 0px;
 }
 
+.media-dimensions-label {
+  font-size: 0.85em;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 8px;
+  margin-top: -5px;
+}
+
 .form-field-sublabel {
   margin-top: 10px; // Space above sublabel
 }
@@ -103,11 +111,18 @@ textarea[matInput] {
     align-items: center;
     justify-content: center;
     color: #777;
+    
     .upload-placeholder-icon {
       font-size: 48px;
       width: 48px;
       height: 48px;
       margin-bottom: 10px;
+    }
+
+    .upload-subtitle {
+      font-size: 0.8em;
+      color: #999;
+      margin-top: 5px;
     }
   }
 
@@ -120,7 +135,8 @@ textarea[matInput] {
     justify-content: center;
   }
 
-  .image-preview {
+  .image-preview,
+  .video-preview {
     max-width: 100%;
     max-height: 200px; // Max height for preview within container
     object-fit: contain;
@@ -128,10 +144,22 @@ textarea[matInput] {
     margin-bottom: 5px;
   }
 
+  .video-preview {
+    background-color: #000;
+  }
+
   .filename-preview {
     font-size: 0.8em;
     color: #555;
     word-break: break-all;
+    margin-bottom: 3px;
+  }
+
+  .media-type-indicator {
+    font-size: 0.75em;
+    color: #2196F3;
+    font-weight: 500;
+    text-transform: uppercase;
   }
 }
 
