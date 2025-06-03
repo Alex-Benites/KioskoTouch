@@ -67,12 +67,15 @@
             matInput
             placeholder="Seleccione un Producto"
             formControlName="productosSeleccionados"
+            [readonly]="true"
+            style="pointer-events: none;"
           />
           <button
             mat-icon-button
             matSuffix
             (click)="eliminarProductos()"
             type="button"
+            style="pointer-events: auto;"
           >
             <mat-icon>delete_outline</mat-icon>
           </button>
@@ -126,16 +129,15 @@
         <div class="productos-grid">
           @for (producto of productos; track producto.id) {
           <div class="producto-card">
+            <div class="producto-nombre">{{ producto.nombre }}</div>
             <img
               [src]="getFullImageUrl(producto.imagenUrl)"
               [alt]="producto.nombre"
             />
-            <div class="producto-nombre">{{ producto.nombre }}</div>
             <div class="producto-actions">
-              <button class="btn" (click)="agregarProducto(producto)">
+              <button class="btn" type="button" (click)="agregarProducto(producto)">
                 Agregar
               </button>
-
             </div>
           </div>
           }

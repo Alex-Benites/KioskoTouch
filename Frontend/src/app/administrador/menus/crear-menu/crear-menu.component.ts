@@ -38,7 +38,7 @@ export class CrearMenuComponent implements OnInit {
   selectedFile: File | null = null;
   isEditMode = false;
   menuId: number | null = null;
-  currentImageUrl: string | null = null; // Para mostrar imagen actual
+  currentImageUrl: string | null = null;
   saving = false;
   productos: Producto[] = [];
   search: string = '';
@@ -130,21 +130,6 @@ export class CrearMenuComponent implements OnInit {
     if (!imagenUrl) return '';
     return `http://127.0.0.1:8000${imagenUrl}`;
   }
-  estaSeleccionado(producto: Producto): boolean {
-    return this.productosSeleccionados.some(p => p.id === producto.id);
-  }
-
-  toggleSeleccion(producto: Producto): void {
-    const index = this.productosSeleccionados.findIndex(p => p.id === producto.id);
-    if (index > -1) {
-      // Ya está seleccionado → lo quitamos
-      this.productosSeleccionados.splice(index, 1);
-    } else {
-      // No está seleccionado → lo agregamos
-      this.productosSeleccionados.push(producto);
-    }
-  }
-
 
   /* Método para cargar menu en modo edición
   private cargarmenuParaEditar(): void {

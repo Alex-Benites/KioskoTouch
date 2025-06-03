@@ -3,7 +3,9 @@ from .models import (
     AppkioskoProductos, 
     AppkioskoCategorias, 
     AppkioskoIngredientes, 
-    AppkioskoProductosIngredientes
+    AppkioskoProductosIngredientes,
+    AppkioskoMenus, 
+    AppkioskoMenuproductos
 )
 from comun.models import AppkioskoImagen, AppkioskoEstados
 from django.core.files.storage import default_storage
@@ -547,6 +549,138 @@ class IngredienteSerializer(serializers.ModelSerializer):
             return imagen.ruta
         except AppkioskoImagen.DoesNotExist:
             return None
+
+class MenuProductoDetalleSerializer(serializers.ModelSerializer):
+    """Detalle de productos dentro de un menú"""
+    nombre = serializers.CharField(source='producto.nombre', read_only=True)
+    descripcion = serializers.CharField(source='producto.descripcion', read_only=True)
+    precio = serializers.DecimalField(source='producto.precio', max_digits=10, decimal_places=2, read_only=True)
+    imagen_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppkioskoMenuproductos
+        fields = ['id', 'producto', 'nombre', 'descripcion', 'precio', 'cantidad', 'imagen_url']
+
+    def get_imagen_url(self, obj):
+        try:
+            imagen = AppkioskoImagen.objects.get(
+                categoria_imagen='productos',
+                entidad_relacionada_id=obj.producto.id
+            )
+            return imagen.ruta
+        except AppkioskoImagen.DoesNotExist:
+            return None
+
+class MenuSerializer(serializers.ModelSerializer):
+    estado_nombre = serializers.CharField(source='estado.descripcion', read_only=True)
+    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True, default=None)
+    productos_detalle = serializers.SerializerMethodField()
+    imagen_url = serializers.SerializerMethodField()
+    imagen = serializers.ImageField(write_only=True, required=False)
+    productos = serializers.ListField(write_only=True, required=False)  # IDs de productos y cantidades
+
+    class Meta:
+        model = AppkioskoMenus
+        fields = [
+            'id', 'nombre', 'descripcion', 'precio',
+            'categoria', 'categoria_nombre', 'estado', 'estado_nombre',
+            'productos', 'productos_detalle', 'imagen', 'imagen_url',
+            'created_at', 'updated_at'
+        ]
+
+    def get_imagen_url(self, obj):
+        try:
+            imagen = AppkioskoImagen.objects.get(
+                categoria_imagen='menus',
+                entidad_relacionada_id=obj.id
+            )
+            return imagen.ruta
+        except AppkioskoImagen.DoesNotExist:
+            return None
+
+    def get_productos_detalle(self, obj):
+        productos_rel = AppkioskoMenuproductos.objects.filter(menu=obj)
+        return MenuProductoDetalleSerializer(productos_rel, many=True).data
+
+    def create(self, validated_data):
+        productos_data = validated_data.pop('productos', [])
+        imagen = validated_data.pop('imagen', None)
+        menu = AppkioskoMenus.objects.create(**validated_data)
+
+        # Asociar productos al menú
+        for prod in productos_data:
+            # prod debe ser un dict: {'producto': id, 'cantidad': n}
+            producto_id = prod.get('producto')
+            cantidad = prod.get('cantidad', 1)
+            producto = AppkioskoProductos.objects.get(id=producto_id)
+            AppkioskoMenuproductos.objects.create(menu=menu, producto=producto, cantidad=cantidad)
+
+        # Guardar imagen si se envía
+        if imagen:
+            self._crear_imagen_menu(menu, imagen)
+
+        return menu
+
+    def update(self, instance, validated_data):
+        productos_data = validated_data.pop('productos', None)
+        imagen = validated_data.pop('imagen', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Actualizar productos asociados si se envían
+        if productos_data is not None:
+            AppkioskoMenuproductos.objects.filter(menu=instance).delete()
+            for prod in productos_data:
+                producto_id = prod.get('producto')
+                cantidad = prod.get('cantidad', 1)
+                producto = AppkioskoProductos.objects.get(id=producto_id)
+                AppkioskoMenuproductos.objects.create(menu=instance, producto=producto, cantidad=cantidad)
+
+        # Actualizar imagen si se envía
+        if imagen:
+            self._actualizar_imagen_menu(instance, imagen)
+
+        return instance
+
+    def _crear_imagen_menu(self, menu, imagen):
+        """Crea y guarda la imagen del menú"""
+        try:
+            menus_dir = os.path.join(settings.MEDIA_ROOT, 'menus')
+            os.makedirs(menus_dir, exist_ok=True)
+            extension = imagen.name.split('.')[-1] if '.' in imagen.name else 'jpg'
+            nombre_archivo = f"menu_{menu.id}_{uuid.uuid4().hex[:8]}.{extension}"
+            ruta_fisica = os.path.join(menus_dir, nombre_archivo)
+            with open(ruta_fisica, 'wb+') as destination:
+                for chunk in imagen.chunks():
+                    destination.write(chunk)
+            ruta_relativa = f"/media/menus/{nombre_archivo}"
+            AppkioskoImagen.objects.create(
+                ruta=ruta_relativa,
+                categoria_imagen='menus',
+                entidad_relacionada_id=menu.id
+            )
+            return ruta_relativa
+        except Exception as e:
+            print(f"❌ Error al guardar imagen de menú: {str(e)}")
+            return None
+
+    def _actualizar_imagen_menu(self, instance, imagen):
+        """Actualiza la imagen del menú"""
+        try:
+            imagen_anterior = AppkioskoImagen.objects.get(
+                categoria_imagen='menus',
+                entidad_relacionada_id=instance.id
+            )
+            if imagen_anterior.ruta:
+                ruta_fisica = os.path.join(settings.MEDIA_ROOT, imagen_anterior.ruta.lstrip('/media/'))
+                if os.path.exists(ruta_fisica):
+                    os.remove(ruta_fisica)
+            imagen_anterior.delete()
+        except AppkioskoImagen.DoesNotExist:
+            pass
+        self._crear_imagen_menu(instance, imagen)
 
 
 
