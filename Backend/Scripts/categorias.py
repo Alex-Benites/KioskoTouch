@@ -38,6 +38,7 @@ def crear_categorias_iniciales():
         {'nombre': 'Ensaladas'},
         {'nombre': 'Pizzas'},
         {'nombre': 'Infantil'},
+        {'nombre': 'Combos'},
     ]
 
     print("Creando categorías iniciales...")

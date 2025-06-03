@@ -1,0 +1,219 @@
+.form-container {
+    padding: 20px 40px;
+    background-color: #F2F2F2;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 85vh;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .breadcrumb-title {
+    font-size: 20px;
+    color: #888;
+    font-weight: bold;
+    margin-bottom: 0px;
+    text-transform: uppercase;
+  }
+
+  .form-main-title {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 30px;
+  }
+
+  .product-form {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    flex-grow: 1;
+  }
+
+  @media (min-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .form-fields-column,
+  .image-upload-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-field {
+    width: 100%;
+    margin-bottom: 15px;
+  }
+
+  textarea[matInput] {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  ::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-flex {
+    background-color: #fff !important;
+    border-radius: 4px !important;
+  }
+
+  ::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+    background-color: #fff !important;
+  }
+
+  .image-upload-label {
+    font-size: 20px;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 8px;
+    margin-top: 0px;
+  }
+
+  .image-upload-container {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #fff;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    position: relative;
+    flex-grow: 1;
+  }
+
+  .image-upload-container:hover {
+    border-color: #d32f2f;
+  }
+
+  .upload-placeholder-icon {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    opacity: 0.7;
+  }
+
+  .image-upload-container p {
+    color: #777;
+    margin-top: 10px;
+  }
+
+  .image-preview {
+    max-width: 100%;
+    max-height: calc(300px - 40px);
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  .delete-image-button {
+    width: 50%;
+    align-self: center;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  mat-error {
+    font-size: 0.75em;
+}
+
+.buscador {
+  margin-bottom: 32px;
+  label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .buscador-input {
+    position: relative;
+    input {
+      width: 100%;
+      max-width: 300px;
+      padding: 8px 36px 8px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #b3b0b0;
+      font-size: 1rem;
+      outline: none;
+    }
+    i {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 28px;
+  margin-top: 12px;
+}
+
+.producto-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 24px 12px 18px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    margin-bottom: 12px;
+  }
+  .producto-nombre {
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+  }
+  .producto-actions {
+    display: flex;
+    gap: 12px; // Espacio entre los botones
+    justify-content: center;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 28px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    &:hover {
+      background: #c0392b;
+    }
+  }
+}
+
+

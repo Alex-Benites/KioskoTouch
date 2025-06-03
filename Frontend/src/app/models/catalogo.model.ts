@@ -23,3 +23,20 @@ export interface Estado {
   id: number;
   nombre: string;
 }
+export interface TipoPromo {
+  id: number;
+  nombre: string;
+}
+export interface Menu {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  categoria: 9;
+  estado: number;
+  productos: Producto[];
+  imagen?: File | null;
+  imagenUrl?: string;
+  created_at: string;
+  updated_at: string;
+}

@@ -1,0 +1,143 @@
+.form-container {
+  padding: 20px 40px;
+  background-color: #F2F2F2;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 85vh;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.breadcrumb-title {
+  font-size: 20px;
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 0px;
+  text-transform: uppercase;
+}
+
+.form-main-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+
+.buscador {
+  margin-bottom: 32px;
+  label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .buscador-input {
+    position: relative;
+    input {
+      width: 100%;
+      max-width: 300px;
+      padding: 8px 36px 8px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #b3b0b0;
+      font-size: 1rem;
+      outline: none;
+    }
+    i {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.menus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 32px 28px;
+  margin-top: 12px;
+}
+
+.menu-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 24px 12px 18px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 320px;
+  position: relative;
+}
+
+.menu-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.menu-img {
+  width: 110px;
+  height: 90px;
+  object-fit: contain;
+  margin-bottom: 12px;
+}
+
+.menu-productos {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+  text-align: left;
+  width: 100%;
+  color: #666;
+  font-size: 1rem;
+  li {
+    margin-bottom: 2px;
+    position: relative;
+    padding-left: 12px;
+  }
+  li::before {
+    content: "-";
+    position: absolute;
+    left: 0;
+    color: #e74c3c;
+    font-weight: bold;
+  }
+}
+
+.menu-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.editar-btn,
+.eliminar-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 22px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.editar-btn:hover,
+.eliminar-btn:hover {
+  background: #c0392b;
+}
+
+
+
+
