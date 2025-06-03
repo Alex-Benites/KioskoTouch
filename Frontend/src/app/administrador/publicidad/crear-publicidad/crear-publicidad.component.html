@@ -8,62 +8,96 @@
     <div class="form-grid">
       <!-- Columna Izquierda: Campos del Formulario -->
       <div class="form-fields-column">
+        
+        <!-- Nombre de la publicidad -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Nombre de la publicidad</mat-label>
-          <input matInput formControlName="nombre" placeholder="Ej: Publicidad Hamburguesa">
-          @if (nombre?.hasError('required')) {
+          <input matInput formControlName="nombre" placeholder="Ej: Publicidad Hamburguesa" maxlength="100">
+          @if (nombre?.hasError('required') && nombre?.touched) {
             <mat-error>El nombre es requerido</mat-error>
           }
-          @if (nombre?.hasError('maxlength')) {
+          @if (nombre?.hasError('maxlength') && nombre?.touched) {
             <mat-error>El nombre no puede tener más de 100 caracteres</mat-error>
           }
+          <mat-hint>{{ nombre?.value?.length || 0 }}/100 caracteres</mat-hint>
         </mat-form-field>
 
+        <!-- Descripción -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Descripción</mat-label>
-          <textarea matInput formControlName="descripcion" placeholder="Ej: Publicidad en patrocinio con..." rows="3"></textarea>
-          @if (descripcion?.hasError('maxlength')) {
+          <textarea 
+            matInput 
+            formControlName="descripcion" 
+            placeholder="Ej: Publicidad en patrocinio con..." 
+            rows="3"
+            maxlength="500">
+          </textarea>
+          @if (descripcion?.hasError('maxlength') && descripcion?.touched) {
             <mat-error>La descripción no puede tener más de 500 caracteres</mat-error>
           }
+          <mat-hint>{{ descripcion?.value?.length || 0 }}/500 caracteres</mat-hint>
         </mat-form-field>
 
+        <!-- Tipo de publicidad con dimensiones -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Tipo de publicidad</mat-label>
-          <mat-select formControlName="tipoPublicidad" required>
-            <mat-option value="banner">Banner</mat-option>
-            <mat-option value="video">Video</mat-option>
-            <mat-option value="popup">Popup</mat-option>
+          <mat-select formControlName="tipoPublicidad" (selectionChange)="onTipoPublicidadChange()">
+            <mat-option value="">Seleccionar tipo</mat-option>
+            @for (tipo of tiposPublicidad; track tipo.value) {
+              <mat-option [value]="tipo.value">
+                <div class="tipo-option">
+                  <span class="tipo-label">{{ tipo.label }}</span>
+                </div>
+              </mat-option>
+            }
           </mat-select>
-          @if (tipoPublicidad?.hasError('required')) {
+          @if (tipoPublicidad?.hasError('required') && tipoPublicidad?.touched) {
             <mat-error>El tipo de publicidad es requerido</mat-error>
           }
+          <mat-hint>Primero selecciona el tipo de publicidad</mat-hint>
         </mat-form-field>
 
+        <!-- Fecha inicial -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Fecha inicial</mat-label>
-          <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicial" placeholder="dd/mm/aaaa" required>
+          <input 
+            matInput 
+            [matDatepicker]="pickerInicio" 
+            formControlName="fechaInicial" 
+            placeholder="dd/mm/aaaa"
+            readonly>
           <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
           <mat-datepicker #pickerInicio></mat-datepicker>
-          @if (fechaInicial?.hasError('required')) {
+          @if (fechaInicial?.hasError('required') && fechaInicial?.touched) {
             <mat-error>La fecha inicial es requerida</mat-error>
           }
         </mat-form-field>
 
+        <!-- Fecha final -->
         <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Fecha Final</mat-label>
-          <input matInput [matDatepicker]="pickerFin" formControlName="fechaFinal" placeholder="dd/mm/aaaa" required>
+          <mat-label>Fecha final</mat-label>
+          <input 
+            matInput 
+            [matDatepicker]="pickerFin" 
+            formControlName="fechaFinal" 
+            placeholder="dd/mm/aaaa"
+            readonly>
           <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
           <mat-datepicker #pickerFin></mat-datepicker>
-          @if (fechaFinal?.hasError('required')) {
+          @if (fechaFinal?.hasError('required') && fechaFinal?.touched) {
             <mat-error>La fecha final es requerida</mat-error>
           }
         </mat-form-field>
 
+        <!-- Estado -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Estado</mat-label>
-          <mat-select formControlName="estado" required>
+          <mat-select formControlName="estado">
             @if (loadingEstados) {
-              <mat-option disabled>Cargando estados...</mat-option>
+              <mat-option disabled>
+                <mat-spinner diameter="20"></mat-spinner>
+                Cargando estados...
+              </mat-option>
             } @else {
               @for (estado of estados; track estado.id) {
                 <mat-option [value]="estado.id">
@@ -72,99 +106,165 @@
               }
             }
           </mat-select>
-          @if (estado?.hasError('required')) {
+          @if (estado?.hasError('required') && estado?.touched) {
             <mat-error>El estado es requerido</mat-error>
           }
         </mat-form-field>
+
       </div>
 
       <!-- Columna Derecha: Carga de Media y Configuración Adicional -->
       <div class="media-config-column">
-        <p class="image-upload-label">Publicidad (Video o Imagen)</p>
-        <p class="media-dimensions-label">Dimensiones recomendadas: Pendiente por definir | Tamaño máximo: 50MB</p>
-        <div class="image-upload-container">
-          <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm, video/ogg">
-          @if (!mediaPreview) {
-            <div class="upload-placeholder" (click)="fileInput.click()">
-              <mat-icon class="upload-placeholder-icon">cloud_upload</mat-icon>
-              <p>Arrastra o haz clic para subir</p>
-              <p class="upload-subtitle">Imágenes: PNG, JPEG, GIF | Videos: MP4, WebM, OGG</p>
-            </div>
-          } @else {
-            <div class="preview-container">
+        
+        <!-- Carga de archivo con dimensiones mejoradas -->
+        <div class="file-upload-section">
+          <div class="file-upload-header">
+            <label class="file-upload-label">
+              <span class="main-label">Archivo de Media *</span>
+              <span class="file-hint">{{ fileInputPlaceholder }}</span>
+              @if (dimensionsInfo) {
+                <span class="dimensions-info">
+                  <mat-icon class="info-icon">info</mat-icon>
+                  {{ dimensionsInfo }}
+                </span>
+              }
+            </label>
+          </div>
+          
+          <input 
+            type="file" 
+            class="file-input"
+            [accept]="acceptedFileTypes"
+            [disabled]="isFileInputDisabled"
+            (change)="onFileSelected($event)"
+            #fileInput>
+          
+          <button 
+            type="button" 
+            mat-stroked-button 
+            [disabled]="isFileInputDisabled"
+            (click)="fileInput.click()"
+            class="file-select-btn">
+            <mat-icon>{{ isFileInputDisabled ? 'block' : 'upload' }}</mat-icon>
+            {{ isFileInputDisabled ? 'Selecciona tipo primero' : 'Seleccionar archivo' }}
+          </button>
+          
+          <!-- Preview del archivo -->
+          @if (mediaPreview && selectedFile) {
+            <div class="media-preview">
+              <div class="preview-header">
+                <span class="file-name">{{ selectedFileName }}</span>
+                <button type="button" mat-icon-button color="warn" (click)="eliminarMedia()" aria-label="Eliminar archivo">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              
               @if (selectedMediaType === 'image') {
-                <img [src]="mediaPreview" alt="Vista previa de la publicidad" class="image-preview">
+                <img [src]="mediaPreview" [alt]="'Vista previa de ' + selectedFileName" class="image-preview">
               } @else if (selectedMediaType === 'video') {
-                <video [src]="mediaPreview" class="video-preview" controls muted>
+                <video [src]="mediaPreview" controls class="video-preview" preload="metadata">
                   Tu navegador no soporta el elemento video.
                 </video>
-              }
-              <div class="media-info">
-                <p class="filename-preview">{{ selectedFileName }}</p>
-                <p class="media-type-indicator">Tipo: {{ selectedMediaType === 'image' ? 'Imagen' : 'Video' }}</p>
-                @if (selectedMediaType === 'video' && videoDuration) {
-                  <p class="video-duration-indicator">Duración: {{ formatDuration(videoDuration) }}</p>
+                @if (shouldShowVideoDuration) {
+                  <div class="video-info">
+                    <mat-icon>schedule</mat-icon>
+                    <span>Duración: {{ formatDuration(videoDuration!) }}</span>
+                    <span class="duration-note">(se usará como tiempo de visualización)</span>
+                  </div>
                 }
-              </div>
+              }
             </div>
-          }
-        </div>
-        <div class="image-buttons-container">
-          <button type="button" mat-stroked-button color="primary" (click)="fileInput.click()" class="image-action-button">
-            <mat-icon>add_photo_alternate</mat-icon>
-            {{ mediaPreview ? 'Cambiar Media' : 'Agregar Media' }}
-          </button>
-          @if (mediaPreview) {
-            <button type="button" mat-stroked-button color="warn" (click)="eliminarMedia()" class="image-action-button">
-              <mat-icon>delete</mat-icon>
-              Eliminar
-            </button>
           }
         </div>
 
-        @if (selectedMediaType === 'image') {
-          <div class="tiempo-intervalo-section">
-            <p class="form-field-sublabel">Tiempo de intervalo (para imágenes)</p>
-            <div class="tiempo-intervalo-group">
-              <mat-form-field appearance="outline" class="form-field tiempo-valor">
-                <mat-label>Valor</mat-label>
-                <input matInput type="number" formControlName="tiempoIntervaloValor" placeholder="5" min="1">
-                @if (tiempoIntervaloValor?.hasError('required')) {
-                  <mat-error>El valor es requerido</mat-error>
+        <!-- Campos de Intervalo (solo para banner) mejorados -->
+        @if (shouldShowIntervalFields) {
+          <div class="interval-section">
+            <h3>Configuración de Visualización</h3>
+            <p class="interval-description">
+              Configura cuánto tiempo se mostrará la imagen en pantalla
+            </p>
+            
+            <div class="interval-controls">
+              <mat-form-field appearance="outline" class="interval-value">
+                <mat-label>Tiempo de Visualización</mat-label>
+                <input 
+                  matInput 
+                  type="number" 
+                  formControlName="tiempoIntervaloValor" 
+                  min="1" 
+                  max="3600"
+                  placeholder="5">
+                @if (tiempoIntervaloValor?.hasError('required') && tiempoIntervaloValor?.touched) {
+                  <mat-error>El tiempo es requerido</mat-error>
                 }
-                @if (tiempoIntervaloValor?.hasError('min')) {
-                  <mat-error>El valor debe ser mayor a 0</mat-error>
+                @if (tiempoIntervaloValor?.hasError('min') && tiempoIntervaloValor?.touched) {
+                  <mat-error>El tiempo debe ser mayor a 0</mat-error>
+                }
+                @if (tiempoIntervaloValor?.hasError('max') && tiempoIntervaloValor?.touched) {
+                  <mat-error>El tiempo no puede ser mayor a 3600 (1 hora)</mat-error>
                 }
               </mat-form-field>
-              <mat-form-field appearance="outline" class="form-field tiempo-unidad">
+              
+              <mat-form-field appearance="outline" class="interval-unit">
                 <mat-label>Unidad</mat-label>
                 <mat-select formControlName="tiempoIntervaloUnidad">
-                  <mat-option value="segundos">Segundos</mat-option>
-                  <mat-option value="minutos">Minutos</mat-option>
-                  <mat-option value="horas">Horas</mat-option>
+                  @for (unidad of unidadesTiempo; track unidad.value) {
+                    <mat-option [value]="unidad.value">
+                      {{ unidad.label }}
+                    </mat-option>
+                  }
                 </mat-select>
-                @if (tiempoIntervaloUnidad?.hasError('required')) {
+                @if (tiempoIntervaloUnidad?.hasError('required') && tiempoIntervaloUnidad?.touched) {
                   <mat-error>La unidad es requerida</mat-error>
                 }
               </mat-form-field>
             </div>
+            
+            <!-- Mostrar tiempo calculado en segundos -->
+            <div class="time-preview">
+              <mat-icon>access_time</mat-icon>
+              <span>
+                Tiempo total: {{ calculateTotalSeconds() }} segundos 
+                ({{ formatDuration(calculateTotalSeconds()) }})
+              </span>
+            </div>
           </div>
         }
+
       </div>
     </div>
 
+    <!-- Acciones del formulario -->
     <div class="form-actions">
-      <button type="button" mat-stroked-button color="primary" (click)="onCancel()" class="action-button cancel-button" [disabled]="isLoading">
-        <mat-icon>cancel</mat-icon>
+      <button 
+        type="button" 
+        mat-stroked-button 
+        color="primary" 
+        (click)="onCancel()" 
+        class="action-button cancel-button" 
+        [disabled]="isLoading"
+        aria-label="Cancelar creación de publicidad">
         Cancelar
       </button>
-      <button type="submit" mat-flat-button color="primary" class="action-button save-button" [disabled]="publicidadForm.invalid || isLoading || !selectedFile">
+      
+      <button 
+        type="submit" 
+        mat-flat-button 
+        color="primary" 
+        class="action-button save-button" 
+        [disabled]="publicidadForm.invalid || isLoading || !selectedFile"
+        aria-label="Guardar publicidad">
         @if (isLoading) {
-          <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
+          <ng-container>
+            <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
+            Guardando...
+          </ng-container>
         } @else {
-          <mat-icon>save</mat-icon>
+          <ng-container>
+            Guardar Publicidad
+          </ng-container>
         }
-        {{ isLoading ? 'Guardando...' : 'Guardar Publicidad' }}
       </button>
     </div>
   </form>

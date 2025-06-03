@@ -53,15 +53,30 @@ class AppkioskoPromocionmenu(models.Model):
         verbose_name_plural = 'Promociones Menús'
 
 class AppkioskoPublicidades(models.Model):
+    # CHOICES para tipo de publicidad
+    TIPO_BANNER = 'banner'
+    TIPO_VIDEO = 'video'
+    
+    TIPOS_PUBLICIDAD = [
+        (TIPO_BANNER, 'Banner'),
+        (TIPO_VIDEO, 'Video'),
+    ]
+    
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    tipo_publicidad = models.CharField(max_length=100, blank=True, null=True)
+    tipo_publicidad = models.CharField(
+        max_length=100, 
+        choices=TIPOS_PUBLICIDAD,
+        default=TIPO_BANNER,
+        help_text="Tipo de publicidad a mostrar"
+    )
     fecha_inicio_publicidad = models.DateTimeField(blank=True, null=True)
     fecha_fin_publicidad = models.DateTimeField(blank=True, null=True)
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
     promocion = models.ForeignKey(AppkioskoPromociones, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    tiempo_visualizacion = models.PositiveIntegerField(default=5, help_text="Tiempo de visualización en segundos")
 
     class Meta:
         managed = True
@@ -71,6 +86,10 @@ class AppkioskoPublicidades(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+    def get_tipo_publicidad_display_custom(self):
+        """Método personalizado para obtener el display del tipo"""
+        return dict(self.TIPOS_PUBLICIDAD).get(self.tipo_publicidad, self.tipo_publicidad)
 
 class AppkioskoPublicidadestablecimiento(models.Model):
     establecimiento = models.ForeignKey(AppkioskoEstablecimientos, on_delete=models.CASCADE, blank=True, null=True)

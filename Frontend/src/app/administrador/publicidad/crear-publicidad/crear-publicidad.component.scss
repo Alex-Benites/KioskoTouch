@@ -1,19 +1,20 @@
 .form-container {
   padding: 20px 40px;
-  background-color: #F2F2F2; // Consistent background
+  background-color: #F2F2F2;
   width: 100%;
   box-sizing: border-box;
-  min-height: calc(100vh - 120px); // Adjust based on header/footer height
+  min-height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
 }
 
 .breadcrumb-title {
-  font-size: 18px; // Slightly smaller for breadcrumb
+  font-size: 18px;
   color: #888;
-  font-weight: normal; // Less emphasis than main title
+  font-weight: normal;
   margin-bottom: 5px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-main-title {
@@ -27,18 +28,16 @@
 .publicidad-form {
   display: flex;
   flex-direction: column;
-  flex-grow: 1; // Allows form-actions to be at the bottom
+  flex-grow: 1;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr; // Default for mobile
+  grid-template-columns: 1fr;
   gap: 30px;
-  margin-bottom: 30px; // Space before form actions
-}
-
-@media (min-width: 992px) { // Adjusted breakpoint for two columns
-  .form-grid {
+  margin-bottom: 30px;
+  
+  @media (min-width: 992px) {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -47,169 +46,318 @@
 .media-config-column {
   display: flex;
   flex-direction: column;
-  gap: 15px; // Space between elements in a column
+  gap: 20px;
 }
 
 .form-field {
   width: 100%;
 }
 
-textarea[matInput] {
-  min-height: 80px;
-  resize: vertical;
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-focus-overlay {
+  opacity: 0 !important;
 }
 
-// Consistent Material Form Field appearance
-::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-flex {
-  background-color: #fff !important;
-  border-radius: 4px !important;
+
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+  color: #666 !important;
 }
 
-::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-text-field-wrapper {
-  background-color: #fff !important;
+::ng-deep .mat-mdc-input-element {
+  outline: none !important;
+  
+  &:focus {
+    outline: none !important;
+  }
 }
 
-.image-upload-label,
-.form-field-sublabel {
-  font-size: 1em; // Standard label size
-  color: black;
-  font-weight: bold; // Medium weight for labels
-  margin-bottom: 8px;
-  margin-top: 0px;
-}
 
-.media-dimensions-label {
-  font-size: 0.85em;
-  color: #666;
-  font-style: italic;
-  margin-bottom: 8px;
-  margin-top: -5px;
-}
 
-.form-field-sublabel {
-  margin-top: 10px; // Space above sublabel
-}
-
-.image-upload-container {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #fff;
-  min-height: 250px; // Adjust for banner aspect ratio
+// Tipo de publicidad con dimensiones
+.tipo-option {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin-bottom: 10px;
-  position: relative;
+  
+  .tipo-label {
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  
+  .tipo-dimensions {
+    font-size: 0.75rem;
+    color: #666;
+    font-style: italic;
+  }
+}
 
-  .upload-placeholder {
-    cursor: pointer;
+// File upload section mejorada
+.file-upload-section {
+  
+  .file-upload-header {
+    margin-bottom: 1rem;
+  }
+  
+  .file-upload-label {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #777;
+    gap: 0.25rem;
     
-    .upload-placeholder-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 10px;
+    .main-label {
+      font-weight: 500;
+      color: #333;
+      font-size: 1rem;
     }
-
-    .upload-subtitle {
-      font-size: 0.8em;
-      color: #999;
-      margin-top: 5px;
+    
+    .file-hint {
+      color: #666;
+      font-size: 0.875rem;
+      font-weight: 400;
+    }
+    
+    .dimensions-info {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: #1976d2;
+      font-size: 0.8rem;
+      background-color: #e3f2fd;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.25rem;
+      
+      .info-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
     }
   }
-
-  .preview-container {
+  
+  .file-input {
+    display: none;
+  }
+  
+  .file-select-btn {
     width: 100%;
-    height: 100%;
+    padding: 1rem;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
+    
+    &:disabled {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+    
+    &:not(:disabled):hover {
+      background-color: #e3f2fd;
+    }
   }
+}
 
+// Media preview
+.media-preview {
+  margin-top: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: #fff;
+  
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    
+    .file-name {
+      font-weight: 500;
+      color: #333;
+      word-break: break-all;
+    }
+  }
+  
   .image-preview,
   .video-preview {
     max-width: 100%;
-    max-height: 200px; // Max height for preview within container
+    max-height: 300px;
     object-fit: contain;
     border-radius: 4px;
-    margin-bottom: 5px;
+    display: block;
+    margin: 0 auto;
   }
-
+  
   .video-preview {
     background-color: #000;
   }
-
-  .filename-preview {
-    font-size: 0.8em;
-    color: #555;
-    word-break: break-all;
-    margin-bottom: 3px;
-  }
-
-  .media-type-indicator {
-    font-size: 0.75em;
-    color: #2196F3;
-    font-weight: 500;
-    text-transform: uppercase;
-  }
 }
 
-.image-upload-container:hover {
-  border-color: #d32f2f; // Theme primary or accent color
-}
-
-.image-buttons-container {
+// Video info mejorada
+.video-info {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px; // Space before next section
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.875rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  
+  .duration-note {
+    color: #1976d2;
+    font-style: italic;
+    font-size: 0.8rem;
+  }
+}
 
-  .image-action-button {
-    flex-grow: 1;
-    mat-icon {
-      margin-right: 5px;
+// Interval section mejorada
+.interval-section {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+  
+  h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .interval-description {
+    margin: 0 0 1rem 0;
+    color: #666;
+    font-size: 0.875rem;
+  }
+  
+  .interval-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .time-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background-color: #e8f5e8;
+    border-radius: 4px;
+    color: #2e7d32;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+// Form actions
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  
+  @media (max-width: 768px) {
+    justify-content: center;
+    flex-direction: column;
+  }
+  
+  .action-button {
+    min-width: 150px;
+    padding: 0 24px;
+    height: 44px;
+    font-size: 0.95em;
+    font-weight: 500;
+    
+    @media (max-width: 768px) {
+      width: 100%;
+    }
+    
+    &:disabled {
+      cursor: not-allowed;
+    }
+    
+    .mat-spinner {
+      display: inline-block;
+    }
+  }
+  
+  .save-button {
+    &:not(:disabled) {
+      background-color: #1976d2;
+      color: white;
+      
+      &:hover {
+        background-color: #1565c0;
+      }
     }
   }
 }
 
-.tiempo-intervalo-group {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start; // Align to top if labels differ
+// Error and success styles
+::ng-deep .error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+}
 
-  .tiempo-valor {
-    flex: 1; // Smaller part for number
+::ng-deep .success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+// Loading state
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .form-container {
+    padding: 15px 20px;
   }
-  .tiempo-unidad {
-    flex: 2; // Larger part for unit select
+  
+  .form-main-title {
+    font-size: 1.5em;
+  }
+  
+  .form-grid {
+    gap: 20px;
   }
 }
 
-.form-actions {
-  display: flex;
-  justify-content: center; // Align to the right as per many designs
-  gap: 15px;
-  margin-top: auto; // Pushes to the bottom if form has flex-grow
-  padding-top: 20px;
-  border-top: 1px solid #eee; // Separator line
-
-  .action-button {
-    min-width: 120px; // Ensure buttons have a decent size
-    padding: 0 20px;
-    height: 40px;
-    font-size: 0.95em;
-  }
-
+// Accessibility improvements
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-mat-error {
-  font-size: 0.75em;
+// Focus styles
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
 }
