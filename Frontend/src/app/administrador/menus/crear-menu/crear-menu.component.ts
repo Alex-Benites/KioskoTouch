@@ -4,6 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
@@ -22,6 +23,7 @@ import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregar Activa
     MatSelectModule,
     MatButtonModule,
     MatCheckboxModule,
+    MatIconModule,
     HeaderAdminComponent,
     FooterAdminComponent,
     FormsModule
@@ -40,7 +42,7 @@ export class CrearMenuComponent implements OnInit {
   saving = false;
   productos: Producto[] = [];
   search: string = '';
-  productosSeleccionados: Producto[] = [];
+  productosSeleccionados: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -102,6 +104,10 @@ export class CrearMenuComponent implements OnInit {
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
     });
+    this.catalogoService.getProductos().subscribe(data => {
+      this.productos = data;
+      this.loadProductImages(); // Solo para productos
+    });
 
     /* Si estamos en modo edición, cargar el menu
     if (this.isEditMode) {
@@ -110,6 +116,20 @@ export class CrearMenuComponent implements OnInit {
     }*/
   }
 
+  loadProductImages(): void {
+    this.productos.forEach(producto => {
+      if (producto.id) {
+        this.catalogoService.getProductoImagen(producto.id).subscribe(response => {
+          producto.imagenUrl = response.imagen_url;
+        });
+      }
+    });
+  }
+
+  getFullImageUrl(imagenUrl: string | undefined): string {
+    if (!imagenUrl) return '';
+    return `http://127.0.0.1:8000${imagenUrl}`;
+  }
   estaSeleccionado(producto: Producto): boolean {
     return this.productosSeleccionados.some(p => p.id === producto.id);
   }
@@ -201,16 +221,36 @@ export class CrearMenuComponent implements OnInit {
 */
 
 
+  agregarProducto(producto: Producto): void {
+    // Agregar el producto seleccionado al array
+    this.productosSeleccionados.push(producto);
 
-  getFullImageUrl(imagenUrl: string | undefined): string {
-    return this.catalogoService.getFullImageUrl(imagenUrl);
+    // Contar cuántas veces aparece cada producto por su id
+    const contador: { [id: number]: { producto: Producto, cantidad: number } } = {};
+
+    this.productosSeleccionados.forEach((prod: Producto) => {
+      if (prod.id in contador) {
+        contador[prod.id].cantidad += 1;
+      } else {
+        contador[prod.id] = { producto: prod, cantidad: 1 };
+      }
+    });
+
+    // Construir el string con nombre(cantidad) solo si cantidad > 1
+    const seleccionados = Object.values(contador)
+      .map(({ producto, cantidad }) =>
+        cantidad > 1 ? `${producto.nombre}(${cantidad})` : producto.nombre
+      )
+      .join(', ');
+
+    this.menuForm.get('productosSeleccionados')?.setValue(seleccionados);
   }
-  agregarProducto(producto: any): void {
-    console.log('🔧 Agregando producto:', producto);
+  eliminarProductos(): void {
+    this.productosSeleccionados = [];
+    this.menuForm.get('productosSeleccionados')?.setValue('');
   }
 
-
-   eliminarImagen(): void {
+  eliminarImagen(): void {
     this.imagePreview = null;
     this.selectedFile = null;
     this.currentImageUrl = null; // Limpiar imagen actual también
@@ -271,8 +311,6 @@ export class CrearMenuComponent implements OnInit {
   }
 
   onSubmit(): void {
-    // 🔧 OBTENER VALOR de categoría incluso si está deshabilitado
-    let categoriaValue = 9;
 
     // 🔧 VALIDACIÓN PERSONALIZADA para modo edición
     const formValid = this.isEditMode ?
@@ -294,9 +332,9 @@ export class CrearMenuComponent implements OnInit {
       }
       // Decidir si crear o actualizar
       if (this.isEditMode) {
-        //this.actualizarmenu(formData);
+        this.actualizarMenu(formData);
       } else {
-        this.crearmenu(formData);
+        this.crearMenu(formData);
       }
     } else {
       alert('⚠️ Por favor completa todos los campos requeridos');
@@ -330,7 +368,7 @@ export class CrearMenuComponent implements OnInit {
 
 
   // 🆕 Método separado para crear menu
-  private crearmenu(formData: FormData): void {
+  private crearMenu(formData: FormData): void {
     this.catalogoService.crearMenu(formData).subscribe({
       next: (response) => {
         console.log('✅ menu creado exitosamente', response);
@@ -347,17 +385,17 @@ export class CrearMenuComponent implements OnInit {
   }
 
 
-  /*  Método para actualizar menu
-  private actualizarmenu(formData: FormData): void {
+  //  Método para actualizar menu
+  private actualizarMenu(formData: FormData): void {
     if (!this.menuId) return;
 
-    this.catalogoService.actualizarmenu(this.menuId, formData).subscribe({
+    this.catalogoService.actualizarMenu(this.menuId, formData).subscribe({
       next: (response) => {
         console.log('✅ menu actualizado exitosamente', response);
         alert('🎉 menu actualizado exitosamente!');
         this.saving = false;
         // 🆕 Redirigir a la lista después de editar
-        this.router.navigate(['/administrador/gestion-menus/editar']);
+        this.router.navigate(['/administrador/gestion-menus/editar-eliminar']);
       },
       error: (error) => {
         console.error('❌ Error al actualizar el menu', error);
@@ -366,7 +404,7 @@ export class CrearMenuComponent implements OnInit {
       }
     });
   }
-*/
+
 
 
   private limpiarFormulario(): void {
