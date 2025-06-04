@@ -12,9 +12,7 @@
           <h3 class="filter-title">Buscar por tipo</h3>
           <div class="checkbox-group">
             <mat-checkbox formControlName="tipoBanner">Banner</mat-checkbox>
-            <mat-checkbox formControlName="tipoSlider">Slider</mat-checkbox>
             <mat-checkbox formControlName="tipoVideo">Video</mat-checkbox>
-            <mat-checkbox formControlName="tipoPopUp">Pop Up</mat-checkbox>
           </div>
         </div>
 
@@ -27,8 +25,12 @@
         </div>
 
         <div class="filter-actions">
-          <button mat-flat-button color="primary" type="submit" class="filter-button">Buscar</button>
-          <button mat-stroked-button type="button" (click)="limpiarFiltros()" class="filter-button">Limpiar</button>
+          <button class="primary__button filter-button" type="submit" [disabled]="isLoading">
+            Buscar
+          </button>
+          <button class="primary__button filter-button" type="button" (click)="limpiarFiltros()" [disabled]="isLoading">
+            Limpiar
+          </button>
         </div>
       </form>
     </div>
@@ -38,33 +40,95 @@
       @if (isLoading) {
         <div class="loading-indicator">
           <mat-spinner diameter="50"></mat-spinner>
+          <p>Cargando publicidades...</p>
         </div>
       } @else if (publicidadesFiltradas.length === 0) {
         <div class="no-results">
-          <mat-icon>search_off</mat-icon>
           <p>No se encontraron publicidades que coincidan con los filtros.</p>
+          @if (todasLasPublicidades.length === 0) {
+            <button class="primary__button" routerLink="/administrador/gestion-publicidad/crear">
+              Crear primera publicidad
+            </button>
+          } @else {
+            <button class="primary__button" (click)="limpiarFiltros()">
+              Mostrar todas
+            </button>
+          }
         </div>
       } @else {
         <div class="publicidad-grid">
-          @for (publi of publicidadesFiltradas; track publi.id) {
-            <mat-card class="publicidad-card">
-              <mat-card-header>
-                <mat-card-title>{{ publi.nombre }}</mat-card-title>
-                <!-- <mat-card-subtitle>{{ publi.tipo }} - {{ publi.estado }}</mat-card-subtitle> -->
-              </mat-card-header>
-              <div class="image-container">
-                <img mat-card-image [src]="publi.imagenUrl || 'assets/images/placeholder-image.png'" [alt]="publi.nombre">
+          @for (publicidad of publicidadesFiltradas; track publicidad.id) {
+            <div class="custom-card">
+              <!-- Header con título centrado -->
+              <div class="card-header">
+                <h3 class="card-title">{{ publicidad.nombre }}</h3>
+                <div class="card-badges">
+                  <span class="tipo-badge" [class]="'tipo-' + publicidad.tipo_publicidad">
+                    {{ getTipoDisplayName(publicidad.tipo_publicidad) }}
+                  </span>
+                  <span class="estado-badge" [class]="'estado-' + (publicidad.estado_nombre === 'Activado' ? 'activo' : 'inactivo')">
+                    {{ getEstadoDisplayName(publicidad.estado_nombre) }}
+                  </span>
+                </div>
               </div>
-              <mat-card-content>
+              
+              <!-- Media container -->
+              <div class="media-container">
+                @defer (when publicidad.media_url) {
+                  @if (isVideoFile(publicidad)) {
+                    <video 
+                      class="media-preview"
+                      [src]="getMediaUrl(publicidad)" 
+                      muted
+                      loop
+                      preload="metadata"
+                      (mouseenter)="playVideo($event)"
+                      (mouseleave)="pauseVideo($event)"
+                      (loadeddata)="onMediaLoaded($event)"
+                      (error)="onMediaError($event)">
+                    </video>
+                  } @else if (publicidad.media_type === 'image') {
+                    <img 
+                      class="media-preview"
+                      [src]="getMediaUrl(publicidad)" 
+                      [alt]="publicidad.nombre"
+                      (load)="onMediaLoaded($event)"
+                      (error)="onMediaError($event)">
+                  }
+                } @placeholder {
+                  <div class="no-media-placeholder">
+                    <span>No media</span>
+                  </div>
+                } @error {
+                  <div class="no-media-placeholder error">
+                    <span>Error cargando</span>
+                  </div>
+                }
+              </div>
+              
+              <!-- Contenido -->
+              <div class="card-content">
                 <p class="descripcion-publicidad">
-                  {{ publi.descripcion || 'Sin descripción disponible.' }}
+                  {{ publicidad.descripcion || 'Sin descripción disponible.' }}
                 </p>
-              </mat-card-content>
-              <mat-card-actions align="end">
-                <button mat-stroked-button color="primary" (click)="editarPublicidad(publi.id)">Editar</button>
-                <button mat-flat-button color="warn" (click)="confirmarEliminacion(publi.id, publi.nombre)">Eliminar</button>
-              </mat-card-actions>
-            </mat-card>
+              </div>
+              
+              <!-- Botones centrados -->
+              <div class="card-actions">
+                <button 
+                  class="primary__button edit-button small" 
+                  (click)="editarPublicidad(publicidad.id)"
+                  [disabled]="isLoading">
+                  Editar
+                </button>
+                <button 
+                  class="primary__button delete-button small" 
+                  (click)="confirmarEliminacion(publicidad.id, publicidad.nombre)"
+                  [disabled]="isLoading">
+                  Eliminar
+                </button>
+              </div>
+            </div>
           }
         </div>
       }
@@ -72,4 +136,4 @@
   </div>
 </div>
 
-<app-footer-admin [backRoute]="'/administrador/gestion-publicidad'"></app-footer-admin> 
+<app-footer-admin [backRoute]="'/administrador/gestion-publicidad'"></app-footer-admin>

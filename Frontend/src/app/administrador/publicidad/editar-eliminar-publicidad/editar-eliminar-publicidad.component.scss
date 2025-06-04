@@ -3,7 +3,7 @@
   background-color: #F2F2F2;
   width: 100%;
   box-sizing: border-box;
-  min-height: calc(100vh - 120px); // Ajusta según altura de header/footer
+  min-height: calc(100vh - 120px);
 }
 
 .breadcrumb-title {
@@ -24,11 +24,11 @@
 
 .content-layout {
   display: flex;
-  flex-direction: column; // Apilado en móvil
+  flex-direction: column;
   gap: 30px;
 }
 
-@media (min-width: 992px) { // Punto de quiebre para dos columnas
+@media (min-width: 992px) {
   .content-layout {
     flex-direction: row;
   }
@@ -39,8 +39,8 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  flex: 0 0 280px; // Ancho fijo para la columna de filtros en desktop
-  height: fit-content; // Para que no se estire innecesariamente
+  flex: 0 0 280px;
+  height: fit-content;
 
   form {
     display: flex;
@@ -60,7 +60,7 @@
 
   .checkbox-group {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); // Responsive para checkboxes
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 10px;
 
     mat-checkbox {
@@ -75,21 +75,30 @@
   margin-top: 15px;
 
   .filter-button {
-    flex-grow: 1;
-    height: 40px;
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    padding: 8px 16px;
   }
 }
 
 .content-column {
-  flex-grow: 1; // Ocupa el espacio restante
-  position: relative; // Para el loading indicator
+  flex-grow: 1;
+  position: relative;
 }
 
 .loading-indicator {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 300px; // Asegura que el spinner sea visible
+  min-height: 300px;
+  gap: 16px;
+  
+  p {
+    color: #666;
+    font-size: 1rem;
+  }
 }
 
 .no-results {
@@ -103,76 +112,250 @@
   background-color: #fff;
   border-radius: 8px;
   min-height: 200px;
-
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 15px;
-  }
+  gap: 16px;
+  
   p {
     font-size: 1.1em;
+    margin-bottom: 20px;
   }
 }
 
 .publicidad-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); // Columnas responsivas para las tarjetas
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
-.publicidad-card {
+// ✅ Custom Card
+.custom-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-  mat-card-header {
-    padding-bottom: 8px; // Menos espacio si no hay subtítulo
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// ✅ Header de la card
+.card-header {
+  padding: 20px 20px 15px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+
+  .card-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 15px 0;
+    font-family: 'Lato', sans-serif;
   }
 
-  mat-card-title {
-    font-size: 1.2em;
-    font-weight: 500;
+  .card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
   }
+}
 
-  .image-container {
-    width: 100%;
-    padding-top: 56.25%; // Aspect ratio 16:9 para la imagen
-    position: relative;
-    background-color: #e0e0e0; // Placeholder color
-    overflow: hidden; // Para que la imagen no se desborde
+// ✅ Media container
+.media-container {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  background-color: #f8f9fa;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover; // Cubre el contenedor manteniendo el aspect ratio
-    }
+.media-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.no-media-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #e9ecef;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+  
+  &.error {
+    background-color: #f8d7da;
+    color: #721c24;
   }
+}
 
-  mat-card-content {
-    padding-top: 16px;
-    flex-grow: 1; // Para que el contenido empuje las acciones hacia abajo
+// ✅ Contenido de la card (simplificado)
+.card-content {
+  padding: 20px;
+  flex-grow: 1;
 
-    .descripcion-publicidad {
-      font-size: 0.9em;
-      color: #555;
-      line-height: 1.4;
-      // Limitar texto a X líneas con elipsis (opcional, requiere más CSS)
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-height: calc(0.9em * 1.4 * 3); // Altura mínima para 3 líneas
-    }
+  .descripcion-publicidad {
+    font-size: 0.95em;
+    color: #555;
+    line-height: 1.5;
+    text-align: justify;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+}
 
-  mat-card-actions {
-    padding: 8px 16px 16px; // Ajustar padding
-    button {
+// ✅ Botones centrados y pequeños
+.card-actions {
+  padding: 0 20px 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+
+  .primary__button {
+    &.small {
       min-width: 80px;
+      min-height: 32px;
+      font-size: 14px;
+      padding: 6px 16px;
+      line-height: 1.4;
+    }
+    
+    &.edit-button {
+      // Mantener el color primary por defecto
+    }
+    
+    &.delete-button {
+      background-color: #dc3545;
+      
+      &:hover {
+        background-color: #c82333;
+      }
+      
+      &:active {
+        background-color: #bd2130;
+      }
+    }
+  }
+}
+
+// ✅ Badges y etiquetas
+.tipo-badge, .estado-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tipo-banner {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.tipo-video {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.estado-activo {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.estado-inactivo {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+// ✅ Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// ✅ Responsive
+@media (max-width: 768px) {
+  .page-container {
+    padding: 15px 20px;
+  }
+  
+  .publicidad-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .filters-column {
+    order: 2;
+  }
+  
+  .content-column {
+    order: 1;
+  }
+  
+  .card-actions {
+    flex-direction: column;
+    
+    .primary__button.small {
+      width: 100%;
+      max-width: none;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    padding: 10px 15px;
+  }
+  
+  .media-container {
+    height: 160px;
+  }
+  
+  .card-header {
+    padding: 15px;
+    
+    .card-title {
+      font-size: 1.1em;
+    }
+  }
+  
+  .card-content {
+    padding: 15px;
+  }
+  
+  .card-actions {
+    padding: 0 15px 15px;
+  }
+  
+  .filter-actions {
+    flex-direction: column;
+    
+    .filter-button {
+      width: 100%;
     }
   }
 }

@@ -1,7 +1,7 @@
 from rest_framework import generics, status, filters
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from .models import AppkioskoPublicidades, AppkioskoVideo
 from comun.models import AppkioskoImagen, AppkioskoEstados
 from .serializers import (
@@ -24,8 +24,11 @@ class PublicidadListCreateView(generics.ListCreateAPIView):
     ordering = ['-created_at']
     
     def get_queryset(self):
-        """Filtrado personalizado sin django-filter"""
+        """Filtrado personalizado con optimización de queries"""
         queryset = super().get_queryset()
+        
+        # ✅ OPTIMIZACIÓN CRÍTICA: Prefetch para evitar N+1 queries
+        queryset = queryset.select_related('estado').prefetch_related('appkioskovideo_set')
         
         # Filtrar por estado
         estado = self.request.query_params.get('estado', None)
@@ -52,6 +55,51 @@ class PublicidadListCreateView(generics.ListCreateAPIView):
             return PublicidadCreateSerializer
         return PublicidadListSerializer
     
+    def list(self, request, *args, **kwargs):
+        """Sobrescribir list para debugging"""
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # ✅ DEBUG: Verificar que las relaciones se estén precargando
+        print(f"🔍 Total publicidades: {queryset.count()}")
+        for pub in queryset[:3]:  # Solo las primeras 3 para debug
+            print(f"🔍 Publicidad {pub.id}: {pub.nombre}")
+            
+            # Verificar videos
+            videos = list(pub.appkioskovideo_set.all())
+            print(f"   - Videos: {len(videos)}")
+            if videos:
+                print(f"   - Primer video: {videos[0].ruta}")
+            
+            # Verificar imágenes
+            imagenes = AppkioskoImagen.objects.filter(
+                categoria_imagen='publicidad',
+                entidad_relacionada_id=pub.id
+            )
+            print(f"   - Imágenes: {imagenes.count()}")
+            if imagenes.exists():
+                print(f"   - Primera imagen: {imagenes.first().ruta}")
+            
+            # Verificar prefetch cache
+            if hasattr(pub, '_prefetched_objects_cache'):
+                print(f"   - Cache prefetch: {list(pub._prefetched_objects_cache.keys())}")
+            else:
+                print(f"   - ❌ No hay cache prefetch")
+        
+        # Continuar con la lógica normal
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # ✅ DEBUG: Verificar datos serializados
+        print(f"🔍 Datos serializados (primeros 2):")
+        for i, item in enumerate(serializer.data[:2]):
+            print(f"   Item {i+1}: {item.get('nombre')} - media_type: {item.get('media_type')} - media_url: {item.get('media_url')}")
+        
+        return Response(serializer.data)
+    
     def create(self, request, *args, **kwargs):
         logger.info("=== CREAR PUBLICIDAD ===")
         logger.info(f"Request data: {request.data}")
@@ -67,8 +115,13 @@ class PublicidadListCreateView(generics.ListCreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PublicidadDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = AppkioskoPublicidades.objects.all()
     parser_classes = (MultiPartParser, FormParser)
+    
+    def get_queryset(self):
+        """Optimización para vista de detalle"""
+        return AppkioskoPublicidades.objects.select_related('estado').prefetch_related(
+            'appkioskovideo_set'
+        )
     
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -117,8 +170,11 @@ class EstadoListView(generics.ListAPIView):
     serializer_class = EstadoSerializer
 
 class PublicidadToggleEstadoView(generics.UpdateAPIView):
-    queryset = AppkioskoPublicidades.objects.all()
     serializer_class = PublicidadDetailSerializer
+    
+    def get_queryset(self):
+        """Optimización para toggle estado"""
+        return AppkioskoPublicidades.objects.select_related('estado')
     
     def patch(self, request, *args, **kwargs):
         publicidad = self.get_object()
@@ -147,13 +203,13 @@ class PublicidadToggleEstadoView(generics.UpdateAPIView):
 
 class PublicidadStatsView(generics.GenericAPIView):
     def get(self, request):
+        # ✅ OPTIMIZACIÓN: Queries más eficientes para estadísticas
         total = AppkioskoPublicidades.objects.count()
-        activas = AppkioskoPublicidades.objects.filter(
-            estado__is_active=True
-        ).count()
-        inactivas = AppkioskoPublicidades.objects.filter(
-            estado__is_inactive=True
-        ).count()
+        
+        # Usar select_related para estado
+        publicidades_con_estado = AppkioskoPublicidades.objects.select_related('estado')
+        activas = publicidades_con_estado.filter(estado__is_active=True).count()
+        inactivas = publicidades_con_estado.filter(estado__is_inactive=True).count()
         
         # Contar por tipo de media
         publicidades_con_video = AppkioskoPublicidades.objects.filter(

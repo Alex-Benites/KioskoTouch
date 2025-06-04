@@ -26,6 +26,7 @@ export interface Publicidad {
   estado: number;
   estado_nombre?: string;
   estado_info?: Estado;
+  tiempo_visualizacion: number; 
   media_type?: 'image' | 'video' | null;
   media_url?: string;
   duracion_video?: number;

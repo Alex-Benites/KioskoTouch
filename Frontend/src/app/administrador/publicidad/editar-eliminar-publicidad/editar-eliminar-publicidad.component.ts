@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-// import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Para diálogos de confirmación
+import { CommonModule } from '@angular/common';
 
 // Angular Material Modules
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -14,26 +14,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // Shared Components
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
-// import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component'; // Si tienes un diálogo genérico
 
-// Services (Asegúrate de crear este servicio)
-// import { PublicidadService } from '../../../services/publicidad.service';
-
-// Models (Opcional, pero recomendado)
-export interface PublicidadCard { // Define una interfaz básica para tus datos
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  tipo?: string; // 'banner', 'slider', 'video', 'popup'
-  estado?: string; // 'activo', 'inactivo'
-  imagenUrl?: string;
-  // Agrega más campos según necesites
-}
+// Services and Models
+import { PublicidadService } from '../../../services/publicidad.service';
+import { Publicidad, ApiError } from '../../../models/marketing.model';
 
 @Component({
   selector: 'app-editar-eliminar-publicidad',
   standalone: true,
   imports: [
+    CommonModule, 
     ReactiveFormsModule,
     MatCheckboxModule,
     MatButtonModule,
@@ -41,10 +31,8 @@ export interface PublicidadCard { // Define una interfaz básica para tus datos
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    // MatDialogModule, // Descomentar si usarás diálogos
     HeaderAdminComponent,
-    FooterAdminComponent,
-    // ConfirmationDialogComponent // Si es standalone y lo usas
+    FooterAdminComponent
   ],
   templateUrl: './editar-eliminar-publicidad.component.html',
   styleUrls: ['./editar-eliminar-publicidad.component.scss']
@@ -52,17 +40,14 @@ export interface PublicidadCard { // Define una interfaz básica para tus datos
 export class EditarEliminarPublicidadComponent implements OnInit {
 
   filtroForm!: FormGroup;
-  todasLasPublicidades: PublicidadCard[] = []; // Datos originales del backend
-  publicidadesFiltradas: PublicidadCard[] = []; // Datos mostrados después de filtrar
+  todasLasPublicidades: Publicidad[] = [];
+  publicidadesFiltradas: Publicidad[] = [];
   isLoading: boolean = false;
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
-  // private dialog = inject(MatDialog); // Descomentar si usarás diálogos
-  // private publicidadService = inject(PublicidadService); // Descomentar cuando tengas el servicio
-
-  constructor() { }
+  private publicidadService = inject(PublicidadService);
 
   ngOnInit(): void {
     this.initializeForm();
@@ -72,136 +57,240 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   private initializeForm(): void {
     this.filtroForm = this.fb.group({
       tipoBanner: [false],
-      tipoSlider: [false],
       tipoVideo: [false],
-      tipoPopUp: [false],
       estadoActivo: [false],
       estadoInactivo: [false]
     });
-
-    // Opcional: aplicar filtros automáticamente al cambiar un checkbox
-    // this.filtroForm.valueChanges.subscribe(() => this.aplicarFiltros());
   }
 
   cargarPublicidades(): void {
     this.isLoading = true;
-    // Simulación de carga de datos (reemplazar con llamada al servicio)
-    setTimeout(() => {
-      this.todasLasPublicidades = [
-        { id: 1, nombre: 'Publicidad Hamburguesa Feliz', descripcion: 'La mejor hamburguesa de la ciudad, ahora con descuento especial para ti. ¡No te la pierdas!', tipo: 'banner', estado: 'activo', imagenUrl: 'https://via.placeholder.com/600x338/FF6347/FFFFFF?Text=Banner+Comida+1' },
-        { id: 2, nombre: 'Oferta Slider Electrónicos', descripcion: 'Descuentos increíbles en todos nuestros electrónicos. Solo por tiempo limitado.', tipo: 'slider', estado: 'activo', imagenUrl: 'https://via.placeholder.com/600x338/4682B4/FFFFFF?Text=Slider+Tech+2' },
-        { id: 3, nombre: 'Video Promocional Viajes', descripcion: 'Descubre destinos soñados con nuestros paquetes turísticos. ¡Aventura te espera!', tipo: 'video', estado: 'inactivo', imagenUrl: 'https://via.placeholder.com/600x338/32CD32/FFFFFF?Text=Video+Viajes+3' },
-        { id: 4, nombre: 'PopUp Nueva Colección Moda', descripcion: '¡Ya llegó! Explora la nueva colección de temporada. Estilo y elegancia.', tipo: 'popup', estado: 'activo', imagenUrl: 'https://via.placeholder.com/600x338/FFD700/000000?Text=PopUp+Moda+4' },
-        { id: 5, nombre: 'Banner Deportes Extremos', descripcion: 'Adrenalina pura con nuestros equipos para deportes extremos. ¡Vive al límite!', tipo: 'banner', estado: 'inactivo', imagenUrl: 'https://via.placeholder.com/600x338/8A2BE2/FFFFFF?Text=Banner+Deportes+5' },
-        { id: 6, nombre: 'Slider Restaurante Gourmet', descripcion: 'Experiencia culinaria única. Reserva tu mesa y deléitate con sabores inolvidables.', tipo: 'slider', estado: 'activo', imagenUrl: 'https://via.placeholder.com/600x338/FF8C00/FFFFFF?Text=Slider+Gourmet+6' },
-      ];
-      this.publicidadesFiltradas = [...this.todasLasPublicidades]; // Inicialmente mostrar todas
-      this.isLoading = false;
-    }, 1500);
+    console.log('=== CARGANDO PUBLICIDADES ===');
+    
+    this.publicidadService.getPublicidades().subscribe({
+      next: (data) => {
+        console.log('✅ Publicidades cargadas:', data);
+        
+        // ✅ DEBUG: Verificar que lleguen las URLs
+        data.forEach((pub, index) => {
+          console.log(`🔍 Publicidad ${index + 1}:`, {
+            id: pub.id,
+            nombre: pub.nombre,
+            media_type: pub.media_type,
+            media_url: pub.media_url,
+            duracion_video: pub.duracion_video
+          });
+        });
+        
+        this.todasLasPublicidades = data;
+        this.publicidadesFiltradas = [...this.todasLasPublicidades];
+        this.isLoading = false;
+        
+        console.log(`📊 Total publicidades: ${data.length}`);
+        this.mostrarEstadisticas();
+      },
+      error: (error: ApiError) => {
+        console.error('❌ Error al cargar publicidades:', error);
+        this.mostrarError('No se pudieron cargar las publicidades.');
+        this.isLoading = false;
+      }
+    });
+  }
 
-    // Llamada real al servicio:
-    // this.publicidadService.getPublicidades().subscribe({
-    //   next: (data) => {
-    //     this.todasLasPublicidades = data;
-    //     this.publicidadesFiltradas = [...this.todasLasPublicidades];
-    //     this.isLoading = false;
-    //   },
-    //   error: (err) => {
-    //     console.error('Error al cargar publicidades:', err);
-    //     this.mostrarError('No se pudieron cargar las publicidades.');
-    //     this.isLoading = false;
-    //   }
-    // });
+  private mostrarEstadisticas(): void {
+    const stats = {
+      total: this.todasLasPublicidades.length,
+      banners: this.todasLasPublicidades.filter(p => p.tipo_publicidad === 'banner').length,
+      videos: this.todasLasPublicidades.filter(p => p.tipo_publicidad === 'video').length,
+      activos: this.todasLasPublicidades.filter(p => p.estado_nombre === 'Activado').length,
+      inactivos: this.todasLasPublicidades.filter(p => p.estado_nombre === 'Desactivado').length
+    };
+    
+    console.log('📈 Estadísticas:', stats);
   }
 
   aplicarFiltros(): void {
-    this.isLoading = true; // Opcional, para feedback visual si el filtrado es pesado
+    console.log('🔍 Aplicando filtros...');
+    this.isLoading = true;
+    
     const filtros = this.filtroForm.value;
-    console.log('Aplicando filtros:', filtros);
+    console.log('Filtros seleccionados:', filtros);
 
-    this.publicidadesFiltradas = this.todasLasPublicidades.filter(publi => {
-      const coincideTipo =
-        (!filtros.tipoBanner && !filtros.tipoSlider && !filtros.tipoVideo && !filtros.tipoPopUp) || // Si no hay filtro de tipo, todos pasan
-        (filtros.tipoBanner && publi.tipo?.toLowerCase() === 'banner') ||
-        (filtros.tipoSlider && publi.tipo?.toLowerCase() === 'slider') ||
-        (filtros.tipoVideo && publi.tipo?.toLowerCase() === 'video') ||
-        (filtros.tipoPopUp && publi.tipo?.toLowerCase() === 'popup');
-
-      const coincideEstado =
-        (!filtros.estadoActivo && !filtros.estadoInactivo) || // Si no hay filtro de estado, todos pasan
-        (filtros.estadoActivo && publi.estado?.toLowerCase() === 'activo') ||
-        (filtros.estadoInactivo && publi.estado?.toLowerCase() === 'inactivo');
-
-      return coincideTipo && coincideEstado;
+    this.publicidadesFiltradas = this.todasLasPublicidades.filter(publicidad => {
+      const coincideTipo = this.verificarFiltroTipo(publicidad, filtros);
+      const coincideEstado = this.verificarFiltroEstado(publicidad, filtros);
+      const coincide = coincideTipo && coincideEstado;
+      
+      if (coincide) {
+        console.log(`✅ Publicidad "${publicidad.nombre}" coincide con filtros`);
+      }
+      
+      return coincide;
     });
-    this.isLoading = false; // Opcional
+    
+    console.log(`🎯 Publicidades filtradas: ${this.publicidadesFiltradas.length}/${this.todasLasPublicidades.length}`);
+    this.isLoading = false;
+  }
+
+  private verificarFiltroTipo(publicidad: Publicidad, filtros: any): boolean {
+    const hayFiltroTipo = filtros.tipoBanner || filtros.tipoVideo;
+    
+    if (!hayFiltroTipo) {
+      return true;
+    }
+    
+    const esBanner = filtros.tipoBanner && publicidad.tipo_publicidad === 'banner';
+    const esVideo = filtros.tipoVideo && publicidad.tipo_publicidad === 'video';
+    
+    return esBanner || esVideo;
+  }
+
+  private verificarFiltroEstado(publicidad: Publicidad, filtros: any): boolean {
+    const hayFiltroEstado = filtros.estadoActivo || filtros.estadoInactivo;
+    
+    if (!hayFiltroEstado) {
+      return true;
+    }
+    
+    const esActivo = filtros.estadoActivo && publicidad.estado_nombre === 'Activado';
+    const esInactivo = filtros.estadoInactivo && publicidad.estado_nombre === 'Desactivado';
+    
+    return esActivo || esInactivo;
   }
 
   limpiarFiltros(): void {
+    console.log('🧹 Limpiando filtros...');
     this.filtroForm.reset({
       tipoBanner: false,
-      tipoSlider: false,
       tipoVideo: false,
-      tipoPopUp: false,
       estadoActivo: false,
       estadoInactivo: false
     });
-    this.publicidadesFiltradas = [...this.todasLasPublicidades]; // Mostrar todas de nuevo
-    console.log('Filtros limpiados');
+    this.publicidadesFiltradas = [...this.todasLasPublicidades];
+    console.log('✅ Filtros limpiados, mostrando todas las publicidades');
   }
 
   editarPublicidad(id: number): void {
-    console.log('Editar publicidad con ID:', id);
-    this.router.navigate(['/administrador/gestion-publicidad/editar', id]); // Ajusta la ruta de edición
+    console.log('✏️ Editando publicidad ID:', id);
+    this.router.navigate(['/administrador/gestion-publicidad/editar', id]);
   }
 
   confirmarEliminacion(id: number, nombre: string): void {
-    console.log('Eliminar publicidad con ID:', id, 'Nombre:', nombre);
-    // Aquí implementarías la lógica con MatDialog si lo deseas
-    // const dialogData: ConfirmationDialogData = {
-    //   title: 'Confirmar Eliminación',
-    //   message: `¿Estás seguro de que deseas eliminar la publicidad "${nombre}"? Esta acción no se puede deshacer.`,
-    //   confirmButtonText: 'Eliminar',
-    //   cancelButtonText: 'Cancelar'
-    // };
-    // const dialogRef = this.dialog.open(ConfirmationDialogComponent, { data: dialogData, width: '400px' });
-    // dialogRef.afterClosed().subscribe(result => {
-    //   if (result) {
-    //     this.procederEliminacion(id);
-    //   }
-    // });
-
-    // Simulación de confirmación directa (sin diálogo)
-    if (confirm(`¿Estás seguro de que deseas eliminar la publicidad "${nombre}"?`)) {
+    console.log('🗑️ Confirmar eliminación - ID:', id, 'Nombre:', nombre);
+    
+    const confirmacion = confirm(
+      `¿Estás seguro de que deseas eliminar la publicidad "${nombre}"?\n\n` +
+      `Esta acción no se puede deshacer.`
+    );
+    
+    if (confirmacion) {
       this.procederEliminacion(id);
     }
   }
 
   private procederEliminacion(id: number): void {
+    console.log('🗑️ Procediendo a eliminar publicidad ID:', id);
     this.isLoading = true;
-    // this.publicidadService.eliminarPublicidad(id).subscribe({
-    //   next: () => {
-    //     this.mostrarExito('Publicidad eliminada correctamente.');
-    //     this.cargarPublicidades(); // Recargar la lista
-    //     this.isLoading = false;
-    //   },
-    //   error: (err) => {
-    //     console.error('Error al eliminar publicidad:', err);
-    //     this.mostrarError('No se pudo eliminar la publicidad.');
-    //     this.isLoading = false;
-    //   }
-    // });
-
-    // Simulación de eliminación
-    console.log('Procediendo a eliminar ID:', id);
-    setTimeout(() => {
-      this.todasLasPublicidades = this.todasLasPublicidades.filter(p => p.id !== id);
-      this.aplicarFiltros(); // Re-aplicar filtros sobre la lista modificada
-      this.mostrarExito('Publicidad eliminada correctamente (simulación).');
-      this.isLoading = false;
-    }, 1000);
+    
+    this.publicidadService.deletePublicidad(id).subscribe({
+      next: () => {
+        console.log('✅ Publicidad eliminada correctamente');
+        this.mostrarExito('Publicidad eliminada correctamente.');
+        this.cargarPublicidades();
+      },
+      error: (error: ApiError) => {
+        console.error('❌ Error al eliminar publicidad:', error);
+        this.mostrarError(error.message || 'No se pudo eliminar la publicidad.');
+        this.isLoading = false;
+      }
+    });
   }
 
+  // ✅ CORREGIDO: Sin hack de prueba, URLs directas del backend
+  getMediaUrl(publicidad: Publicidad): string {
+    if (publicidad.media_url) {
+      if (publicidad.media_url.startsWith('/media/')) {
+        return `http://localhost:8000${publicidad.media_url}`;
+      }
+      return publicidad.media_url;
+    }
+    return '';
+  }
+
+  // ✅ Método para verificar si es video
+  isVideoFile(publicidad: Publicidad): boolean {
+    return publicidad.media_type === 'video' && !!publicidad.media_url;
+  }
+
+  // ✅ Event handlers para media
+  onMediaLoaded(event: Event): void {
+    console.log('✅ Media cargada correctamente:', event.target);
+  }
+
+  onMediaError(event: Event): void {
+    console.error('❌ Error cargando media:', event.target);
+    const target = event.target as HTMLElement;
+    if (target) {
+      target.style.display = 'none';
+    }
+  }
+
+  playVideo(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    if (video && video.tagName === 'VIDEO') {
+      video.play().catch(error => {
+        console.log('No se pudo reproducir el video:', error);
+      });
+    }
+  }
+
+  pauseVideo(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    if (video && video.tagName === 'VIDEO') {
+      video.pause();
+      video.currentTime = 0; // Reinicia al inicio
+    }
+  }
+
+  getTipoDisplayName(tipo: string): string {
+    const tiposMap: { [key: string]: string } = {
+      'banner': 'Banner',
+      'video': 'Video'
+    };
+    return tiposMap[tipo] || tipo;
+  }
+
+  getEstadoDisplayName(estado: string | undefined): string {
+    if (!estado) return 'Sin estado';
+    
+    const estadosMap: { [key: string]: string } = {
+      'Activado': 'Activo',
+      'Desactivado': 'Inactivo'
+    };
+    return estadosMap[estado] || estado;
+  }
+
+  getDuracionDisplay(publicidad: Publicidad): string {
+    if (publicidad.tipo_publicidad === 'video' && publicidad.duracion_video) {
+      const minutos = Math.floor(publicidad.duracion_video / 60);
+      const segundos = publicidad.duracion_video % 60;
+      return `${minutos}:${segundos.toString().padStart(2, '0')}`;
+    }
+    
+    if (publicidad.tipo_publicidad === 'banner' && publicidad.tiempo_visualizacion) {
+      if (publicidad.tiempo_visualizacion >= 60) {
+        const minutos = Math.floor(publicidad.tiempo_visualizacion / 60);
+        const segundos = publicidad.tiempo_visualizacion % 60;
+        if (segundos > 0) {
+          return `${minutos}m ${segundos}s`;
+        }
+        return `${minutos}m`;
+      }
+      return `${publicidad.tiempo_visualizacion}s`;
+    }
+    
+    return '';
+  }
 
   private mostrarError(mensaje: string): void {
     this.snackBar.open(mensaje, 'Cerrar', {

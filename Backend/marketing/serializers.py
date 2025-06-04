@@ -55,32 +55,95 @@ class PublicidadListSerializer(serializers.ModelSerializer):
         ]
     
     def get_media_type(self, obj):
-        if hasattr(obj, 'appkioskovideo_set') and obj.appkioskovideo_set.exists():
-            return 'video'
-        imagen = AppkioskoImagen.objects.filter(
-            categoria_imagen='publicidad',
-            entidad_relacionada_id=obj.id
-        ).first()
-        if imagen:
-            return 'image'
+        try:
+            print(f"🔍 get_media_type para publicidad ID {obj.id}")
+            
+            # ✅ CORREGIDO: Verificar videos precargados correctamente
+            if hasattr(obj, '_prefetched_objects_cache') and 'appkioskovideo_set' in obj._prefetched_objects_cache:
+                videos_list = list(obj._prefetched_objects_cache['appkioskovideo_set'])
+                print(f"   - Videos en cache: {len(videos_list)}")
+                if videos_list:
+                    print(f"   - ✅ TIPO: video (desde cache)")
+                    return 'video'
+            else:
+                # Fallback - query directa
+                videos_count = obj.appkioskovideo_set.count()
+                print(f"   - Videos (query directa): {videos_count}")
+                if videos_count > 0:
+                    print(f"   - ✅ TIPO: video (desde query)")
+                    return 'video'
+            
+            # Verificar imágenes
+            imagen = AppkioskoImagen.objects.filter(
+                categoria_imagen='publicidad',
+                entidad_relacionada_id=obj.id
+            ).first()
+            if imagen:
+                print(f"   - ✅ TIPO: image")
+                return 'image'
+                
+            print(f"   - ⚠️ TIPO: None (sin media)")
+                
+        except Exception as e:
+            print(f"❌ Error en get_media_type: {e}")
+            # Debug: imprimir atributos disponibles
+            print(f"🔍 Atributos de obj: {[attr for attr in dir(obj) if not attr.startswith('_')]}")
+            if hasattr(obj, '_prefetched_objects_cache'):
+                print(f"🔍 Cache prefetch: {list(obj._prefetched_objects_cache.keys())}")
+        
         return None
     
     def get_media_url(self, obj):
-        video = obj.appkioskovideo_set.first()
-        if video:
-            return video.ruta
-        imagen = AppkioskoImagen.objects.filter(
-            categoria_imagen='publicidad',
-            entidad_relacionada_id=obj.id
-        ).first()
-        if imagen:
-            return imagen.ruta
+        try:
+            print(f"🔍 get_media_url para publicidad ID {obj.id}")
+            
+            # ✅ CORREGIDO: Verificar videos precargados
+            if hasattr(obj, '_prefetched_objects_cache') and 'appkioskovideo_set' in obj._prefetched_objects_cache:
+                videos_list = list(obj._prefetched_objects_cache['appkioskovideo_set'])
+                if videos_list:
+                    video = videos_list[0]
+                    print(f"   - ✅ Video URL (cache): {video.ruta}")
+                    return video.ruta
+            else:
+                # Fallback - query directa
+                video = obj.appkioskovideo_set.first()
+                if video:
+                    print(f"   - ✅ Video URL (query): {video.ruta}")
+                    return video.ruta
+            
+            # Buscar imagen
+            imagen = AppkioskoImagen.objects.filter(
+                categoria_imagen='publicidad',
+                entidad_relacionada_id=obj.id
+            ).first()
+            if imagen:
+                print(f"   - ✅ Imagen URL: {imagen.ruta}")
+                return imagen.ruta
+                
+        except Exception as e:
+            print(f"❌ Error en get_media_url: {e}")
+        
+        print(f"   - ⚠️ No se encontró media para publicidad ID: {obj.id}")
         return None
     
     def get_duracion_video(self, obj):
-        video = obj.appkioskovideo_set.first()
-        if video:
-            return video.duracion
+        try:
+            # ✅ CORREGIDO: Verificar videos precargados
+            if hasattr(obj, '_prefetched_objects_cache') and 'appkioskovideo_set' in obj._prefetched_objects_cache:
+                videos_list = list(obj._prefetched_objects_cache['appkioskovideo_set'])
+                if videos_list:
+                    duracion = videos_list[0].duracion
+                    print(f"   - ✅ Duración video (cache): {duracion}")
+                    return duracion
+            else:
+                # Fallback
+                video = obj.appkioskovideo_set.first()
+                if video:
+                    print(f"   - ✅ Duración video (query): {video.duracion}")
+                    return video.duracion
+        except Exception as e:
+            print(f"❌ Error en get_duracion_video: {e}")
+        
         return None
 
 class PublicidadDetailSerializer(serializers.ModelSerializer):
@@ -109,21 +172,37 @@ class PublicidadDetailSerializer(serializers.ModelSerializer):
         ]
     
     def get_imagenes(self, obj):
-        imagenes = AppkioskoImagen.objects.filter(
-            categoria_imagen='publicidad',
-            entidad_relacionada_id=obj.id
-        )
-        return ImagenSerializer(imagenes, many=True).data
+        try:
+            imagenes = AppkioskoImagen.objects.filter(
+                categoria_imagen='publicidad',
+                entidad_relacionada_id=obj.id
+            )
+            return ImagenSerializer(imagenes, many=True).data
+        except Exception as e:
+            print(f"Error en get_imagenes: {e}")
+            return []
     
     def get_media_type(self, obj):
-        if hasattr(obj, 'appkioskovideo_set') and obj.appkioskovideo_set.exists():
-            return 'video'
-        imagen = AppkioskoImagen.objects.filter(
-            categoria_imagen='publicidad',
-            entidad_relacionada_id=obj.id
-        ).first()
-        if imagen:
-            return 'image'
+        try:
+            # Videos precargados
+            if hasattr(obj, '_prefetched_objects_cache') and 'appkioskovideo_set' in obj._prefetched_objects_cache:
+                videos_list = list(obj._prefetched_objects_cache['appkioskovideo_set'])
+                if videos_list:
+                    return 'video'
+            # Fallback
+            elif obj.appkioskovideo_set.exists():
+                return 'video'
+            
+            # Verificar imágenes
+            imagen = AppkioskoImagen.objects.filter(
+                categoria_imagen='publicidad',
+                entidad_relacionada_id=obj.id
+            ).first()
+            if imagen:
+                return 'image'
+        except Exception as e:
+            print(f"Error en get_media_type: {e}")
+        
         return None
 
 class PublicidadCreateSerializer(serializers.ModelSerializer):
@@ -186,6 +265,8 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
         video_duration = validated_data.pop('videoDuration', None)
         tiempo_visualizacion = validated_data.get('tiempo_visualizacion', 5)
         
+        print(f"✅ Creando publicidad con tiempo_visualizacion: {tiempo_visualizacion}")
+        
         estado_id = validated_data.get('estado')
         if estado_id:
             try:
@@ -195,6 +276,7 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f"Estado con ID {estado_id} no existe")
         
         publicidad = AppkioskoPublicidades.objects.create(**validated_data)
+        print(f"✅ Publicidad creada ID {publicidad.id} con tiempo_visualizacion: {publicidad.tiempo_visualizacion}")
         
         if media_file and media_type:
             self._handle_media_file(publicidad, media_file, media_type, video_duration)
@@ -210,19 +292,23 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
         saved_path = default_storage.save(file_path, media_file)
         full_url = default_storage.url(saved_path)
         
+        print(f"✅ Archivo guardado en: {full_url}")
+        
         if media_type == 'video':
-            AppkioskoVideo.objects.create(
+            video = AppkioskoVideo.objects.create(
                 nombre=media_file.name,
                 ruta=full_url,
                 duracion=video_duration or 0,
                 publicidad=publicidad
             )
+            print(f"✅ Video creado ID {video.id}: {video.ruta}")
         elif media_type == 'image':
-            AppkioskoImagen.objects.create(
+            imagen = AppkioskoImagen.objects.create(
                 ruta=full_url,
                 categoria_imagen='publicidad',
                 entidad_relacionada_id=publicidad.id
             )
+            print(f"✅ Imagen creada ID {imagen.id}: {imagen.ruta}")
 
 class PublicidadUpdateSerializer(serializers.ModelSerializer):
     estado_str = serializers.CharField(write_only=True, required=False)
