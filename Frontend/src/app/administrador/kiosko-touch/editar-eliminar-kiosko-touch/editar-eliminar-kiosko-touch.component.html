@@ -1,0 +1,92 @@
+<app-header-admin></app-header-admin>
+
+<div class="kioscos-container">
+  <p class="breadcrumb-title">GESTIÓN DE KIOSKO TOUCH</p>
+  <h1 class="section-title">Edición/Eliminación de Kioscos Touch</h1>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Estado</label>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-select [(value)]="filtroEstado" (selectionChange)="aplicarFiltros()">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="activo">Activo</mat-option>
+          <mat-option value="inactivo">Inactivo</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="filter-group">
+      <label>Establecimiento</label>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-select [(value)]="filtroEstablecimiento" (selectionChange)="aplicarFiltros()">
+          <mat-option value="">Seleccione establecimiento</mat-option>
+          <mat-option value="Local 1: Sur">Local 1: Sur</mat-option>
+          <mat-option value="Local 2: Norte">Local 2: Norte</mat-option>
+          <mat-option value="Local 3: Centro">Local 3: Centro</mat-option>
+          <mat-option value="Local 4: Sur">Local 4: Sur</mat-option>
+          <mat-option value="Local 5: Centro">Local 5: Centro</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Tabla de kioscos -->
+  <div class="table-container">
+    <table class="kioscos-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Token</th>
+          <th>Establecimiento</th>
+          <th>Estado de kiosco</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let kiosco of kioscosFiltrados" [class.inactive-row]="kiosco.estado === 'inactivo'">
+          <td>{{ kiosco.nombre }}</td>
+          <td>{{ kiosco.token }}</td>
+          <td>{{ kiosco.establecimiento }}</td>
+          <td>
+            <span class="estado-badge" [class.activo]="kiosco.estado === 'activo'" [class.inactivo]="kiosco.estado === 'inactivo'">
+              {{ kiosco.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <!-- Toggle Switch para cambiar estado -->
+            <mat-slide-toggle
+              [checked]="kiosco.estado === 'activo'"
+              (change)="cambiarEstado(kiosco, $event)"
+              [color]="'primary'">
+            </mat-slide-toggle>
+
+            <!-- Botón Editar con imagen personalizada -->
+            <button mat-icon-button
+                    class="action-button edit-button"
+                    (click)="editarKiosco(kiosco)"
+                    matTooltip="Editar kiosco">
+              <img src="assets/admin/ADMIN_7.png" alt="Editar" class="custom-icon">
+            </button>
+
+            <!-- Botón Eliminar con imagen personalizada -->
+            <button mat-icon-button
+                    class="action-button delete-button"
+                    (click)="abrirDialogoEliminar(kiosco)"
+                    matTooltip="Eliminar kiosco">
+              <img src="assets/admin/ADMIN_7_1.png" alt="Eliminar" class="custom-icon">
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Mensaje cuando no hay datos -->
+    <div class="no-data" *ngIf="kioscosFiltrados.length === 0">
+      <p>No se encontraron kioscos con los filtros aplicados.</p>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin></app-footer-admin>

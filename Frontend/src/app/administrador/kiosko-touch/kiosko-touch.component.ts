@@ -14,7 +14,7 @@ export class KioskoTouchComponent {
   constructor(private router: Router) {}
 
   irA(ruta: string) {
-    this.router.navigateByUrl(ruta);
+    console.log('Navegando a:', ruta); // Para debug
+    this.router.navigate([ruta]);
   }
-
 }

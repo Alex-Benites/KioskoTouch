@@ -1,0 +1,144 @@
+<app-header-admin></app-header-admin>
+
+<div class="establecimiento-container">
+  <p class="breadcrumb-title">GESTIÓN DE ESTABLECIMIENTOS</p>
+  <h1 class="section-title">Creación de nuevo Establecimiento</h1>
+
+  <form [formGroup]="form" class="form-container">
+    <!-- Formulario de creación -->
+    <div class="form-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre del establecimiento</mat-label>
+        <input matInput placeholder="Cheese Burger" formControlName="nombreEstablecimiento" />
+      </mat-form-field>
+
+      <!-- Cambiar select por input para tipo de establecimiento -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tipo de establecimiento</mat-label>
+        <input matInput placeholder="Ej: Restaurante, Cafetería, etc." formControlName="tipoEstablecimiento" />
+      </mat-form-field>
+
+      <!-- Reemplazar "Ubicación" por "Dirección específica" -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección específica</mat-label>
+        <textarea matInput
+                  placeholder="Ej: 9 de Octubre y Malecón 2000, Local 15"
+                  formControlName="direccionEspecifica"
+                  rows="2"></textarea>
+        <mat-error *ngIf="form.get('direccionEspecifica')?.hasError('required') && form.get('direccionEspecifica')?.touched">
+          La dirección específica es requerida
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Teléfono de contacto</mat-label>
+        <input matInput placeholder="0999999999" formControlName="telefonoContacto" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Correo electrónico</mat-label>
+        <input matInput placeholder="ejemplo@correo.com" type="email" formControlName="correoElectronico" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Responsable asignado</mat-label>
+        <input matInput placeholder="Nombre del responsable" formControlName="responsableAsignado" />
+      </mat-form-field>
+
+      <!-- Forzar desplegable hacia abajo -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Cargo asignado</mat-label>
+        <mat-select formControlName="cargoAsignado" placeholder="Seleccione Tipo" panelClass="select-panel-down">
+          <mat-option value="gerente">Gerente</mat-option>
+          <mat-option value="administrador">Administrador</mat-option>
+          <mat-option value="supervisor">Supervisor</mat-option>
+          <mat-option value="encargado">Encargado</mat-option>
+          <mat-option value="jefe_cocina">Jefe de Cocina</mat-option>
+          <mat-option value="otro">Otro</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Campos con dependencia: cuando se selecciona provincia, se cargan las ciudades -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Provincia</mat-label>
+        <mat-select formControlName="provincia"
+                    (selectionChange)="onProvinciaChange($event)"
+                    placeholder="Seleccione provincia">
+          <mat-option value="Guayas">Guayas</mat-option>
+          <mat-option value="Pichincha">Pichincha</mat-option>
+          <mat-option value="Manabí">Manabí</mat-option>
+          <mat-option value="Esmeraldas">Esmeraldas</mat-option>
+          <mat-option value="El Oro">El Oro</mat-option>
+          <mat-option value="Los Ríos">Los Ríos</mat-option>
+          <mat-option value="Azuay">Azuay</mat-option>
+          <mat-option value="Loja">Loja</mat-option>
+          <mat-option value="Tungurahua">Tungurahua</mat-option>
+          <mat-option value="Imbabura">Imbabura</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Ciudad</mat-label>
+        <mat-select formControlName="ciudad"
+                    [disabled]="!ciudadesDisponibles.length"
+                    placeholder="Primero seleccione una provincia">
+          <mat-option *ngFor="let ciudad of ciudadesDisponibles" [value]="ciudad">
+            {{ ciudad }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Sección del mapa y estado -->
+    <div class="mapa-section">
+      <h3>Mapa del establecimiento</h3>
+
+      <div class="mapa-container">
+        <div class="mapa-placeholder" [class.has-image]="imagenMapaUrl">
+          <!-- Vista previa del mapa DENTRO del placeholder -->
+          <div class="mapa-preview" *ngIf="imagenMapaUrl">
+            <img [src]="imagenMapaUrl" alt="Mapa del establecimiento" />
+            <button type="button" class="remove-image-button" (click)="eliminarMapa()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <!-- Contenido original solo se muestra si NO hay imagen -->
+          <div class="upload-content" *ngIf="!imagenMapaUrl">
+            <div class="upload-icon">
+              <mat-icon>add_location_alt</mat-icon>
+            </div>
+            <p class="upload-text">Subir Ubicación</p>
+            <input type="file" (change)="onMapaSeleccionado($event)" accept="image/*" style="display: none;" #fileInput>
+            <button type="button" class="upload-button" (click)="fileInput.click()">
+              Seleccionar archivo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="eliminar-button" (click)="eliminarMapa()" *ngIf="imagenMapaUrl">
+        Eliminar
+      </button>
+
+      <div class="estado-section">
+        <h3>Estado del Establecimiento</h3>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="estadoEstablecimiento">
+            <mat-option value="activo">Activo</mat-option>
+            <mat-option value="inactivo">Inactivo</mat-option>
+            <mat-option value="mantenimiento">En Mantenimiento</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+  </form>
+
+  <!-- Botones de acción - Solo el botón Crear -->
+  <div class="form-actions">
+    <button type="button" class="primary__button" (click)="crearEstablecimiento()">Crear</button>
+  </div>
+</div>
+
+<app-footer-admin></app-footer-admin>

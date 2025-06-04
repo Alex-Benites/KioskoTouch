@@ -1,0 +1,327 @@
+.establecimiento-container {
+  padding: 20px 40px;
+  background-color: #F2F2F2;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 85vh;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.breadcrumb-title {
+  font-size: 20px;
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 0px;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+.form-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  flex-grow: 1;
+
+  .form-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    .full-width {
+      width: 100%;
+    }
+
+    // Estilos para textarea
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+  }
+
+  .mapa-section {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+
+    .mapa-container {
+      flex: 1;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .mapa-placeholder {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 40px 20px; // Aumentar padding para hacer el rectángulo más grande
+      text-align: center;
+      background-color: #fafafa;
+      min-height: 500px; // Aumentar de 200px a 300px para hacer el rectángulo más grande
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s ease;
+      position: relative; // Para posicionar el botón de eliminar
+
+      &:hover {
+        border-color: #d32f2f;
+      }
+
+      // Cuando hay imagen, mantener padding moderado
+      &.has-image {
+        padding: 15px; // Aumentar de 10px a 15px
+        background-color: #fff;
+        border-color: #d32f2f;
+      }
+
+      .upload-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        gap: 20px; // Agregar gap para mejor separación
+      }
+
+      .upload-icon {
+        width: 80px; // Aumentar de 60px a 80px
+        height: 80px; // Aumentar de 60px a 80px
+        border-radius: 8px;
+        background-color: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px; // Aumentar margen
+
+        // Estilos para tu ícono personalizado PNG
+        .custom-upload-icon {
+          width: 48px; // Tamaño del ícono PNG
+          height: 48px;
+          object-fit: contain; // Para mantener las proporciones
+          filter: opacity(0.7); // Darle un poco de transparencia
+          transition: filter 0.3s ease;
+        }
+
+        // Mantener estilos del mat-icon por si no tienes la imagen aún
+        mat-icon {
+          font-size: 40px; // Aumentar de 32px a 40px
+          width: 40px;
+          height: 40px;
+          color: #666;
+        }
+
+        &:hover .custom-upload-icon {
+          filter: opacity(1); // Quitar transparencia al hover
+        }
+      }
+
+      .upload-text {
+        color: #666;
+        font-size: 18px; // Aumentar de 16px a 18px
+        font-weight: 500;
+        margin: 0 0 20px 0; // Aumentar margen
+      }
+
+      .upload-button {
+        background-color: transparent;
+        border: 1px solid #ddd;
+        color: #666;
+        padding: 12px 24px; // Aumentar padding del botón
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 15px; // Aumentar de 14px a 15px
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: #d32f2f;
+          color: #d32f2f;
+        }
+      }
+
+      // Vista previa DENTRO del placeholder
+      .mapa-preview {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        border-radius: 4px;
+        overflow: hidden;
+        min-height: 260px; // Aumentar de 180px a 260px para la imagen
+
+        img {
+          width: 100%;
+          height: 100%;
+          min-height: 260px; // Aumentar altura mínima
+          object-fit: cover;
+          display: block;
+          border-radius: 4px;
+        }
+
+        .remove-image-button {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background-color: rgba(211, 47, 47, 0.9);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 32px; // Aumentar de 28px a 32px
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+          z-index: 10;
+
+          &:hover {
+            background-color: rgba(211, 47, 47, 1);
+          }
+
+          mat-icon {
+            font-size: 18px; // Aumentar de 16px a 18px
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+    }
+
+    .eliminar-button {
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      align-self: center; // Cambiar de flex-start a center
+      margin-bottom: 15px;
+
+      &:hover {
+        background-color: #b71c1c;
+      }
+    }
+
+    .estado-section {
+      margin-top: auto;
+      padding-top: 25px;
+      border-top: 1px solid #eee;
+
+      h3 {
+        margin-bottom: 15px;
+      }
+    }
+  }
+}
+
+// Estilos para los campos de formulario
+::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-flex {
+  background-color: #fff !important;
+  border-radius: 4px !important;
+}
+
+::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+  background-color: #fff !important;
+}
+
+// Forzar que el select se abra hacia abajo
+::ng-deep .select-panel-down {
+  transform-origin: top !important;
+  top: 0 !important;
+}
+
+// Estilos para los botones de acción - SOLO CREAR CENTRADO
+.form-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+// Estilos del botón
+.primary__button {
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  min-width: 120px;
+
+  &:hover {
+    background-color: #b71c1c;
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .establecimiento-container {
+    padding: 15px 20px;
+  }
+
+  .form-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .mapa-section {
+    .mapa-placeholder {
+      padding: 30px 15px;
+      min-height: 150px;
+
+      .upload-icon {
+        width: 50px;
+        height: 50px;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+    }
+
+    .mapa-preview img {
+      height: 200px;
+    }
+  }
+
+  .form-actions {
+    button {
+      width: 200px; // Ancho fijo en móvil
+    }
+  }
+}

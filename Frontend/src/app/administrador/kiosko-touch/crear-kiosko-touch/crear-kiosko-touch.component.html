@@ -1,22 +1,22 @@
 <app-header-admin></app-header-admin>
 
-<div class="pantalla-cocina-container">
-  <p class="breadcrumb-title">GESTIÓN DE PANTALLAS DE COCINA</p>
-  <h1 class="section-title">Creación de nueva Pantalla de Cocina</h1>
+<div class="kiosko-touch-container">
+  <p class="breadcrumb-title">GESTIÓN DE KIOSKO TOUCH</p>
+  <h1 class="section-title">Creación de nuevo Kiosco Touch</h1>
 
   <form [formGroup]="form" class="form-container">
     <!-- Formulario de creación -->
     <div class="form-section">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Nombre de la pantalla</mat-label>
-        <input matInput placeholder="Ingrese el nombre" formControlName="nombrePantalla" />
+        <mat-label>Nombre de Kiosco</mat-label>
+        <input matInput placeholder="Ingrese el nombre del kiosco" formControlName="nombreKiosco" />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Estado de la pantalla</mat-label>
-        <mat-select formControlName="estadoPantalla">
-          <mat-option value="disponible">Disponible</mat-option>
-          <mat-option value="ocupada">Ocupada</mat-option>
+        <mat-label>Estado del Kiosco</mat-label>
+        <mat-select formControlName="estadoKiosco">
+          <mat-option value="activo">Activo</mat-option>
+          <mat-option value="inactivo">Inactivo</mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -39,9 +39,9 @@
       </button>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Kiosco asociado</mat-label>
-        <input matInput placeholder="Seleccione un kiosco" formControlName="kioscoAsociado" readonly />
-        <button mat-icon-button matSuffix (click)="eliminarKiosco()" type="button">
+        <mat-label>Establecimiento asociado</mat-label>
+        <input matInput placeholder="Seleccione un establecimiento" formControlName="establecimientoAsociado" readonly />
+        <button mat-icon-button matSuffix (click)="eliminarEstablecimiento()" type="button">
           <mat-icon>delete_outline</mat-icon>
         </button>
       </mat-form-field>
@@ -49,7 +49,7 @@
 
     <!-- Sección de vinculación -->
     <div class="vinculacion-section">
-      <h3>Vinculación/Desvinculación del Kiosco Touch</h3>
+      <h3>Vinculación/Desvinculación del Establecimiento</h3>
 
       <div class="search-bar">
         <mat-form-field appearance="outline" class="search-field">
@@ -59,39 +59,30 @@
             <mat-icon>search</mat-icon>
           </button>
         </mat-form-field>
-
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Buscar establecimiento</mat-label>
-          <input matInput placeholder="Buscar" formControlName="buscarEstablecimiento" />
-          <button mat-icon-button matSuffix type="button">
-            <mat-icon>search</mat-icon>
-          </button>
-        </mat-form-field>
       </div>
 
-      <div class="kioscos-list">
-        <div class="kiosco-item" *ngFor="let kiosco of kioscos">
-          <img src="assets/admin/ADMIN_29_1.png" alt="Kiosco" />
-          <div class="kiosco-info">
-            <p class="kiosco-nombre">{{ kiosco.nombre }}</p>
-            <p class="kiosco-id">{{ kiosco.id }}</p>
+      <div class="establecimientos-list">
+        <div class="establecimiento-item" *ngFor="let establecimiento of establecimientos">
+          <img src="assets/admin/ADMIN_23.png" alt="Establecimiento" />
+          <div class="establecimiento-info">
+            <p class="establecimiento-nombre">{{ establecimiento.nombre }}</p>
           </div>
           <mat-checkbox
-            [checked]="kiosco.seleccionado"
-            (change)="onKioscoSeleccionado(kiosco, $event)">
+            [checked]="establecimiento.seleccionado"
+            (change)="onEstablecimientoSeleccionado(establecimiento, $event)">
           </mat-checkbox>
         </div>
       </div>
 
-      <button class="primary__button agregar-button" (click)="agregarKiosco()" type="button">
-        Agregar Kiosco +
+      <button class="primary__button agregar-button" (click)="agregarEstablecimiento()" type="button">
+        Agregar Local +
       </button>
     </div>
   </form>
 
-  <!-- Botones de acción con el mismo estilo que crear.component -->
+  <!-- Botones de acción -->
   <div class="form-actions">
-    <button type="button" class="primary__button" (click)="crearPantalla()">Crear</button>
+    <button type="button" class="primary__button" (click)="crearKiosco()">Crear</button>
   </div>
 </div>
 

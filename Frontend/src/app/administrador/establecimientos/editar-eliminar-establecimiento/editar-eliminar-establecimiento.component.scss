@@ -1,0 +1,277 @@
+.establecimientos-container {
+  padding: 20px 40px;
+  background-color: #F2F2F2;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 85vh;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.breadcrumb-title {
+  font-size: 20px;
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 0px;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+.filters-section {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  align-items: end;
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-weight: 500;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .filter-field {
+      width: 200px;
+
+      &.search-field {
+        width: 280px; // Hacer más ancho el campo de búsqueda
+      }
+
+      ::ng-deep .mat-mdc-form-field-flex {
+        background-color: #fff;
+        border-radius: 4px;
+      }
+    }
+  }
+}
+
+.table-container {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.establecimientos-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background-color: #d32f2f;
+    color: white;
+
+    th {
+      padding: 15px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      // Ajustar anchos específicos para las columnas
+      &:nth-child(1) { width: 18%; } // Establecimiento
+      &:nth-child(2) { width: 25%; } // Dirección
+      &:nth-child(3) { width: 12%; } // Ciudad
+      &:nth-child(4) { width: 12%; } // Provincia
+      &:nth-child(5) { width: 12%; } // Teléfono
+      &:nth-child(6) { width: 10%; } // Estado
+      &:nth-child(7) {
+        width: 11%;
+        text-align: center;
+      } // Acciones
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #f9f9f9;
+      }
+
+      &.inactive-row {
+        opacity: 0.7;
+        background-color: #fafafa;
+      }
+
+      td {
+        padding: 15px 20px;
+        font-size: 14px;
+        color: #333;
+        vertical-align: middle;
+
+        // Ajustar contenido de celdas específicas
+        &:nth-child(2) { // Dirección
+          font-size: 13px;
+          line-height: 1.3;
+          max-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        &:nth-child(3), &:nth-child(4) { // Ciudad y Provincia
+          font-weight: 500;
+        }
+
+        &.actions-cell {
+          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+        }
+      }
+    }
+  }
+}
+
+.estado-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.activo {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+  }
+
+  &.inactivo {
+    background-color: #ffebee;
+    color: #d32f2f;
+  }
+}
+
+.action-button {
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+
+  // Estilos para imágenes personalizadas
+  .custom-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+  }
+
+  &.edit-button {
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.1);
+
+      .custom-icon {
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  &.delete-button {
+    &:hover {
+      background-color: rgba(211, 47, 47, 0.1);
+
+      .custom-icon {
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  // Si alguna vez necesitas mat-icon
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.no-data {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .establecimientos-container {
+    padding: 15px 20px;
+  }
+
+  .filters-section {
+    flex-direction: column;
+    gap: 15px;
+
+    .filter-group .filter-field {
+      width: 100%;
+    }
+  }
+
+  .establecimientos-table {
+    font-size: 12px;
+
+    thead th {
+      padding: 10px 8px;
+      font-size: 11px;
+
+      // Ajustar anchos para móvil
+      &:nth-child(1) { width: 20%; } // Establecimiento
+      &:nth-child(2) { width: 30%; } // Dirección
+      &:nth-child(3) { width: 15%; } // Ciudad
+      &:nth-child(4) { width: 15%; } // Provincia
+      &:nth-child(5) { display: none; } // Ocultar Teléfono en móvil
+      &:nth-child(6) { width: 10%; } // Estado
+      &:nth-child(7) { width: 10%; } // Acciones
+    }
+
+    tbody td {
+      padding: 10px 8px;
+
+      &:nth-child(5) { display: none; } // Ocultar Teléfono en móvil
+
+      &:nth-child(2) { // Dirección en móvil
+        font-size: 11px;
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .actions-cell {
+      gap: 8px;
+    }
+
+    .action-button {
+      width: 28px;
+      height: 28px;
+
+      .custom-icon {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}

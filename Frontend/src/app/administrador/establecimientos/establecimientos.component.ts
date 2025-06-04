@@ -11,9 +11,10 @@ import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.com
 })
 export class EstablecimientosComponent {
 
-    constructor(private router: Router) {}
+  constructor(private router: Router) {}
 
-    irA(ruta: string) {
-    this.router.navigateByUrl(ruta);
+  irA(ruta: string) {
+    console.log('Navegando a:', ruta); // Para debug
+    this.router.navigate([ruta]);
   }
 }

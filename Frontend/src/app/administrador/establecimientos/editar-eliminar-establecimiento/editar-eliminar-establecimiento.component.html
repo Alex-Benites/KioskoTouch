@@ -1,0 +1,103 @@
+<app-header-admin></app-header-admin>
+
+<div class="establecimientos-container">
+  <p class="breadcrumb-title">GESTIÓN DE ESTABLECIMIENTOS</p>
+  <h1 class="section-title">Edición/Eliminación de Establecimientos</h1>
+
+  <!-- Filtros mejorados -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Estado</label>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-select [(value)]="filtroEstado" (selectionChange)="aplicarFiltros()">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="activo">Activo</mat-option>
+          <mat-option value="inactivo">Inactivo</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="filter-group">
+      <label>Provincia</label>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-select [(value)]="filtroProvincia" (selectionChange)="aplicarFiltros()">
+          <mat-option value="">Todas las provincias</mat-option>
+          <mat-option value="Guayas">Guayas</mat-option>
+          <mat-option value="Pichincha">Pichincha</mat-option>
+          <mat-option value="Manabí">Manabí</mat-option>
+          <mat-option value="Esmeraldas">Esmeraldas</mat-option>
+          <mat-option value="El Oro">El Oro</mat-option>
+          <mat-option value="Los Ríos">Los Ríos</mat-option>
+          <mat-option value="Azuay">Azuay</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Búsqueda por texto actualizada -->
+    <div class="filter-group">
+      <label>Buscar establecimiento</label>
+      <mat-form-field appearance="outline" class="filter-field search-field">
+        <input matInput
+               placeholder="Nombre o ciudad..."
+               [(ngModel)]="textoBusqueda"
+               (input)="aplicarFiltros()">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Tabla actualizada con columnas separadas -->
+  <div class="table-container">
+    <table class="establecimientos-table">
+      <thead>
+        <tr>
+          <th>Establecimiento</th>
+          <th>Dirección</th>
+          <th>Ciudad</th>
+          <th>Provincia</th>
+          <th>Teléfono</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let establecimiento of establecimientosFiltrados" [class.inactive-row]="establecimiento.estado === 'inactivo'">
+          <td>{{ establecimiento.nombre }}</td>
+          <td>{{ establecimiento.direccion }}</td>
+          <td>{{ establecimiento.ciudad }}</td>
+          <td>{{ establecimiento.provincia }}</td>
+          <td>{{ establecimiento.telefono }}</td>
+          <td>
+            <span class="estado-badge" [class.activo]="establecimiento.estado === 'activo'" [class.inactivo]="establecimiento.estado === 'inactivo'">
+              {{ establecimiento.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <!-- Botón Editar -->
+            <button mat-icon-button
+                    class="action-button edit-button"
+                    (click)="editarEstablecimiento(establecimiento)"
+                    matTooltip="Editar establecimiento">
+              <img src="assets/admin/ADMIN_7.png" alt="Editar" class="custom-icon">
+            </button>
+
+            <!-- Botón Eliminar -->
+            <button mat-icon-button
+                    class="action-button delete-button"
+                    (click)="abrirDialogoEliminar(establecimiento)"
+                    matTooltip="Eliminar establecimiento">
+              <img src="assets/admin/ADMIN_7_1.png" alt="Eliminar" class="custom-icon">
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Mensaje cuando no hay datos -->
+    <div class="no-data" *ngIf="establecimientosFiltrados.length === 0">
+      <p>No se encontraron establecimientos con los filtros aplicados.</p>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin></app-footer-admin>
