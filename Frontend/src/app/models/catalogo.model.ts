@@ -32,11 +32,12 @@ export interface Menu {
   nombre: string;
   descripcion: string;
   precio: number;
-  categoria: number;
+  tipo_menu: string;
   estado: number;
   productos: Producto[];
   imagen?: File | null;
   imagenUrl?: string;
   created_at: string;
   updated_at: string;
+  productosLista?: string[];
 }

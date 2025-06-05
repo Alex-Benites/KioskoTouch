@@ -20,8 +20,13 @@
       <img
         [src]="getFullImageUrl(menu.imagenUrl)"
         [alt]="menu.nombre"
+        style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
       />
-      <div class="menu-productos">{{ menu.productos }}</div>
+      <div class="menu-productos-lista">
+        <ul>
+          <li *ngFor="let prod of menu.productosLista">{{ prod }}</li>
+        </ul>
+      </div>
       <div class="menu-actions">
         <button class="btn" (click)="editarMenu(menu)">Editar</button>
         <button class="btn" (click)="eliminarMenu(menu)">Eliminar</button>

@@ -125,7 +125,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        """Actualizar producto con ingredientes e imagen"""
+        """Actualizar producto with ingredientes e imagen"""
         print(f"🔄 Actualizando producto: {instance.nombre}")
         
         # 🔧 GUARDAR CATEGORÍA ORIGINAL ANTES DE ACTUALIZAR
@@ -284,7 +284,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             
             print(f"   🔍 Relaciones a reutilizar (ordenadas): {[f'ID:{rel.id}' for rel in relaciones_eliminables]}")
             
-            # Reutilizar tantas relaciones como sea posible
+            # Reutilizar tantas relaciones como sea possível
             reutilizaciones = min(len(relaciones_eliminables), len(ingredientes_a_agregar_list))
             
             for i in range(reutilizaciones):
@@ -573,17 +573,16 @@ class MenuProductoDetalleSerializer(serializers.ModelSerializer):
 
 class MenuSerializer(serializers.ModelSerializer):
     estado_nombre = serializers.CharField(source='estado.descripcion', read_only=True)
-    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True, default=None)
     productos_detalle = serializers.SerializerMethodField()
     imagen_url = serializers.SerializerMethodField()
     imagen = serializers.ImageField(write_only=True, required=False)
-    productos = serializers.ListField(write_only=True, required=False)  # IDs de productos y cantidades
+    productos = serializers.ListField(write_only=True, required=False) 
 
     class Meta:
         model = AppkioskoMenus
         fields = [
             'id', 'nombre', 'descripcion', 'precio',
-            'categoria', 'categoria_nombre', 'estado', 'estado_nombre',
+            'tipo_menu', 'estado', 'estado_nombre',
             'productos', 'productos_detalle', 'imagen', 'imagen_url',
             'created_at', 'updated_at'
         ]
@@ -602,20 +601,56 @@ class MenuSerializer(serializers.ModelSerializer):
         productos_rel = AppkioskoMenuproductos.objects.filter(menu=obj)
         return MenuProductoDetalleSerializer(productos_rel, many=True).data
 
+    def to_internal_value(self, data):
+        # Reconstruir productos si vienen como productos[0][producto], productos[0][cantidad], etc.
+        productos = []
+        i = 0
+        while True:
+            key_producto = f'productos[{i}][producto]'
+            key_cantidad = f'productos[{i}][cantidad]'
+            if key_producto in data and key_cantidad in data:
+                prod_id = data.get(key_producto)
+                cantidad = data.get(key_cantidad)
+                # Si por alguna razón prod_id o cantidad son listas, toma el primer valor
+                if isinstance(prod_id, list):
+                    prod_id = prod_id[0]
+                if isinstance(cantidad, list):
+                    cantidad = cantidad[0]
+                if prod_id is not None and cantidad is not None:
+                    productos.append({'producto': prod_id, 'cantidad': cantidad})
+                i += 1
+            else:
+                break
+        # Reemplazar en data para que el resto del serializer funcione igual
+        mutable_data = data.copy()
+        mutable_data['productos'] = productos
+        return super().to_internal_value(mutable_data)
+
+    def validate_productos(self, value):
+        print("DEBUG productos recibidos en validate_productos:", value)
+        # Si value es una lista con una sola lista interna, aplánala
+        if isinstance(value, list) and len(value) == 1 and isinstance(value[0], list):
+            value = value[0]
+        if not value or not isinstance(value, list):
+            raise serializers.ValidationError("Debes seleccionar al menos un producto para el menú.")
+        for prod in value:
+            if not isinstance(prod, dict):
+                raise serializers.ValidationError("Formato de producto inválido.")
+            if not prod.get('producto') or int(prod.get('cantidad', 0)) < 1:
+                raise serializers.ValidationError("Cada producto debe tener un ID válido y cantidad mayor a 0.")
+        return value
+
     def create(self, validated_data):
         productos_data = validated_data.pop('productos', [])
         imagen = validated_data.pop('imagen', None)
         menu = AppkioskoMenus.objects.create(**validated_data)
 
-        # Asociar productos al menú
         for prod in productos_data:
-            # prod debe ser un dict: {'producto': id, 'cantidad': n}
-            producto_id = prod.get('producto')
-            cantidad = prod.get('cantidad', 1)
+            producto_id = int(prod.get('producto'))
+            cantidad = int(prod.get('cantidad', 1))
             producto = AppkioskoProductos.objects.get(id=producto_id)
             AppkioskoMenuproductos.objects.create(menu=menu, producto=producto, cantidad=cantidad)
 
-        # Guardar imagen si se envía
         if imagen:
             self._crear_imagen_menu(menu, imagen)
 

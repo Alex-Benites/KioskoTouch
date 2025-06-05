@@ -2,12 +2,14 @@ from django.urls import path
 from .views import (
     ProductoListCreateAPIView, 
     CategoriaListView,
+    MenuListCreateAPIView, 
+    MenuDetailAPIView,
     get_ingredientes_por_categoria, 
     get_producto_imagen,
     get_producto_con_ingredientes,
     listar_productos_con_ingredientes,  
     get_estados,
-    
+    get_menu_imagen,
 )
 from . import views  
 
@@ -31,6 +33,10 @@ urlpatterns = [
     
     # === ESTADOS ===
     path('estados/', get_estados, name='estados-list'),
+
+    # === MENUS ===
+    path('menus/', MenuListCreateAPIView.as_view(), name='menu-list-create'),
     
-    
+    path('menus/<int:pk>/', MenuDetailAPIView.as_view(), name='menu-detail'),
+    path('menus/<int:menu_id>/imagen/', get_menu_imagen, name='menu-imagen'),
 ]

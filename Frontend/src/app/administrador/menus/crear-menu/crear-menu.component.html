@@ -49,16 +49,28 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Estado del menú</mat-label>
-          <mat-select formControlName="disponibilidad">
-            <mat-option *ngFor="let disp of estados" [value]="disp.id">{{
-              disp.nombre
-            }}</mat-option>
+          <mat-label>Tipo de menú</mat-label>
+          <mat-select formControlName="tipo_menu" required>
+            <mat-option value="pequeño">Pequeño</mat-option>
+            <mat-option value="mediano">Mediano</mat-option>
+            <mat-option value="grande">Grande</mat-option>
+            <mat-option value="otro">Otro</mat-option>
           </mat-select>
-          <mat-error
-            *ngIf="menuForm.get('disponibilidad')?.hasError('required')"
-            >{{ disponibilidadError }}</mat-error
-          >
+          <mat-error *ngIf="menuForm.get('tipo_menu')?.hasError('required')">
+            El tipo de menú es requerido
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Estado del menú</mat-label>
+          <mat-select formControlName="estado">
+            <mat-option *ngFor="let disp of estados" [value]="disp.id">
+              {{ disp.nombre || disp.descripcion }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="menuForm.get('estado')?.hasError('required')">
+            {{ disponibilidadError }}
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -66,9 +78,10 @@
           <input
             matInput
             placeholder="Seleccione un Producto"
-            formControlName="productosSeleccionados"
-            [readonly]="true"
-            style="pointer-events: none;"
+            [value]="productosSeleccionadosTexto"
+            readonly
+            tabindex="-1"
+            style=" color: #222; cursor: not-allowed;"
           />
           <button
             mat-icon-button
@@ -150,7 +163,7 @@
           class="primary__button"
           [disabled]="!menuForm.valid"
         >
-          Crear
+          {{ isEditMode ? 'Actualizar Menú' : 'Crear' }}
         </button>
       </div>
     </div>
