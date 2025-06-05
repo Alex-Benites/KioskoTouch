@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Producto, Categoria, Estado, TipoPromo, Menu } from '../models/catalogo.model';
+import { Producto, Categoria, Estado, Menu } from '../models/catalogo.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -131,9 +131,5 @@ export class CatalogoService {
         error: () => observer.next(false)
       });
     });
-  }
-  getTipoPromo(): Observable<TipoPromo[]> {
-    const url = `${this.apiUrl}/comun/tipoPromos/`;
-    return this.http.get<TipoPromo[]>(url, this.getHttpOptions());
   }
 }

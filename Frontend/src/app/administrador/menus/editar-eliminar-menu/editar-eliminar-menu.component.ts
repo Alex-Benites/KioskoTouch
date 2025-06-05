@@ -20,6 +20,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
 export class EditarEliminarMenuComponent implements OnInit {
   displayedColumns: string[] = ['nombre', 'imagen', 'menus'];
   menus: Menu[] = [];
+  menusFiltrados: Menu[] = [];
   search: string = '';
   loading = false;
   eliminando = false;
@@ -47,6 +48,7 @@ export class EditarEliminarMenuComponent implements OnInit {
           // Productos: usar productos_detalle del backend
           menu.productosLista = this.getProductosLista(menu);
         });
+        this.menusFiltrados = [...this.menus];
       },
       error: (error) => {
         this.loading = false;
@@ -86,25 +88,25 @@ export class EditarEliminarMenuComponent implements OnInit {
     return `http://127.0.0.1:8000${imagenUrl}`;
   }
   abrirDialogoEliminar(menu: any): void {
-        const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-          width: '400px',
-          data: {
-            itemType: 'menu',
-            itemName: menu.nombre,  // 🔧 Agregar nombre del menu
-            message: `¿Estás seguro de que deseas eliminar el menu "${menu.nombre}"?`  // 🔧 Mensaje personalizado
-          } as ConfirmationDialogData
-        });
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        itemType: 'menu',
+        itemName: menu.nombre,
+        message: `¿Estás seguro de que deseas eliminar el menu "${menu.nombre}"?`  // 🔧 Mensaje personalizado
+      } as ConfirmationDialogData
+    });
 
-        dialogRef.afterClosed().subscribe(result => {
-          if (result) {
-            console.log('🗑️ Confirmado eliminar menu:', menu.nombre);
-            this.eliminarMenu(menu);
-            // 🔧 REMOVER esta línea duplicada: this.menus = this.menus.filter(p => p !== menu);
-          } else {
-            console.log('🚫 Eliminación cancelada');
-          }
-        });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('🗑️ Confirmado eliminar menu:', menu.nombre);
+        this.eliminarMenu(menu);
+
+      } else {
+        console.log('🚫 Eliminación cancelada');
       }
+    });
+  }
 
     eliminarMenu(menu: Menu): void {
       this.eliminando = true;
@@ -142,5 +144,16 @@ export class EditarEliminarMenuComponent implements OnInit {
           this.cargarMenus();
         }
       });
+    }
+
+    filtrarMenus(): void {
+      const texto = this.search.trim().toLowerCase();
+      if (!texto) {
+        this.menusFiltrados = [...this.menus];
+        return;
+      }
+      this.menusFiltrados = this.menus.filter(menu =>
+        menu.nombre.toLowerCase().includes(texto)
+      );
     }
 }

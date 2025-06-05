@@ -1,1 +1,88 @@
-<p>editar-eliminar-promocion works!</p>
+<app-header-admin></app-header-admin>
+
+<div class="form-container">
+  <p class="breadcrumb-title">GESTIÓN DE PROMOCIONES</p>
+  <h1 class="form-main-title">Edición/Eliminación de Promociones</h1>
+  <div class="filtros-promociones">
+    <div class="filtros-col">
+      <div class="filtro-mes">
+        <label>Buscar por mes</label>
+        <div class="filtro-mes-lista">
+          <div *ngFor="let mes of meses; let i = index">
+            <input type="checkbox" [id]="'mes'+i" [(ngModel)]="mesesSeleccionados[i]" />
+            <label [for]="'mes'+i">{{ mes }}</label>
+          </div>
+        </div>
+      </div>
+      <div class="filtro-grupo">
+        <label>Buscar por grupos</label>
+        <div>
+          <input type="radio" id="filtroProducto" name="grupo" value="producto" [(ngModel)]="tipoFiltroGrupo" (change)="aplicarFiltros()" />
+          <label for="filtroProducto">Producto en específico</label>
+        </div>
+        <div>
+          <input type="radio" id="filtroMenu" name="grupo" value="menu" [(ngModel)]="tipoFiltroGrupo" (change)="aplicarFiltros()" />
+          <label for="filtroMenu">Menú en específico</label>
+        </div>
+        <div>
+          <input type="radio" id="filtroNombre" name="grupo" value="nombre" [(ngModel)]="tipoFiltroGrupo" (change)="aplicarFiltros()" />
+          <label for="filtroNombre">Nombre de la promoción</label>
+        </div>
+        <div class="buscador" *ngIf="tipoFiltroGrupo">
+          <div class="search-input-wrapper">
+            <input
+              id="buscar-promocion"
+              type="text"
+              [(ngModel)]="busquedaGrupo"
+              (input)="aplicarFiltros()"
+              [placeholder]="
+                tipoFiltroGrupo === 'producto' ? 'Ej: Coca Cola' :
+                tipoFiltroGrupo === 'menu' ? 'Ej: Combo Familiar' :
+                'Ej: Promo Ecuador'
+              "
+              class="search-input"
+            />
+            <i class="fas fa-search search-icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="filtro-botones">
+        <button class="btn" (click)="aplicarFiltros()">Buscar</button>
+        <button class="btn" (click)="limpiarFiltros()">Limpiar</button>
+      </div>
+    </div>
+    <div class="filtros-col promociones-col">
+      <div class="promociones-grid">
+        <ng-container *ngFor="let promo of promocionesFiltradas">
+          <div class="promo-card">
+            <div class="promo-nombre">{{ promo.nombre }}</div>
+            <img
+              [src]="getFullImageUrl(promo.imagenUrl)"
+              [alt]="promo.nombre"
+              style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
+            />
+            <div class="promo-descripcion">{{ promo.descripcion }}</div>
+            <div class="promo-productos-lista">
+              <strong>Productos:</strong>
+              <ul>
+                <li *ngFor="let prod of promo.productosLista">{{ prod }}</li>
+              </ul>
+            </div>
+            <div class="promo-menus-lista">
+              <strong>Menús:</strong>
+              <ul>
+                <li *ngFor="let men of promo.menusLista">{{ men }}</li>
+              </ul>
+            </div>
+            <div class="promo-actions">
+              <button class="btn" (click)="editarPromocion(promo)">Editar</button>
+              <button class="btn" (click)="abrirDialogoEliminar(promo)">Eliminar</button>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-promociones'"></app-footer-admin>

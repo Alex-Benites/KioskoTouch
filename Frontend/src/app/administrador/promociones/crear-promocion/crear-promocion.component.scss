@@ -214,3 +214,72 @@
     }
   }
 }
+.menus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 32px;
+  margin-top: 12px;
+  justify-items: center;
+}
+
+.menu-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 24px 18px 18px 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 240px;
+  max-width: 270px;
+  color: #555; // <-- Gris general para el texto de la card
+
+  img {
+    width: 110px;
+    height: 90px;
+    object-fit: contain;
+    margin-bottom: 12px;
+  }
+  .menu-nombre {
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1.15rem;
+    color: #444; // Un gris más oscuro para el nombre del menú
+  }
+  .menu-productos-lista {
+    margin-bottom: 14px;
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      li {
+        font-size: 1.05rem;
+        color: #666; // Gris para los productos
+        margin-bottom: 2px;
+        text-align: left;
+      }
+    }
+  }
+  .menu-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 28px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    &:hover {
+      background: #c0392b;
+    }
+  }
+}

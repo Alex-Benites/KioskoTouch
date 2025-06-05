@@ -23,10 +23,7 @@ export interface Estado {
   id: number;
   nombre: string;
 }
-export interface TipoPromo {
-  id: number;
-  nombre: string;
-}
+
 export interface Menu {
   id: number;
   nombre: string;
@@ -40,4 +37,5 @@ export interface Menu {
   created_at: string;
   updated_at: string;
   productosLista?: string[];
+  menuLista?: string[];
 }

@@ -1,5 +1,10 @@
 from django.urls import path
 from . import views
+from .views import (
+    PromocionListCreateAPIView,
+    PromocionDetailAPIView,
+    get_promocion_imagen,
+)
 
 urlpatterns = [
 
@@ -12,4 +17,8 @@ urlpatterns = [
     # Estados (para los dropdowns)
     path('estados/', views.EstadoListView.as_view(), name='estado-list'),
 
+    # Promociones
+    path('promociones/', PromocionListCreateAPIView.as_view(), name='promocion-list-create'),
+    path('promociones/<int:pk>/', PromocionDetailAPIView.as_view(), name='promocion-detail'),
+    path('promociones/<int:promocion_id>/imagen/', get_promocion_imagen, name='promocion-imagen'),
 ]

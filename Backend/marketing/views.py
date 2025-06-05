@@ -1,15 +1,20 @@
 from rest_framework import generics, status, filters
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.db.models import Q, Prefetch
-from .models import AppkioskoPublicidades, AppkioskoVideo
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from django.conf import settings
+import os
+
+from .models import AppkioskoPublicidades, AppkioskoVideo, AppkioskoPromociones
 from comun.models import AppkioskoImagen, AppkioskoEstados
 from .serializers import (
     PublicidadListSerializer,
     PublicidadDetailSerializer,
     PublicidadCreateSerializer,
     PublicidadUpdateSerializer,
-    EstadoSerializer
+    EstadoSerializer,
+    PromocionSerializer
 )
 import logging
 
@@ -237,3 +242,127 @@ class PublicidadStatsView(generics.GenericAPIView):
             'con_imagen': publicidades_con_imagen,
             'por_tipo': stats_tipo
         })
+
+# === LISTAR Y CREAR PROMOCIONES ===
+class PromocionListCreateAPIView(generics.ListCreateAPIView):
+    queryset = AppkioskoPromociones.objects.all().order_by('-created_at')
+    serializer_class = PromocionSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        print(f"\n🚀 CREANDO PROMOCIÓN:")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            promocion = serializer.save()
+            print(f"🎉 PROMOCIÓN CREADA EXITOSAMENTE: ID {promocion.id} - {promocion.nombre}")
+            return Response({
+                'mensaje': '🎉 Promoción creada exitosamente',
+                'promocion': PromocionSerializer(promocion).data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+# === DETALLE, ACTUALIZAR Y ELIMINAR PROMOCIÓN ===
+class PromocionDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = AppkioskoPromociones.objects.all()
+    serializer_class = PromocionSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+
+    def update(self, request, *args, **kwargs):
+        print(f"\n🔄 ACTUALIZANDO PROMOCIÓN ID: {kwargs.get('pk')}")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            promocion = serializer.save()
+            print(f"✅ PROMOCIÓN ACTUALIZADA: ID {promocion.id} - {promocion.nombre}")
+            return Response({
+                'mensaje': '✅ Promoción actualizada exitosamente',
+                'promocion': PromocionSerializer(promocion).data
+            })
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            promocion_id = kwargs.get('pk')
+            print(f"\n🗑️ ELIMINACIÓN FÍSICA PROMOCIÓN ID: {promocion_id}")
+
+            promocion = self.get_object()
+            promocion_nombre = promocion.nombre
+            print(f"   Promoción a eliminar: {promocion_nombre}")
+
+            # Eliminar imagen física si existe
+            try:
+                imagen = AppkioskoImagen.objects.get(
+                    categoria_imagen='promociones',
+                    entidad_relacionada_id=promocion_id
+                )
+                if imagen.ruta:
+                    ruta_completa = os.path.join(settings.MEDIA_ROOT, imagen.ruta.lstrip('/media/'))
+                    if os.path.exists(ruta_completa):
+                        os.remove(ruta_completa)
+                        print(f"   🖼️ Archivo de imagen eliminado: {ruta_completa}")
+                    else:
+                        print(f"   ⚠️ Archivo de imagen no encontrado: {ruta_completa}")
+                imagen.delete()
+                print(f"   🗑️ Registro de imagen eliminado de la DB")
+            except AppkioskoImagen.DoesNotExist:
+                print(f"   ℹ️ No se encontró imagen asociada a la promoción")
+            except Exception as e:
+                print(f"   ⚠️ Error eliminando imagen: {str(e)}")
+
+            # Eliminar la promoción
+            promocion.delete()
+            print(f"✅ PROMOCIÓN ELIMINADA COMPLETAMENTE: {promocion_nombre} (ID: {promocion_id})")
+            return Response({
+                'success': True,
+                'mensaje': f'Promoción "{promocion_nombre}" eliminada completamente',
+                'id': int(promocion_id)
+            }, status=status.HTTP_200_OK)
+
+        except AppkioskoPromociones.DoesNotExist:
+            print(f"❌ Promoción ID {promocion_id} no encontrada")
+            return Response({
+                'success': False,
+                'error': 'Promoción no encontrada'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"❌ Error eliminando promoción: {str(e)}")
+            return Response({
+                'success': False,
+                'error': f'Error al eliminar promoción: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# === OBTENER SOLO LA IMAGEN DE UNA PROMOCIÓN ===
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_promocion_imagen(request, promocion_id):
+    """Obtiene solo la imagen de una promoción específica"""
+    try:
+        imagen = AppkioskoImagen.objects.get(
+            categoria_imagen='promociones',
+            entidad_relacionada_id=promocion_id
+        )
+        return Response({'imagen_url': imagen.ruta})
+    except AppkioskoImagen.DoesNotExist:
+        return Response({'imagen_url': None})
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)

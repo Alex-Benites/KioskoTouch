@@ -174,6 +174,11 @@ export const administradorRoutes: Routes = [
     canActivate: [authGuard, permissionGuard(['marketing.add_appkioskopromociones'])]
   },
   {
+    path: 'gestion-promociones/crear/:id',
+    component: CrearPromocionComponent,
+    canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopromociones'])]
+  },
+  {
     path: 'gestion-promociones/editar-eliminar',
     component: EditarEliminarPromocionComponent,
     canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopromociones', 'marketing.delete_appkioskopromociones'])]

@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse,HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { 
-  Publicidad, 
+import {
+  Publicidad,
   PublicidadStats,
-  ApiError
+  ApiError,
+  Promocion
 } from '../models/marketing.model';
 import { Estado } from '../models/catalogo.model';
 import { environment } from '../../environments/environment';
@@ -106,4 +107,51 @@ export class PublicidadService {
 
     return throwError(() => apiError);
   };
+  getFullImageUrl(imagenUrl: string | undefined): string {
+    if (!imagenUrl) return 'assets/images/no-image.png';
+    return `http://127.0.0.1:8000${imagenUrl}`;
+  }
+  private getHttpOptions() {
+    return {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+  }
+  crearPromocion(PromocionData: FormData): Observable<Promocion> {
+    const url = `${this.apiUrl}/promociones/`;
+    return this.http.post<Promocion>(url, PromocionData);
+  }
+  getPromociones(): Observable<Promocion[]> {
+    const url = `${this.apiUrl}/promociones/`;
+    return this.http.get<Promocion[]>(url, this.getHttpOptions());
+  }
+  getPromocionImagen(PromocionId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/promociones/${PromocionId}/imagen/`);
+  }
+  obtenerPromocionPorId(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/promociones/${id}/`);
+  }
+
+  actualizarPromocion(id: number, formData: FormData): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/promociones/${id}/`, formData);
+  }
+
+  eliminarPromocion(id: number): Observable<any> {
+    const url = `${this.apiUrl}/promociones/${id}/`;
+    return this.http.delete<any>(url, this.getHttpOptions());
+  }
+
+  obtenerPromociones(): Observable<Promocion[]> {
+    return this.getPromociones();
+  }
+
+  verificarPromocionExiste(id: number): Observable<boolean> {
+    return new Observable(observer => {
+      this.obtenerPromocionPorId(id).subscribe({
+        next: () => observer.next(true),
+        error: () => observer.next(false)
+      });
+    });
+  }
 }

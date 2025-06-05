@@ -1,4 +1,4 @@
-import { Estado } from './catalogo.model';
+import { Estado,Menu,Producto } from './catalogo.model';
 
 export interface Imagen {
   id: number;
@@ -26,7 +26,7 @@ export interface Publicidad {
   estado: number;
   estado_nombre?: string;
   estado_info?: Estado;
-  tiempo_visualizacion: number; 
+  tiempo_visualizacion: number;
   media_type?: 'image' | 'video' | null;
   media_url?: string;
   duracion_video?: number;
@@ -36,7 +36,27 @@ export interface Publicidad {
   created_at: string;
   updated_at?: string;
 }
-
+export interface Promocion {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  valor_descuento: number;
+  fecha_inicio_promo: string;
+  fecha_fin_promo: string;
+  tipo_promocion: string;
+  codigo_promocional: string;
+  limite_uso_usuario: number;
+  limite_uso_total: number;
+  estado: number;
+  productos: Producto[];
+  menus: Menu[];
+  imagen?: File | null;
+  imagenUrl?: string;
+  created_at: string;
+  updated_at: string;
+  productosLista?: string[];
+  menusLista?: string[];
+}
 export interface PublicidadStats {
   total: number;
   activas: number;

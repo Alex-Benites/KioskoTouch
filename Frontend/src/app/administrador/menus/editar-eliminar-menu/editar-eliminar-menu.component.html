@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <app-header-admin></app-header-admin>
 
 <div class="form-container">
@@ -6,33 +8,40 @@
   <p class="subtitle">Menús Disponibles</p>
 
   <div class="buscador">
-    <label>Buscar menú</label>
-    <div class="buscador-input">
-      <input type="text" placeholder="Buscar" [(ngModel)]="search" />
-      <i class="fas fa-search"></i>
+    <label for="buscar-menu" class="search-label">Buscar menú:</label>
+    <div class="search-input-wrapper">
+      <input
+        id="buscar-menu"
+        type="text"
+        [(ngModel)]="search"
+        (input)="filtrarMenus()"
+        placeholder="Ej: Compartir"
+        class="search-input"
+      />
+      <i class="fas fa-search search-icon"></i>
     </div>
   </div>
 
   <div class="menus-grid">
-    @for (menu of menus; track menu.id) {
-    <div class="menu-card">
-      <div class="menu-nombre">{{ menu.nombre }}</div>
-      <img
-        [src]="getFullImageUrl(menu.imagenUrl)"
-        [alt]="menu.nombre"
-        style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
-      />
-      <div class="menu-productos-lista">
-        <ul>
-          <li *ngFor="let prod of menu.productosLista">{{ prod }}</li>
-        </ul>
+    <ng-container *ngFor="let menu of menusFiltrados">
+      <div class="menu-card">
+        <div class="menu-nombre">{{ menu.nombre }}</div>
+        <img
+          [src]="getFullImageUrl(menu.imagenUrl)"
+          [alt]="menu.nombre"
+          style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
+        />
+        <div class="menu-productos-lista">
+          <ul>
+            <li *ngFor="let prod of menu.productosLista">{{ prod }}</li>
+          </ul>
+        </div>
+        <div class="menu-actions">
+          <button class="btn" (click)="editarMenu(menu)">Editar</button>
+          <button class="btn" (click)="abrirDialogoEliminar(menu)">Eliminar</button>
+        </div>
       </div>
-      <div class="menu-actions">
-        <button class="btn" (click)="editarMenu(menu)">Editar</button>
-        <button class="btn" (click)="eliminarMenu(menu)">Eliminar</button>
-      </div>
-    </div>
-    }
+    </ng-container>
   </div>
 </div>
 

@@ -33,15 +33,16 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Tipo de Promoción</mat-label>
-          <mat-select formControlName="tipo">
-            @for (cat of categorias; track cat.id) {
-            <mat-option [value]="cat.id">{{ cat.nombre }}</mat-option>
-            }
+          <mat-label>Tipo de promoción</mat-label>
+          <mat-select formControlName="tipo_promocion" required>
+            <mat-option value="navidad">Navidad</mat-option>
+            <mat-option value="cumpleanos">Cumpleaños</mat-option>
+            <mat-option value="black">Black Friday</mat-option>
+            <mat-option value="otro">Otro</mat-option>
           </mat-select>
-          @if (promocionForm.get('tipo')?.hasError('required')) {
-          <mat-error>El tipo de promoción es requerido.</mat-error>
-          }
+          <mat-error *ngIf="promocionForm.get('tipo_promocion')?.hasError('required')">
+            El tipo de promoción es requerido
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -49,24 +50,20 @@
           <input
             matInput
             type="number"
-            formControlName="descuento"
-            placeholder="Ej: 10%"
+            formControlName="valor_descuento"
+            placeholder="Ej: 10"
           />
-          @if (promocionForm.get('descuento')?.hasError('required')) {
-          <mat-error>El descuento es requerido.</mat-error>
-          } @if (promocionForm.get('descuento')?.hasError('pattern')) {
-          <mat-error>Formato de descuento inválido (ej: 10 o 15).</mat-error>
-          }
+          <mat-error *ngIf="DescuentoError">{{ DescuentoError }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Codigo promocional</mat-label>
           <input
             matInput
-            formControlName="codigo"
+            formControlName="codigo_promocional"
             placeholder="Ej: GUAYACO25"
           />
-          @if (promocionForm.get('codigo')?.hasError('required')) {
+          @if (promocionForm.get('codigo_promocional')?.hasError('required')) {
           <mat-error>El codigo promocional es requerido.</mat-error>
           }
         </mat-form-field>
@@ -76,14 +73,10 @@
           <input
             matInput
             type="number"
-            formControlName="limiteTotal"
+            formControlName="limite_uso_total"
             placeholder="Ej: 200"
           />
-          @if (promocionForm.get('limiteTotal')?.hasError('required')) {
-          <mat-error>El limite de uso total es requerido.</mat-error>
-          } @if (promocionForm.get('limiteTotal')?.hasError('pattern')) {
-          <mat-error>Formato de limite inválido (ej: 10 o 10.99).</mat-error>
-          }
+          <mat-error *ngIf="limiteTotalError">{{ limiteTotalError }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -91,24 +84,20 @@
           <input
             matInput
             type="number"
-            formControlName="limiteUsuario"
+            formControlName="limite_uso_usuario"
             placeholder="Ej: 2"
           />
-          @if (promocionForm.get('limiteUsuario')?.hasError('required')) {
-          <mat-error>El limite de uso por usuario es requerido.</mat-error>
-          } @if (promocionForm.get('limiteUsuario')?.hasError('pattern')) {
-          <mat-error>Formato de limite inválido (ej: 1 o 5).</mat-error>
-          }
+          <mat-error *ngIf="limiteUsuarioError">{{ limiteUsuarioError }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Estado de la promoción</mat-label>
-          <mat-select formControlName="disponibilidad">
+          <mat-select formControlName="estado">
             @for (disp of estados; track disp.id) {
             <mat-option [value]="disp.id">{{ disp.nombre }}</mat-option>
             }
           </mat-select>
-          @if (promocionForm.get('disponibilidad')?.hasError('required')) {
+          @if (promocionForm.get('estado')?.hasError('required')) {
           <mat-error *ngIf="disponibilidadError">{{
             disponibilidadError
           }}</mat-error>
@@ -128,6 +117,25 @@
             mat-icon-button
             matSuffix
             (click)="eliminarProductos()"
+            type="button"
+            style="pointer-events: auto"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Menús Seleccionados</mat-label>
+          <input
+            matInput
+            placeholder="Seleccione un Menú"
+            formControlName="menusSeleccionados"
+            [readonly]="true"
+            style="pointer-events: none"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="eliminarMenus()"
             type="button"
             style="pointer-events: auto"
           >
@@ -177,7 +185,7 @@
           <input
             matInput
             [matDatepicker]="pickerInicio"
-            formControlName="fechaInicio"
+            formControlName="fecha_inicio_promo"
             placeholder="Selecciona una fecha"
           />
           <mat-datepicker-toggle
@@ -185,7 +193,7 @@
             [for]="pickerInicio"
           ></mat-datepicker-toggle>
           <mat-datepicker #pickerInicio></mat-datepicker>
-          @if (promocionForm.get('fechaInicio')?.hasError('required')) {
+          @if (promocionForm.get('fecha_inicio_promo')?.hasError('required')) {
           <mat-error>La fecha de inicio es requerida.</mat-error>
           }
         </mat-form-field>
@@ -195,7 +203,7 @@
           <input
             matInput
             [matDatepicker]="pickerFin"
-            formControlName="fechaFin"
+            formControlName="fecha_fin_promo"
             placeholder="Selecciona una fecha"
           />
           <mat-datepicker-toggle
@@ -203,7 +211,7 @@
             [for]="pickerFin"
           ></mat-datepicker-toggle>
           <mat-datepicker #pickerFin></mat-datepicker>
-          @if (promocionForm.get('fechaFin')?.hasError('required')) {
+          @if (promocionForm.get('fecha_fin_promo')?.hasError('required')) {
           <mat-error>La fecha de Fin es requerida.</mat-error>
           }
         </mat-form-field>
@@ -236,16 +244,41 @@
           </div>
           }
         </div>
+        <div class="menus-grid">
+          @for (menu of menus; track menu.id) {
+          <div class="menu-card">
+            <div class="menu-nombre">{{ menu.nombre }}</div>
+            <img
+              [src]="getFullImageUrl(menu.imagenUrl)"
+              [alt]="menu.nombre"
+              style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
+            />
+            <div class="menu-productos-lista">
+              <ul>
+                <li *ngFor="let men of menu.menuLista">{{ men }}</li>
+              </ul>
+            </div>
+            <div class="menu-actions">
+              <button
+              class="btn"
+              type="button"
+              (click)="agregarMenu(menu)"
+              >
+              Agregar
+            </button>
+            </div>
+          </div>
+          }
+        </div>
       </div>
     </div>
-
     <div class="form-actions">
       <button
         type="submit"
         class="primary__button"
-        [disabled]="!promocionForm.valid"
+        [disabled]="!promocionForm.valid || !tieneProductoOMenuSeleccionado()"
       >
-        Crear
+        {{ isEditMode ? 'Actualizar Promoción' : 'Crear' }}
       </button>
     </div>
   </form>

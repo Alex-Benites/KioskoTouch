@@ -10,7 +10,8 @@ import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CatalogoService } from '../../../services/catalogo.service';
-import { Producto, Estado, Categoria } from '../../../models/catalogo.model';
+import { PublicidadService } from '../../../services/publicidad.service';
+import { Producto, Estado, Categoria, Menu } from '../../../models/catalogo.model';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
@@ -36,33 +37,46 @@ export class CrearPromocionComponent implements OnInit {
   saving = false;
   promocionId: number | null = null;
   productos: Producto[] = [];
+  menus: Menu[] = [];
+  menusSeleccionados: Menu[] = [];
   productosSeleccionados: Producto [] = [];
   categorias: Categoria[] = [];
   search: string = '';
+  loading = false;
   estados: any[] = [];
   constructor(
     private fb: FormBuilder,
     private catalogoService: CatalogoService,
+    private publicidadService: PublicidadService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     this.promocionForm = this.fb.group({
       nombre: ['', Validators.required],
       descripcion: ['', Validators.required],
-      tipo: ['', Validators.required],
-      descuento: ['', [
+      tipo_promocion: ['', Validators.required],
+      valor_descuento: ['', [
         Validators.required,
-        Validators.pattern(/^\d+(\.\d{1,2})?$/),
+        Validators.pattern(/^\d+$/),
         Validators.min(0.01)
       ]],
-      codigo: ['', Validators.required],
-      limiteTotal: ['', Validators.required],
-      limiteUsuario: ['', Validators.required],
-      fechaInicio: ['', Validators.required],
-      fechaFin: ['', Validators.required],
-      disponibilidad: ['', Validators.required],
+      codigo_promocional: ['', Validators.required],
+      limite_uso_total: ['', [
+        Validators.required,
+        Validators.pattern(/^\d+$/),
+        Validators.min(1)
+      ]],
+      limite_uso_usuario: ['', [
+        Validators.required,
+        Validators.pattern(/^\d+$/),
+        Validators.min(1)
+      ]],
+      fecha_inicio_promo: ['', Validators.required],
+      fecha_fin_promo: ['', Validators.required],
+      estado: ['', Validators.required],
       imagen: [null, Validators.required],
-      productosSeleccionados: ['']
+      productosSeleccionados: [''],
+      menusSeleccionados: ['']
     });
   }
 
@@ -75,8 +89,13 @@ export class CrearPromocionComponent implements OnInit {
     });
     this.catalogoService.getProductos().subscribe(data => {
       this.productos = data;
-      this.loadProductImages(); // Solo para productos
+      this.loadProductImages();
     });
+    this.cargarMenus();
+
+    if (this.isEditMode && this.promocionId) {
+      this.cargarPromocionParaEditar();
+    }
   }
   loadProductImages(): void {
     this.productos.forEach(producto => {
@@ -87,7 +106,42 @@ export class CrearPromocionComponent implements OnInit {
       }
     });
   }
-
+  loadMenuImages(): void {
+    this.menus.forEach(menu => {
+      if (menu.id) {
+        this.catalogoService.getMenuImagen(menu.id).subscribe(response => {
+          menu.imagenUrl = response.imagen_url;
+        });
+      }
+    });
+  }
+  cargarMenus(): void {
+  this.loading = true;
+  this.catalogoService.getMenus().subscribe({
+    next: (menus) => {
+      this.menus = menus.map(menu => {
+        this.catalogoService.getMenuImagen(menu.id).subscribe(response => {
+          menu.imagenUrl = response.imagen_url;
+        });
+        menu.menuLista = this.getProductosLista(menu);
+        return menu;
+      });
+      this.loading = false;
+    },
+    error: (error) => {
+      this.loading = false;
+      alert('❌ Error al cargar los menus. Por favor, intenta de nuevo.');
+    }
+  });
+}
+  getProductosLista(menu: any): string[] {
+  if (!menu.productos_detalle || !Array.isArray(menu.productos_detalle)) return [];
+  return menu.productos_detalle.map((p: any) => {
+    const cantidad = p.cantidad || 1;
+    const nombre = p.nombre || p.producto_nombre || p.producto?.nombre || '';
+    return cantidad > 1 ? `- ${nombre} (${cantidad})` : `- ${nombre}`;
+  });
+}
   onFileSelected(event: any): void {
     this.selectedFile = event.target.files[0] as File;
     if (this.selectedFile) {
@@ -132,20 +186,45 @@ export class CrearPromocionComponent implements OnInit {
       this.promocionForm.get('imagen')?.markAsTouched();
     }
   }
-  get precioError(): string {
-    const control = this.promocionForm.get('precio');
+  get DescuentoError(): string {
+    const control = this.promocionForm.get('valor_descuento');
     if (control?.hasError('required') && control?.touched) {
-      return 'El precio es obligatorio';
+      return 'El descuento es obligatorio';
     }
     if (control?.hasError('pattern') && control?.touched) {
-      return 'El precio debe ser un número válido';
+      return 'El descuento debe ser un número válido';
     }
     if (control?.hasError('min') && control?.touched) {
-      return 'El precio debe ser mayor a 0';
+      return 'El descuento debe ser mayor a 0';
     }
     return '';
   }
-
+  get limiteTotalError(): string {
+    const control = this.promocionForm.get('limite_uso_total');
+    if (control?.hasError('required') && control?.touched) {
+      return 'El limite de uso total es obligatorio';
+    }
+    if (control?.hasError('pattern') && control?.touched) {
+      return 'El limite de uso total debe ser un número válido';
+    }
+    if (control?.hasError('min') && control?.touched) {
+      return 'El limite de uso total debe ser mayor a 0';
+    }
+    return '';
+  }
+  get limiteUsuarioError(): string {
+    const control = this.promocionForm.get('limite_uso_usuario');
+    if (control?.hasError('required') && control?.touched) {
+      return 'El limite de uso por usuario es obligatorio';
+    }
+    if (control?.hasError('pattern') && control?.touched) {
+      return 'El limite de uso por usuario debe ser un número válido';
+    }
+    if (control?.hasError('min') && control?.touched) {
+      return 'El limite de uso por usuario debe ser mayor a 0';
+    }
+    return '';
+  }
   get disponibilidadError(): string {
     const control = this.promocionForm.get('disponibilidad');
     if (control?.hasError('required') && control?.touched) {
@@ -162,66 +241,213 @@ export class CrearPromocionComponent implements OnInit {
     return '';
   }
   onSubmit(): void {
-  if (this.promocionForm.valid) {
+  // Validar productos y menús seleccionados
+  const productosIds = this.productosSeleccionados.map(p => p.id);
+  const menusIds = this.menusSeleccionados.map(m => m.id);
+
+  if (!productosIds.length && !menusIds.length) {
+    alert('⚠️ Debes seleccionar al menos un producto o menú para la promoción.');
+    return;
+  }
+
+  const formValid = this.isEditMode
+    ? this.validarFormularioParaEdicion()
+    : this.promocionForm.valid;
+
+  if (formValid) {
+    this.saving = true;
     const formValue = this.promocionForm.value;
+
+    // Convertir fechas a formato ISO
+    const fechaInicio = formValue.fecha_inicio_promo
+      ? new Date(formValue.fecha_inicio_promo).toISOString()
+      : '';
+    const fechaFin = formValue.fecha_fin_promo
+      ? new Date(formValue.fecha_fin_promo).toISOString()
+      : '';
 
     const formData = new FormData();
     formData.append('nombre', formValue.nombre);
     formData.append('descripcion', formValue.descripcion);
-    formData.append('descuento', formValue.descuento.toString());
-    formData.append('tipo', formValue.tipo);
-    formData.append('codigo', formValue.codigo);
-    formData.append('limiteTotal', formValue.limiteTotal.toString());
-    formData.append('limiteUsuario', formValue.limiteUsuario.toString());
-    formData.append('fechaInicio', formValue.fechaInicio.toString());
-    formData.append('fechaFin', formValue.fechaFin.toString());
-    formData.append('disponibilidad', formValue.disponibilidad);
-    formData.append('productos', this.promocionForm.get('productosSeleccionados')?.value);
+    formData.append('valor_descuento', formValue.valor_descuento.toString());
+    formData.append('fecha_inicio_promo', fechaInicio);
+    formData.append('fecha_fin_promo', fechaFin);
+    formData.append('tipo_promocion', formValue.tipo_promocion);
+    formData.append('codigo_promocional', formValue.codigo_promocional);
+    formData.append('limite_uso_total', formValue.limite_uso_total.toString());
+    formData.append('limite_uso_usuario', formValue.limite_uso_usuario.toString());
+    formData.append('estado', formValue.estado);
+
+    // Siempre envía el campo, aunque esté vacío
+    if (productosIds.length > 0) {
+      productosIds.forEach(id => formData.append('productos', id.toString()));
+    } else {
+      formData.append('productos', '__empty__');
+    }
+
+    if (menusIds.length > 0) {
+      menusIds.forEach(id => formData.append('menus', id.toString()));
+    } else {
+      formData.append('menus', '__empty__');
+    }
 
     if (this.selectedFile) {
       formData.append('imagen', this.selectedFile, this.selectedFile.name);
     }
 
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+    if (this.isEditMode && this.promocionId) {
+      this.actualizarPromocion(formData);
+    } else {
+      this.publicidadService.crearPromocion(formData).subscribe({
+        next: (resp) => {
+          alert('Promoción creada exitosamente');
+          this.router.navigate(['/administrador/gestion-promociones']);
+        },
+        error: (err) => {
+          alert('Error al crear la promoción');
+          this.saving = false;
+        }
+      });
     }
   } else {
-    console.log('Formulario no válido');
+    alert('Por favor completa todos los campos requeridos');
     this.promocionForm.markAllAsTouched();
   }
 }
-  agregarProducto(producto: Producto): void {
-    // Verificar si el producto ya está en la lista
-    if (this.productosSeleccionados.some(p => p.id === producto.id)) {
-      alert('El producto ya fue ingresado');
-      return;
+
+private validarFormularioParaEdicion(): boolean {
+  const formValue = this.promocionForm.value;
+  const camposCompletos =
+    formValue.nombre &&
+    formValue.descripcion &&
+    formValue.tipo_promocion &&
+    formValue.valor_descuento &&
+    formValue.codigo_promocional &&
+    formValue.limite_uso_total &&
+    formValue.limite_uso_usuario &&
+    formValue.fecha_inicio_promo &&
+    formValue.fecha_fin_promo &&
+    formValue.estado &&
+    (this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0);
+
+  const descuentoValido = /^\d+(\.\d{1,2})?$/.test(formValue.valor_descuento) && parseFloat(formValue.valor_descuento) > 0;
+  const limiteTotalValido = /^\d+$/.test(formValue.limite_uso_total) && parseInt(formValue.limite_uso_total) > 0;
+  const limiteUsuarioValido = /^\d+$/.test(formValue.limite_uso_usuario) && parseInt(formValue.limite_uso_usuario) > 0;
+
+  return camposCompletos && descuentoValido && limiteTotalValido && limiteUsuarioValido;
+}
+
+actualizarPromocion(formData: FormData): void {
+  if (!this.promocionId) return;
+
+  this.publicidadService.actualizarPromocion(this.promocionId, formData).subscribe({
+    next: (response) => {
+      alert('🎉 Promoción actualizada exitosamente!');
+      this.saving = false;
+      this.router.navigate(['/administrador/gestion-promociones']);
+    },
+    error: (error) => {
+      console.error('❌ Error al actualizar la promoción', error);
+      alert('❌ Error al actualizar la promoción. Revisa los datos e intenta nuevamente.');
+      this.saving = false;
     }
+  });
+}
+  agregarProducto(producto: Producto): void {
+  if (this.productosSeleccionados.some(p => p.id === producto.id)) {
+    alert('El producto ya fue ingresado');
+    return;
+  }
+  this.productosSeleccionados.push(producto);
+  this.promocionForm.get('productosSeleccionados')?.setValue(
+    this.productosSeleccionados.map(p => p.nombre).join(', ')
+  );
+}
 
-    // Agregar el producto seleccionado al array
-    this.productosSeleccionados.push(producto);
+agregarMenu(menu: Menu): void {
+  if (this.menusSeleccionados.some(m => m.id === menu.id)) {
+    alert('El menú ya fue ingresado');
+    return;
+  }
+  this.menusSeleccionados.push(menu);
+  this.promocionForm.get('menusSeleccionados')?.setValue(
+    this.menusSeleccionados.map(m => m.nombre).join(', ')
+  );
+}
 
-    // Contar cuántas veces aparece cada producto por su id
-    const contador: { [id: number]: { producto: Producto, cantidad: number } } = {};
+eliminarProductos(): void {
+  this.productosSeleccionados = [];
+  this.promocionForm.get('productosSeleccionados')?.setValue('');
+}
 
-    this.productosSeleccionados.forEach((prod: Producto) => {
-      if (prod.id in contador) {
-        contador[prod.id].cantidad += 1;
-      } else {
-        contador[prod.id] = { producto: prod, cantidad: 1 };
+eliminarMenus(): void {
+  this.menusSeleccionados = [];
+  this.promocionForm.get('menusSeleccionados')?.setValue('');
+}
+
+tieneProductoOMenuSeleccionado(): boolean {
+  return this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0;
+}
+
+private cargarPromocionParaEditar(): void {
+  if (!this.promocionId) return;
+
+  this.publicidadService.obtenerPromocionPorId(this.promocionId).subscribe({
+    next: (promocion) => {
+      // Llenar formulario con datos de la promoción
+      this.promocionForm.patchValue({
+        nombre: promocion.nombre,
+        descripcion: promocion.descripcion,
+        tipo_promocion: promocion.tipo_promocion,
+        valor_descuento: promocion.valor_descuento,
+        codigo_promocional: promocion.codigo_promocional,
+        limite_uso_total: promocion.limite_uso_total,
+        limite_uso_usuario: promocion.limite_uso_usuario,
+        fecha_inicio_promo: promocion.fecha_inicio_promo,
+        fecha_fin_promo: promocion.fecha_fin_promo,
+        estado: promocion.estado,
+        imagen: null
+      });
+
+      // Manejar imagen actual
+      if (promocion.imagen_url) {
+        this.currentImageUrl = this.publicidadService.getFullImageUrl(promocion.imagen_url);
+        this.imagePreview = this.currentImageUrl;
+        this.promocionForm.get('imagen')?.clearValidators();
+        this.promocionForm.get('imagen')?.updateValueAndValidity();
       }
-    });
 
-    // Construir el string con nombre(cantidad) solo si cantidad > 1
-    const seleccionados = Object.values(contador)
-      .map(({ producto, cantidad }) =>
-        cantidad > 1 ? `${producto.nombre}(${cantidad})` : producto.nombre
-      )
-      .join(', ');
+      // Cargar productos seleccionados
+      if (promocion.productos_detalle && Array.isArray(promocion.productos_detalle)) {
+        this.productosSeleccionados = promocion.productos_detalle
+          .map((p: any) => this.productos.find(prod => prod.id === (p.producto?.id ?? p.producto)))
+          .filter((p: Producto | undefined): p is Producto => !!p);
+        this.promocionForm.get('productosSeleccionados')?.setValue(
+          this.productosSeleccionados.map(p => p.nombre).join(', ')
+        );
+      } else {
+        this.productosSeleccionados = [];
+        this.promocionForm.get('productosSeleccionados')?.setValue('');
+      }
 
-    this.promocionForm.get('productosSeleccionados')?.setValue(seleccionados);
-  }
-  eliminarProductos(): void {
-    this.productosSeleccionados = [];
-    this.promocionForm.get('productosSeleccionados')?.setValue('');
-  }
+      // Cargar menús seleccionados
+      if (promocion.menus_detalle && Array.isArray(promocion.menus_detalle)) {
+        this.menusSeleccionados = promocion.menus_detalle
+          .map((m: any) => this.menus.find(menu => menu.id === (m.menu?.id ?? m.menu)))
+          .filter((m: Menu | undefined): m is Menu => !!m);
+        this.promocionForm.get('menusSeleccionados')?.setValue(
+          this.menusSeleccionados.map(m => m.nombre).join(', ')
+        );
+      } else {
+        this.menusSeleccionados = [];
+        this.promocionForm.get('menusSeleccionados')?.setValue('');
+      }
+    },
+    error: (error) => {
+      console.error('❌ Error al cargar la promoción:', error);
+      alert('❌ Error al cargar la promoción. Redirigiendo...');
+      this.router.navigate(['/administrador/gestion-promociones']);
+    }
+  });
+}
 }

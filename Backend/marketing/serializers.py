@@ -1,9 +1,13 @@
+import uuid
 from rest_framework import serializers
 from .models import AppkioskoPublicidades, AppkioskoVideo
 from comun.models import AppkioskoImagen, AppkioskoEstados
 import os
 from django.conf import settings
 from django.core.files.storage import default_storage
+from .models import AppkioskoPromociones, AppkioskoPromocionproductos, AppkioskoPromocionmenu
+from catalogo.models import AppkioskoProductos, AppkioskoMenus
+from catalogo.serializers import ProductoSerializer, MenuSerializer
 
 class EstadoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -414,3 +418,168 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
                 categoria_imagen='publicidad',
                 entidad_relacionada_id=publicidad.id
             )
+
+class PromocionProductoDetalleSerializer(serializers.ModelSerializer):
+    producto = ProductoSerializer(read_only=True)
+    class Meta:
+        model = AppkioskoPromocionproductos
+        fields = ['id', 'producto']
+
+class PromocionMenuDetalleSerializer(serializers.ModelSerializer):
+    menu = MenuSerializer(read_only=True)
+    class Meta:
+        model = AppkioskoPromocionmenu
+        fields = ['id', 'menu']
+
+class PromocionSerializer(serializers.ModelSerializer):
+    productos = serializers.ListField(
+        child=serializers.CharField(), write_only=True, required=False
+    )
+    menus = serializers.ListField(
+        child=serializers.CharField(), write_only=True, required=False
+    )
+    productos_detalle = serializers.SerializerMethodField(read_only=True)
+    menus_detalle = serializers.SerializerMethodField(read_only=True)
+    imagen = serializers.ImageField(write_only=True, required=False)
+    imagen_url = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = AppkioskoPromociones
+        fields = [
+            'id', 'nombre', 'descripcion', 'valor_descuento',
+            'fecha_inicio_promo', 'fecha_fin_promo', 'tipo_promocion',
+            'codigo_promocional', 'limite_uso_usuario', 'estado', 'limite_uso_total',
+            'created_at', 'updated_at',
+            'productos', 'menus', 'productos_detalle', 'menus_detalle',
+            'imagen', 'imagen_url'
+        ]
+
+    def get_imagen_url(self, obj):
+        try:
+            imagen = AppkioskoImagen.objects.get(
+                categoria_imagen='promociones',
+                entidad_relacionada_id=obj.id
+            )
+            return imagen.ruta
+        except AppkioskoImagen.DoesNotExist:
+            return None
+
+    def get_productos_detalle(self, obj):
+        rels = AppkioskoPromocionproductos.objects.filter(promocion=obj)
+        return PromocionProductoDetalleSerializer(rels, many=True).data
+
+    def get_menus_detalle(self, obj):
+        rels = AppkioskoPromocionmenu.objects.filter(promocion=obj)
+        return PromocionMenuDetalleSerializer(rels, many=True).data
+
+    def validate_productos(self, value):
+        # Filtrar valores vacíos o especiales
+        value = [v for v in value if str(v).isdigit()]
+        # No duplicados
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError("No puedes agregar el mismo producto más de una vez.")
+        # Validar existencia
+        for prod_id in value:
+            if not AppkioskoProductos.objects.filter(id=prod_id).exists():
+                raise serializers.ValidationError(f"Producto con ID {prod_id} no existe.")
+        return value
+
+    def validate_menus(self, value):
+        value = [v for v in value if str(v).isdigit()]
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError("No puedes agregar el mismo menú más de una vez.")
+        for menu_id in value:
+            if not AppkioskoMenus.objects.filter(id=menu_id).exists():
+                raise serializers.ValidationError(f"Menú con ID {menu_id} no existe.")
+        return value
+
+    def create(self, validated_data):
+        productos = validated_data.pop('productos', [])
+        menus = validated_data.pop('menus', [])
+        imagen = validated_data.pop('imagen', None)
+        promocion = AppkioskoPromociones.objects.create(**validated_data)
+        # Asociar productos
+        for prod_id in productos:
+            AppkioskoPromocionproductos.objects.create(promocion=promocion, producto_id=prod_id)
+        # Asociar menús
+        for menu_id in menus:
+            AppkioskoPromocionmenu.objects.create(promocion=promocion, menu_id=menu_id)
+        # Guardar imagen si se envía
+        if imagen:
+            self._crear_imagen_promocion(promocion, imagen)
+        return promocion
+
+    def update(self, instance, validated_data):
+        productos = self.initial_data.getlist('productos') if 'productos' in self.initial_data else None
+        menus = self.initial_data.getlist('menus') if 'menus' in self.initial_data else None
+        imagen = validated_data.pop('imagen', None)
+
+        # Limpia y convierte solo los valores válidos a int
+        def limpiar_ids(lista):
+            if not lista or (len(lista) == 1 and lista[0] in ['', '__empty__']):
+                return []
+            return [int(x) for x in lista if str(x).isdigit()]
+
+        productos = limpiar_ids(productos)
+        menus = limpiar_ids(menus)
+
+        # Elimina todas las relaciones y crea solo las nuevas (aunque sean vacías)
+        if productos is not None:
+            AppkioskoPromocionproductos.objects.filter(promocion=instance).delete()
+            for prod_id in productos:
+                AppkioskoPromocionproductos.objects.create(promocion=instance, producto_id=prod_id)
+
+        if menus is not None:
+            AppkioskoPromocionmenu.objects.filter(promocion=instance).delete()
+            for menu_id in menus:
+                AppkioskoPromocionmenu.objects.create(promocion=instance, menu_id=menu_id)
+
+        # Validar que al menos uno tenga datos (después de filtrar)
+        if (productos is None or len(productos) == 0) and (menus is None or len(menus) == 0):
+            raise serializers.ValidationError("Debes seleccionar al menos un producto o menú.")
+
+        # Actualizar campos básicos
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if imagen:
+            self._actualizar_imagen_promocion(instance, imagen)
+        return instance
+
+    def _crear_imagen_promocion(self, promocion, imagen):
+        """Crea y guarda la imagen de la promoción"""
+        try:
+            promociones_dir = os.path.join(settings.MEDIA_ROOT, 'promociones')
+            os.makedirs(promociones_dir, exist_ok=True)
+            extension = imagen.name.split('.')[-1] if '.' in imagen.name else 'jpg'
+            nombre_archivo = f"promocion_{promocion.id}_{uuid.uuid4().hex[:8]}.{extension}"
+            ruta_fisica = os.path.join(promociones_dir, nombre_archivo)
+            with open(ruta_fisica, 'wb+') as destination:
+                for chunk in imagen.chunks():
+                    destination.write(chunk)
+            ruta_relativa = f"/media/promociones/{nombre_archivo}"
+            AppkioskoImagen.objects.create(
+                ruta=ruta_relativa,
+                categoria_imagen='promociones',
+                entidad_relacionada_id=promocion.id
+            )
+            return ruta_relativa
+        except Exception as e:
+            print(f"❌ Error al guardar imagen de promoción: {str(e)}")
+            return None
+
+    def _actualizar_imagen_promocion(self, instance, imagen):
+        """Actualiza la imagen de la promoción"""
+        try:
+            imagen_anterior = AppkioskoImagen.objects.get(
+                categoria_imagen='promociones',
+                entidad_relacionada_id=instance.id
+            )
+            if imagen_anterior.ruta:
+                ruta_fisica = os.path.join(settings.MEDIA_ROOT, imagen_anterior.ruta.lstrip('/media/'))
+                if os.path.exists(ruta_fisica):
+                    os.remove(ruta_fisica)
+            imagen_anterior.delete()
+        except AppkioskoImagen.DoesNotExist:
+            pass
+        self._crear_imagen_promocion(instance, imagen)
