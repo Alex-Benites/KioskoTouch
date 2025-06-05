@@ -152,6 +152,11 @@ export const administradorRoutes: Routes = [
     canActivate: [authGuard, permissionGuard(['catalogo.add_appkioskomenus'])]
   },
   {
+    path: 'gestion-menus/crear/:id',
+    component: CrearMenuComponent,
+    canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskomenus'])]
+  },
+  {
     path: 'gestion-menus/editar-eliminar',
     component: EditarEliminarMenuComponent,
     canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskomenus', 'catalogo.delete_appkioskomenus'])]

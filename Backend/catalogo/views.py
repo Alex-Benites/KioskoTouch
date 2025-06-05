@@ -5,9 +5,11 @@ from .models import (
     AppkioskoProductos, 
     AppkioskoCategorias, 
     AppkioskoIngredientes, 
-    AppkioskoProductosIngredientes  
+    AppkioskoProductosIngredientes,
+    AppkioskoMenus,
+    AppkioskoMenuproductos
 )
-from .serializers import ProductoSerializer, CategoriaSerializer
+from .serializers import ProductoSerializer, CategoriaSerializer, MenuSerializer
 from comun.models import AppkioskoEstados, AppkioskoImagen
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
@@ -76,6 +78,21 @@ def get_producto_imagen(request, producto_id):
         imagen = AppkioskoImagen.objects.get(
             categoria_imagen='productos',
             entidad_relacionada_id=producto_id
+        )
+        return Response({'imagen_url': imagen.ruta})
+    except AppkioskoImagen.DoesNotExist:
+        return Response({'imagen_url': None})
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_menu_imagen(request, menu_id):
+    """Obtiene solo la imagen de un menú específico"""
+    try:
+        imagen = AppkioskoImagen.objects.get(
+            categoria_imagen='menus',
+            entidad_relacionada_id=menu_id
         )
         return Response({'imagen_url': imagen.ruta})
     except AppkioskoImagen.DoesNotExist:
@@ -314,4 +331,138 @@ class ProductoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             return Response({
                 'success': False,
                 'error': f'Error al eliminar producto: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class MenuListCreateAPIView(generics.ListCreateAPIView):
+    """Vista para listar y crear menús con productos"""
+    queryset = AppkioskoMenus.objects.select_related('estado').all()
+    serializer_class = MenuSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        print(f"\n🚀 CREANDO MENÚ:")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            menu = serializer.save()
+            productos_count = AppkioskoMenuproductos.objects.filter(menu=menu).count()
+            print(f"🎉 MENÚ CREADO EXITOSAMENTE:")
+            print(f"   ID: {menu.id}")
+            print(f"   Nombre: {menu.nombre}")
+            print(f"   Productos asociados: {productos_count}")
+            print("─" * 50)
+            return Response({
+                'mensaje': '🎉 Menú creado exitosamente',
+                'menu': serializer.data,
+                'productos_asociados': productos_count
+            }, status=status.HTTP_201_CREATED)
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            print("─" * 50)
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+class MenuDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Vista para obtener, actualizar y eliminar un menú específico"""
+    queryset = AppkioskoMenus.objects.select_related('estado').all()
+    serializer_class = MenuSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+
+    def update(self, request, *args, **kwargs):
+        print(f"\n🔄 ACTUALIZANDO MENÚ ID: {kwargs.get('pk')}")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            menu = serializer.save()
+            print(f"✅ MENÚ ACTUALIZADO:")
+            print(f"   ID: {menu.id}")
+            print(f"   Nombre: {menu.nombre}")
+            print("─" * 50)
+            return Response({
+                'mensaje': '✅ Menú actualizado exitosamente',
+                'menu': serializer.data
+            })
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            print("─" * 50)
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        """Eliminación física del menú y sus relaciones"""
+        try:
+            menu_id = kwargs.get('pk')
+            print(f"\n🗑️ ELIMINACIÓN FÍSICA MENÚ ID: {menu_id}")
+
+            menu = self.get_object()
+            menu_nombre = menu.nombre
+            print(f"   Menú a eliminar: {menu_nombre}")
+
+            # Eliminar relaciones con productos
+            relaciones_productos = AppkioskoMenuproductos.objects.filter(menu=menu)
+            count_relaciones = relaciones_productos.count()
+            if count_relaciones > 0:
+                relaciones_productos.delete()
+                print(f"   🗑️ Eliminadas {count_relaciones} relaciones de productos")
+
+            # Eliminar imagen física si existe
+            try:
+                imagen = AppkioskoImagen.objects.get(
+                    categoria_imagen='menus',
+                    entidad_relacionada_id=menu_id
+                )
+                if imagen.ruta:
+                    ruta_completa = os.path.join(settings.MEDIA_ROOT, imagen.ruta.lstrip('/media/'))
+                    if os.path.exists(ruta_completa):
+                        os.remove(ruta_completa)
+                        print(f"   🖼️ Archivo de imagen eliminado: {ruta_completa}")
+                    else:
+                        print(f"   ⚠️ Archivo de imagen no encontrado: {ruta_completa}")
+                imagen.delete()
+                print(f"   🗑️ Registro de imagen eliminado de la DB")
+            except AppkioskoImagen.DoesNotExist:
+                print(f"   ℹ️ No se encontró imagen asociada al menú")
+            except Exception as e:
+                print(f"   ⚠️ Error eliminando imagen: {str(e)}")
+
+            # Eliminar el menú
+            menu.delete()
+            print(f"✅ MENÚ ELIMINADO COMPLETAMENTE:")
+            print(f"   Nombre: {menu_nombre}")
+            print(f"   ID: {menu_id}")
+            print(f"   Relaciones eliminadas: {count_relaciones}")
+            print("─" * 50)
+            return Response({
+                'success': True,
+                'mensaje': f'Menú "{menu_nombre}" eliminado completamente',
+                'id': int(menu_id),
+                'tipo_eliminacion': 'fisica',
+                'relaciones_eliminadas': count_relaciones
+            }, status=status.HTTP_200_OK)
+
+        except AppkioskoMenus.DoesNotExist:
+            print(f"❌ Menú ID {menu_id} no encontrado")
+            return Response({
+                'success': False,
+                'error': 'Menú no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"❌ Error eliminando menú: {str(e)}")
+            return Response({
+                'success': False,
+                'error': f'Error al eliminar menú: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

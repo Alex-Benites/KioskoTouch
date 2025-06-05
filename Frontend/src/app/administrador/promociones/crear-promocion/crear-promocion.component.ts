@@ -4,15 +4,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
-import { Router,ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CatalogoService } from '../../../services/catalogo.service';
 import { Producto, Estado, Categoria } from '../../../models/catalogo.model';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-crear-promocion',
@@ -20,7 +21,8 @@ import { MatNativeDateModule } from '@angular/material/core';
   imports: [
     CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, HeaderAdminComponent, FooterAdminComponent,
-    MatDatepickerModule,MatNativeDateModule
+    MatDatepickerModule, MatNativeDateModule, MatIconModule,
+    FormsModule
   ],
   templateUrl: './crear-promocion.component.html',
   styleUrls: ['./crear-promocion.component.scss']
@@ -36,6 +38,7 @@ export class CrearPromocionComponent implements OnInit {
   productos: Producto[] = [];
   productosSeleccionados: Producto [] = [];
   categorias: Categoria[] = [];
+  search: string = '';
   estados: any[] = [];
   constructor(
     private fb: FormBuilder,
@@ -46,19 +49,20 @@ export class CrearPromocionComponent implements OnInit {
     this.promocionForm = this.fb.group({
       nombre: ['', Validators.required],
       descripcion: ['', Validators.required],
-      tipo: ['', Validators.required], // El validador se mantendrá, pero el select tendrá opciones
+      tipo: ['', Validators.required],
       descuento: ['', [
         Validators.required,
         Validators.pattern(/^\d+(\.\d{1,2})?$/),
-        Validators.min(0.01)  // Mínimo 0.01 (1 centavo)
+        Validators.min(0.01)
       ]],
       codigo: ['', Validators.required],
       limiteTotal: ['', Validators.required],
       limiteUsuario: ['', Validators.required],
-      fechaInicial: ['', Validators.required],
+      fechaInicio: ['', Validators.required],
       fechaFin: ['', Validators.required],
       disponibilidad: ['', Validators.required],
       imagen: [null, Validators.required],
+      productosSeleccionados: ['']
     });
   }
 
@@ -68,6 +72,19 @@ export class CrearPromocionComponent implements OnInit {
 
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
+    });
+    this.catalogoService.getProductos().subscribe(data => {
+      this.productos = data;
+      this.loadProductImages(); // Solo para productos
+    });
+  }
+  loadProductImages(): void {
+    this.productos.forEach(producto => {
+      if (producto.id) {
+        this.catalogoService.getProductoImagen(producto.id).subscribe(response => {
+          producto.imagenUrl = response.imagen_url;
+        });
+      }
     });
   }
 
@@ -155,10 +172,11 @@ export class CrearPromocionComponent implements OnInit {
     formData.append('tipo', formValue.tipo);
     formData.append('codigo', formValue.codigo);
     formData.append('limiteTotal', formValue.limiteTotal.toString());
-    formData.append('limiteUsuario', formValue.Usuario.toString());
-    formData.append('fechaInicial', formValue.fechaInicial.toString());
+    formData.append('limiteUsuario', formValue.limiteUsuario.toString());
+    formData.append('fechaInicio', formValue.fechaInicio.toString());
     formData.append('fechaFin', formValue.fechaFin.toString());
-    formData.append('estado', formValue.estado);
+    formData.append('disponibilidad', formValue.disponibilidad);
+    formData.append('productos', this.promocionForm.get('productosSeleccionados')?.value);
 
     if (this.selectedFile) {
       formData.append('imagen', this.selectedFile, this.selectedFile.name);
@@ -167,12 +185,43 @@ export class CrearPromocionComponent implements OnInit {
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
-
-    }
-    else {
-      console.log('Formulario no válido');
-      this.promocionForm.markAllAsTouched();
-    }
+  } else {
+    console.log('Formulario no válido');
+    this.promocionForm.markAllAsTouched();
   }
+}
+  agregarProducto(producto: Producto): void {
+    // Verificar si el producto ya está en la lista
+    if (this.productosSeleccionados.some(p => p.id === producto.id)) {
+      alert('El producto ya fue ingresado');
+      return;
+    }
 
+    // Agregar el producto seleccionado al array
+    this.productosSeleccionados.push(producto);
+
+    // Contar cuántas veces aparece cada producto por su id
+    const contador: { [id: number]: { producto: Producto, cantidad: number } } = {};
+
+    this.productosSeleccionados.forEach((prod: Producto) => {
+      if (prod.id in contador) {
+        contador[prod.id].cantidad += 1;
+      } else {
+        contador[prod.id] = { producto: prod, cantidad: 1 };
+      }
+    });
+
+    // Construir el string con nombre(cantidad) solo si cantidad > 1
+    const seleccionados = Object.values(contador)
+      .map(({ producto, cantidad }) =>
+        cantidad > 1 ? `${producto.nombre}(${cantidad})` : producto.nombre
+      )
+      .join(', ');
+
+    this.promocionForm.get('productosSeleccionados')?.setValue(seleccionados);
+  }
+  eliminarProductos(): void {
+    this.productosSeleccionados = [];
+    this.promocionForm.get('productosSeleccionados')?.setValue('');
+  }
 }

@@ -34,22 +34,37 @@ export class EditarEliminarMenuComponent implements OnInit {
   }
   cargarMenus(): void {
     this.loading = true;
-    console.log('🔄 Cargando menus desde la base de datos...');
-
     this.catalogoService.getMenus().subscribe({
       next: (menus) => {
         this.menus = menus;
         this.loading = false;
-        console.log('✅ Menus cargados:', menus.length);
-        console.log('📦 Menus:', menus);
+        // Cargar imágenes y productos para cada menú
+        this.menus.forEach(menu => {
+          // Imagen
+          this.catalogoService.getMenuImagen(menu.id).subscribe(response => {
+            menu.imagenUrl = response.imagen_url;
+          });
+          // Productos: usar productos_detalle del backend
+          menu.productosLista = this.getProductosLista(menu);
+        });
       },
       error: (error) => {
-        console.error('❌ Error al cargar menus:', error);
         this.loading = false;
         alert('❌ Error al cargar los menus. Por favor, intenta de nuevo.');
       }
     });
   }
+
+  // Helper para formatear la lista de productos
+  getProductosLista(menu: any): string[] {
+    if (!menu.productos_detalle || !Array.isArray(menu.productos_detalle)) return [];
+    return menu.productos_detalle.map((p: any) => {
+      const cantidad = p.cantidad || 1;
+      const nombre = p.nombre || '';
+      return cantidad > 1 ? `- ${nombre} (${cantidad})` : `- ${nombre}`;
+    });
+  }
+
    editarMenu(Menu: any): void {
     console.log('🔧 Editando Menu:', Menu);
     // Navegar al formulario de edición con el ID del Menu

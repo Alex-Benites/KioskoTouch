@@ -1,33 +1,41 @@
 <app-header-admin></app-header-admin>
 
 <div class="form-container">
-    <p class="breadcrumb-title">GESTIÓN DE MENÚS</p>
-    <h1 class="form-main-title">Editar/Eliminar Menú</h1>
-    <p class="subtitle">Menús Disponibles</p>
+  <p class="breadcrumb-title">GESTIÓN DE MENÚS</p>
+  <h1 class="form-main-title">Editar/Eliminar Menú</h1>
+  <p class="subtitle">Menús Disponibles</p>
 
-    <div class="buscador">
-        <label>Buscar menú</label>
-        <div class="buscador-input">
-            <input type="text" placeholder="Buscar" [(ngModel)]="search" />
-            <i class="fas fa-search"></i>
-        </div>
+  <div class="buscador">
+    <label>Buscar menú</label>
+    <div class="buscador-input">
+      <input type="text" placeholder="Buscar" [(ngModel)]="search" />
+      <i class="fas fa-search"></i>
     </div>
+  </div>
 
-    <div class="menus-grid">
-        @for (menu of menus; track menu.id) {
-        <div class="menu-card">
-            <div class="menu-title">{{ menu.nombre }}</div>
-            <img [src]="getFullImageUrl(menu.imagenUrl)" [alt]="menu.nombre" class="menu-img" />
-            <ul class="menu-productos">
-                <li *ngFor="let producto of menu.productos">{{ producto.nombre }}</li>
-            </ul>
-            <div class="menu-actions">
-                <button class="editar-btn" (click)="editarMenu(menu)">Editar</button>
-                <button class="eliminar-btn" (click)="eliminarMenu(menu)">Eliminar</button>
-            </div>
-        </div>
-        }
+  <div class="menus-grid">
+    @for (menu of menus; track menu.id) {
+    <div class="menu-card">
+      <div class="menu-nombre">{{ menu.nombre }}</div>
+      <img
+        [src]="getFullImageUrl(menu.imagenUrl)"
+        [alt]="menu.nombre"
+        style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
+      />
+      <div class="menu-productos-lista">
+        <ul>
+          <li *ngFor="let prod of menu.productosLista">{{ prod }}</li>
+        </ul>
+      </div>
+      <div class="menu-actions">
+        <button class="btn" (click)="editarMenu(menu)">Editar</button>
+        <button class="btn" (click)="eliminarMenu(menu)">Eliminar</button>
+      </div>
     </div>
+    }
+  </div>
 </div>
 
-<app-footer-admin [backRoute]="'/administrador/gestion-menus'"></app-footer-admin>
+<app-footer-admin
+  [backRoute]="'/administrador/gestion-menus'"
+></app-footer-admin>

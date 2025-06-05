@@ -38,11 +38,11 @@ export class CrearMenuComponent implements OnInit {
   selectedFile: File | null = null;
   isEditMode = false;
   menuId: number | null = null;
-  currentImageUrl: string | null = null; // Para mostrar imagen actual
+  currentImageUrl: string | null = null;
   saving = false;
   productos: Producto[] = [];
   search: string = '';
-  productosSeleccionados: any[] = [];
+  productosSeleccionados: { producto: number, cantidad: number }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -53,15 +53,15 @@ export class CrearMenuComponent implements OnInit {
     this.menuForm = this.fb.group({
       nombre: ['', Validators.required],
       descripcion: ['', Validators.required],
-    precio: ['', [
-      Validators.required,
-      Validators.pattern(/^\d+(\.\d{1,2})?$/),
-      Validators.min(0.01)  // Mínimo 0.01 (1 centavo)
-    ]],
-      disponibilidad: ['', Validators.required],
-      productosSeleccionados: ['', Validators.required],
+      precio: ['', [
+        Validators.required,
+        Validators.pattern(/^\d+(\.\d{1,2})?$/),
+        Validators.min(0.01)
+      ]],
+      tipo_menu: ['', Validators.required], // <--- CAMBIO
+      estado: ['', Validators.required],    // <--- CAMBIO
+      productos: [[], Validators.required], // <--- CAMBIO: array de productos
       imagen: [null, Validators.required],
-
     });
   }
 
@@ -109,11 +109,10 @@ export class CrearMenuComponent implements OnInit {
       this.loadProductImages(); // Solo para productos
     });
 
-    /* Si estamos en modo edición, cargar el menu
+    // Si estamos en modo edición, cargar el menu
     if (this.isEditMode) {
       this.cargarmenuParaEditar();
-      this.productosSeleccionados = [...this.menuExistente.productos];
-    }*/
+    }
   }
 
   loadProductImages(): void {
@@ -130,86 +129,50 @@ export class CrearMenuComponent implements OnInit {
     if (!imagenUrl) return '';
     return `http://127.0.0.1:8000${imagenUrl}`;
   }
-  estaSeleccionado(producto: Producto): boolean {
-    return this.productosSeleccionados.some(p => p.id === producto.id);
-  }
 
-  toggleSeleccion(producto: Producto): void {
-    const index = this.productosSeleccionados.findIndex(p => p.id === producto.id);
-    if (index > -1) {
-      // Ya está seleccionado → lo quitamos
-      this.productosSeleccionados.splice(index, 1);
-    } else {
-      // No está seleccionado → lo agregamos
-      this.productosSeleccionados.push(producto);
-    }
-  }
-
-
-  /* Método para cargar menu en modo edición
+  // Método para cargar menu en modo edición
   private cargarmenuParaEditar(): void {
     if (!this.menuId) return;
 
     console.log('🔄 Cargando menu para editar, ID:', this.menuId);
 
-    this.catalogoService.obtenermenuPorId(this.menuId).subscribe({
+    this.catalogoService.obtenerMenuPorId(this.menuId).subscribe({
       next: (menu) => {
         console.log('✅ menu cargado completo:', menu);
 
-        // 📝 Llenar formulario con datos básicos
+        // Llenar formulario con datos del menú
         this.menuForm.patchValue({
           nombre: menu.nombre,
           descripcion: menu.descripcion,
           precio: menu.precio,
-          categoria: menu.categoria,        // ✅ ID: 1
-          disponibilidad: menu.estado      // ✅ ID: 1
-        });
-
-        // 🔒 DESHABILITAR categoría en modo edición
-        this.menuForm.get('categoria')?.disable();
-        console.log('🔒 Campo categoría deshabilitado para edición');
-
-        console.log('📝 Formulario rellenado con:', {
-          nombre: menu.nombre,
-          categoria: menu.categoria,
+          tipo_menu: menu.tipo_menu,
           estado: menu.estado,
-          precio: menu.precio
+          productos: [],
+          imagen: null
         });
 
-        // 🖼️ Manejar imagen actual
+        // Manejar imagen actual
         if (menu.imagen_url) {
           this.currentImageUrl = this.catalogoService.getFullImageUrl(menu.imagen_url);
           this.imagePreview = this.currentImageUrl;
-          console.log('🖼️ Imagen cargada:', this.currentImageUrl);
-
-          // Quitar validación obligatoria de imagen para edición
           this.menuForm.get('imagen')?.clearValidators();
           this.menuForm.get('imagen')?.updateValueAndValidity();
         }
 
-        // 🥗 Cargar ingredientes - usar "hamburguesas" directamente
-        console.log('🥗 Categoria del menu:', menu.categoria_nombre);
-        console.log('🥗 Ingredientes actuales:', menu.ingredientes_detalle);
-
-        // Convertir categoria_nombre a la categoría de ingredientes
-        let categoriaIngredientes = '';
-        if (menu.categoria_nombre === 'Hamburguesa') {
-          categoriaIngredientes = 'hamburguesas';
-        } else if (menu.categoria_nombre === 'Pizza' || menu.categoria_nombre === 'Pizzas') {
-          categoriaIngredientes = 'pizzas';
-        } else if (menu.categoria_nombre === 'Ensalada') {
-          categoriaIngredientes = 'ensaladas';
-        }
-        // Agregar más conversiones según tus categorías
-
-        if (categoriaIngredientes) {
-          this.cargarIngredientesYMarcarSeleccionados(
-            categoriaIngredientes,               // ✅ "hamburguesas"
-            menu.ingredientes_detalle || []  // ✅ Array completo de ingredientes
-          );
+        // Cargar productos seleccionados (usando productos_detalle del backend)
+        if (menu.productos_detalle && Array.isArray(menu.productos_detalle)) {
+          this.productosSeleccionados = menu.productos_detalle.map((p: any) => ({
+            producto: typeof p.producto === 'object' ? p.producto.id : p.producto, // Soporta ambos casos
+            cantidad: p.cantidad
+          }));
+          this.menuForm.get('productos')?.setValue(this.productosSeleccionados);
+        } else {
+          this.productosSeleccionados = [];
+          this.menuForm.get('productos')?.setValue([]);
         }
 
-        console.log('✅ menu cargado completamente para edición');
+        console.log('📝 Formulario rellenado con:', this.menuForm.value);
+        console.log('🛒 Productos seleccionados:', this.productosSeleccionados);
       },
       error: (error) => {
         console.error('❌ Error al cargar menu:', error);
@@ -218,36 +181,39 @@ export class CrearMenuComponent implements OnInit {
       }
     });
   }
-*/
 
+
+
+  get productosSeleccionadosTexto(): string {
+    // Muestra: "Hamburguesa sencilla (x2), Papas (x1)"
+    return this.productosSeleccionados
+      .filter(p => p.producto && p.cantidad > 0)
+      .map(p => {
+        const prod = this.productos.find(x => x.id === p.producto);
+        if (!prod) return '';
+        return p.cantidad > 1 ? `${prod.nombre} (x${p.cantidad})` : prod.nombre;
+      })
+      .filter(Boolean)
+      .join(', ');
+  }
 
   agregarProducto(producto: Producto): void {
-    // Agregar el producto seleccionado al array
-    this.productosSeleccionados.push(producto);
-
-    // Contar cuántas veces aparece cada producto por su id
-    const contador: { [id: number]: { producto: Producto, cantidad: number } } = {};
-
-    this.productosSeleccionados.forEach((prod: Producto) => {
-      if (prod.id in contador) {
-        contador[prod.id].cantidad += 1;
-      } else {
-        contador[prod.id] = { producto: prod, cantidad: 1 };
-      }
-    });
-
-    // Construir el string con nombre(cantidad) solo si cantidad > 1
-    const seleccionados = Object.values(contador)
-      .map(({ producto, cantidad }) =>
-        cantidad > 1 ? `${producto.nombre}(${cantidad})` : producto.nombre
-      )
-      .join(', ');
-
-    this.menuForm.get('productosSeleccionados')?.setValue(seleccionados);
+    if (!producto || !producto.id) return;
+    const idx = this.productosSeleccionados.findIndex(p => p.producto === producto.id);
+    if (idx > -1) {
+      this.productosSeleccionados[idx].cantidad += 1;
+    } else {
+      this.productosSeleccionados.push({ producto: producto.id, cantidad: 1 });
+    }
+    // Solo deja productos con cantidad > 0 y producto válido
+    this.productosSeleccionados = this.productosSeleccionados.filter(
+      p => p.producto && p.cantidad > 0
+    );
+    this.menuForm.get('productos')?.setValue(this.productosSeleccionados);
   }
   eliminarProductos(): void {
     this.productosSeleccionados = [];
-    this.menuForm.get('productosSeleccionados')?.setValue('');
+    this.menuForm.get('productos')?.setValue([]);
   }
 
   eliminarImagen(): void {
@@ -311,26 +277,37 @@ export class CrearMenuComponent implements OnInit {
   }
 
   onSubmit(): void {
+    const productos = (this.menuForm.get('productos')?.value || []).filter(
+      (prod: any) => prod.producto && !isNaN(Number(prod.producto)) && prod.cantidad > 0
+    );
 
-    // 🔧 VALIDACIÓN PERSONALIZADA para modo edición
-    const formValid = this.isEditMode ?
-      this.validarFormularioParaEdicion() :
-      this.menuForm.valid;
+    if (!productos.length) {
+      alert('⚠️ Debes seleccionar al menos un producto para el menú.');
+      return;
+    }
+
+    const formValid = this.isEditMode
+      ? this.validarFormularioParaEdicion()
+      : this.menuForm.valid;
 
     if (formValid) {
       this.saving = true;
-
       const formData = new FormData();
       formData.append('nombre', this.menuForm.get('nombre')?.value);
       formData.append('descripcion', this.menuForm.get('descripcion')?.value);
       formData.append('precio', this.menuForm.get('precio')?.value);
-      formData.append('estado', this.menuForm.get('disponibilidad')?.value);
-      formData.append('productos', this.menuForm.get('productosSeleccionados')?.value);
-      // Solo agregar imagen si hay una nueva seleccionada
+      formData.append('tipo_menu', this.menuForm.get('tipo_menu')?.value);
+      formData.append('estado', this.menuForm.get('estado')?.value);
+
+      productos.forEach((prod: any, i: number) => {
+        formData.append(`productos[${i}][producto]`, prod.producto);
+        formData.append(`productos[${i}][cantidad]`, prod.cantidad);
+      });
+
       if (this.selectedFile) {
         formData.append('imagen', this.selectedFile, this.selectedFile.name);
       }
-      // Decidir si crear o actualizar
+
       if (this.isEditMode) {
         this.actualizarMenu(formData);
       } else {
@@ -345,21 +322,20 @@ export class CrearMenuComponent implements OnInit {
     const nombre = this.menuForm.get('nombre')?.value;
     const descripcion = this.menuForm.get('descripcion')?.value;
     const precio = this.menuForm.get('precio')?.value;
-    const disponibilidad = this.menuForm.get('disponibilidad')?.value;
-    const productosSeleccionados = this.menuForm.get('productosSeleccionados')?.value;
+    const tipo_menu = this.menuForm.get('tipo_menu')?.value;
+    const estado = this.menuForm.get('estado')?.value;
+    const productos = this.menuForm.get('productos')?.value;
 
-    // Validar que todos los campos requeridos estén completos
-    const camposCompletos = nombre && descripcion && precio && disponibilidad && productosSeleccionados;
-
-    // Validar formato de precio
+    const camposCompletos = nombre && descripcion && precio && tipo_menu && estado && productos && productos.length > 0;
     const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
 
     console.log('🔍 Validación edición:', {
       nombre: !!nombre,
       descripcion: !!descripcion,
       precio: precioValido,
-      disponibilidad: !!disponibilidad,
-      productosSeleccionados: !!productosSeleccionados,
+      tipo_menu: !!tipo_menu,
+      estado: !!estado,
+      productos: !!productos && productos.length > 0,
       valid: camposCompletos && precioValido
     });
 
@@ -418,5 +394,9 @@ export class CrearMenuComponent implements OnInit {
       disponibilidad: '',
       categoria: ''
     });
+
+    // Limpiar productos seleccionados
+    this.productosSeleccionados = [];
+    this.menuForm.get('productos')?.setValue([]);
   }
 }

@@ -101,22 +101,39 @@
           }
         </mat-form-field>
 
-        <div class="productos-seleccionados">
-          <label class="titulo-campo">Productos Seleccionados</label>
-          <div class="lista-productos">
-            <div
-              class="producto"
-              *ngFor="let producto of productosSeleccionados"
-            >
-              <img
-                [src]="producto.imagen"
-                alt="{{ producto.nombre }}"
-                class="imagen-producto"
-              />
-              <p>{{ producto.nombre }}</p>
-            </div>
-          </div>
-        </div>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Estado de la promoción</mat-label>
+          <mat-select formControlName="disponibilidad">
+            @for (disp of estados; track disp.id) {
+            <mat-option [value]="disp.id">{{ disp.nombre }}</mat-option>
+            }
+          </mat-select>
+          @if (promocionForm.get('disponibilidad')?.hasError('required')) {
+          <mat-error *ngIf="disponibilidadError">{{
+            disponibilidadError
+          }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Productos Seleccionados</mat-label>
+          <input
+            matInput
+            placeholder="Seleccione un Producto"
+            formControlName="productosSeleccionados"
+            [readonly]="true"
+            style="pointer-events: none"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="eliminarProductos()"
+            type="button"
+            style="pointer-events: auto"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </mat-form-field>
       </div>
 
       <div class="image-upload-column">
@@ -191,19 +208,34 @@
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Estado de la promoción</mat-label>
-          <mat-select formControlName="disponibilidad">
-            @for (disp of estados; track disp.id) {
-            <mat-option [value]="disp.id">{{ disp.nombre }}</mat-option>
-            }
-          </mat-select>
-          @if (promocionForm.get('disponibilidad')?.hasError('required')) {
-          <mat-error *ngIf="disponibilidadError">{{
-            disponibilidadError
-          }}</mat-error>
+        <div class="buscador">
+          <label>Buscar producto</label>
+          <div class="buscador-input">
+            <input type="text" placeholder="Buscar" [(ngModel)]="search" />
+            <i class="fas fa-search"></i>
+          </div>
+        </div>
+
+        <div class="productos-grid">
+          @for (producto of productos; track producto.id) {
+          <div class="producto-card">
+            <div class="producto-nombre">{{ producto.nombre }}</div>
+            <img
+              [src]="getFullImageUrl(producto.imagenUrl)"
+              [alt]="producto.nombre"
+            />
+            <div class="producto-actions">
+              <button
+                class="btn"
+                type="button"
+                (click)="agregarProducto(producto)"
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
           }
-        </mat-form-field>
+        </div>
       </div>
     </div>
 
