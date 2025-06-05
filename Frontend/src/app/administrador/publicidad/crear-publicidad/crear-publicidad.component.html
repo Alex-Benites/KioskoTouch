@@ -2,7 +2,8 @@
 
 <div class="form-container">
   <p class="breadcrumb-title">GESTIÓN DE PUBLICIDAD</p>
-  <h1 class="form-main-title">Creación de Publicidad</h1>
+  <!-- ✅ TÍTULO DINÁMICO -->
+  <h1 class="form-main-title">{{ pageTitle }}</h1>
 
   <form [formGroup]="publicidadForm" (ngSubmit)="onSubmit()" class="publicidad-form">
     <div class="form-grid">
@@ -120,7 +121,10 @@
         <div class="file-upload-section">
           <div class="file-upload-header">
             <label class="file-upload-label">
-              <span class="main-label">Archivo de Media *</span>
+              <!-- ✅ ETIQUETA DINÁMICA SEGÚN MODO -->
+              <span class="main-label">
+                Archivo de Media {{ isEditMode ? '(opcional)' : '*' }}
+              </span>
               <span class="file-hint">{{ fileInputPlaceholder }}</span>
               @if (dimensionsInfo) {
                 <span class="dimensions-info">
@@ -146,14 +150,20 @@
             (click)="fileInput.click()"
             class="file-select-btn">
             <mat-icon>{{ isFileInputDisabled ? 'block' : 'upload' }}</mat-icon>
-            {{ isFileInputDisabled ? 'Selecciona tipo primero' : 'Seleccionar archivo' }}
+            {{ isFileInputDisabled ? 'Selecciona tipo primero' : (isEditMode ? 'Cambiar archivo' : 'Seleccionar archivo') }}
           </button>
           
-          <!-- Preview del archivo -->
-          @if (mediaPreview && selectedFile) {
+          <!-- ✅ PREVIEW DEL ARCHIVO (NUEVO O EXISTENTE) -->
+          @if (mediaPreview) {
             <div class="media-preview">
               <div class="preview-header">
-                <span class="file-name">{{ selectedFileName }}</span>
+                <span class="file-name">
+                  {{ selectedFileName || 'Archivo existente' }}
+                  <!-- ✅ INDICADOR SI ES ARCHIVO EXISTENTE -->
+                  @if (!selectedFile && existingMediaUrl) {
+                    <span class="existing-file-badge">(archivo actual)</span>
+                  }
+                </span>
                 <button type="button" mat-icon-button color="warn" (click)="eliminarMedia()" aria-label="Eliminar archivo">
                   <mat-icon>delete</mat-icon>
                 </button>
@@ -244,7 +254,7 @@
         (click)="onCancel()" 
         class="action-button cancel-button" 
         [disabled]="isLoading"
-        aria-label="Cancelar creación de publicidad">
+        aria-label="Cancelar">
         Cancelar
       </button>
       
@@ -253,16 +263,16 @@
         mat-flat-button 
         color="primary" 
         class="action-button save-button" 
-        [disabled]="publicidadForm.invalid || isLoading || !selectedFile"
+        [disabled]="publicidadForm.invalid || isLoading || (!isEditMode && !selectedFile)"
         aria-label="Guardar publicidad">
         @if (isLoading) {
           <ng-container>
             <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
-            Guardando...
+            {{ isEditMode ? 'Actualizando...' : 'Guardando...' }}
           </ng-container>
         } @else {
           <ng-container>
-            Guardar Publicidad
+            {{ submitButtonText }}
           </ng-container>
         }
       </button>

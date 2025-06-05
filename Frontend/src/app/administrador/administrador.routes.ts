@@ -230,7 +230,11 @@ export const administradorRoutes: Routes = [
     component: EditarEliminarPublicidadComponent,
     canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopublicidades', 'marketing.delete_appkioskopublicidades'])]
   },
-
+  {
+    path: 'gestion-publicidad/crear/:id',
+    component: CrearPublicidadComponent,
+    canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopublicidades'])]
+  },
   // 🖥️ Gestión de kiosko touch - Permisos: establecimientos.appkioskokioskostouch
   {
     path: 'gestion-kiosko-touch',

@@ -26,7 +26,7 @@ export class PublicidadService {
   }
 
   // Obtener una publicidad por ID
-  getPublicidad(id: number): Observable<Publicidad> {
+  getPublicidadById(id: number): Observable<Publicidad> {
     return this.http.get<Publicidad>(`${this.apiUrl}/publicidades/${id}/`)
       .pipe(catchError(this.handleError));
   }

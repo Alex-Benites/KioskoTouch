@@ -172,7 +172,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
 
   editarPublicidad(id: number): void {
     console.log('✏️ Editando publicidad ID:', id);
-    this.router.navigate(['/administrador/gestion-publicidad/editar', id]);
+    this.router.navigate(['/administrador/gestion-publicidad/crear', id]);
   }
 
   confirmarEliminacion(id: number, nombre: string): void {
