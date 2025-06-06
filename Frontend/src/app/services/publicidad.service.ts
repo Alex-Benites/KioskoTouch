@@ -109,7 +109,7 @@ export class PublicidadService {
   };
   getFullImageUrl(imagenUrl: string | undefined): string {
     if (!imagenUrl) return 'assets/images/no-image.png';
-    return `http://127.0.0.1:8000${imagenUrl}`;
+    return `${environment.baseUrl}${imagenUrl}`;
   }
   private getHttpOptions() {
     return {

@@ -8,6 +8,8 @@ import { PublicidadService } from '../../../services/publicidad.service';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { environment } from '../../../../environments/environment'; 
+
 @Component({
   selector: 'app-editar-eliminar-promocion',
   standalone: true,
@@ -128,7 +130,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
   getFullImageUrl(imagenUrl: string | undefined): string {
     if (!imagenUrl) return '';
     // Ajusta la URL base según tu backend
-    return imagenUrl.startsWith('http') ? imagenUrl : `http://127.0.0.1:8000${imagenUrl}`;
+    return imagenUrl.startsWith('http') ? imagenUrl : `${environment.baseUrl}${imagenUrl}`;
   }
 
   editarPromocion(promo: Promocion): void {

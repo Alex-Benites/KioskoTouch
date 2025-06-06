@@ -23,6 +23,8 @@ import { PublicidadService } from '../../../services/publicidad.service';
 import { ApiError, TipoPublicidad, UnidadTiempo } from '../../../models/marketing.model';
 import { Estado } from '../../../models/catalogo.model';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'app-crear-publicidad',
   standalone: true,
@@ -229,7 +231,7 @@ export class CrearPublicidadComponent implements OnInit {
 
   private getMediaUrlForEdit(mediaUrl: string): string {
     if (mediaUrl.startsWith('/media/')) {
-      return `http://localhost:8000${mediaUrl}`;
+      return `${environment.baseUrl}${mediaUrl}`;
     }
     return mediaUrl;
   }
