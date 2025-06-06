@@ -264,39 +264,12 @@
   padding-top: 20px;
   border-top: 1px solid #eee;
   
-  @media (max-width: 768px) {
-    justify-content: center;
-    flex-direction: column;
-  }
-  
-  .action-button {
-    min-width: 150px;
-    padding: 0 24px;
-    height: 44px;
-    font-size: 0.95em;
-    font-weight: 500;
+  .primary__button {
+    min-width: 140px; // ✅ ANCHO FIJO
     
     @media (max-width: 768px) {
       width: 100%;
-    }
-    
-    &:disabled {
-      cursor: not-allowed;
-    }
-    
-    .mat-spinner {
-      display: inline-block;
-    }
-  }
-  
-  .save-button {
-    &:not(:disabled) {
-      background-color: #1976d2;
-      color: white;
-      
-      &:hover {
-        background-color: #1565c0;
-      }
+      min-width: unset;
     }
   }
 }

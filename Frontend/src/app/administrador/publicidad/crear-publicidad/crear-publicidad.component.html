@@ -1,3 +1,4 @@
+<!-- ✅ crear-publicidad.component.html COMPLETO -->
 <app-header-admin></app-header-admin>
 
 <div class="form-container">
@@ -245,14 +246,12 @@
       </div>
     </div>
 
-    <!-- Acciones del formulario -->
+    <!-- ✅ ACCIONES DEL FORMULARIO - COMO CREAR-USUARIO -->
     <div class="form-actions">
       <button 
         type="button" 
-        mat-stroked-button 
-        color="primary" 
+        class="primary__button cancel-button" 
         (click)="onCancel()" 
-        class="action-button cancel-button" 
         [disabled]="isLoading"
         aria-label="Cancelar">
         Cancelar
@@ -260,21 +259,12 @@
       
       <button 
         type="submit" 
-        mat-flat-button 
-        color="primary" 
-        class="action-button save-button" 
+        class="primary__button save-button" 
         [disabled]="publicidadForm.invalid || isLoading || (!isEditMode && !selectedFile)"
         aria-label="Guardar publicidad">
-        @if (isLoading) {
-          <ng-container>
-            <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
-            {{ isEditMode ? 'Actualizando...' : 'Guardando...' }}
-          </ng-container>
-        } @else {
-          <ng-container>
-            {{ submitButtonText }}
-          </ng-container>
-        }
+        @if (!isLoading) {
+          <span>{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
+        } 
       </button>
     </div>
   </form>
