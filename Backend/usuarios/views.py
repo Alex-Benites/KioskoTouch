@@ -29,7 +29,7 @@ def get_user_permissions(user):
             permission_code = f"{app_label}.{perm.codename}"
             formatted_permissions.append(permission_code)
         return formatted_permissions
-    
+
     # Para usuarios normales, obtener permisos específicos
     # Permisos directos del usuario
     user_permissions = user.user_permissions.select_related('content_type').all()
@@ -37,16 +37,16 @@ def get_user_permissions(user):
     group_permissions = Permission.objects.filter(
         group__user=user
     ).select_related('content_type').all()
-    
+
     all_permissions = list(user_permissions) + list(group_permissions)
-    
+
     # Formatear como app_label.codename
     formatted_permissions = []
     for perm in all_permissions:
         app_label = perm.content_type.app_label
         permission_code = f"{app_label}.{perm.codename}"
         formatted_permissions.append(permission_code)
-    
+
     return list(set(formatted_permissions))
 
 @api_view(['POST'])
@@ -55,15 +55,15 @@ def login_empleado(request):
     """Login con email/username y contraseña"""
     email_or_username = request.data.get('email_or_username')
     password = request.data.get('password')
-    
+
     if not email_or_username or not password:
         return Response({
             'error': 'Email/Username y contraseña son requeridos'
         }, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # Intentar autenticar primero como username
     user = authenticate(username=email_or_username, password=password)
-    
+
     # Si no funciona como username, intentar como email
     if not user:
         try:
@@ -71,7 +71,7 @@ def login_empleado(request):
             user = authenticate(username=user_by_email.username, password=password)
         except User.DoesNotExist:
             pass
-    
+
     if user and user.is_active:
         # Para superuser, no es necesario que tenga registro en AppkioskoEmpleados
         empleado = None
@@ -88,14 +88,14 @@ def login_empleado(request):
                 empleado = AppkioskoEmpleados.objects.get(user=user)
             except AppkioskoEmpleados.DoesNotExist:
                 pass
-        
+
         # Obtener permisos del usuario
         user_permissions = get_user_permissions(user)
-        
+
         # Crear tokens JWT
         refresh = RefreshToken.for_user(user)
         access_token = refresh.access_token
-        
+
         # Agregar información adicional al token
         access_token['permissions'] = user_permissions
         access_token['user_id'] = user.id
@@ -103,7 +103,7 @@ def login_empleado(request):
         if empleado:
             access_token['empleado_id'] = empleado.id
             access_token['cedula'] = empleado.cedula
-        
+
         response_data = {
             'access_token': str(access_token),
             'refresh_token': str(refresh),
@@ -120,7 +120,7 @@ def login_empleado(request):
                 'empleado': None
             }
         }
-        
+
         # Agregar info de empleado si existe
         if empleado:
             response_data['user']['empleado'] = {
@@ -131,13 +131,13 @@ def login_empleado(request):
                 'telefono': empleado.telefono,
                 'sexo': empleado.sexo
             }
-        
+
         return Response(response_data)
     else:
         return Response({
             'error': 'Credenciales inválidas'
         }, status=status.HTTP_401_UNAUTHORIZED)
-    
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_token(request):
@@ -151,9 +151,9 @@ def verify_token(request):
                 empleado = AppkioskoEmpleados.objects.get(user=request.user)
             except AppkioskoEmpleados.DoesNotExist:
                 pass
-        
+
         permissions = get_user_permissions(request.user)
-        
+
         response_data = {
             'valid': True,
             'user': {
@@ -169,7 +169,7 @@ def verify_token(request):
                 'empleado': None
             }
         }
-        
+
         if empleado:
             response_data['user']['empleado'] = {
                 'id': empleado.id,
@@ -179,9 +179,9 @@ def verify_token(request):
                 'telefono': empleado.telefono,
                 'sexo': empleado.sexo
             }
-        
+
         return Response(response_data)
-        
+
     except AppkioskoEmpleados.DoesNotExist:
         return Response({
             'error': 'Información de empleado no encontrada'
@@ -193,7 +193,7 @@ def get_user_permissions_endpoint(request):
     """Endpoint para obtener permisos del usuario autenticado"""
     permissions = get_user_permissions(request.user)
     groups = [group.name for group in request.user.groups.all()]
-    
+
     return Response({
         'permissions': permissions,
         'groups': groups,
@@ -313,15 +313,15 @@ def password_reset_confirm(request, uidb64, token):
         return Response({'error': 'Error al actualizar la contraseña'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-    
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_grupos_disponibles(request):
     """Obtener lista de grupos (roles) disponibles"""
     grupos = Group.objects.all().values('id', 'name')
     return Response({
-        'grupos':list(grupos), 
-        'total': len(grupos)}, 
+        'grupos':list(grupos),
+        'total': len(grupos)},
         status=status.HTTP_200_OK
     )
 
@@ -329,7 +329,7 @@ def get_grupos_disponibles(request):
 @permission_classes([IsAuthenticated])
 def get_permisos_disponibles(request):
     """Obtener SOLO los permisos de modelos específicos"""
-    
+
     # 🎯 Mapeo SIMPLE: gestión -> modelo específico
     modelos_por_gestion = {
         'usuarios': {
@@ -343,7 +343,7 @@ def get_permisos_disponibles(request):
             'app_label': 'auth'
         },
         'productos': {
-            'label': 'Gestión de Productos', 
+            'label': 'Gestión de Productos',
             'modelo': 'appkioskoproductos',
             'app_label': 'catalogo'
         },
@@ -354,7 +354,7 @@ def get_permisos_disponibles(request):
         },
         'menus': {
             'label': 'Gestión de Menús',
-            'modelo': 'appkioskomenus', 
+            'modelo': 'appkioskomenus',
             'app_label': 'catalogo'
         },
         'promociones': {
@@ -383,9 +383,9 @@ def get_permisos_disponibles(request):
             'app_label': 'establecimientos'
         }
     }
-    
+
     gestiones = {}
-    
+
     for gestion_key, config in modelos_por_gestion.items():
         # 🎯 Buscar permisos de este modelo específico
         permisos_modelo = Permission.objects.filter(
@@ -394,37 +394,37 @@ def get_permisos_disponibles(request):
         ).select_related('content_type').values(
             'id', 'name', 'codename', 'content_type__model', 'content_type__app_label'
         ).order_by('codename')
-        
+
         gestiones[gestion_key] = {
             'label': config['label'],
             'permisos': []
         }
-        
+
         # Solo permisos CRUD
         for permiso in permisos_modelo:
             accion = None
             if permiso['codename'].startswith('add_'):
                 accion = 'crear'
             elif permiso['codename'].startswith('change_'):
-                accion = 'modificar'  
+                accion = 'modificar'
             elif permiso['codename'].startswith('delete_'):
                 accion = 'eliminar'
             elif permiso['codename'].startswith('view_'):
                 accion = 'ver'
-            
+
             if accion:
                 permiso['accion'] = accion
                 gestiones[gestion_key]['permisos'].append(permiso)
-        
+
         # Debug por gestión
         print(f"✅ {gestion_key}: {len(gestiones[gestion_key]['permisos'])} permisos de {config['app_label']}.{config['modelo']}")
 
     total_permisos = sum(len(g['permisos']) for g in gestiones.values())
-    
+
     print(f"\n🎯 TOTAL EXACTO: {total_permisos} permisos (debería ser 40 con grupos e ingredientes)")
     if gestiones:
         print(f"Última gestión procesada: {gestion_key}")
-    
+
     return Response({
         'gestiones': gestiones,
         'total_permisos': total_permisos
@@ -442,7 +442,7 @@ def asignar_rol_empleado(request):
             return Response({
                 'error': 'El nombre del rol es requerido'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if empleado.agregar_rol(nombre_grupo):
             return Response({
                 'message': f'Rol "{nombre_grupo}" asignado a {empleado.nombres} {empleado.apellidos}',
@@ -456,7 +456,7 @@ def asignar_rol_empleado(request):
         return Response({
             'error': 'Empleado no encontrado'
         }, status=status.HTTP_404_NOT_FOUND)
-    
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def crear_rol(request):
@@ -469,50 +469,50 @@ def crear_rol(request):
     print(f"Permisos recibidos: {request.data.get('permisos')}")
     print(f"Cantidad de permisos: {len(request.data.get('permisos', []))}")
     print("="*60 + "\n")
-    
+
     try:
         nombre = request.data.get('nombre')
         descripcion = request.data.get('descripcion', '')
         permisos_ids = request.data.get('permisos', [])
-        
+
         # Validaciones
         if not nombre:
             return Response({
                 'error': 'El nombre del rol es requerido'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if not permisos_ids:
             return Response({
                 'error': 'Debe seleccionar al menos un permiso'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Verificar si el grupo ya existe
         if Group.objects.filter(name=nombre).exists():
             return Response({
                 'error': f'Ya existe un rol con el nombre "{nombre}"'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Verificar que los permisos existen
         permisos = Permission.objects.filter(id__in=permisos_ids)
         if len(permisos) != len(permisos_ids):
             return Response({
                 'error': 'Algunos permisos seleccionados no son válidos'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Crear el grupo en una transacción
         with transaction.atomic():
             # Crear el grupo
             grupo = Group.objects.create(name=nombre)
-            
+
             # Asignar permisos
             grupo.permissions.set(permisos)
-            
+
             # Log de éxito
             print(f"✅ ROL CREADO: {nombre}")
             print(f"   Permisos asignados: {len(permisos)}")
             for permiso in permisos:
                 print(f"   - {permiso.content_type.app_label}.{permiso.codename}")
-        
+
         return Response({
             'message': f'Rol "{nombre}" creado exitosamente',
             'rol': {
@@ -530,13 +530,13 @@ def crear_rol(request):
                 ]
             }
         }, status=status.HTTP_201_CREATED)
-        
+
     except Exception as e:
         print(f"❌ ERROR CREANDO ROL: {str(e)}")
         return Response({
             'error': f'Error interno del servidor: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_detalle_grupo(request, grupo_id):
@@ -544,7 +544,7 @@ def get_detalle_grupo(request, grupo_id):
     try:
         grupo = Group.objects.get(id=grupo_id)
         permisos = grupo.permissions.select_related('content_type').all()
-        
+
         return Response({
             'grupo': {
                 'id': grupo.id,
@@ -562,7 +562,7 @@ def get_detalle_grupo(request, grupo_id):
                 'permisos_count': len(permisos)
             }
         }, status=status.HTTP_200_OK)
-        
+
     except Group.DoesNotExist:
         return Response({
             'error': 'Grupo no encontrado'
@@ -576,7 +576,7 @@ def editar_grupo(request, grupo_id):
         grupo = Group.objects.get(id=grupo_id)
         nombre = request.data.get('nombre')
         permisos_ids = request.data.get('permisos', [])
-        
+
         # Validaciones
         if nombre and nombre != grupo.name:
             if Group.objects.filter(name=nombre).exists():
@@ -584,24 +584,24 @@ def editar_grupo(request, grupo_id):
                     'error': f'Ya existe un rol con el nombre "{nombre}"'
                 }, status=status.HTTP_400_BAD_REQUEST)
             grupo.name = nombre
-        
+
         if not permisos_ids:
             return Response({
                 'error': 'Debe seleccionar al menos un permiso'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Verificar que los permisos existen
         permisos = Permission.objects.filter(id__in=permisos_ids)
         if len(permisos) != len(permisos_ids):
             return Response({
                 'error': 'Algunos permisos seleccionados no son válidos'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Actualizar en una transacción
         with transaction.atomic():
             grupo.save()
             grupo.permissions.set(permisos)
-        
+
         return Response({
             'message': f'Rol "{grupo.name}" actualizado exitosamente',
             'grupo': {
@@ -610,7 +610,7 @@ def editar_grupo(request, grupo_id):
                 'permisos_count': len(permisos)
             }
         }, status=status.HTTP_200_OK)
-        
+
     except Group.DoesNotExist:
         return Response({
             'error': 'Grupo no encontrado'
@@ -622,21 +622,21 @@ def eliminar_grupo(request, grupo_id):
     """Eliminar un grupo específico"""
     try:
         grupo = Group.objects.get(id=grupo_id)
-        
+
         # Verificar si el grupo tiene usuarios asignados
         usuarios_count = grupo.user_set.count()
         if usuarios_count > 0:
             return Response({
                 'error': f'No se puede eliminar: El rol "{grupo.name}" está asignado a {usuarios_count} usuario(s)'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         nombre_grupo = grupo.name
         grupo.delete()
-        
+
         return Response({
             'message': f'Rol "{nombre_grupo}" eliminado exitosamente'
         }, status=status.HTTP_200_OK)
-        
+
     except Group.DoesNotExist:
         return Response({
             'error': 'Grupo no encontrado'
@@ -654,18 +654,18 @@ def _get_accion_from_codename(codename):
         return 'ver'
     else:
         return 'otros'
-    
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def crear_usuario(request):
     """Crear un nuevo usuario empleado con permisos específicos"""
-    
+
     # 🔐 Verificar permisos
     if not request.user.has_perm('auth.add_user'):
         return Response({
             'error': 'No tienes permisos para crear usuarios'
         }, status=status.HTTP_403_FORBIDDEN)
-    
+
     print("\n" + "="*60)
     print("🎯 DATOS RECIBIDOS PARA CREAR USUARIO:")
     print("="*60)
@@ -677,7 +677,7 @@ def crear_usuario(request):
     print(f"Grupos: {request.data.get('grupos')}")
     print(f"Establecimiento: {request.data.get('establecimiento')}")
     print("="*60 + "\n")
-    
+
     try:
         # Obtener datos del request
         cedula = request.data.get('cedula')
@@ -693,31 +693,31 @@ def crear_usuario(request):
         grupos_ids = request.data.get('grupos', [])
         is_active = request.data.get('isActive', True)
         establecimiento_id = request.data.get('establecimiento')
-        
+
         # 🔍 Validaciones básicas
         if not cedula or not nombres or not apellidos or not username or not email or not password:
             return Response({
                 'error': 'Campos requeridos: cédula, nombres, apellidos, username, email, password'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validar cédula única
         if AppkioskoEmpleados.objects.filter(cedula=cedula).exists():
             return Response({
                 'error': f'Ya existe un empleado con la cédula {cedula}'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validar username único
         if User.objects.filter(username=username).exists():
             return Response({
                 'error': f'Ya existe un usuario con el username {username}'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validar email único
         if User.objects.filter(email=email).exists():
             return Response({
                 'error': f'Ya existe un usuario con el email {email}'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validar grupos
         if grupos_ids:
             grupos = Group.objects.filter(id__in=grupos_ids)
@@ -725,7 +725,7 @@ def crear_usuario(request):
                 return Response({
                     'error': 'Algunos roles seleccionados no son válidos'
                 }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # 🏗️ Crear en una transacción
         with transaction.atomic():
             # 1. Crear usuario Django
@@ -737,7 +737,7 @@ def crear_usuario(request):
                 last_name=apellidos,
                 is_active=is_active
             )
-            
+
             # 2. Crear empleado
             empleado = AppkioskoEmpleados.objects.create(
                 cedula=cedula,
@@ -749,11 +749,11 @@ def crear_usuario(request):
                 turno_trabajo=turno_trabajo,
                 user=user
             )
-            
+
             # 3. Asignar grupos/roles
             if grupos_ids:
                 user.groups.set(grupos)
-            
+
             # Log de éxito
             print(f"✅ USUARIO CREADO:")
             print(f"   - User ID: {user.id}")
@@ -762,7 +762,7 @@ def crear_usuario(request):
             print(f"   - Username: {user.username}")
             print(f"   - Email: {user.email}")
             print(f"   - Grupos: {[g.name for g in user.groups.all()]}")
-        
+
         return Response({
             'message': f'Usuario {nombres} {apellidos} creado exitosamente',
             'usuario': {
@@ -777,29 +777,29 @@ def crear_usuario(request):
                 'is_active': user.is_active
             }
         }, status=status.HTTP_201_CREATED)
-        
+
     except Exception as e:
         print(f"❌ ERROR CREANDO USUARIO: {str(e)}")
         return Response({
             'error': f'Error interno del servidor: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_empleados_lista(request):
     """Obtener lista de empleados con información básica"""
-    
+
     # 🔐 Verificar permisos
     if not request.user.has_perm('auth.view_user'):
         return Response({
             'error': 'No tienes permisos para ver usuarios'
         }, status=status.HTTP_403_FORBIDDEN)
-    
+
     try:
         # Obtener empleados con información del usuario
         empleados = AppkioskoEmpleados.objects.select_related('user').all()
-        
+
         empleados_data = []
         for empleado in empleados:
             if empleado.user:
@@ -817,17 +817,17 @@ def get_empleados_lista(request):
                     'roles': [{'id': g.id, 'name': g.name} for g in empleado.user.groups.all()],
                     'fecha_registro': empleado.created_at.strftime('%Y-%m-%d') if empleado.created_at else None
                 })
-        
+
         return Response({
             'empleados': empleados_data,
             'total': len(empleados_data)
         }, status=status.HTTP_200_OK)
-        
+
     except Exception as e:
         return Response({
             'error': f'Error al obtener empleados: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 @api_view(['GET', 'PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def empleado_detalle_actualizar(request, empleado_id):
@@ -838,27 +838,27 @@ def empleado_detalle_actualizar(request, empleado_id):
     try:
         print(f"🔍 empleado_id recibido: {empleado_id}")  # DEBUG
         print(f"🔍 tipo de empleado_id: {type(empleado_id)}")  # DEBUG
-        
+
         # 🔥 ASEGURAR que busque por el ID correcto
         user = User.objects.get(id=empleado_id)  # Debe usar empleado_id de la URL
         print(f"🔍 Usuario encontrado: {user.username} (ID: {user.id})")  # DEBUG
-        
+
         # Buscar el empleado relacionado si existe
         try:
             empleado = AppkioskoEmpleados.objects.get(user=user)
         except AppkioskoEmpleados.DoesNotExist:
             empleado = None
-        
+
         if request.method == 'GET':
             # 🔐 Verificar permisos
             if not request.user.has_perm('auth.view_user'):
                 return Response({
                     'error': 'No tienes permisos para ver usuarios'
                 }, status=status.HTTP_403_FORBIDDEN)
-            
+
             return Response({
                 'empleado': {
-                    'id': user.id,  
+                    'id': user.id,
                     'cedula': empleado.cedula if empleado else '',
                     'nombres': empleado.nombres if empleado else user.first_name,
                     'apellidos': empleado.apellidos if empleado else user.last_name,
@@ -873,36 +873,36 @@ def empleado_detalle_actualizar(request, empleado_id):
                     'roles': [{'id': grupo.id, 'name': grupo.name} for grupo in user.groups.all()]
                 }
             }, status=status.HTTP_200_OK)
-        
+
         elif request.method in ['PUT', 'PATCH']:
             # 🔐 Verificar permisos
             if not request.user.has_perm('auth.change_user'):
                 return Response({
                     'error': 'No tienes permisos para actualizar usuarios'
                 }, status=status.HTTP_403_FORBIDDEN)
-            
+
             data = request.data
-            
+
             # Actualizar campos del User
             user.username = data.get('username', user.username)
             user.email = data.get('email', user.email)
             user.first_name = data.get('nombres', user.first_name)
             user.last_name = data.get('apellidos', user.last_name)
             user.is_active = data.get('isActive', user.is_active)
-            
+
             # Actualizar contraseña solo si se proporciona
             if 'password' in data and data['password']:
                 user.set_password(data['password'])
-            
+
             # Actualizar grupos/roles
             if 'grupos' in data:
                 grupos_ids = data['grupos']
                 if grupos_ids:
                     grupos = Group.objects.filter(id__in=grupos_ids)
                     user.groups.set(grupos)
-            
+
             user.save()
-            
+
             if empleado:
                 empleado.cedula = data.get('cedula', empleado.cedula)
                 empleado.nombres = data.get('nombres', empleado.nombres)
@@ -925,7 +925,7 @@ def empleado_detalle_actualizar(request, empleado_id):
                         sexo=data.get('sexo', ''),
                         turno_trabajo=data.get('turnoTrabajo', '')
                     )
-            
+
             return Response({
                 'mensaje': 'Empleado actualizado exitosamente',
                 'empleado': {
@@ -936,8 +936,8 @@ def empleado_detalle_actualizar(request, empleado_id):
                     'email': user.email
                 }
             }, status=status.HTTP_200_OK)
-            
-    except User.DoesNotExist:  
+
+    except User.DoesNotExist:
         return Response({
             'error': 'Empleado no encontrado'
         }, status=status.HTTP_404_NOT_FOUND)
@@ -945,37 +945,37 @@ def empleado_detalle_actualizar(request, empleado_id):
         return Response({
             'error': f'Error: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def eliminar_empleado(request, empleado_id):
     """Eliminar un empleado de la base de datos"""
-    
+
     # Verificar permisos (implementar después)
     if not request.user.has_perm('auth.delete_user'):
         return Response({
             'error': 'No tienes permisos para eliminar usuarios'
         }, status=status.HTTP_403_FORBIDDEN)
-    
+
     try:
         user = User.objects.get(id=empleado_id)
-        
+
         # Verificar que no se elimine a sí mismo
         if user.id == request.user.id:
             return Response({
                 'error': 'No puedes eliminar tu propia cuenta'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Verificar que no sea superuser
         if user.is_superuser:
             return Response({
                 'error': 'No se puede eliminar una cuenta de superusuario'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Guardar info para respuesta
         username = user.username
         nombre_completo = f"{user.first_name} {user.last_name}".strip()
-        
+
         # Eliminar empleado relacionado si existe
         try:
             empleado = AppkioskoEmpleados.objects.get(user=user)
@@ -983,14 +983,14 @@ def eliminar_empleado(request, empleado_id):
             empleado.delete()
         except AppkioskoEmpleados.DoesNotExist:
             pass
-        
+
         # Eliminar usuario
         user.delete()
-        
+
         return Response({
             'message': f'Usuario {nombre_completo or username} eliminado exitosamente'
         }, status=status.HTTP_200_OK)
-        
+
     except User.DoesNotExist:
         return Response({
             'error': 'Usuario no encontrado'
@@ -998,4 +998,50 @@ def eliminar_empleado(request, empleado_id):
     except Exception as e:
         return Response({
             'error': f'Error al eliminar usuario: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_empleados_para_establecimiento(request):
+    """Obtener empleados con sus roles para dropdown de establecimiento"""
+
+    # 🔐 Verificar permisos
+    if not request.user.has_perm('auth.view_user'):
+        return Response({
+            'error': 'No tienes permisos para ver usuarios'
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        # Obtener empleados activos con usuario y roles
+        empleados = AppkioskoEmpleados.objects.select_related('user').filter(
+            user__is_active=True,
+            user__isnull=False
+        ).order_by('nombres', 'apellidos')
+
+        empleados_data = []
+        for empleado in empleados:
+            # Obtener el rol principal del empleado
+            rol_principal = empleado.user.groups.first()
+
+            empleados_data.append({
+                'id': empleado.id,
+                'user_id': empleado.user.id,
+                'nombres': empleado.nombres,
+                'apellidos': empleado.apellidos,
+                'nombre_completo': f"{empleado.nombres} {empleado.apellidos}",
+                'cargo': rol_principal.name if rol_principal else 'Sin rol asignado',
+                'cedula': empleado.cedula,
+                'telefono': empleado.telefono,
+                'email': empleado.user.email
+            })
+
+        return Response({
+            'empleados': empleados_data,
+            'total': len(empleados_data)
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"❌ ERROR obteniendo empleados: {str(e)}")
+        return Response({
+            'error': f'Error al obtener empleados: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

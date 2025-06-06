@@ -1,7 +1,7 @@
 <app-header-admin></app-header-admin>
 
 <div class="form-container">
-  
+
   <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
   <h1 class="form-main-title">
     {{ isEditMode ? 'Editar Producto' : 'Creación de nuevo Producto' }}
@@ -86,14 +86,14 @@
         @for (ingrediente of ingredientesDisponibles; track ingrediente.id) {
         <div class="ingrediente-card"
           [class.selected]="ingrediente.seleccionado"
-          
+
         >
-          <mat-checkbox [checked]="ingrediente.seleccionado" 
+          <mat-checkbox [checked]="ingrediente.seleccionado"
                     class="ingrediente-checkbox"
                     (change)="toggleIngrediente(ingrediente)">
             <div class="ingrediente-content">
               <div class="ingrediente-image">
-                <img [src]="getFullImageUrl(ingrediente.imagen_url)" 
+                <img [src]="getFullImageUrl(ingrediente.imagen_url)"
                      [alt]="ingrediente.nombre"
                      onerror="this.src='assets/images/no-ingredient.png'">
               </div>
@@ -117,9 +117,16 @@
 
     <div class="form-actions">
       <button type="submit" class="primary__button" [disabled]="!productoForm.valid">{{ isEditMode ? 'Actualizar Producto' : 'Crear Producto' }}</button>
-      
+
     </div>
   </form>
 </div>
 
 <app-footer-admin [backRoute]="'/administrador/gestion-productos'"></app-footer-admin>
+<app-success-popup
+  [visible]="mostrarPopupExito"
+  [title]="tituloPopup"
+  [message]="mensajePopup"
+  buttonText="Aceptar"
+  (onClose)="cerrarPopupExito()"
+></app-success-popup>

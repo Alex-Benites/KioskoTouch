@@ -1,15 +1,18 @@
 from django.urls import path
 from . import views
+from .views import (
+    get_empleados_para_establecimiento,
+)
 
 urlpatterns = [
 
-    # URLs para autenticación 
+    # URLs para autenticación
 
     path('auth/login/', views.login_empleado, name='login_empleado'),
     path('auth/verify/', views.verify_token, name='verify_token'),
     path('auth/logout/', views.logout_empleado, name='logout_empleado'),
     path('auth/permissions/', views.get_user_permissions_endpoint, name='get_permissions'),
-    
+
     # Password reset API endpoints
     path('auth/password-reset/', views.password_reset_request, name='password_reset_api'),
     path('auth/password-reset-confirm/<str:uidb64>/<str:token>/', views.password_reset_confirm, name='password_reset_confirm_api'),
@@ -29,6 +32,9 @@ urlpatterns = [
     path('empleados/lista/', views.get_empleados_lista, name='empleados_lista'),
     path('empleados/<int:empleado_id>/', views.empleado_detalle_actualizar, name='empleado_detalle_actualizar'),
     path('empleados/<int:empleado_id>/eliminar/', views.eliminar_empleado, name='eliminar_empleado'),
+
+    # 👥 Endpoint para empleados en dropdown de establecimiento
+    path('empleados/dropdown/', get_empleados_para_establecimiento, name='empleados_dropdown'),
 ]
 
 

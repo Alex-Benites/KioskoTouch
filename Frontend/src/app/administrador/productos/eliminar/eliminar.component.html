@@ -92,3 +92,12 @@
 
 <app-footer-admin [backRoute]="'/administrador/gestion-productos'"></app-footer-admin>
 
+<!-- 🆕 AGREGAR al final del archivo -->
+<app-success-popup
+  [visible]="mostrarPopupExito"
+  [title]="tituloPopup"
+  [message]="mensajePopup"
+  buttonText="Aceptar"
+  (onClose)="cerrarPopupExito()"
+></app-success-popup>
+

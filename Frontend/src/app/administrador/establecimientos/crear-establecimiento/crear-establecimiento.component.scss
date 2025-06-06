@@ -74,26 +74,27 @@
     .mapa-placeholder {
       border: 2px dashed #ddd;
       border-radius: 8px;
-      padding: 40px 20px; // Aumentar padding para hacer el rectángulo más grande
+      padding: 40px 20px;
       text-align: center;
       background-color: #fafafa;
-      min-height: 500px; // Aumentar de 200px a 300px para hacer el rectángulo más grande
+      min-height: 500px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       transition: border-color 0.3s ease;
-      position: relative; // Para posicionar el botón de eliminar
+      position: relative;
 
       &:hover {
         border-color: #d32f2f;
       }
 
-      // Cuando hay imagen, mantener padding moderado
+      // ✅ Cuando hay imagen, eliminar padding para que ocupe todo el espacio
       &.has-image {
-        padding: 15px; // Aumentar de 10px a 15px
+        padding: 0; // ✅ Sin padding para que la imagen ocupe todo
         background-color: #fff;
         border-color: #d32f2f;
+        border-style: solid; // ✅ Cambiar a sólido cuando hay imagen
       }
 
       .upload-content {
@@ -102,56 +103,54 @@
         align-items: center;
         justify-content: center;
         height: 100%;
-        gap: 20px; // Agregar gap para mejor separación
+        gap: 20px;
       }
 
       .upload-icon {
-        width: 80px; // Aumentar de 60px a 80px
-        height: 80px; // Aumentar de 60px a 80px
+        width: 80px;
+        height: 80px;
         border-radius: 8px;
         background-color: #f0f0f0;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 20px; // Aumentar margen
+        margin-bottom: 20px;
 
-        // Estilos para tu ícono personalizado PNG
         .custom-upload-icon {
-          width: 48px; // Tamaño del ícono PNG
+          width: 48px;
           height: 48px;
-          object-fit: contain; // Para mantener las proporciones
-          filter: opacity(0.7); // Darle un poco de transparencia
+          object-fit: contain;
+          filter: opacity(0.7);
           transition: filter 0.3s ease;
         }
 
-        // Mantener estilos del mat-icon por si no tienes la imagen aún
         mat-icon {
-          font-size: 40px; // Aumentar de 32px a 40px
+          font-size: 40px;
           width: 40px;
           height: 40px;
           color: #666;
         }
 
         &:hover .custom-upload-icon {
-          filter: opacity(1); // Quitar transparencia al hover
+          filter: opacity(1);
         }
       }
 
       .upload-text {
         color: #666;
-        font-size: 18px; // Aumentar de 16px a 18px
+        font-size: 18px;
         font-weight: 500;
-        margin: 0 0 20px 0; // Aumentar margen
+        margin: 0 0 20px 0;
       }
 
       .upload-button {
         background-color: transparent;
         border: 1px solid #ddd;
         color: #666;
-        padding: 12px 24px; // Aumentar padding del botón
+        padding: 12px 24px;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 15px; // Aumentar de 14px a 15px
+        font-size: 15px;
         transition: all 0.3s ease;
 
         &:hover {
@@ -160,65 +159,69 @@
         }
       }
 
-      // Vista previa DENTRO del placeholder
+      // ✅ Vista previa que ocupa TODO el placeholder
       .mapa-preview {
-        width: 100%;
-        height: 100%;
-        position: relative;
-        border-radius: 4px;
+        position: absolute; // ✅ Posición absoluta para ocupar todo el contenedor
+        top: 0;
+        left: 0;
+        width: 100%; // ✅ Ocupar todo el ancho
+        height: 100%; // ✅ Ocupar toda la altura
+        border-radius: 6px; // ✅ Mismo border-radius que el contenedor
         overflow: hidden;
-        min-height: 260px; // Aumentar de 180px a 260px para la imagen
 
         img {
-          width: 100%;
-          height: 100%;
-          min-height: 260px; // Aumentar altura mínima
-          object-fit: cover;
+          width: 100%; // ✅ Ancho completo
+          height: 100%; // ✅ Altura completa
+          object-fit: cover; // ✅ Cubrir todo el espacio manteniendo proporción
           display: block;
-          border-radius: 4px;
+          border-radius: 6px;
         }
 
         .remove-image-button {
           position: absolute;
-          top: 10px;
-          right: 10px;
+          top: 15px; // ✅ Separar un poco del borde
+          right: 15px; // ✅ Separar un poco del borde
           background-color: rgba(211, 47, 47, 0.9);
           color: white;
           border: none;
           border-radius: 50%;
-          width: 32px; // Aumentar de 28px a 32px
-          height: 32px;
+          width: 36px; // ✅ Hacer un poco más grande para mejor visibilidad
+          height: 36px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           transition: background-color 0.3s ease;
           z-index: 10;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); // ✅ Sombra para mejor visibilidad
 
           &:hover {
             background-color: rgba(211, 47, 47, 1);
+            transform: scale(1.1); // ✅ Efecto hover
           }
 
           mat-icon {
-            font-size: 18px; // Aumentar de 16px a 18px
-            width: 18px;
-            height: 18px;
+            font-size: 20px; // ✅ Icono más grande
+            width: 20px;
+            height: 20px;
           }
         }
       }
     }
 
+    // ✅ Botón eliminar centrado y separado
     .eliminar-button {
       background-color: #d32f2f;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 25px;
       border-radius: 4px;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      align-self: center; // Cambiar de flex-start a center
+      align-self: center; // ✅ Centrado
+      margin-top: 15px; // ✅ Separado de la imagen
       margin-bottom: 15px;
 
       &:hover {
@@ -300,7 +303,11 @@
   .mapa-section {
     .mapa-placeholder {
       padding: 30px 15px;
-      min-height: 150px;
+      min-height: 300px; // ✅ Altura menor en móviles
+
+      &.has-image {
+        padding: 0; // ✅ Sin padding en móviles también
+      }
 
       .upload-icon {
         width: 50px;
@@ -312,16 +319,33 @@
           height: 24px;
         }
       }
+
+      .mapa-preview {
+        .remove-image-button {
+          top: 10px;
+          right: 10px;
+          width: 32px;
+          height: 32px;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
     }
 
-    .mapa-preview img {
-      height: 200px;
+    .eliminar-button {
+      margin-top: 15px;
+      padding: 8px 20px;
+      font-size: 13px;
     }
   }
 
   .form-actions {
     button {
-      width: 200px; // Ancho fijo en móvil
+      width: 200px;
     }
   }
 }

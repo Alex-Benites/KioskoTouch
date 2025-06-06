@@ -1,5 +1,6 @@
 from django.db import models
 from comun.models import AppkioskoEstados
+from django.contrib.auth.models import User
 from usuarios.models import AppkioskoEmpleados
 
 class AppkioskoEstablecimientos(models.Model):
@@ -11,6 +12,35 @@ class AppkioskoEstablecimientos(models.Model):
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    provincia = models.CharField(
+        max_length=50,
+        verbose_name="Provincia",
+        help_text="Provincia donde se encuentra el establecimiento"
+    )
+
+    ciudad = models.CharField(
+        max_length=50,
+        verbose_name="Ciudad",
+        help_text="Ciudad donde se encuentra el establecimiento"
+    )
+
+    responsable_asignado = models.ForeignKey(
+        AppkioskoEmpleados,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='establecimientos_responsable',
+        verbose_name="Responsable Asignado",
+        help_text="Empleado responsable del establecimiento"
+    )
+
+    cargo_asignado = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Cargo del Responsable",
+        help_text="Cargo del empleado responsable (se llena automáticamente)"
+    )
 
     class Meta:
         managed = True
@@ -19,7 +49,17 @@ class AppkioskoEstablecimientos(models.Model):
         verbose_name_plural = 'Establecimientos'
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre} - {self.ciudad}, {self.provincia}"
+
+    def save(self, *args, **kwargs):
+        if self.responsable_asignado and self.responsable_asignado.user:
+            rol_principal = self.responsable_asignado.user.groups.first()
+            if rol_principal:
+                self.cargo_asignado = rol_principal.name
+            else:
+                self.cargo_asignado = 'Sin rol asignado'
+
+        super().save(*args, **kwargs)
 
 class AppkioskoEstablecimientosusuarios(models.Model):
     establecimiento = models.ForeignKey(AppkioskoEstablecimientos, on_delete=models.CASCADE, blank=True, null=True)

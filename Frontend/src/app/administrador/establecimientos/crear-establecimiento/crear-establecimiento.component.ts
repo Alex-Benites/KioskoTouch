@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterModule, Router } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
+import { EmpleadosService, EmpleadoDropdown } from '../../../services/empleados.service';
 
 @Component({
   selector: 'app-crear-establecimiento',
@@ -28,13 +29,17 @@ import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.
     HeaderAdminComponent
   ]
 })
-export class CrearEstablecimientoComponent {
+export class CrearEstablecimientoComponent implements OnInit {
   form: FormGroup;
   imagenMapaUrl: string | null = null;
   archivoMapa: File | null = null;
 
-  // Para la opción 2 (cascada)
+  // Para la cascada provincia → ciudad
   ciudadesDisponibles: string[] = [];
+
+  // 🆕 Lista de empleados desde la base de datos
+  empleadosDisponibles: EmpleadoDropdown[] = [];
+  loadingEmpleados: boolean = false;
 
   private ciudadesPorProvincia: { [key: string]: string[] } = {
     'Guayas': ['Guayaquil', 'Durán', 'Milagro', 'Daule', 'Samborondón'],
@@ -49,16 +54,17 @@ export class CrearEstablecimientoComponent {
     'Imbabura': ['Ibarra', 'Otavalo', 'Cotacachi']
   };
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private empleadosService: EmpleadosService // 🆕 Inyectar servicio
+  ) {
     this.form = this.fb.group({
       nombreEstablecimiento: ['', [Validators.required]],
       tipoEstablecimiento: ['', [Validators.required]],
-
-      // Campos de ubicación actualizados - SIN sector y codigoPostal
       provincia: ['', [Validators.required]],
       ciudad: ['', [Validators.required]],
       direccionEspecifica: ['', [Validators.required]],
-
       telefonoContacto: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       correoElectronico: ['', [Validators.required, Validators.email]],
       responsableAsignado: ['', [Validators.required]],
@@ -67,7 +73,29 @@ export class CrearEstablecimientoComponent {
     });
   }
 
-  // Para la opción 2 (cascada)
+  ngOnInit(): void {
+    this.cargarEmpleados(); // 🆕 Cargar empleados al inicializar
+  }
+
+  // 🆕 Cargar empleados desde la base de datos
+  cargarEmpleados(): void {
+    this.loadingEmpleados = true;
+
+    this.empleadosService.getEmpleadosParaDropdown().subscribe({
+      next: (response) => {
+        this.empleadosDisponibles = response.empleados;
+        this.loadingEmpleados = false;
+        console.log('✅ Empleados cargados:', this.empleadosDisponibles);
+      },
+      error: (error) => {
+        console.error('❌ Error cargando empleados:', error);
+        this.loadingEmpleados = false;
+        alert('Error al cargar los empleados. Por favor, recarga la página.');
+      }
+    });
+  }
+
+  // Método para cuando se selecciona una provincia
   onProvinciaChange(event: any): void {
     const provincia = event.value;
     this.ciudadesDisponibles = this.ciudadesPorProvincia[provincia] || [];
@@ -79,28 +107,47 @@ export class CrearEstablecimientoComponent {
     console.log('Ciudades disponibles:', this.ciudadesDisponibles);
   }
 
-  onMapaSeleccionado(event: any): void {
-    const archivo = event.target.files[0];
+  // 🆕 Método actualizado para cuando se selecciona un responsable
+  onResponsableChange(event: any): void {
+    const empleadoId = event.value;
+    const empleadoSeleccionado = this.empleadosDisponibles.find(emp => emp.id === empleadoId);
 
-    if (archivo && archivo.type.startsWith('image/')) {
-      this.archivoMapa = archivo;
+    if (empleadoSeleccionado) {
+      // Automáticamente llenar el campo cargo
+      this.form.get('cargoAsignado')?.setValue(empleadoSeleccionado.cargo);
+
+      console.log('✅ Responsable seleccionado:', empleadoSeleccionado);
+    }
+  }
+
+  // Método para seleccionar archivo de mapa
+  onMapaSeleccionado(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.archivoMapa = file;
 
       // Crear URL para vista previa
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagenMapaUrl = e.target.result;
       };
-      reader.readAsDataURL(archivo);
+      reader.readAsDataURL(file);
 
-      console.log('Archivo de mapa seleccionado:', archivo.name);
-    } else {
-      alert('Por favor, seleccione un archivo de imagen válido.');
+      console.log('Archivo de mapa seleccionado:', file.name);
     }
   }
 
+  // Método para eliminar el mapa
   eliminarMapa(): void {
     this.imagenMapaUrl = null;
     this.archivoMapa = null;
+
+    // Limpiar el input file
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+
     console.log('Mapa eliminado');
   }
 
@@ -111,37 +158,74 @@ export class CrearEstablecimientoComponent {
       return;
     }
 
-    // Crear objeto con los datos del establecimiento - SIN sector y codigoPostal
+    // 🆕 Obtener el empleado seleccionado con toda su información
+    const empleadoSeleccionado = this.empleadosDisponibles.find(
+      emp => emp.id === this.form.get('responsableAsignado')?.value
+    );
+
     const establecimientoData = {
       nombreEstablecimiento: this.form.get('nombreEstablecimiento')?.value,
       tipoEstablecimiento: this.form.get('tipoEstablecimiento')?.value,
 
-      // Ubicación simplificada
       ubicacion: {
         provincia: this.form.get('provincia')?.value,
         ciudad: this.form.get('ciudad')?.value,
         direccionEspecifica: this.form.get('direccionEspecifica')?.value,
-        // Crear dirección completa para mostrar
         direccionCompleta: `${this.form.get('direccionEspecifica')?.value}, ${this.form.get('ciudad')?.value}, ${this.form.get('provincia')?.value}`
       },
 
       telefonoContacto: this.form.get('telefonoContacto')?.value,
       correoElectronico: this.form.get('correoElectronico')?.value,
-      responsableAsignado: this.form.get('responsableAsignado')?.value,
-      cargoAsignado: this.form.get('cargoAsignado')?.value,
+
+      // 🆕 Información completa del responsable desde la BD
+      responsable: {
+        empleado_id: empleadoSeleccionado?.id,
+        user_id: empleadoSeleccionado?.user_id,
+        nombre_completo: empleadoSeleccionado?.nombre_completo,
+        nombres: empleadoSeleccionado?.nombres,
+        apellidos: empleadoSeleccionado?.apellidos,
+        cargo: empleadoSeleccionado?.cargo,
+        cedula: empleadoSeleccionado?.cedula,
+        telefono: empleadoSeleccionado?.telefono,
+        email: empleadoSeleccionado?.email
+      },
+
       estadoEstablecimiento: this.form.get('estadoEstablecimiento')?.value,
       archivoMapa: this.archivoMapa
     };
 
-    console.log('Establecimiento creado:', establecimientoData);
-    alert('Establecimiento creado exitosamente!');
+    console.log('🏢 Establecimiento creado con empleado de BD:', establecimientoData);
+    alert('Establecimiento creado exitosamente con responsable de la base de datos!');
   }
 
+  // Método auxiliar para marcar campos como tocados
   private marcarCamposComoTocados(): void {
     Object.keys(this.form.controls).forEach(key => {
       const control = this.form.get(key);
-      control?.markAsTouched();
+      if (control) {
+        control.markAsTouched();
+      }
     });
+  }
+
+  // Método opcional para limpiar el formulario
+  private limpiarFormulario(): void {
+    this.form.reset();
+    this.imagenMapaUrl = null;
+    this.archivoMapa = null;
+    this.ciudadesDisponibles = [];
+
+    // Establecer valores por defecto
+    this.form.patchValue({
+      estadoEstablecimiento: 'activo'
+    });
+  }
+
+  // Método para cancelar (opcional)
+  cancelar(): void {
+    if (confirm('¿Está seguro de que desea cancelar? Se perderán todos los datos ingresados.')) {
+      this.router.navigate(['/administrador/establecimientos']);
+    }
   }
 
   // Métodos para obtener errores de validación (opcional)

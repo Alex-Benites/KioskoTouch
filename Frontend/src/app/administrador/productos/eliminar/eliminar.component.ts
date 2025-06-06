@@ -9,8 +9,9 @@ import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.
 import { CommonModule } from '@angular/common';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
-import { CatalogoService } from '../../../services/catalogo.service'; 
-import { Producto, Categoria, Estado } from '../../../models/catalogo.model'; 
+import { SuccessPopupComponent } from '../../../shared/success-popup/success-popup.component'; // ← AGREGAR IMPORT
+import { CatalogoService } from '../../../services/catalogo.service';
+import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 
 @Component({
   selector: 'app-eliminar',
@@ -22,7 +23,8 @@ import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    HeaderAdminComponent
+    HeaderAdminComponent,
+    SuccessPopupComponent  // ← AGREGAR AQUÍ
   ],
   templateUrl: './eliminar.component.html',
   styleUrls: ['./eliminar.component.scss']
@@ -34,12 +36,17 @@ export class EliminarComponent implements OnInit{
   loading = false;
   eliminando = false;
 
+  // 🆕 Agregar estas propiedades para el popup
+  mostrarPopupExito: boolean = false;
+  tituloPopup: string = '';
+  mensajePopup: string = '';
+
   constructor(
     private dialog: MatDialog,
     private catalogoService: CatalogoService,
     private router: Router
   ) {}
-  
+
   ngOnInit(): void {
     this.cargarProductos();
   }
@@ -72,7 +79,7 @@ export class EliminarComponent implements OnInit{
     abrirDialogoEliminar(producto: any): void {
       const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
         width: '400px',
-        data: { 
+        data: {
           itemType: 'producto',
           itemName: producto.nombre,  // 🔧 Agregar nombre del producto
           message: `¿Estás seguro de que deseas eliminar el producto "${producto.nombre}"?`  // 🔧 Mensaje personalizado
@@ -97,19 +104,23 @@ export class EliminarComponent implements OnInit{
     this.catalogoService.eliminarProducto(producto.id).subscribe({
       next: (response) => {
         console.log('✅ Producto eliminado exitosamente:', response);
-        
+
         // Remover el producto de la lista local
         this.productos = this.productos.filter(p => p.id !== producto.id);
-        
+
         this.eliminando = false;
-        
-        // Mostrar mensaje de éxito
-        alert(`✅ Producto "${producto.nombre}" eliminado exitosamente`);
+
+        // ❌ QUITAR: alert(`✅ Producto "${producto.nombre}" eliminado exitosamente`);
+
+        // ✅ AGREGAR: Mostrar popup personalizado
+        this.tituloPopup = '¡PRODUCTO ELIMINADO!';
+        this.mensajePopup = `El producto "${producto.nombre}" ha sido eliminado exitosamente del sistema`;
+        this.mostrarPopupExito = true;
       },
       error: (error) => {
         console.error('❌ Error al eliminar producto:', error);
         this.eliminando = false;
-        
+
         // Mostrar mensaje de error más específico
         let mensajeError = '❌ Error al eliminar el producto.';
         if (error.status === 404) {
@@ -119,12 +130,22 @@ export class EliminarComponent implements OnInit{
         } else if (error.error?.message) {
           mensajeError = `❌ ${error.error.message}`;
         }
-        
+
         alert(mensajeError);
-        
+
         // Recargar productos por si hubo cambios
         this.cargarProductos();
       }
     });
   }
+
+  // 🆕 Agregar método para cerrar popup
+  cerrarPopupExito(): void {
+    this.mostrarPopupExito = false;
+
+    // Opcional: recargar la lista después de cerrar popup
+    // this.cargarProductos();
+  }
+
+  // ...rest of existing code...
 }

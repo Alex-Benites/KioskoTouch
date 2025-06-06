@@ -12,13 +12,11 @@
         <input matInput placeholder="Cheese Burger" formControlName="nombreEstablecimiento" />
       </mat-form-field>
 
-      <!-- Cambiar select por input para tipo de establecimiento -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Tipo de establecimiento</mat-label>
         <input matInput placeholder="Ej: Restaurante, Cafetería, etc." formControlName="tipoEstablecimiento" />
       </mat-form-field>
 
-      <!-- Reemplazar "Ubicación" por "Dirección específica" -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Dirección específica</mat-label>
         <textarea matInput
@@ -40,25 +38,47 @@
         <input matInput placeholder="ejemplo@correo.com" type="email" formControlName="correoElectronico" />
       </mat-form-field>
 
+      <!-- Responsable asignado como select -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Responsable asignado</mat-label>
-        <input matInput placeholder="Nombre del responsable" formControlName="responsableAsignado" />
+        <mat-select formControlName="responsableAsignado"
+                    placeholder="Seleccione un empleado"
+                    [disabled]="loadingEmpleados"
+                    (selectionChange)="onResponsableChange($event)">
+
+          <!-- Mostrar loading mientras carga -->
+          <mat-option *ngIf="loadingEmpleados" disabled>
+            Cargando empleados...
+          </mat-option>
+
+          <!-- 🎯 Solo mostrar el nombre completo, SIN el cargo -->
+          <mat-option *ngFor="let empleado of empleadosDisponibles" [value]="empleado.id">
+            {{ empleado.nombre_completo }}
+          </mat-option>
+
+          <!-- Mensaje si no hay empleados -->
+          <mat-option *ngIf="!loadingEmpleados && empleadosDisponibles.length === 0" disabled>
+            No hay empleados disponibles
+          </mat-option>
+        </mat-select>
+
+        <!-- Error si es requerido -->
+        <mat-error *ngIf="form.get('responsableAsignado')?.hasError('required') && form.get('responsableAsignado')?.touched">
+          Debe seleccionar un responsable
+        </mat-error>
       </mat-form-field>
 
-      <!-- Forzar desplegable hacia abajo -->
+      <!-- Cargo asignado como input readonly -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Cargo asignado</mat-label>
-        <mat-select formControlName="cargoAsignado" placeholder="Seleccione Tipo" panelClass="select-panel-down">
-          <mat-option value="gerente">Gerente</mat-option>
-          <mat-option value="administrador">Administrador</mat-option>
-          <mat-option value="supervisor">Supervisor</mat-option>
-          <mat-option value="encargado">Encargado</mat-option>
-          <mat-option value="jefe_cocina">Jefe de Cocina</mat-option>
-          <mat-option value="otro">Otro</mat-option>
-        </mat-select>
+        <input matInput
+               placeholder="Se asignará automáticamente"
+               formControlName="cargoAsignado"
+               readonly />
+        <mat-hint>Este campo se completa automáticamente al seleccionar un responsable</mat-hint>
       </mat-form-field>
 
-      <!-- Campos con dependencia: cuando se selecciona provincia, se cargan las ciudades -->
+      <!-- Provincia -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Provincia</mat-label>
         <mat-select formControlName="provincia"
@@ -77,6 +97,7 @@
         </mat-select>
       </mat-form-field>
 
+      <!-- Ciudad -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Ciudad</mat-label>
         <mat-select formControlName="ciudad"
@@ -106,7 +127,7 @@
           <!-- Contenido original solo se muestra si NO hay imagen -->
           <div class="upload-content" *ngIf="!imagenMapaUrl">
             <div class="upload-icon">
-              <mat-icon>add_location_alt</mat-icon>
+              <mat-icon>add_location</mat-icon>
             </div>
             <p class="upload-text">Subir Ubicación</p>
             <input type="file" (change)="onMapaSeleccionado($event)" accept="image/*" style="display: none;" #fileInput>
@@ -115,27 +136,28 @@
             </button>
           </div>
         </div>
-      </div>
 
-      <button type="button" class="eliminar-button" (click)="eliminarMapa()" *ngIf="imagenMapaUrl">
-        Eliminar
-      </button>
+        <!-- Botón eliminar imagen (debajo del rectángulo) -->
+        <button type="button" class="eliminar-button" (click)="eliminarMapa()" *ngIf="imagenMapaUrl">
+          Eliminar
+        </button>
 
-      <div class="estado-section">
-        <h3>Estado del Establecimiento</h3>
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Estado</mat-label>
-          <mat-select formControlName="estadoEstablecimiento">
-            <mat-option value="activo">Activo</mat-option>
-            <mat-option value="inactivo">Inactivo</mat-option>
-            <mat-option value="mantenimiento">En Mantenimiento</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div class="estado-section">
+          <h3>Estado del Establecimiento</h3>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Estado</mat-label>
+            <mat-select formControlName="estadoEstablecimiento">
+              <mat-option value="activo">Activo</mat-option>
+              <mat-option value="inactivo">Inactivo</mat-option>
+              <mat-option value="mantenimiento">En Mantenimiento</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
     </div>
   </form>
 
-  <!-- Botones de acción - Solo el botón Crear -->
+  <!-- Botones de acción -->
   <div class="form-actions">
     <button type="button" class="primary__button" (click)="crearEstablecimiento()">Crear</button>
   </div>

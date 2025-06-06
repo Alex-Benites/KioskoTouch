@@ -1,0 +1,23 @@
+<div *ngIf="visible" class="popup-overlay" (click)="cerrarPopup()">
+  <div class="popup" (click)="$event.stopPropagation()">
+    <div class="dialog-container success-dialog">
+      <div class="icon-container">
+        <img src="assets/admin/ADMIN_3.png" alt="Éxito Icono" class="dialog-icon">
+      </div>
+
+      <h2 class="dialog-title">
+        {{ title }}
+      </h2>
+
+      <div class="dialog-content">
+        <p>{{ message }}</p>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="primary__button continue-button" (click)="cerrarPopup()">
+          {{ buttonText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

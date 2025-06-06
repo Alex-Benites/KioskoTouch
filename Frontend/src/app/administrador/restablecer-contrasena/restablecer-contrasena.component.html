@@ -10,12 +10,12 @@
     </header>
 
     <h1 class="title">Recuperar Contraseña</h1>
-    
+
     <!-- Mostrar si viene del enlace del email -->
     <p *ngIf="vieneDeEnlace" style="text-align: center; color: #666; margin-bottom: 20px;">
       📧 Llegaste desde el enlace del email. Ingresa tu nueva contraseña.
     </p>
-    
+
     <!-- Mostrar errores -->
     <div *ngIf="error" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
       {{ error }}
@@ -30,25 +30,25 @@
       <div class="input-container">
         <label for="newPassword">Nueva contraseña</label>
         <div class="input-wrapper">
-          <input 
-            type="password" 
-            id="newPassword" 
+          <input
+            type="password"
+            id="newPassword"
             placeholder="Ingrese contraseña (mínimo 8 caracteres)"
             [(ngModel)]="nuevaPassword"
             name="nuevaPassword"
             (input)="onInputChange()"
             [disabled]="loading"
             required
-          /> 
+          />
         </div>
       </div>
 
       <div class="input-container">
         <label for="repeatPassword">Confirmar contraseña</label>
         <div class="input-wrapper">
-          <input 
-            type="password" 
-            id="repeatPassword" 
+          <input
+            type="password"
+            id="repeatPassword"
             placeholder="Ingrese contraseña de nuevo"
             [(ngModel)]="confirmarPassword"
             name="confirmarPassword"
@@ -62,9 +62,9 @@
       <div class="input-container">
         <label for="verificationCode">Código de verificación</label>
         <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="verificationCode" 
+          <input
+            type="text"
+            id="verificationCode"
             [placeholder]="vieneDeEnlace ? 'Detectado automáticamente desde el email' : 'Ingrese código del email'"
             [(ngModel)]="codigoValidacion"
             name="codigoValidacion"
@@ -82,17 +82,17 @@
       </div>
 
       <div class="button-group">
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           class="primary__button submit-btn"
           [disabled]="loading || !nuevaPassword || !confirmarPassword || (!codigoValidacion && !vieneDeEnlace)"
         >
           <span *ngIf="loading">Actualizando...</span>
           <span *ngIf="!loading">Restablecer</span>
         </button>
-        <button 
-          type="button" 
-          class="primary__button cancel-btn" 
+        <button
+          type="button"
+          class="primary__button cancel-btn"
           (click)="volverAlLogin()"
           [disabled]="loading"
         >
@@ -111,7 +111,6 @@
   <div *ngIf="mostrarPopup" class="popup-overlay">
     <div class="popup">
       <button (click)="continuar()" class="popup-close">X</button>
-      <span>✅</span>
       <h2>¡FINALIZADO!</h2>
       <p>Tu contraseña ha sido actualizada correctamente</p>
       <p style="color: #666; font-size: 14px;">Ya puedes iniciar sesión con tu nueva contraseña</p>

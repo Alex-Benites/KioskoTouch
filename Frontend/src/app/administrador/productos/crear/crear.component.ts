@@ -8,9 +8,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { SuccessPopupComponent } from '../../../shared/success-popup/success-popup.component'; // ← AGREGAR IMPORT
 import { CatalogoService } from '../../../services/catalogo.service';
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
-import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregar ActivatedRoute
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-crear-producto',
@@ -24,7 +25,8 @@ import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregar Activa
     MatButtonModule,
     MatCheckboxModule,
     HeaderAdminComponent,
-    FooterAdminComponent
+    FooterAdminComponent,
+    SuccessPopupComponent  // ← AGREGAR AQUÍ
   ],
   templateUrl: './crear.component.html',
   styleUrls: ['./crear.component.scss']
@@ -43,6 +45,11 @@ export class CrearComponent implements OnInit {
   productoId: number | null = null;
   currentImageUrl: string | null = null; // Para mostrar imagen actual
   saving = false;
+
+  // 🆕 Agregar estas propiedades para el popup
+  mostrarPopupExito: boolean = false;
+  tituloPopup: string = '';
+  mensajePopup: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -484,13 +491,19 @@ export class CrearComponent implements OnInit {
   }
 
 
-  // 🆕 Método separado para crear producto
+  // 🆕 Método separado para crear producto (MODIFICAR)
   private crearProducto(formData: FormData): void {
     this.catalogoService.crearProducto(formData).subscribe({
       next: (response) => {
         console.log('✅ Producto creado exitosamente', response);
-        alert('🎉 Producto creado exitosamente!');
-        this.limpiarFormulario();
+
+        // ❌ QUITAR: alert('🎉 Producto creado exitosamente!');
+
+        // ✅ AGREGAR: Mostrar popup personalizado
+        this.tituloPopup = '¡PRODUCTO CREADO!';
+        this.mensajePopup = 'El producto ha sido creado exitosamente y está listo para ser usado';
+        this.mostrarPopupExito = true;
+
         this.saving = false;
       },
       error: (error) => {
@@ -502,17 +515,22 @@ export class CrearComponent implements OnInit {
   }
 
 
-  //  Método para actualizar producto
+  // 🆕 Método para actualizar producto (MODIFICAR)
   private actualizarProducto(formData: FormData): void {
     if (!this.productoId) return;
 
     this.catalogoService.actualizarProducto(this.productoId, formData).subscribe({
       next: (response) => {
         console.log('✅ Producto actualizado exitosamente', response);
-        alert('🎉 Producto actualizado exitosamente!');
+
+        // ❌ QUITAR: alert('🎉 Producto actualizado exitosamente!');
+
+        // ✅ AGREGAR: Mostrar popup personalizado
+        this.tituloPopup = '¡PRODUCTO ACTUALIZADO!';
+        this.mensajePopup = 'El producto ha sido actualizado exitosamente con los nuevos datos';
+        this.mostrarPopupExito = true;
+
         this.saving = false;
-        // 🆕 Redirigir a la lista después de editar
-        this.router.navigate(['/administrador/gestion-productos/editar']);
       },
       error: (error) => {
         console.error('❌ Error al actualizar el producto', error);
@@ -522,6 +540,20 @@ export class CrearComponent implements OnInit {
     });
   }
 
+
+
+  // 🆕 Agregar método para cerrar popup
+cerrarPopupExito(): void {
+  this.mostrarPopupExito = false;
+
+  if (this.isEditMode) {
+    // En modo edición: redirigir a la lista después de cerrar popup
+    this.router.navigate(['/administrador/gestion-productos/editar']);
+  } else {
+    // En modo creación: limpiar formulario
+    this.limpiarFormulario();
+  }
+}
 
 
   private limpiarFormulario(): void {
