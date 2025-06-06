@@ -94,3 +94,13 @@ class AppkioskoEmpleados(models.Model):
             self.user.groups.set(grupos)
             return True
         return False
+
+
+class PasswordResetToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='password_reset_token')
+    token = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.token} - {'USED' if self.used else 'ACTIVE'}"
