@@ -44,8 +44,12 @@ if settings.DEBUG:
     # Desarrollo local
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # Producción (PythonAnywhere)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # CATCH-ALL AL FINAL (después de media/static)
 urlpatterns += [
-   # re_path(r'^.*$', serve_angular_app, name='angular_app'),
+    re_path(r'^.*$', serve_angular_app, name='angular_app'),
 ]
