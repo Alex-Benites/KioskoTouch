@@ -7,201 +7,156 @@
   </h1>
 
   <form [formGroup]="form" class="form-container">
-    <div class="form-grid">
-      <!-- Columna de campos de formulario -->
-      <div class="form-fields-column">
-        <!-- Formulario de creación -->
-        <div class="form-section">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Nombre del establecimiento</mat-label>
-            <input matInput placeholder="Cheese Burger" formControlName="nombreEstablecimiento" />
-          </mat-form-field>
+    <!-- Grid principal: campos a la izquierda, imagen a la derecha -->
+    <div class="form-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre del establecimiento</mat-label>
+        <input matInput placeholder="Cheese Burger" formControlName="nombreEstablecimiento" />
+      </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Tipo de establecimiento</mat-label>
-            <input matInput placeholder="Ej: Restaurante, Cafetería, etc." formControlName="tipoEstablecimiento" />
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tipo de establecimiento</mat-label>
+        <input matInput placeholder="Ej: Restaurante, Cafetería, etc." formControlName="tipoEstablecimiento" />
+      </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Dirección específica</mat-label>
-            <textarea matInput
-                      placeholder="Ej: 9 de Octubre y Malecón 2000, Local 15"
-                      formControlName="direccionEspecifica"
-                      rows="2"></textarea>
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección específica</mat-label>
+        <textarea matInput
+                  placeholder="Ej: 9 de Octubre y Malecón 2000, Local 15"
+                  formControlName="direccionEspecifica"
+                  rows="2"></textarea>
+      </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Teléfono de contacto</mat-label>
-            <input matInput placeholder="0999999999" formControlName="telefonoContacto" />
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Teléfono de contacto</mat-label>
+        <input matInput placeholder="0999999999" formControlName="telefonoContacto" />
+      </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Correo electrónico</mat-label>
-            <input matInput placeholder="ejemplo@correo.com" type="email" formControlName="correoElectronico" />
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Correo electrónico</mat-label>
+        <input matInput placeholder="ejemplo@correo.com" type="email" formControlName="correoElectronico" />
+      </mat-form-field>
 
-          <!-- Responsable asignado como select -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Responsable asignado</mat-label>
-            <mat-select formControlName="responsableAsignado"
-                        placeholder="Seleccione un empleado"
-                        [disabled]="loadingEmpleados"
-                        (selectionChange)="onResponsableChange($event)">
-              <mat-option *ngIf="loadingEmpleados" disabled>
-                Cargando empleados...
-              </mat-option>
-              <mat-option *ngFor="let empleado of empleadosDisponibles" [value]="empleado.id">
-                {{ empleado.nombre_completo }}
-              </mat-option>
-              <mat-option *ngIf="!loadingEmpleados && empleadosDisponibles.length === 0" disabled>
-                No hay empleados disponibles
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Responsable asignado</mat-label>
+        <mat-select formControlName="responsableAsignado"
+                    placeholder="Seleccione un empleado"
+                    [disabled]="loadingEmpleados"
+                    (selectionChange)="onResponsableChange($event)">
+          <mat-option *ngIf="loadingEmpleados" disabled>
+            Cargando empleados...
+          </mat-option>
+          <mat-option *ngFor="let empleado of empleadosDisponibles" [value]="empleado.id">
+            {{ empleado.nombre_completo }}
+          </mat-option>
+          <mat-option *ngIf="!loadingEmpleados && empleadosDisponibles.length === 0" disabled>
+            No hay empleados disponibles
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-          <!-- Cargo asignado como input readonly -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Cargo asignado</mat-label>
-            <input matInput
-                   placeholder="Se asignará automáticamente"
-                   formControlName="cargoAsignado"
-                   readonly />
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Cargo asignado</mat-label>
+        <input matInput
+               placeholder="Se asignará automáticamente"
+               formControlName="cargoAsignado"
+               readonly />
+      </mat-form-field>
 
-          <!-- Provincia -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Provincia</mat-label>
-            <mat-select formControlName="provincia"
-                        (selectionChange)="onProvinciaChange($event)"
-                        placeholder="Seleccione provincia">
-              <mat-option value="Guayas">Guayas</mat-option>
-              <mat-option value="Pichincha">Pichincha</mat-option>
-              <mat-option value="Manabí">Manabí</mat-option>
-              <mat-option value="Esmeraldas">Esmeraldas</mat-option>
-              <mat-option value="El Oro">El Oro</mat-option>
-              <mat-option value="Los Ríos">Los Ríos</mat-option>
-              <mat-option value="Azuay">Azuay</mat-option>
-              <mat-option value="Loja">Loja</mat-option>
-              <mat-option value="Tungurahua">Tungurahua</mat-option>
-              <mat-option value="Imbabura">Imbabura</mat-option>
-            </mat-select>
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Provincia</mat-label>
+        <mat-select formControlName="provincia"
+                    (selectionChange)="onProvinciaChange($event)"
+                    placeholder="Seleccione provincia">
+          <mat-option value="Guayas">Guayas</mat-option>
+          <mat-option value="Pichincha">Pichincha</mat-option>
+          <mat-option value="Manabí">Manabí</mat-option>
+          <mat-option value="Esmeraldas">Esmeraldas</mat-option>
+          <mat-option value="El Oro">El Oro</mat-option>
+          <mat-option value="Los Ríos">Los Ríos</mat-option>
+          <mat-option value="Azuay">Azuay</mat-option>
+          <mat-option value="Loja">Loja</mat-option>
+          <mat-option value="Tungurahua">Tungurahua</mat-option>
+          <mat-option value="Imbabura">Imbabura</mat-option>
+        </mat-select>
+      </mat-form-field>
 
-          <!-- Ciudad -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Ciudad</mat-label>
-            <mat-select formControlName="ciudad"
-                        [disabled]="!ciudadesDisponibles.length"
-                        placeholder="Primero seleccione una provincia">
-              <mat-option *ngFor="let ciudad of ciudadesDisponibles" [value]="ciudad">
-                {{ ciudad }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Ciudad</mat-label>
+        <mat-select formControlName="ciudad"
+                    [disabled]="!ciudadesDisponibles.length"
+                    placeholder="Primero seleccione una provincia">
+          <mat-option *ngFor="let ciudad of ciudadesDisponibles" [value]="ciudad">
+            {{ ciudad }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-          <!-- Estado del Establecimiento -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Estado del Establecimiento</mat-label>
-            <mat-select formControlName="estadoEstablecimiento">
-              <mat-option *ngFor="let estado of estados" [value]="estado.id">
-                {{ estado.nombre | titlecase }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </div>
-
-      <!-- ✅ COLUMNA DE IMAGEN SIMPLIFICADA -->
-      <div class="image-upload-column">
-        <p class="image-upload-label">Imagen del establecimiento</p>
-        
-        <!-- ✅ Mostrar imagen actual en modo edición -->
-        <div *ngIf="isEditMode && imagenActual && !imagePreview" class="imagen-actual">
-          <p><strong>Imagen actual:</strong></p>
-          <img [src]="'http://localhost:8000' + imagenActual" 
-               alt="Imagen actual" 
-               class="imagen-preview">
-        </div>
-
-        <!-- ✅ Sección simplificada de subida de imagen -->
-        <div class="nueva-imagen-section">
-          <div class="image-upload-container" (click)="fileInput.click()">
-            <input hidden type="file" #fileInput 
-                   (change)="onFileSelected($event)"
-                   accept="image/png, image/jpeg, image/jpg, image/webp">
-            
-            <div *ngIf="!imagePreview" class="upload-placeholder">
-              <img src="assets/admin/ADMIN_27.png" alt="Subir Imagen Icono" class="upload-placeholder-icon">
-              <p>{{ isEditMode ? 'Cambiar imagen' : 'Subir imagen' }}</p>
-              <p>Formato recomendado: 300x200</p>
-            </div>
-            
-            <div *ngIf="imagePreview" class="image-preview-container">
-              <img [src]="imagePreview" alt="Vista previa de la imagen" class="image-preview">
-            </div>
-          </div>
-
-          <!-- ✅ Botones simplificados -->
-          <div *ngIf="imagePreview" class="image-actions">
-            <button type="button" 
-                    class="primary__button delete-image-button" 
-                    (click)="clearFile()">
-              Quitar imagen
-            </button>
-          </div>
-
-          <!-- ✅ Info del archivo seleccionado -->
-          <div *ngIf="selectedFile" class="file-info">
-            <p><strong>Archivo:</strong> {{ selectedFile.name }}</p>
-            <p><strong>Tamaño:</strong> {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
-          </div>
-        </div>
-      </div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Estado del Establecimiento</mat-label>
+        <mat-select formControlName="estadoEstablecimiento">
+          <mat-option *ngFor="let estado of estados" [value]="estado.id">
+            {{ estado.nombre | titlecase }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
 
-    <!-- Sección del mapa -->
-    <!--
-    <div class="mapa-section">
-      <h3>Mapa del establecimiento</h3>
-      <div class="mapa-container">
-        <div class="mapa-placeholder" [class.has-image]="imagenMapaUrl">
-          <div class="mapa-preview" *ngIf="imagenMapaUrl">
-            <img [src]="imagenMapaUrl" alt="Mapa del establecimiento" />
-            <button type="button" class="remove-image-button" (click)="eliminarMapa()">
-              <mat-icon>close</mat-icon>
-            </button>
+    <!-- Columna de imagen -->
+    <div class="image-upload-column">
+      <p class="image-upload-label">Imagen del establecimiento</p>
+
+      <!-- Mostrar imagen actual en modo edición -->
+      <div *ngIf="isEditMode && imagenActual && !imagePreview" class="imagen-actual">
+        <p><strong>Imagen actual:</strong></p>
+        <img [src]="'http://localhost:8000' + imagenActual"
+             alt="Imagen actual"
+             class="imagen-preview">
+      </div>
+
+      <!-- Sección de subida de imagen -->
+      <div class="nueva-imagen-section">
+        <div class="image-upload-container" (click)="fileInput.click()">
+          <input hidden type="file" #fileInput
+                 (change)="onFileSelected($event)"
+                 accept="image/png, image/jpeg, image/jpg, image/webp">
+
+          <div *ngIf="!imagePreview" class="upload-placeholder">
+            <img src="assets/admin/ADMIN_27.png" alt="Subir Imagen Icono" class="upload-placeholder-icon">
+            <p>{{ isEditMode ? 'Cambiar imagen' : 'Subir imagen' }}</p>
+            <p>Formato recomendado: 300x200</p>
           </div>
 
-          <div class="upload-content" *ngIf="!imagenMapaUrl">
-            <div class="upload-icon">
-              <mat-icon>add_location</mat-icon>
-            </div>
-            <p class="upload-text">Subir Ubicación</p>
-            <input type="file" (change)="onMapaSeleccionado($event)" accept="image/*" style="display: none;" #mapFileInput>
-            <button type="button" class="upload-button" (click)="mapFileInput.click()">
-              Seleccionar imagen
-            </button>
+          <div *ngIf="imagePreview" class="image-preview-container">
+            <img [src]="imagePreview" alt="Vista previa de la imagen" class="image-preview">
           </div>
         </div>
 
-        <button type="button" class="eliminar-button" (click)="eliminarMapa()" *ngIf="imagenMapaUrl">
-          Eliminar imagen
-        </button>
-      </div>
-    </div>
-    -->
+        <div *ngIf="imagePreview" class="image-actions">
+          <button type="button"
+                  class="primary__button delete-image-button"
+                  (click)="clearFile()">
+            Quitar imagen
+          </button>
+        </div>
 
-    <!-- Botones de acción -->
-    <div class="form-actions">
-      <button type="button" class="primary__button" (click)="crearEstablecimiento()">
-        {{ isEditMode ? 'Actualizar' : 'Crear' }}
-      </button>
-      
-      <button type="button" class="secondary__button" (click)="cancelar()">
-        Cancelar
-      </button>
+        <div *ngIf="selectedFile" class="file-info">
+          <p><strong>Archivo:</strong> {{ selectedFile.name }}</p>
+          <p><strong>Tamaño:</strong> {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+        </div>
+      </div>
     </div>
   </form>
+
+  <!-- Botones de acción -->
+  <div class="form-actions">
+    <button type="button" class="primary__button" (click)="crearEstablecimiento()">
+      {{ isEditMode ? 'Actualizar' : 'Crear' }}
+    </button>
+    <button type="button" class="secondary__button" (click)="cancelar()">
+      Cancelar
+    </button>
+  </div>
 </div>
 
 <app-footer-admin></app-footer-admin>

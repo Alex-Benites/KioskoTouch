@@ -660,6 +660,7 @@ class MenuSerializer(serializers.ModelSerializer):
         productos_data = validated_data.pop('productos', None)
         imagen = validated_data.pop('imagen', None)
 
+        # Actualiza los campos de la instancia existente
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
