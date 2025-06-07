@@ -1,35 +1,54 @@
 <div class="container">
   <header class="header">
-    <h1 class="header__title">Kiosko Go</h1>
+    <!-- Cambiar el texto por una imagen -->
+    <img src="assets/cliente/USUARIO_2.png" alt="KIOSCO GO!" class="header__logo" />
+    <!-- ❌ QUITAR: <h1 class="header__title">KIOSCO GO!</h1> -->
   </header>
 
-  <main>
-    <p class="options__title">¿Dónde desea comer?</p>
-    <article class="options__container">
-      <div class="opcion option__servir">
-        <img src="img/cliente/icon-servir.png" alt="Para Servir" />
-        <label class="opcion__selector">
-          <input type="radio" name="tipoPedido" value="servir" [(ngModel)]="seleccion" />
-          Para Servir
-        </label>
+  <main class="main-content">
+    <div class="options__container">
+      <!-- Opción Comer Aquí -->
+      <div class="opcion"
+           [class.selected]="seleccion === 'servir'"
+           (click)="seleccionar('servir')">
+        <div class="opcion__image-container">
+          <img src="assets/cliente/USUARIO_3.png" alt="Comer Aquí" class="opcion__image" />
+        </div>
+        <div class="opcion__content">
+          <h3 class="opcion__title">Comer Aquí</h3>
+        </div>
+        <input type="radio"
+               name="tipoPedido"
+               value="servir"
+               [(ngModel)]="seleccion"
+               class="opcion__radio" />
       </div>
-      <div class="opcion option__llevar">
-        <img src="img/cliente/icon-llevar.png" alt="Para Llevar"/>
-        <label class="opcion__selector">
-          <input type="radio" name="tipoPedido" value="llevar" [(ngModel)]="seleccion" />
-          Para Llevar
-        </label>
+
+      <!-- Opción Para Llevar -->
+      <div class="opcion"
+           [class.selected]="seleccion === 'llevar'"
+           (click)="seleccionar('llevar')">
+        <div class="opcion__image-container">
+          <img src="assets/cliente/USUARIO_4.png" alt="Para Llevar" class="opcion__image" />
+        </div>
+        <div class="opcion__content">
+          <h3 class="opcion__title">Para Llevar</h3>
+        </div>
+        <input type="radio"
+               name="tipoPedido"
+               value="llevar"
+               [(ngModel)]="seleccion"
+               class="opcion__radio" />
       </div>
-    </article>
+    </div>
   </main>
 
-  <button class="continuar" [disabled]="!seleccion" (click)="continuar()">Continuar</button>
-
-  <hr />
-
-  <section class="publicidad">
-    <!-- Aquí va el espacio para banners o promos -->
-    <p>Publicidad</p>
-  </section>
+  <footer class="footer">
+    <button class="continuar"
+            [disabled]="!seleccion"
+            (click)="continuar()">
+      Continuar
+    </button>
+  </footer>
 </div>
-  
+

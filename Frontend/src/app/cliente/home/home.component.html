@@ -1,10 +1,27 @@
-<main class="container">
-  <header class="header__container">
-    <h1 class="header__title">Kiosko Go</h1>
-    <p class="header__welcome">¡Bienvenido!</p>
-    <p class="header__start">Comienza tu pedido</p>
-    <button (click)="irAlMenu()" class="header__button">Empezar</button>
-  </header>
-  <footer class="footer__images">
-  </footer>
+<main class="home-container">
+  <div class="content-wrapper">
+    <!-- Header con título -->
+    <header class="header-section">
+      <h1 class="brand-title">KIOSCO GO!</h1>
+      <h2 class="welcome-title">BIENVENIDO</h2>
+    </header>
+
+    <!-- Sección de imagen principal -->
+    <section class="hero-image-section">
+      <div class="food-showcase">
+        <img
+          src="assets/cliente/USUARIO_1.png"
+          alt="Combo hamburguesa, papas y bebida"
+          class="hero-food-image"
+        >
+      </div>
+    </section>
+
+    <!-- Botón de acción -->
+    <footer class="action-section">
+      <button (click)="irAlMenu()" class="order-button">
+        Ordenar
+      </button>
+    </footer>
+  </div>
 </main>

@@ -1,25 +1,35 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router'; // ← Agregar ActivatedRoute
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 
 @Component({
-  standalone: true,
   selector: 'app-tipo-pedido',
-  imports: [CommonModule, FormsModule],
   templateUrl: './tipo-pedido.component.html',
-  styleUrl: './tipo-pedido.component.scss'
+  styleUrls: ['./tipo-pedido.component.scss'],
+  standalone: true,
+  imports: [CommonModule, FormsModule]
 })
 export class TipoPedidoComponent {
-  seleccion: string | null = null;
-  //seleccion: string = '';
+  seleccion: string = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute // ← Agregar esto
+  ) {}
 
-  continuar() {
+  seleccionar(tipo: string): void {
+    this.seleccion = tipo;
+    console.log('💡 Tipo de pedido seleccionado:', tipo);
+  }
+
+  continuar(): void {
     if (this.seleccion) {
-      // Aquí podrías guardar la elección en un servicio si quieres usarla después
-      this.router.navigate(['/cliente/menu']); // Redirige donde quieras
+      console.log('🚀 Continuando con tipo de pedido:', this.seleccion);
+      localStorage.setItem('tipoPedido', this.seleccion);
+
+      // Usar navegación relativa
+      this.router.navigate(['menu'], { relativeTo: this.route });
     }
   }
 }
