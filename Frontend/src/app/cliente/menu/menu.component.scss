@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $kiosko-red: #d92325;
 $kiosko-red-dark: #b01719;
 $kiosko-yellow-promo: #f7b731;
@@ -291,7 +293,7 @@ $badge-discount: #e74c3c;
     background-color: $kiosko-background-medium;
     color: $kiosko-text-dark;
     &:hover:not(:disabled) {
-      background-color: darken($kiosko-background-medium, 10%);
+      background-color: color.scale($kiosko-background-medium, $lightness: 10%);
     }
   }
 
@@ -299,7 +301,7 @@ $badge-discount: #e74c3c;
     background-color: $kiosko-green-continue;
     color: $kiosko-text-light;
      &:hover:not(:disabled) {
-      background-color: darken($kiosko-green-continue, 10%);
+      background-color: color.scale($kiosko-green-continue, $lightness: -10%);
     }
   }
 }
