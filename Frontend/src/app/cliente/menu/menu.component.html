@@ -4,47 +4,116 @@
     Iniciar sesión<i class="icon__qrcode"></i>
   </button>
 </header>
+
 <section class="home__languages-container">
-  <p class="home__title">Home</p>
+  <p class="home__title">Menú</p>
   <article class="home__languages">
-    <label><span class="flag english__language"></span>Inglés<input class="language__selector" type="radio" name="idioma" value="en" [(ngModel)]="idioma"></label>
-    <label><span class="flag spanish__language"></span>Español<input class="language__selector" type="radio" name="idioma" value="es" [(ngModel)]="idioma"></label>
+    <label>
+      <span class="flag english__language"></span>
+      Inglés
+      <input 
+        class="language__selector" 
+        type="radio" 
+        name="idioma" 
+        value="en" 
+        [checked]="idiomaActual === 'en'"
+        (change)="cambiarIdioma($event)">
+    </label>
+    <label>
+      <span class="flag spanish__language"></span>
+      Español
+      <input 
+        class="language__selector" 
+        type="radio" 
+        name="idioma" 
+        value="es" 
+        [checked]="idiomaActual === 'es'"
+        (change)="cambiarIdioma($event)">
+    </label>
   </article>
 </section>
+
 <main>
   <section class="product__dashboard-container">
-      <!-- Carrusel vertical -->
+    <!-- Carrusel vertical de categorías -->
     <article class="carousel__outer-container">
-      <div *ngFor="let cat of categorias" (click)="seleccionarCategoria(cat)"
-        [class.bg-yellow-300]="cat.nombre === categoriaSeleccionada" class="carousel__inner-container">
-        <figure class="category__image-container">
-          <img [src]="cat.img" class="category__image" />
-        </figure>
-        <!-- <p class="category__name">{{ cat.nombre }}</p> -->
-      </div>
+      @for (categoria of categoriasLista; track categoria.id) {
+        <div 
+          (click)="seleccionarCategoria(categoria)"
+          [class.bg-yellow-300]="categoria.id === categoriaActual?.id" 
+          class="carousel__inner-container">
+          <figure class="category__image-container">
+            <img 
+              [src]="obtenerImagenCategoria(categoria)" 
+              [alt]="categoria.nombre"
+              class="category__image" />
+          </figure>
+          <p class="category__name">{{ categoria.nombre }}</p>
+        </div>
+      }
     </article>
-    <!-- Productos -->
+
+    <!-- Productos de la categoría seleccionada -->
     <article class="category__products">
-      <h2 class="category__products-title">Combos y sandwiches</h2>
-      <div class="product__card-container">
-        <figure *ngFor="let prod of productosFiltrados" class="product__card">
-          <img [src]="prod.img" class="product__card-image"/>
-          <div class="product__card-details">
-            <h3 class="product__card-name">{{ prod.nombre }}</h3>
-            <span class="product__card-price">${{ prod.precio }}</span>
-          </div>
-        </figure>
-      </div>
+      <h2 class="category__products-title">
+        {{ categoriaActual?.nombre || 'Productos' }}
+      </h2>
+      
+      @if (productosActuales.length > 0) {
+        <div class="product__card-container">
+          @for (producto of productosActuales; track producto.id) {
+            <figure class="product__card">
+              <img 
+                [src]="obtenerImagenProducto(producto)" 
+                [alt]="producto.nombre"
+                class="product__card-image"/>
+              <div class="product__card-details">
+                <h3 class="product__card-name">{{ producto.nombre }}</h3>
+                <p class="product__card-description">{{ producto.descripcion }}</p>
+                <div class="product__card-footer">
+                  <span class="product__card-price">${{ producto.precio.toFixed(2) }}</span>
+                  <button 
+                    class="product__add-button"
+                    (click)="agregarProducto(producto)">
+                    Agregar
+                  </button>
+                </div>
+              </div>
+            </figure>
+          }
+        </div>
+      } @else {
+        <div class="no-products">
+          <p>No hay productos disponibles en esta categoría</p>
+        </div>
+      }
     </article>
   </section>
+
+  <!-- Panel de pedido -->
   <section class="my-order">
-  <div class="order__divider">
-    <h2 class="order__title">Mi orden</h2>
-  </div>
-  <article class="order__details-container">
-    <div class="order__details">Total: $0 | Productos: 0</div>
-    <button (click)="continuar()" class="continue__button">Continuar</button>
-  </article>
+    <div class="order__divider">
+      <h2 class="order__title">Mi orden</h2>
+    </div>
+    <article class="order__details-container">
+      <div class="order__details">
+        Total: ${{ totalPedidoSeguro.toFixed(2) }} | 
+        Productos: {{ cantidadItemsSeguro }}
+      </div>
+      <button 
+        (click)="continuar()" 
+        class="continue__button"
+        [disabled]="!puedeontinuar">
+        Continuar
+      </button>
+    </article>
+
+    <!-- Información del tipo de pedido -->
+    @if (resumenPedido()) {
+      <div class="order__info">
+        <p class="order__type">{{ resumenPedido()?.descripcion }}</p>
+      </div>
+    }
   </section>
 </main>
 
@@ -56,14 +125,13 @@
   <img src="img/cliente/publicidadejemplo.png" class="advertisement__img" alt="Publicidad" />
 </div>
 
-
 <!-- Pop-up para login -->
-<div *ngIf="mostrarPopupLogin" class="popup-overlay">
-  <div class="popup">
-    <button (click)="cerrarPopupLogin()" class="popup-close">X</button>
-    <h2>Escanee el siguiente código QR</h2>
-    <img src="img/cliente/codigoQR.png" alt="QR" />
+@if (mostrarLogin) {
+  <div class="popup-overlay">
+    <div class="popup">
+      <button (click)="cerrarPopupLogin()" class="popup-close">×</button>
+      <h2>Escanee el siguiente código QR</h2>
+      <img src="img/cliente/codigoQR.png" alt="Código QR" />
+    </div>
   </div>
-</div>
-
-
+}

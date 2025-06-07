@@ -2,14 +2,13 @@
   <header class="header">
     <!-- Cambiar el texto por una imagen -->
     <img src="assets/cliente/USUARIO_2.png" alt="KIOSCO GO!" class="header__logo" />
-    <!-- ❌ QUITAR: <h1 class="header__title">KIOSCO GO!</h1> -->
   </header>
 
   <main class="main-content">
     <div class="options__container">
       <!-- Opción Comer Aquí -->
       <div class="opcion"
-           [class.selected]="seleccion === 'servir'"
+           [class.selected]="seleccionLocal() === 'servir'"
            (click)="seleccionar('servir')">
         <div class="opcion__image-container">
           <img src="assets/cliente/USUARIO_3.png" alt="Comer Aquí" class="opcion__image" />
@@ -20,13 +19,13 @@
         <input type="radio"
                name="tipoPedido"
                value="servir"
-               [(ngModel)]="seleccion"
+               [checked]="seleccionLocal() === 'servir'"
                class="opcion__radio" />
       </div>
 
       <!-- Opción Para Llevar -->
       <div class="opcion"
-           [class.selected]="seleccion === 'llevar'"
+           [class.selected]="seleccionLocal() === 'llevar'"
            (click)="seleccionar('llevar')">
         <div class="opcion__image-container">
           <img src="assets/cliente/USUARIO_4.png" alt="Para Llevar" class="opcion__image" />
@@ -37,7 +36,7 @@
         <input type="radio"
                name="tipoPedido"
                value="llevar"
-               [(ngModel)]="seleccion"
+               [checked]="seleccionLocal() === 'llevar'"
                class="opcion__radio" />
       </div>
     </div>
@@ -45,10 +44,9 @@
 
   <footer class="footer">
     <button class="continuar"
-            [disabled]="!seleccion"
+            [disabled]="!puedeContinuar()"
             (click)="continuar()">
       Continuar
     </button>
   </footer>
 </div>
-

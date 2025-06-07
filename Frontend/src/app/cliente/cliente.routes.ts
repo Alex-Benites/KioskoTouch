@@ -4,6 +4,8 @@ import { TipoPedidoComponent } from './tipo-pedido/tipo-pedido.component';
 import { MenuComponent } from './menu/menu.component';
 
 export const clienteRoutes: Routes = [
+
+   { path: '', redirectTo: 'home', pathMatch: 'full' },
     
   { path: 'home', component: HomeComponent },
 

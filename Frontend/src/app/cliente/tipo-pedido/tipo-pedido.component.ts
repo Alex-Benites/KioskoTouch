@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router'; // ← Agregar ActivatedRoute
+import { Component, signal, computed, inject } from '@angular/core';
+import { Router} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TipoEntrega } from '../../models/pedido.model'; 
+import { PedidoService } from '../../services/pedido.service';
 
 @Component({
   selector: 'app-tipo-pedido',
@@ -11,25 +13,47 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule]
 })
 export class TipoPedidoComponent {
-  seleccion: string = '';
+  
+  seleccionLocal = signal<TipoEntrega | ''>('');
+
+  router = inject(Router);
+  PedidoService = inject(PedidoService);
+
+  puedeContinuar = computed(() => this.seleccionLocal() !== '');
+
+  tipoEntregaActual = this.PedidoService.tipoEntrega;
+  resumenPedido = this.PedidoService.resumenPedido;
 
   constructor(
-    private router: Router,
-    private route: ActivatedRoute // ← Agregar esto
   ) {}
 
-  seleccionar(tipo: string): void {
-    this.seleccion = tipo;
-    console.log('💡 Tipo de pedido seleccionado:', tipo);
+  seleccionar(tipo: TipoEntrega){
+    this.seleccionLocal.set(tipo);
   }
 
-  continuar(): void {
-    if (this.seleccion) {
-      console.log('🚀 Continuando con tipo de pedido:', this.seleccion);
-      localStorage.setItem('tipoPedido', this.seleccion);
-
-      // Usar navegación relativa
-      this.router.navigate(['menu'], { relativeTo: this.route });
-    }
+continuar(): void {
+  const tipo = this.seleccionLocal();
+  if (tipo) {
+    console.log('🚀 Tipo seleccionado:', tipo);
+    console.log('🧭 URL actual antes de navegar:', this.router.url);
+    
+    this.PedidoService.setTipoEntrega(tipo);
+    
+    this.router.navigate(['/cliente/menu']).then(success => {
+      console.log('✅ Navegación result:', success);
+      console.log('🧭 URL después de navegar:', this.router.url);
+      
+      // ✅ NUEVO: Verificar después de un momento
+      setTimeout(() => {
+        console.log('🧭 URL después de 500ms:', this.router.url);
+        console.log('🧭 Router state:', this.router.routerState.snapshot);
+      }, 500);
+      
+    }).catch(error => {
+      console.error('💥 Error de navegación:', error);
+    });
   }
+}
+
+
 }
