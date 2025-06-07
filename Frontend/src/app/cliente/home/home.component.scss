@@ -4,74 +4,16 @@
   padding: 0;
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-  font-family: "Righteous", sans-serif;
-  background: linear-gradient(172deg, #FF939B 0.66%, #EF2A39 64.7%);
-}
-
-.header__container {
-  min-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.header__title {
-  font-family: "Lobster", sans-serif;
-  font-size: 150px;
-  font-weight: bold;
-}
-
-.header__welcome{
-  font-size: 72px;
-}
-
-.header__start{
-  font-size: 60px;
-}
-
-.header__button{
-  height: 120px;
-  width: 266px;
-  margin-top: 1rem;
-  padding: 1rem 2rem;
-  background: transparent;
-  color: white;
-  cursor: pointer;
-  box-shadow: 0px 9px 30px 0px rgba(239, 42, 57, 0.20);
-  border-radius: 20px;
-  border: 3px solid #FFF;
-  font-family: "Righteous", sans-serif;
-  font-size: 50px;
-}
-
-.header__button:hover {
-  transform: scale(1.10);
-  transition: all 200ms ease;
-}
-
-.footer__images{
-  width: 100%;
-  min-height: 412px;
-  background-image: url(../../../../public/img/cliente/homefooter.png);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  margin-top: 100px;
-}
-
+/* ===== ESTILOS PRINCIPALES DEL KIOSCO ===== */
 .home-container {
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(180deg, #C53030 0%, #E53E3E 50%, #FC8181 100%);
+  background: linear-gradient(
+    to bottom, 
+    #AC2125 0%, 
+    #DE3336 50%, 
+    #AC2125 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,56 +24,51 @@
 .content-wrapper {
   width: 100%;
   height: 100%;
+  max-width: 1200px; /* ✅ LÍMITE PARA KIOSCO 32" */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 30px 20px; /* ← Reducir padding superior/inferior de 40px a 30px */
+  padding: 3vh 2vw; /* ✅ PADDING RELATIVO AL VIEWPORT */
   text-align: center;
 }
 
-/* Header Section */
+/* ===== HEADER SECTION ===== */
 .header-section {
   flex: 0 0 auto;
-  margin-top: 10px; /* ← Reducir de 20px a 10px */
+  margin-bottom: 2vh; /* ✅ MARGEN RELATIVO */
 }
 
 .brand-title {
   font-family: 'Impact', 'Arial Black', sans-serif;
-  font-size: 4rem;
+  /* ✅ ESCALADO FLUIDO: min 3rem, preferido 8vmin, max 6rem */
+  font-size: clamp(3rem, 8vmin, 6rem);
   font-weight: 900;
   color: white;
   text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
-  letter-spacing: 2px;
-  margin-bottom: 10px;
-
-  @media (max-width: 768px) {
-    font-size: 3rem;
-  }
+  letter-spacing: 0.05em; /* ✅ RELATIVO AL FONT-SIZE */
+  margin-bottom: 1vh;
 }
 
 .welcome-title {
   font-family: 'Impact', 'Arial Black', sans-serif;
-  font-size: 3.5rem;
+  /* ✅ ESCALADO FLUIDO: min 2.5rem, preferido 6vmin, max 5rem */
+  font-size: clamp(2.5rem, 6vmin, 5rem);
   font-weight: 900;
   color: white;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 1px;
-
-  @media (max-width: 768px) {
-    font-size: 2.5rem;
-  }
+  letter-spacing: 0.05em;
 }
 
-/* Hero Image Section */
+/* ===== HERO IMAGE SECTION ===== */
 .hero-image-section {
-  flex: 1;
+  flex: 1 1 auto; /* ✅ CRECE Y SE ENCOGE SEGÚN ESPACIO DISPONIBLE */
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 2000px; /* ← Aumentar de 600px a 800px */
-  padding: 20px 0; /* ← Agregar padding */
+  padding: 2vh 0;
+  overflow: hidden;
 }
 
 .food-showcase {
@@ -144,28 +81,20 @@
 }
 
 .hero-food-image {
-  max-width: 140%; /* ← Aumentar de 100% a 120% */
-  max-height: 1400%; /* ← Aumentar de 100% a 120% */
+  /* ✅ TAMAÑOS PROPORCIONALMENTE CORRECTOS */
+  max-width: 85%; /* Mantiene espacio lateral */
+  max-height: 65vh; /* Máximo 65% de la altura del viewport */
   width: auto;
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
-
-  @media (max-width: 768px) {
-    max-width: 110%; /* ← Aumentar de 90% a 110% */
-    max-height: 110%;
-  }
-
-  @media (max-width: 480px) {
-    max-width: 100%;
-    max-height: 100%;
-  }
 }
 
-/* Action Section */
+/* ===== ACTION SECTION ===== */
 .action-section {
   flex: 0 0 auto;
-  margin-bottom: 30px; /* ← Reducir de 40px a 30px */
+  margin-top: 2vh;
+  margin-bottom: 3vh;
 }
 
 .order-button {
@@ -173,48 +102,232 @@
   color: #C53030;
   border: none;
   border-radius: 50px;
-  padding: 20px 60px;
-  font-size: 1.8rem;
+  /* ✅ PADDING Y FONT-SIZE CON ESCALADO FLUIDO */
+  padding: clamp(15px, 3vmin, 30px) clamp(40px, 8vmin, 80px);
+  font-size: clamp(1.4rem, 4vmin, 2.5rem);
   font-weight: 700;
   font-family: 'Arial', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
 
   &:hover {
     background-color: #f7f7f7;
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.02);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   }
 
   &:active {
-    transform: translateY(0);
-  }
-
-  @media (max-width: 768px) {
-    padding: 15px 40px;
-    font-size: 1.5rem;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
   }
 }
 
-/* Responsive adjustments */
-@media (max-width: 480px) {
+/* ===== MEDIA QUERIES ESPECÍFICAS ===== */
+
+/* ✅ NUEVO: Específico para tu kiosco 800x1200 (PRIORIDAD ALTA) */
+@media (min-width: 750px) and (max-width: 850px) and (min-height: 1100px) and (max-height: 1300px) {
+  
+  /* ✅ ELIMINAR LIMITACIONES DEL CONTENEDOR PRINCIPAL */
+  .home-container {
+    padding: 0; /* SIN PADDING */
+  }
+  
   .content-wrapper {
-    padding: 20px 15px;
+    max-width: none; /* ✅ SIN LÍMITE DE ANCHO */
+    padding: 0; /* ✅ SIN PADDING */
+    width: 100vw; /* TODO EL ANCHO */
   }
-
+  
+  /* ✅ HACER QUE LA SECCIÓN DE IMAGEN USE TODO EL ANCHO */
+  .hero-image-section {
+    width: 100vw; /* TODO EL ANCHO DE LA PANTALLA */
+    padding: 0; /* SIN PADDING */
+  }
+  
+  .food-showcase {
+    width: 100vw; /* TODO EL ANCHO DE LA PANTALLA */
+  }
+  
+  .hero-food-image {
+    width: 100vw; /* ✅ TODO EL ANCHO DE LA PANTALLA */
+    max-width: 100vw;
+    max-height: 75vh; /* ✅ MÁS ALTURA PARA LA IMAGEN (antes 70vh) */
+    object-fit: cover; /* Para que llene completamente */
+  }
+  
+  /* ✅ HEADER: Reducir margin-bottom */
+  .header-section {
+    padding: 2vh 2vw; /* ✅ MENOS padding vertical */
+    margin-bottom: 0; /* ✅ ELIMINAR el margin-bottom de 2vh */
+  }
+  
+  /* ✅ FOOTER: Dar espacio al botón para que no esté pegado */
+  .action-section {
+    padding: 1vh 2vw; /* ✅ MÍNIMO PADDING */
+    margin-top: 2vh; /* ✅ AÑADIR margen superior para separar del imagen */
+    margin-bottom: 0; /* ✅ SIN margen inferior */
+  }
+  
+  /* ✅ TÍTULOS CON JERARQUÍA CORRECTA */
   .brand-title {
-    font-size: 2.5rem;
+    font-size: clamp(2.5rem, 8vmin, 4rem); /* ✅ MÁS PEQUEÑO que welcome-title */
+    margin-bottom: 1vh; /* ✅ MENOS espacio entre títulos */
   }
-
+  
   .welcome-title {
-    font-size: 2rem;
+    font-size: clamp(5rem, 12vmin, 7rem); /* ✅ MÁS GRANDE que brand-title */
+    margin-bottom: 0; /* ✅ SIN MARGEN INFERIOR */
   }
-
+  
+  /* ✅ BOTÓN MÁS PEQUEÑO Y COMPACTO */
   .order-button {
-    padding: 12px 30px;
-    font-size: 1.3rem;
+    padding: clamp(12px, 2.5vmin, 20px) clamp(30px, 6vmin, 60px); /* ✅ MÁS PEQUEÑO */
+    font-size: clamp(1.2rem, 3vmin, 1.8rem); /* ✅ MÁS PEQUEÑO */
+    margin: 0; /* ✅ SIN MÁRGENES EXTRAS del botón */
   }
 }
+/* Kiosco 32" Optimizado (1200px - 1400px) */
+@media (min-width: 1200px) and (max-width: 1400px) {
+  .brand-title {
+    font-size: clamp(4rem, 7vmin, 6rem);
+  }
+  
+  .welcome-title {
+    font-size: clamp(3rem, 5.5vmin, 5rem);
+  }
+  
+  .hero-food-image {
+    max-width: 80%; /* ✅ ANCHO MODERADO en pantallas anchas */
+    max-height: 70vh;
+  }
+  
+  .order-button {
+    padding: clamp(18px, 2.8vmin, 28px) clamp(50px, 7.5vmin, 75px);
+    font-size: clamp(1.6rem, 3.8vmin, 2.3rem);
+  }
+}
+
+/* Kiosco 32" Optimizado (1200px - 1400px) */
+@media (min-width: 1200px) and (max-width: 1400px) {
+  .brand-title {
+    font-size: clamp(4rem, 7vmin, 6rem);
+  }
+  
+  .welcome-title {
+    font-size: clamp(3rem, 5.5vmin, 5rem);
+  }
+  
+  .hero-food-image {
+    max-width: 80%; /* ✅ ANCHO MODERADO en pantallas anchas */
+    max-height: 70vh;
+  }
+  
+  .order-button {
+    padding: clamp(18px, 2.8vmin, 28px) clamp(50px, 7.5vmin, 75px);
+    font-size: clamp(1.6rem, 3.8vmin, 2.3rem);
+  }
+}
+
+/* Pantallas grandes (> 1400px) */
+@media (min-width: 1400px) {
+  .content-wrapper {
+    max-width: 1200px; /* Mantén el contenido centrado */
+  }
+  
+  .brand-title {
+    font-size: 6rem; /* Tamaño fijo para pantallas muy grandes */
+  }
+  
+  .welcome-title {
+    font-size: 5rem;
+  }
+  
+  .hero-food-image {
+    max-width: 75%; /* ✅ ANCHO RESTRINGIDO en pantallas muy grandes */
+    max-height: 70vh;
+  }
+  
+  .order-button {
+    padding: 25px 70px;
+    font-size: 2.2rem;
+  }
+}
+
+/* Tablets en landscape (768px - 1199px) */
+@media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
+  .brand-title {
+    font-size: clamp(3.5rem, 9vmin, 5rem);
+  }
+  
+  .welcome-title {
+    font-size: clamp(2.8rem, 7vmin, 4rem);
+  }
+  
+  .hero-food-image {
+    max-width: 85%; /* ✅ ANCHO NORMAL en tablets landscape */
+    max-height: 60vh;
+  }
+  
+  .order-button {
+    padding: clamp(12px, 2.5vmin, 22px) clamp(35px, 7vmin, 65px);
+    font-size: clamp(1.3rem, 3.5vmin, 2rem);
+  }
+}
+
+/* Tablets portrait y móviles (< 768px) */
+@media (max-width: 767px) {
+  .content-wrapper {
+    padding: 2vh 4vw;
+  }
+  
+  .brand-title {
+    font-size: clamp(2.5rem, 10vmin, 4rem);
+  }
+  
+  .welcome-title {
+    font-size: clamp(2rem, 8vmin, 3.5rem);
+  }
+  
+  .hero-food-image {
+    max-width: 92%; /* ✅ ANCHO AMPLIO en móviles/tablets pequeños */
+    max-height: 55vh;
+  }
+  
+  .order-button {
+    padding: clamp(10px, 2.2vmin, 18px) clamp(25px, 6vmin, 50px);
+    font-size: clamp(1.1rem, 3.2vmin, 1.8rem);
+  }
+}
+
+/* Móviles pequeños (< 480px) */
+@media (max-width: 479px) {
+  .content-wrapper {
+    padding: 1.5vh 3vw;
+  }
+  
+  .hero-food-image {
+    max-width: 95%; /* ✅ CASI TODO EL ANCHO en móviles pequeños */
+    max-height: 50vh;
+  }
+  
+  .order-button {
+    padding: clamp(8px, 2vmin, 15px) clamp(20px, 5.5vmin, 45px);
+    font-size: clamp(1rem, 3vmin, 1.6rem);
+  }
+}
+
+/* ===== ESTILOS LEGACY (comentados para limpiar) ===== */
+/*
+.container,
+.header__container,
+.header__title,
+.header__welcome,
+.header__start,
+.header__button,
+.footer__images {
+  // Mantén estos estilos si los necesitas para otras partes del componente
+}
+*/
