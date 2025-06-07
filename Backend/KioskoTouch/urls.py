@@ -2,12 +2,17 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse
 from django.http import HttpResponse, Http404
 import os
 
 def serve_angular_app(request):
     """Servir la aplicación Angular desde static files"""
     try:
+        # NO servir Angular para rutas que empiecen con static/, media/, o admin/
+        if request.path.startswith('/static/') or request.path.startswith('/media/') or request.path.startswith('/admin/'):
+            raise Http404("Not found")
+            
         # Buscar index.html en staticfiles
         index_path = os.path.join(settings.STATIC_ROOT, 'index.html')
         
@@ -30,6 +35,8 @@ urlpatterns = [
     path('api/ventas/', include('ventas.urls')),               
     path('api/marketing/', include('marketing.urls')),        
     path('api/establecimientos/', include('establecimientos.urls')), 
+
+
 ]
 
 # AGREGAR MEDIA/STATIC ANTES del catch-all
@@ -38,7 +45,7 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# CATCH-ALL SOLO para rutas específicas (NO static/media)
+# CATCH-ALL AL FINAL (después de media/static)
 urlpatterns += [
-    re_path(r'^(?!static|media|admin).*$', serve_angular_app, name='angular_app'),
+   # re_path(r'^.*$', serve_angular_app, name='angular_app'),
 ]
