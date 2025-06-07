@@ -1,25 +1,59 @@
+import { Component, signal, computed, inject } from '@angular/core';
+import { Router} from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { TipoEntrega } from '../../models/pedido.model'; 
+import { PedidoService } from '../../services/pedido.service';
 
 @Component({
-  standalone: true,
   selector: 'app-tipo-pedido',
-  imports: [CommonModule, FormsModule],
   templateUrl: './tipo-pedido.component.html',
-  styleUrl: './tipo-pedido.component.scss'
+  styleUrls: ['./tipo-pedido.component.scss'],
+  standalone: true,
+  imports: [CommonModule, FormsModule]
 })
 export class TipoPedidoComponent {
-  seleccion: string | null = null;
-  //seleccion: string = '';
+  
+  seleccionLocal = signal<TipoEntrega | ''>('');
 
-  constructor(private router: Router) {}
+  router = inject(Router);
+  PedidoService = inject(PedidoService);
 
-  continuar() {
-    if (this.seleccion) {
-      // Aquí podrías guardar la elección en un servicio si quieres usarla después
-      this.router.navigate(['/cliente/menu']); // Redirige donde quieras
-    }
+  puedeContinuar = computed(() => this.seleccionLocal() !== '');
+
+  tipoEntregaActual = this.PedidoService.tipoEntrega;
+  resumenPedido = this.PedidoService.resumenPedido;
+
+  constructor(
+  ) {}
+
+  seleccionar(tipo: TipoEntrega){
+    this.seleccionLocal.set(tipo);
   }
+
+continuar(): void {
+  const tipo = this.seleccionLocal();
+  if (tipo) {
+    console.log('🚀 Tipo seleccionado:', tipo);
+    console.log('🧭 URL actual antes de navegar:', this.router.url);
+    
+    this.PedidoService.setTipoEntrega(tipo);
+    
+    this.router.navigate(['/cliente/menu']).then(success => {
+      console.log('✅ Navegación result:', success);
+      console.log('🧭 URL después de navegar:', this.router.url);
+      
+      // ✅ NUEVO: Verificar después de un momento
+      setTimeout(() => {
+        console.log('🧭 URL después de 500ms:', this.router.url);
+        console.log('🧭 Router state:', this.router.routerState.snapshot);
+      }, 500);
+      
+    }).catch(error => {
+      console.error('💥 Error de navegación:', error);
+    });
+  }
+}
+
+
 }

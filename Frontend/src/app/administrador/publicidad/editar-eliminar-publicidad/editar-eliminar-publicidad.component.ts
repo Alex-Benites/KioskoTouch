@@ -19,6 +19,8 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
 import { PublicidadService } from '../../../services/publicidad.service';
 import { Publicidad, ApiError } from '../../../models/marketing.model';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'app-editar-eliminar-publicidad',
   standalone: true,
@@ -210,7 +212,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   getMediaUrl(publicidad: Publicidad): string {
     if (publicidad.media_url) {
       if (publicidad.media_url.startsWith('/media/')) {
-        return `http://localhost:8000${publicidad.media_url}`;
+        return `${environment.baseUrl}${publicidad.media_url}`;
       }
       return publicidad.media_url;
     }

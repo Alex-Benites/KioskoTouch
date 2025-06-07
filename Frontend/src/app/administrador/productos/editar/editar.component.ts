@@ -6,6 +6,7 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model'; 
 import { CatalogoService } from '../../../services/catalogo.service'; 
 import { Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-editar',
@@ -56,6 +57,6 @@ export class EditarComponent implements OnInit {
   
   getFullImageUrl(imagenUrl: string | undefined): string {
     if (!imagenUrl) return '';
-    return `http://127.0.0.1:8000${imagenUrl}`;
+    return `${environment.baseUrl}${imagenUrl}`;
   }
 }

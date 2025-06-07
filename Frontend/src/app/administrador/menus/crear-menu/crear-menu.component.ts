@@ -12,9 +12,10 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
 import { CatalogoService } from '../../../services/catalogo.service';
 import {  Producto, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregar ActivatedRoute
+import { environment } from '../../../../environments/environment'; 
+
 @Component({
   selector: 'app-crear-menu',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -127,7 +128,7 @@ export class CrearMenuComponent implements OnInit {
 
   getFullImageUrl(imagenUrl: string | undefined): string {
     if (!imagenUrl) return '';
-    return `http://127.0.0.1:8000${imagenUrl}`;
+    return `${environment.baseUrl}${imagenUrl}`;
   }
 
   // Método para cargar menu en modo edición

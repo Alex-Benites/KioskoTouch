@@ -8,6 +8,7 @@ import { Menu, Estado } from '../../../models/catalogo.model';
 import { CatalogoService } from '../../../services/catalogo.service';
 import { Router } from '@angular/router';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { environment } from '../../../../environments/environment'; 
 
 @Component({
   selector: 'app-editar-eliminar-menu',
@@ -85,7 +86,7 @@ export class EditarEliminarMenuComponent implements OnInit {
 
   getFullImageUrl(imagenUrl: string | undefined): string {
     if (!imagenUrl) return '';
-    return `http://127.0.0.1:8000${imagenUrl}`;
+    return `${environment.baseUrl}${imagenUrl}`;
   }
   abrirDialogoEliminar(menu: any): void {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {

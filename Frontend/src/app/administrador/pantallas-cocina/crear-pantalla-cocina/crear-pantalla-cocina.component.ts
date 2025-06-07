@@ -19,7 +19,6 @@ import { CatalogoService } from '../../../services/catalogo.service';
   selector: 'app-crear-pantalla-cocina',
   templateUrl: './crear-pantalla-cocina.component.html',
   styleUrls: ['./crear-pantalla-cocina.component.scss'],
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
