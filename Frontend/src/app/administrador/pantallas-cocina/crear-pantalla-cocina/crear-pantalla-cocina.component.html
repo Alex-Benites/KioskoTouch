@@ -15,8 +15,9 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Estado de la pantalla</mat-label>
         <mat-select formControlName="estadoPantalla">
-          <mat-option value="disponible">Disponible</mat-option>
-          <mat-option value="ocupada">Ocupada</mat-option>
+              <mat-option *ngFor="let estado of estados" [value]="estado.id">
+                {{ estado.nombre | titlecase }}
+              </mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -74,7 +75,7 @@
           <img src="assets/admin/ADMIN_29_1.png" alt="Kiosco" />
           <div class="kiosco-info">
             <p class="kiosco-nombre">{{ kiosco.nombre }}</p>
-            <p class="kiosco-id">{{ kiosco.id }}</p>
+            
           </div>
           <mat-checkbox
             [checked]="kiosco.seleccionado"

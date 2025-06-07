@@ -13,7 +13,7 @@ import { CatalogoService } from '../../../services/catalogo.service';
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router';
 
-@Component({
+@Component({ 
   selector: 'app-crear-producto',
   standalone: true,
   imports: [

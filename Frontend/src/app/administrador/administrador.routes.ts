@@ -200,6 +200,11 @@ export const administradorRoutes: Routes = [
     component: CrearPantallaCocinaComponent,
     canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskopantallascocina'])]
   },
+   {
+    path: 'gestion-pantallas-cocina/crear/:id',
+    component: CrearPantallaCocinaComponent,
+    canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskopantallascocina'])]
+  },
   {
     path: 'gestion-pantallas-cocina/editar-eliminar',
     component: EditarEliminarPantallaCocinaComponent,
@@ -216,6 +221,11 @@ export const administradorRoutes: Routes = [
     path: 'gestion-establecimientos/crear',
     component: CrearEstablecimientoComponent,
     canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskoestablecimientos'])]
+  },
+  {
+    path: 'gestion-establecimientos/crear/:id',
+    component: CrearEstablecimientoComponent,
+    canActivate: [authGuard, permissionGuard(['establecimientos.change_appkioskoestablecimientos'])]
   },
   {
     path: 'gestion-establecimientos/editar-eliminar',
@@ -253,6 +263,11 @@ export const administradorRoutes: Routes = [
   },
   {
     path: 'gestion-kiosko-touch/crear',
+    component: CrearKioskoTouchComponent,
+    canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskokioskostouch'])]
+  },
+  {
+    path: 'gestion-kiosko-touch/crear/:id',
     component: CrearKioskoTouchComponent,
     canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskokioskostouch'])]
   },

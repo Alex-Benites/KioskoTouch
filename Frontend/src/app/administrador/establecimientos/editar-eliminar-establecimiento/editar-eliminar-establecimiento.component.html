@@ -61,15 +61,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let establecimiento of establecimientosFiltrados" [class.inactive-row]="establecimiento.estado === 'inactivo'">
+        <!-- ✅ CORREGIR: Usar estado_nombre en lugar de estado -->
+        <tr *ngFor="let establecimiento of establecimientosFiltrados" 
+            [class.inactive-row]="establecimiento.estado_nombre === 'inactivo'">
           <td>{{ establecimiento.nombre }}</td>
           <td>{{ establecimiento.direccion }}</td>
           <td>{{ establecimiento.ciudad }}</td>
           <td>{{ establecimiento.provincia }}</td>
           <td>{{ establecimiento.telefono }}</td>
           <td>
-            <span class="estado-badge" [class.activo]="establecimiento.estado === 'activo'" [class.inactivo]="establecimiento.estado === 'inactivo'">
-              {{ establecimiento.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+            <!-- ✅ CORREGIR: Usar estado_nombre en lugar de estado -->
+            <span class="estado-badge" 
+                  [class.activo]="establecimiento.estado_nombre === 'activo'" 
+                  [class.inactivo]="establecimiento.estado_nombre === 'inactivo'">
+              {{ establecimiento.estado_nombre === 'activo' ? 'Activo' : 'Inactivo' }}
             </span>
           </td>
           <td class="actions-cell">

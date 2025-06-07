@@ -40,6 +40,8 @@ class AppkioskoImagen(models.Model):
         ('menu', 'Menú'),
         ('publicidad', 'Publicidad'),
         ('categorias', 'Categorías'),
+        ('establecimientos', 'Establecimientos'),
+
     ]
     
     ruta = models.CharField(max_length=500)

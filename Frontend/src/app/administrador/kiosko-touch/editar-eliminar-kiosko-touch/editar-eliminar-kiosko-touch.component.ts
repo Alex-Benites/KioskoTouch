@@ -1,24 +1,33 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { KioskoTouchService } from '../../../services/kiosko-touch.service';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+// ✅ IMPORTAR LA INTERFAZ DESDE EL ARCHIVO SEPARADO:
+import { KioscoTouch } from '../../../models/kiosco-touch-editar.model';
 
-interface KioscoTouch {
-  id: number;
-  nombre: string;
-  token: string;
-  establecimiento: string;
-  estado: 'activo' | 'inactivo';
-}
+// ❌ ELIMINAR LA INTERFAZ LOCAL:
+// interface KioscoTouch {
+//   id: number;
+//   nombre: string;
+//   token: string;
+//   estado: string;
+//   establecimiento?: {
+//     id: number;
+//     nombre: string;
+//   } | null;
+// }
 
 @Component({
   selector: 'app-editar-eliminar-kiosko-touch',
@@ -27,80 +36,74 @@ interface KioscoTouch {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatFormFieldModule,
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
     MatSlideToggleModule,
+    MatInputModule,
     RouterModule,
     FooterAdminComponent,
     HeaderAdminComponent
   ]
 })
 export class EditarEliminarKioskoTouchComponent implements OnInit {
-
-  // Datos de ejemplo
-  kioscos: KioscoTouch[] = [
-    { id: 1, nombre: 'Kiosco Sur', token: '012345678', establecimiento: 'Local 1: Sur', estado: 'activo' },
-    { id: 2, nombre: 'Kiosco Norte', token: '012345678', establecimiento: 'Local 2: Norte', estado: 'activo' },
-    { id: 3, nombre: 'Kiosco Centro', token: '012345678', establecimiento: 'Local 3: Centro', estado: 'inactivo' },
-    { id: 4, nombre: 'Kiosco Plaza', token: '012345678', establecimiento: 'Local 4: Sur', estado: 'inactivo' },
-    { id: 5, nombre: 'Kiosco Mall', token: '012345678', establecimiento: 'Local 5: Centro', estado: 'activo' },
-    { id: 6, nombre: 'Kiosco Express', token: '012345678', establecimiento: 'Local 1: Sur', estado: 'inactivo' },
-    { id: 7, nombre: 'Kiosco Plus', token: '012345678', establecimiento: 'Local 2: Norte', estado: 'activo' }
-  ];
-
+  kioscos: KioscoTouch[] = [];
   kioscosFiltrados: KioscoTouch[] = [];
   filtroEstado: string = '';
   filtroEstablecimiento: string = '';
+  textoBusqueda: string = '';
+  loading = false;
 
-  constructor(private dialog: MatDialog) {}
+  constructor(
+    private dialog: MatDialog,
+    private kioskoTouchService: KioskoTouchService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.kioscosFiltrados = [...this.kioscos];
+    this.cargarKioscos();
+  }
+
+  cargarKioscos(): void {
+    this.loading = true;
+    this.kioskoTouchService.obtenerKioscosTouch().subscribe({
+      next: (data) => {
+        this.kioscos = data;
+        this.kioscosFiltrados = [...data];
+        this.loading = false;
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error al cargar kioscos:', error);
+        alert('Error al cargar kioscos');
+      }
+    });
   }
 
   aplicarFiltros(): void {
     this.kioscosFiltrados = this.kioscos.filter(kiosco => {
       const cumpleFiltroEstado = !this.filtroEstado || kiosco.estado === this.filtroEstado;
-      const cumpleFiltroEstablecimiento = !this.filtroEstablecimiento || kiosco.establecimiento === this.filtroEstablecimiento;
-
-      return cumpleFiltroEstado && cumpleFiltroEstablecimiento;
+      const cumpleFiltroEstablecimiento = !this.filtroEstablecimiento || 
+        (kiosco.establecimiento && kiosco.establecimiento.nombre === this.filtroEstablecimiento);
+      const cumpleBusquedaTexto = !this.textoBusqueda ||
+        kiosco.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
+        (kiosco.establecimiento && kiosco.establecimiento.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()));
+      
+      return cumpleFiltroEstado && cumpleFiltroEstablecimiento && cumpleBusquedaTexto;
     });
-
-    console.log('Filtros aplicados:', {
-      filtroEstado: this.filtroEstado,
-      filtroEstablecimiento: this.filtroEstablecimiento,
-      resultados: this.kioscosFiltrados.length
-    });
-  }
-
-  cambiarEstado(kiosco: KioscoTouch, event: any): void {
-    const nuevoEstado = event.checked ? 'activo' : 'inactivo';
-    kiosco.estado = nuevoEstado;
-
-    console.log(`Estado de ${kiosco.nombre} cambiado a: ${nuevoEstado}`);
-
-    // Aquí puedes agregar la lógica para actualizar en el backend
-    // this.kioscoService.actualizarEstado(kiosco.id, nuevoEstado).subscribe(...);
-
-    this.aplicarFiltros();
   }
 
   editarKiosco(kiosco: KioscoTouch): void {
-    console.log('Editar kiosco:', kiosco);
-
-    // Aquí puedes navegar a la página de edición
-    // this.router.navigate(['/administrador/kiosko-touch/editar', kiosco.id]);
-
-    alert(`Funcionalidad de edición para "${kiosco.nombre}" en desarrollo.`);
+    console.log('🚀 Navegando a editar kiosco:', kiosco.id);
+    this.router.navigate(['/administrador/gestion-kiosko-touch/crear', kiosco.id]);
   }
 
-  // Método que abre el diálogo de confirmación
   abrirDialogoEliminar(kiosco: KioscoTouch): void {
     const dialogData: ConfirmationDialogData = {
-      itemType: 'kiosco', // Cambiar a 'kiosco'
+      itemType: 'kiosco',
     };
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
@@ -111,25 +114,30 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.eliminarKiosco(kiosco);
-      } else {
-        console.log('❌ Eliminación cancelada');
       }
     });
   }
 
-  // Método privado que realiza la eliminación
-  private eliminarKiosco(kiosco: KioscoTouch): void {
-    console.log('🗑️ Eliminando kiosco:', kiosco);
+  eliminarKiosco(kiosco: KioscoTouch): void {
+    this.kioskoTouchService.eliminarKioscoTouch(kiosco.id).subscribe({
+      next: () => {
+        this.kioscos = this.kioscos.filter(k => k.id !== kiosco.id);
+        this.aplicarFiltros();
+        alert(`Kiosco "${kiosco.nombre}" eliminado exitosamente.`);
+      },
+      error: (error) => {
+        console.error('Error al eliminar kiosco:', error);
+        alert('Error al eliminar el kiosco.');
+      }
+    });
+  }
 
-    // Eliminar de la lista local
-    this.kioscos = this.kioscos.filter(k => k.id !== kiosco.id);
+  cambiarEstado(kiosco: KioscoTouch, event: any): void {
+    const nuevoEstado = event.checked ? 'activo' : 'inactivo';
+    kiosco.estado = nuevoEstado;
 
-    // Aquí puedes agregar la lógica para eliminar en el backend
-    // this.kioscoService.eliminar(kiosco.id).subscribe(...);
+    console.log(`Estado de ${kiosco.nombre} cambiado a: ${nuevoEstado}`);
 
-    console.log(`Kiosco "${kiosco.nombre}" eliminado exitosamente.`);
-
-    // Reaplicar filtros para actualizar la vista
     this.aplicarFiltros();
   }
 }

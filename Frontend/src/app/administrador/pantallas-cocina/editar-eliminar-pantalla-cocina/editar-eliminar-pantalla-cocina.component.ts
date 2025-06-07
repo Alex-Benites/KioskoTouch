@@ -1,24 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatDialog } from '@angular/material/dialog'; // Agregar
-import { RouterModule } from '@angular/router';
+import { MatInputModule } from '@angular/material/input';
+import { MatDialog } from '@angular/material/dialog';
+import { RouterModule, Router } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
-import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component'; // Agregar
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { PantallaCocinaService } from '../../../services/pantalla-cocina.service';
+import { PantallaCocina } from '../../../models/pantalla-cocina-editar.model';
 
-interface PantallaCocina {
-  id: number;
-  nombre: string;
-  token: string;
-  kiosco: string;
-  estado: 'activo' | 'inactivo';
-}
 
 @Component({
   selector: 'app-editar-eliminar-pantalla-cocina',
@@ -27,94 +24,111 @@ interface PantallaCocina {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatFormFieldModule,
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
     MatSlideToggleModule,
+    MatInputModule,
     RouterModule,
     FooterAdminComponent,
     HeaderAdminComponent
   ]
 })
 export class EditarEliminarPantallaCocinaComponent implements OnInit {
-
-  // Datos de ejemplo
-  pantallas: PantallaCocina[] = [
-    { id: 1, nombre: 'Cocina Sur', token: '012345678', kiosco: 'Kiosco 1', estado: 'activo' },
-    { id: 2, nombre: 'Cocina Norte', token: '012345678', kiosco: 'Kiosco 2', estado: 'activo' },
-    { id: 3, nombre: 'Cocina Urdesa', token: '012345678', kiosco: 'Kiosco 3', estado: 'inactivo' },
-    { id: 4, nombre: 'Cocina Centro', token: '012345678', kiosco: 'Kiosco 4', estado: 'inactivo' },
-    { id: 5, nombre: 'Cocina Sur', token: '012345678', kiosco: 'Kiosco 1', estado: 'activo' },
-    { id: 6, nombre: 'Cocina Norte', token: '012345678', kiosco: 'Kiosco 2', estado: 'inactivo' },
-    { id: 7, nombre: 'Cocina Urdesa', token: '012345678', kiosco: 'Kiosco 3', estado: 'activo' }
-  ];
-
+  pantallas: PantallaCocina[] = [];
   pantallasFiltradas: PantallaCocina[] = [];
   filtroEstado: string = '';
   filtroKiosco: string = '';
+  textoBusqueda: string = '';
+  loading = false;
 
-  constructor(private dialog: MatDialog) {} // Inyectar MatDialog
+  constructor(
+    private dialog: MatDialog,
+    private pantallaCocinaService: PantallaCocinaService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.pantallasFiltradas = [...this.pantallas];
+    this.cargarPantallas();
+  }
+
+  cargarPantallas(): void {
+    this.loading = true;
+    this.pantallaCocinaService.obtenerPantallasCocina().subscribe({
+      next: (data) => {
+        this.pantallas = data;
+        this.pantallasFiltradas = [...data];
+        this.loading = false;
+        console.log('✅ Pantallas cargadas:', this.pantallas.length);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('❌ Error al cargar pantallas:', error);
+        alert('Error al cargar pantallas');
+        this.pantallas = [];
+        this.pantallasFiltradas = [];
+      }
+    });
   }
 
   aplicarFiltros(): void {
     this.pantallasFiltradas = this.pantallas.filter(pantalla => {
       const cumpleFiltroEstado = !this.filtroEstado || pantalla.estado === this.filtroEstado;
-
-      // Corregir el filtro de kiosco
-      let cumpleFiltroKiosco = true;
-      if (this.filtroKiosco) {
-        // Mapear los valores del select a los textos reales en los datos
-        const mapeoKioscos: { [key: string]: string } = {
-          'kiosco1': 'Kiosco 1',
-          'kiosco2': 'Kiosco 2',
-          'kiosco3': 'Kiosco 3',
-          'kiosco4': 'Kiosco 4'
-        };
-
-        const kioscoABuscar = mapeoKioscos[this.filtroKiosco] || this.filtroKiosco;
-        cumpleFiltroKiosco = pantalla.kiosco === kioscoABuscar;
-      }
-
-      return cumpleFiltroEstado && cumpleFiltroKiosco;
+      const cumpleFiltroKiosco = !this.filtroKiosco || 
+        (pantalla.kiosco_touch && pantalla.kiosco_touch.nombre === this.filtroKiosco);
+      const cumpleBusquedaTexto = !this.textoBusqueda ||
+        pantalla.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
+        (pantalla.kiosco_touch && pantalla.kiosco_touch.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()));
+      
+      return cumpleFiltroEstado && cumpleFiltroKiosco && cumpleBusquedaTexto;
     });
-
-    console.log('Filtros aplicados:', {
-      filtroEstado: this.filtroEstado,
-      filtroKiosco: this.filtroKiosco,
-      resultados: this.pantallasFiltradas.length
-    });
+    
+    console.log(`🔍 Filtros aplicados: ${this.pantallasFiltradas.length} de ${this.pantallas.length} pantallas`);
   }
 
   cambiarEstado(pantalla: PantallaCocina, event: any): void {
     const nuevoEstado = event.checked ? 'activo' : 'inactivo';
+    const estadoAnterior = pantalla.estado;
+    
+    // Actualizar localmente primero
     pantalla.estado = nuevoEstado;
 
     console.log(`Estado de ${pantalla.nombre} cambiado a: ${nuevoEstado}`);
 
-    // Aquí puedes agregar la lógica para actualizar en el backend
-    // this.pantallaService.actualizarEstado(pantalla.id, nuevoEstado).subscribe(...);
+    // ✅ ACTUALIZAR EN EL BACKEND:
+    const datosActualizacion = {
+      nombre: pantalla.nombre,
+      token: pantalla.token,
+      estado: nuevoEstado,
+      kiosco_touch_asociado: pantalla.kiosco_touch ? pantalla.kiosco_touch.id : null
+    };
 
-    this.aplicarFiltros();
+    this.pantallaCocinaService.actualizarPantallaCocina(pantalla.id, datosActualizacion).subscribe({
+      next: () => {
+        console.log('✅ Estado actualizado en el backend');
+        this.aplicarFiltros();
+      },
+      error: (error) => {
+        console.error('❌ Error actualizando estado:', error);
+        // Revertir el cambio local si falla
+        pantalla.estado = estadoAnterior;
+        event.source.checked = estadoAnterior === 'activo';
+        alert('Error al actualizar el estado de la pantalla');
+      }
+    });
   }
 
   editarPantalla(pantalla: PantallaCocina): void {
-    console.log('Editar pantalla:', pantalla);
-
-    // Aquí puedes navegar a la página de edición
-    // this.router.navigate(['/administrador/pantallas-cocina/editar', pantalla.id]);
-
-    alert(`Funcionalidad de edición para "${pantalla.nombre}" en desarrollo.`);
+    console.log('🚀 Navegando a editar pantalla:', pantalla.id);
+    this.router.navigate(['/administrador/gestion-pantallas-cocina/crear', pantalla.id]);
   }
 
-  // Método que abre el diálogo de confirmación
   abrirDialogoEliminar(pantalla: PantallaCocina): void {
     const dialogData: ConfirmationDialogData = {
-      itemType: 'pantalla', // Cambiar de 'usuario' a 'pantalla'
+      itemType: 'pantalla',
     };
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
@@ -125,25 +139,29 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.eliminarPantalla(pantalla);
-      } else {
-        console.log('❌ Eliminación cancelada');
       }
     });
   }
 
-  // Método privado que realiza la eliminación
-  private eliminarPantalla(pantalla: PantallaCocina): void {
-    console.log('🗑️ Eliminando pantalla:', pantalla);
+  eliminarPantalla(pantalla: PantallaCocina): void {
+    this.pantallaCocinaService.eliminarPantallaCocina(pantalla.id).subscribe({
+      next: () => {
+        this.pantallas = this.pantallas.filter(p => p.id !== pantalla.id);
+        this.aplicarFiltros();
+        alert(`Pantalla "${pantalla.nombre}" eliminada exitosamente.`);
+      },
+      error: (error) => {
+        console.error('❌ Error al eliminar pantalla:', error);
+        alert('Error al eliminar la pantalla.');
+      }
+    });
+  }
 
-    // Eliminar de la lista local
-    this.pantallas = this.pantallas.filter(p => p.id !== pantalla.id);
-
-    // Aquí puedes agregar la lógica para eliminar en el backend
-    // this.pantallaService.eliminar(pantalla.id).subscribe(...);
-
-    console.log(`Pantalla "${pantalla.nombre}" eliminada exitosamente.`);
-
-    // Reaplicar filtros para actualizar la vista
-    this.aplicarFiltros();
+  limpiarFiltros(): void {
+    this.filtroEstado = '';
+    this.filtroKiosco = '';
+    this.textoBusqueda = '';
+    this.pantallasFiltradas = [...this.pantallas];
+    console.log('🧹 Filtros limpiados');
   }
 }

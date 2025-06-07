@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -7,11 +7,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
+import { PantallaCocinaService } from '../../../services/pantalla-cocina.service';
+import { KioskoTouchService } from '../../../services/kiosko-touch.service';
+import { CatalogoService } from '../../../services/catalogo.service';
 
 @Component({
   selector: 'app-crear-pantalla-cocina',
@@ -33,26 +35,96 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     HeaderAdminComponent
   ]
 })
-export class CrearPantallaCocinaComponent {
+export class CrearPantallaCocinaComponent implements OnInit {
   form: FormGroup;
-  kioscos = [
-    { nombre: 'Kiosco 1', id: 'ID.0001', imagen: 'assets/admin/ADMIN_29_1.png', seleccionado: false },
-    { nombre: 'Kiosco 2', id: 'ID.0002', imagen: 'assets/admin/ADMIN_29_1.png', seleccionado: false },
-    { nombre: 'Kiosco 3', id: 'ID.0003', imagen: 'assets/admin/ADMIN_29_1.png', seleccionado: false },
-    { nombre: 'Kiosco 4', id: 'ID.0004', imagen: 'assets/admin/ADMIN_29_1.png', seleccionado: false },
-    { nombre: 'Kiosco 5', id: 'ID.0005', imagen: 'assets/admin/ADMIN_29_1.png', seleccionado: false }
-  ];
-
+  kioscos: any[] = [];
   kioscosAsociados: any[] = [];
+  loading = false;
+  estados: { id: number, nombre: string }[] = [];
+  pantallaId: number | null = null;
+  isEditMode = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute,
+    private pantallaCocinaService: PantallaCocinaService,
+    private kioskoTouchService: KioskoTouchService,
+    private catalogoService: CatalogoService
+  ) {
     this.form = this.fb.group({
-      nombrePantalla: [''],
-      estadoPantalla: ['disponible'],
-      token: [''],
+      nombrePantalla: ['', [Validators.required]],
+      estadoPantalla: [''],
+      token: ['', [Validators.required]],
       kioscoAsociado: [''],
       buscarCiudad: [''],
       buscarEstablecimiento: ['']
+    });
+  }
+
+  ngOnInit(): void {
+    this.cargarEstados();
+    this.cargarKioscos();
+    this.generarToken();
+
+    // Detectar modo edición
+    this.pantallaId = Number(this.route.snapshot.paramMap.get('id'));
+    this.isEditMode = !!this.pantallaId && !isNaN(this.pantallaId);
+
+    if (this.isEditMode) {
+      this.cargarPantallaParaEditar();
+    }
+  }
+
+  cargarEstados(): void {
+    this.catalogoService.getEstados().subscribe({
+      next: (estados) => {
+        this.estados = estados;
+      },
+      error: (error) => {
+        console.error('Error cargando estados:', error);
+      }
+    });
+  }
+
+  cargarKioscos(): void {
+    this.loading = true;
+    this.kioskoTouchService.obtenerKioscosTouch().subscribe({
+      next: (data) => {
+        this.kioscos = data.map(k => ({ ...k, seleccionado: false }));
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando kioscos:', error);
+        alert('Error al cargar kioscos');
+        this.loading = false;
+      }
+    });
+  }
+
+  cargarPantallaParaEditar(): void {
+    if (!this.pantallaId) return;
+    this.pantallaCocinaService.obtenerPantallaCoci‌naPorId(this.pantallaId).subscribe({
+      next: (pantalla) => {
+        this.form.patchValue({
+          nombrePantalla: pantalla.nombre,
+          token: pantalla.token,
+          estadoPantalla: pantalla.estado_id
+        });
+
+        // Si hay kiosco asociado, agregarlo a la lista
+        if (pantalla.kiosco_touch) {
+          const kiosco = this.kioscos.find(k => k.id === pantalla.kiosco_touch_id);
+          if (kiosco) {
+            this.kioscosAsociados = [{ ...kiosco, seleccionado: false }];
+            this.actualizarCampoKioscoAsociado();
+          }
+        }
+      },
+      error: (error) => {
+        alert('Error al cargar la pantalla');
+        this.router.navigate(['/administrador/pantallas-cocina']);
+      }
     });
   }
 
@@ -61,12 +133,10 @@ export class CrearPantallaCocinaComponent {
     this.form.get('token')?.setValue(token);
   }
 
-  // Método para manejar la selección de checkboxes
   onKioscoSeleccionado(kiosco: any, event: any): void {
     kiosco.seleccionado = event.checked;
   }
 
-  // Método para agregar kioscos seleccionados
   agregarKiosco(): void {
     const kioscosSeleccionados = this.kioscos.filter(k => k.seleccionado);
 
@@ -75,49 +145,37 @@ export class CrearPantallaCocinaComponent {
       return;
     }
 
-    const kioscosYaAsociados: string[] = [];
-    const kioscosNuevos: any[] = [];
-
-    kioscosSeleccionados.forEach(kiosco => {
-      // Verificar si el kiosco ya está asociado
-      const yaAsociado = this.kioscosAsociados.find(ka => ka.id === kiosco.id);
-
-      if (yaAsociado) {
-        kioscosYaAsociados.push(kiosco.nombre);
-      } else {
-        kioscosNuevos.push(kiosco);
-      }
-    });
-
-    // Mostrar mensaje si algunos kioscos ya estaban asociados
-    if (kioscosYaAsociados.length > 0) {
-      const mensaje = kioscosYaAsociados.length === 1
-        ? `El kiosco "${kioscosYaAsociados[0]}" ya ha sido asociado.`
-        : `Los kioscos "${kioscosYaAsociados.join('", "')}" ya han sido asociados.`;
-
-      alert(mensaje);
+    // Solo permitir un kiosco asociado (según tu modelo original)
+    if (kioscosSeleccionados.length > 1) {
+      alert('Solo se puede asociar un kiosco por pantalla.');
+      return;
     }
 
-    // Agregar solo los kioscos nuevos
-    if (kioscosNuevos.length > 0) {
-      this.kioscosAsociados.push(...kioscosNuevos);
-      this.actualizarCampoKioscoAsociado();
+    const kioscoYaAsociado = this.kioscosAsociados.find(ka => ka.id === kioscosSeleccionados[0].id);
 
-      // Limpiar selecciones
-      this.kioscos.forEach(k => k.seleccionado = false);
+    if (kioscoYaAsociado) {
+      alert(`El kiosco "${kioscosSeleccionados[0].nombre}" ya ha sido asociado.`);
+      return;
     }
+
+    this.kioscosAsociados = [kioscosSeleccionados[0]];
+    this.actualizarCampoKioscoAsociado();
+    this.kioscos.forEach(k => k.seleccionado = false);
   }
 
-  // Método para actualizar el campo de texto con los kioscos asociados
   actualizarCampoKioscoAsociado(): void {
     const nombresKioscos = this.kioscosAsociados.map(k => k.nombre).join(', ');
     this.form.get('kioscoAsociado')?.setValue(nombresKioscos);
   }
 
-  // Método para eliminar todos los kioscos asociados
   eliminarKiosco(): void {
     this.kioscosAsociados = [];
     this.form.get('kioscoAsociado')?.setValue('');
+  }
+
+  removerKioscoAsociado(kioscoARemover: any): void {
+    this.kioscosAsociados = this.kioscosAsociados.filter(k => k.id !== kioscoARemover.id);
+    this.actualizarCampoKioscoAsociado();
   }
 
   copiarToken(): void {
@@ -133,39 +191,57 @@ export class CrearPantallaCocinaComponent {
     }
   }
 
-  // Método para remover un kiosco específico
-  removerKioscoAsociado(kioscoARemover: any): void {
-    this.kioscosAsociados = this.kioscosAsociados.filter(k => k.id !== kioscoARemover.id);
-    this.actualizarCampoKioscoAsociado();
-  }
-
   borrarToken(): void {
     this.form.get('token')?.setValue('');
     console.log('Token borrado');
   }
 
   crearPantalla(): void {
-    // Validar que el nombre no esté vacío
-    if (!this.form.get('nombrePantalla')?.value?.trim()) {
-      alert('El nombre de la pantalla es requerido.');
+    if (this.form.invalid) {
+      alert('Por favor, complete todos los campos requeridos.');
       return;
     }
 
-    // Validar que haya al menos un kiosco asociado
     if (this.kioscosAsociados.length === 0) {
-      alert('Debe asociar al menos un kiosco a la pantalla.');
+      alert('Debe asociar un kiosco a la pantalla.');
       return;
     }
 
-    // Si pasa todas las validaciones, proceder con la creación
-    const formData = {
-      nombrePantalla: this.form.get('nombrePantalla')?.value,
-      estadoPantalla: this.form.get('estadoPantalla')?.value,
+    const pantallaData = {
+      nombre: this.form.get('nombrePantalla')?.value,
       token: this.form.get('token')?.value,
-      kioscosAsociados: this.kioscosAsociados
+      estado: this.form.get('estadoPantalla')?.value,
+      kiosco_touch_asociado: this.kioscosAsociados[0].id
     };
 
-    console.log('Pantalla creada:', formData);
-    alert('Pantalla creada exitosamente!');
+    this.loading = true;
+
+    if (this.isEditMode && this.pantallaId) {
+      this.pantallaCocinaService.actualizarPantallaCocina(this.pantallaId, pantallaData).subscribe({
+        next: () => {
+          alert('Pantalla de Cocina actualizada exitosamente!');
+          this.router.navigate(['/administrador/pantallas-cocina']);
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error actualizando pantalla:', error);
+          alert('Error al actualizar la pantalla: ' + (error.error?.error || 'Error desconocido'));
+          this.loading = false;
+        }
+      });
+    } else {
+      this.pantallaCocinaService.crearPantallaCocina(pantallaData).subscribe({
+        next: () => {
+          alert('Pantalla de Cocina creada exitosamente!');
+          this.router.navigate(['/administrador/pantallas-cocina']);
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error creando pantalla:', error);
+          alert('Error al crear la pantalla: ' + (error.error?.error || 'Error desconocido'));
+          this.loading = false;
+        }
+      });
+    }
   }
 }

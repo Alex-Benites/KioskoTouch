@@ -47,10 +47,10 @@
         <tr *ngFor="let pantalla of pantallasFiltradas" [class.inactive-row]="pantalla.estado === 'inactivo'">
           <td>{{ pantalla.nombre }}</td>
           <td>{{ pantalla.token }}</td>
-          <td>{{ pantalla.kiosco }}</td>
+          <td>{{ pantalla.kiosco_touch?.nombre || 'Sin kiosco' }}</td>
           <td>
             <span class="estado-badge" [class.activo]="pantalla.estado === 'activo'" [class.inactivo]="pantalla.estado === 'inactivo'">
-              {{ pantalla.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+              <td>{{ pantalla.kiosco_touch?.nombre || 'Sin kiosco' }}</td>
             </span>
           </td>
           <td class="actions-cell">

@@ -12,17 +12,9 @@ import { RouterModule } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
-
-// Actualizar la interface para ser más realista
-interface Establecimiento {
-  id: number;
-  nombre: string;
-  direccion: string; // Dirección específica
-  provincia: string; // Para filtros
-  ciudad: string; // Información adicional
-  telefono: string;
-  estado: 'activo' | 'inactivo';
-}
+import { EstablecimientosService } from '../../../services/establecimientos.service';
+import { Establecimiento } from '../../../models/establecimiento.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-editar-eliminar-establecimiento',
@@ -44,117 +36,59 @@ interface Establecimiento {
   ]
 })
 export class EditarEliminarEstablecimientoComponent implements OnInit {
-
-  // Datos de ejemplo con más establecimientos
-  establecimientos: Establecimiento[] = [
-    {
-      id: 1,
-      nombre: 'Burguer King Centro',
-      direccion: '9 de Octubre y Malecón 2000',
-      provincia: 'Guayas',
-      ciudad: 'Guayaquil',
-      telefono: '0995842167',
-      estado: 'activo'
-    },
-    {
-      id: 2,
-      nombre: 'KFC Norte',
-      direccion: 'Av. La Prensa y Eloy Alfaro',
-      provincia: 'Pichincha',
-      ciudad: 'Quito',
-      telefono: '0987231940',
-      estado: 'activo'
-    },
-    {
-      id: 3,
-      nombre: 'Pizza Hut Mall',
-      direccion: 'Centro Comercial Portoviejo, Local 201',
-      provincia: 'Manabí',
-      ciudad: 'Portoviejo',
-      telefono: '0961023589',
-      estado: 'inactivo'
-    },
-    {
-      id: 4,
-      nombre: 'Subway Plaza',
-      direccion: 'Av. Las Américas y 25 de Julio',
-      provincia: 'Esmeraldas',
-      ciudad: 'Esmeraldas',
-      telefono: '0957684321',
-      estado: 'inactivo'
-    },
-    {
-      id: 5,
-      nombre: 'Dominos Sur',
-      direccion: 'Av. Pedro Menéndez Gilbert y Francisco de Orellana',
-      provincia: 'Guayas',
-      ciudad: 'Guayaquil',
-      telefono: '0974519038',
-      estado: 'activo'
-    },
-    {
-      id: 6,
-      nombre: 'Telepizza Centro',
-      direccion: 'Av. Amazonas y Jorge Washington',
-      provincia: 'Pichincha',
-      ciudad: 'Quito',
-      telefono: '0942037816',
-      estado: 'inactivo'
-    },
-    {
-      id: 7,
-      nombre: 'Papa Johns Mall',
-      direccion: 'Centro Comercial El Bosque, Local 45',
-      provincia: 'Manabí',
-      ciudad: 'Portoviejo',
-      telefono: '0998376204',
-      estado: 'activo'
-    }
-  ];
-
+  establecimientos: Establecimiento[] = [];
   establecimientosFiltrados: Establecimiento[] = [];
   filtroEstado: string = '';
   filtroProvincia: string = '';
   textoBusqueda: string = '';
+  loading = false; 
 
-  constructor(private dialog: MatDialog) {}
+  constructor(
+    private dialog: MatDialog,
+    private establecimientosService: EstablecimientosService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.establecimientosFiltrados = [...this.establecimientos];
+    this.cargarEstablecimientos();
   }
 
-  // Método de filtros actualizado
+
+  editarEstablecimiento(establecimiento: Establecimiento): void {
+    this.router.navigate(['/administrador/gestion-establecimientos/crear', establecimiento.id]);
+  }
+
+  cargarEstablecimientos(): void {
+    this.loading = true;
+    this.establecimientosService.obtenerEstablecimientos().subscribe({
+      next: (data) => {
+        this.establecimientos = data;
+        this.establecimientosFiltrados = [...data];
+        this.loading = false;
+      },
+      error: (error) => {
+        this.loading = false;
+        alert('Error al cargar establecimientos');
+      }
+    });
+  }
+
   aplicarFiltros(): void {
     this.establecimientosFiltrados = this.establecimientos.filter(establecimiento => {
-      const cumpleFiltroEstado = !this.filtroEstado || establecimiento.estado === this.filtroEstado;
+      // ✅ MEJOR: Usar estado_nombre si el backend lo devuelve
+      const cumpleFiltroEstado = !this.filtroEstado || 
+        (establecimiento.estado_nombre && establecimiento.estado_nombre === this.filtroEstado);
+      
       const cumpleFiltroProvincia = !this.filtroProvincia || establecimiento.provincia === this.filtroProvincia;
-
-      // Búsqueda por texto en NOMBRE o CIUDAD (ya no en dirección)
+      
       const cumpleBusquedaTexto = !this.textoBusqueda ||
         establecimiento.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
         establecimiento.ciudad.toLowerCase().includes(this.textoBusqueda.toLowerCase());
-
+        
       return cumpleFiltroEstado && cumpleFiltroProvincia && cumpleBusquedaTexto;
     });
-
-    console.log('Filtros aplicados:', {
-      filtroEstado: this.filtroEstado,
-      filtroProvincia: this.filtroProvincia,
-      textoBusqueda: this.textoBusqueda,
-      resultados: this.establecimientosFiltrados.length
-    });
   }
 
-  editarEstablecimiento(establecimiento: Establecimiento): void {
-    console.log('Editar establecimiento:', establecimiento);
-
-    // Aquí puedes navegar a la página de edición
-    // this.router.navigate(['/administrador/establecimientos/editar', establecimiento.id]);
-
-    alert(`Funcionalidad de edición para "${establecimiento.nombre}" en desarrollo.`);
-  }
-
-  // Método que abre el diálogo de confirmación
   abrirDialogoEliminar(establecimiento: Establecimiento): void {
     const dialogData: ConfirmationDialogData = {
       itemType: 'establecimiento',
@@ -168,25 +102,20 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.eliminarEstablecimiento(establecimiento);
-      } else {
-        console.log('❌ Eliminación cancelada');
       }
     });
   }
 
-  // Método privado que realiza la eliminación
-  private eliminarEstablecimiento(establecimiento: Establecimiento): void {
-    console.log('🗑️ Eliminando establecimiento:', establecimiento);
-
-    // Eliminar de la lista local
-    this.establecimientos = this.establecimientos.filter(e => e.id !== establecimiento.id);
-
-    // Aquí puedes agregar la lógica para eliminar en el backend
-    // this.establecimientoService.eliminar(establecimiento.id).subscribe(...);
-
-    console.log(`Establecimiento "${establecimiento.nombre}" eliminado exitosamente.`);
-
-    // Reaplicar filtros para actualizar la vista
-    this.aplicarFiltros();
+  eliminarEstablecimiento(establecimiento: Establecimiento): void {
+    this.establecimientosService.eliminarEstablecimiento(establecimiento.id!).subscribe({
+      next: () => {
+        this.establecimientos = this.establecimientos.filter(e => e.id !== establecimiento.id);
+        this.aplicarFiltros();
+        alert(`Establecimiento "${establecimiento.nombre}" eliminado exitosamente.`);
+      },
+      error: () => {
+        alert('Error al eliminar el establecimiento.');
+      }
+    });
   }
 }

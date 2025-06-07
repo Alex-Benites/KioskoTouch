@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Component,OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -11,7 +11,13 @@ import { RouterModule } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
+import { Router } from '@angular/router';
+import { EstablecimientosService } from '../../../services/establecimientos.service';
+import { KioskoTouchService } from '../../../services/kiosko-touch.service';
+import { Establecimiento } from '../../../models/establecimiento.model';
+import { CatalogoService } from '../../../services/catalogo.service';
+import { ActivatedRoute } from '@angular/router'; // Agregar import
+ 
 @Component({
   selector: 'app-crear-kiosko-touch',
   templateUrl: './crear-kiosko-touch.component.html',
@@ -29,42 +35,113 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatTooltipModule,
     RouterModule,
     FooterAdminComponent,
-    HeaderAdminComponent
+    HeaderAdminComponent,
+
   ]
 })
 export class CrearKioskoTouchComponent {
   form: FormGroup;
-  establecimientos = [
-    { nombre: 'Local 1: Sur', imagen: 'assets/admin/ADMIN_23.png', seleccionado: false },
-    { nombre: 'Local 2: Norte', imagen: 'assets/admin/ADMIN_23.png', seleccionado: false },
-    { nombre: 'Local 3: Centro', imagen: 'assets/admin/ADMIN_23.png', seleccionado: false },
-    { nombre: 'Local 4: Sur', imagen: 'assets/admin/ADMIN_23.png', seleccionado: false },
-    { nombre: 'Local 5: Centro', imagen: 'assets/admin/ADMIN_23.png', seleccionado: false }
-  ];
+  establecimientos: (Establecimiento & { seleccionado: boolean })[] = [];
+  establecimientosAsociados: (Establecimiento & { seleccionado: boolean })[] = [];
+  loading = false;
+  estados: { id: number, nombre: string }[] = [];
 
-  establecimientosAsociados: any[] = [];
+  constructor(
+    private fb: FormBuilder,
+    private establecimientosService: EstablecimientosService,
+    private kioskoTouchService: KioskoTouchService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private catalogoService: CatalogoService,
 
-  constructor(private fb: FormBuilder) {
+  ) {
     this.form = this.fb.group({
-      nombreKiosco: [''],
-      estadoKiosco: ['activo'],
-      token: [''],
+      nombreKiosco: ['', [Validators.required]],
+      estadoKiosco: [''],
+      token: ['', [Validators.required]],
       establecimientoAsociado: [''],
       buscarCiudad: ['']
     });
   }
+  kioscoId: number | null = null;
+  isEditMode = false;
+
+  ngOnInit(): void {
+    this.cargarEstados();
+    this.cargarEstablecimientos();
+    this.generarToken(); // Generar token automáticamente al cargar
+
+    // Detectar modo edición
+    this.kioscoId = Number(this.route.snapshot.paramMap.get('id'));
+    this.isEditMode = !!this.kioscoId && !isNaN(this.kioscoId);
+
+    if (this.isEditMode) {
+      this.cargarKioscoParaEditar();
+    }
+  }
+
+  cargarEstados(): void {
+    this.catalogoService.getEstados().subscribe({
+      next: (estados) => {
+        this.estados = estados;
+      },
+      error: (error) => {
+        console.error('Error cargando estados:', error);
+      }
+    });
+  }
+
+  cargarKioscoParaEditar(): void {
+    if (!this.kioscoId) return;
+    this.kioskoTouchService.obtenerKioscoTouchPorId(this.kioscoId).subscribe({
+      next: (kiosco) => {
+        this.form.patchValue({
+          nombreKiosco: kiosco.nombre,
+          token: kiosco.token,
+          estadoKiosco: kiosco.estado_id
+        });
+
+        // Si hay establecimiento asociado, agregarlo a la lista
+        if (kiosco.establecimiento) {
+          const establecimiento = this.establecimientos.find(e => e.id === kiosco.establecimiento_id);
+          if (establecimiento) {
+            this.establecimientosAsociados = [{ ...establecimiento, seleccionado: false }];
+            this.actualizarCampoEstablecimientoAsociado();
+          }
+        }
+      },
+      error: (error) => {
+        alert('Error al cargar el kiosco');
+        this.router.navigate(['/administrador/kiosko-touch']);
+      }
+    });
+  }
+
+
+  cargarEstablecimientos(): void {
+    this.loading = true;
+    this.establecimientosService.obtenerEstablecimientos().subscribe({
+      next: (data) => {
+        this.establecimientos = data.map(e => ({ ...e, seleccionado: false }));
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando establecimientos:', error);
+        alert('Error al cargar establecimientos');
+        this.loading = false;
+      }
+    });
+  }
 
   generarToken(): void {
-    const token = Math.random().toString(36).substr(2, 8).toUpperCase();
+    const token = Math.random().toString(36).substr(2, 12).toUpperCase();
     this.form.get('token')?.setValue(token);
   }
 
-  // Método para manejar la selección de checkboxes
   onEstablecimientoSeleccionado(establecimiento: any, event: any): void {
     establecimiento.seleccionado = event.checked;
   }
 
-  // Método para agregar establecimientos seleccionados (misma lógica que kioscos)
   agregarEstablecimiento(): void {
     const establecimientosSeleccionados = this.establecimientos.filter(e => e.seleccionado);
 
@@ -77,8 +154,7 @@ export class CrearKioskoTouchComponent {
     const establecimientosNuevos: any[] = [];
 
     establecimientosSeleccionados.forEach(establecimiento => {
-      // Verificar si el establecimiento ya está asociado (usando nombre en lugar de id)
-      const yaAsociado = this.establecimientosAsociados.find(ea => ea.nombre === establecimiento.nombre);
+      const yaAsociado = this.establecimientosAsociados.find(ea => ea.id === establecimiento.id);
 
       if (yaAsociado) {
         establecimientosYaAsociados.push(establecimiento.nombre);
@@ -87,32 +163,26 @@ export class CrearKioskoTouchComponent {
       }
     });
 
-    // Mostrar mensaje si algunos establecimientos ya estaban asociados
     if (establecimientosYaAsociados.length > 0) {
       const mensaje = establecimientosYaAsociados.length === 1
         ? `El establecimiento "${establecimientosYaAsociados[0]}" ya ha sido asociado.`
         : `Los establecimientos "${establecimientosYaAsociados.join('", "')}" ya han sido asociados.`;
-
       alert(mensaje);
     }
 
-    // Agregar solo los establecimientos nuevos
     if (establecimientosNuevos.length > 0) {
       this.establecimientosAsociados.push(...establecimientosNuevos);
       this.actualizarCampoEstablecimientoAsociado();
-
-      // Limpiar selecciones
       this.establecimientos.forEach(e => e.seleccionado = false);
     }
   }
 
-  // Método para actualizar el campo de texto con los establecimientos asociados
+
   actualizarCampoEstablecimientoAsociado(): void {
     const nombresEstablecimientos = this.establecimientosAsociados.map(e => e.nombre).join(', ');
     this.form.get('establecimientoAsociado')?.setValue(nombresEstablecimientos);
   }
 
-  // Método para eliminar todos los establecimientos asociados
   eliminarEstablecimiento(): void {
     this.establecimientosAsociados = [];
     this.form.get('establecimientoAsociado')?.setValue('');
@@ -133,9 +203,10 @@ export class CrearKioskoTouchComponent {
 
   // Método para remover un establecimiento específico (también corregir aquí)
   removerEstablecimientoAsociado(establecimientoARemover: any): void {
-    this.establecimientosAsociados = this.establecimientosAsociados.filter(e => e.nombre !== establecimientoARemover.nombre);
+    this.establecimientosAsociados = this.establecimientosAsociados.filter(e => e.id !== establecimientoARemover.id);
     this.actualizarCampoEstablecimientoAsociado();
   }
+
 
   borrarToken(): void {
     this.form.get('token')?.setValue('');
@@ -143,27 +214,51 @@ export class CrearKioskoTouchComponent {
   }
 
   crearKiosco(): void {
-    // Validar que el nombre no esté vacío
-    if (!this.form.get('nombreKiosco')?.value?.trim()) {
-      alert('El nombre del kiosco es requerido.');
+    if (this.form.invalid) {
+      alert('Por favor, complete todos los campos requeridos.');
       return;
     }
 
-    // Validar que haya al menos un establecimiento asociado
     if (this.establecimientosAsociados.length === 0) {
       alert('Debe asociar al menos un establecimiento al kiosco.');
       return;
     }
 
-    // Si pasa todas las validaciones, proceder con la creación
-    const formData = {
-      nombreKiosco: this.form.get('nombreKiosco')?.value,
-      estadoKiosco: this.form.get('estadoKiosco')?.value,
+    const kioscoData = {
+      nombre: this.form.get('nombreKiosco')?.value,
       token: this.form.get('token')?.value,
-      establecimientosAsociados: this.establecimientosAsociados
+      estado: this.form.get('estadoKiosco')?.value,
+      establecimientos_asociados: this.establecimientosAsociados.map(e => e.id!)
     };
 
-    console.log('Kiosco creado:', formData);
-    alert('Kiosco Touch creado exitosamente!');
+    this.loading = true;
+
+    if (this.isEditMode && this.kioscoId) {
+      this.kioskoTouchService.actualizarKioscoTouch(this.kioscoId, kioscoData).subscribe({
+        next: () => {
+          alert('Kiosco Touch actualizado exitosamente!');
+          this.router.navigate(['/administrador/kiosko-touch']);
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error actualizando kiosco:', error);
+          alert('Error al actualizar el kiosco: ' + (error.error?.error || 'Error desconocido'));
+          this.loading = false;
+        }
+      });
+    } else {
+      this.kioskoTouchService.crearKioscoTouch(kioscoData).subscribe({
+        next: () => {
+          alert('Kiosco Touch creado exitosamente!');
+          this.router.navigate(['/administrador/kiosko-touch']);
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error creando kiosco:', error);
+          alert('Error al crear el kiosco: ' + (error.error?.error || 'Error desconocido'));
+          this.loading = false;
+        }
+      });
+    }
   }
 }

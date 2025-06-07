@@ -68,7 +68,7 @@ export class EliminarComponent implements OnInit{
         alert('❌ Error al cargar los productos. Por favor, intenta de nuevo.');
       }
     });
-  }
+  } 
 
   editarProducto(producto: any): void {
     console.log('Editar producto:', producto);

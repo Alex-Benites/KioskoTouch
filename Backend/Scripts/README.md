@@ -82,3 +82,9 @@ python Scripts/ingredientes.py listar_categorias
 
 # Migrar imágenes
 python Scripts/ingredientes.py migrar_imagenes
+
+
+
+
+# mega script 
+python Scripts/mega_crear_todo.py

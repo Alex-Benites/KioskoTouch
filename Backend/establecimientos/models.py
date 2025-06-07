@@ -1,7 +1,10 @@
 from django.db import models
-from comun.models import AppkioskoEstados
+from comun.models import AppkioskoEstados,AppkioskoImagen
 from django.contrib.auth.models import User
 from usuarios.models import AppkioskoEmpleados
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+import os
 
 class AppkioskoEstablecimientos(models.Model):
     nombre = models.CharField(max_length=50)
@@ -10,6 +13,17 @@ class AppkioskoEstablecimientos(models.Model):
     tipo_establecimiento = models.CharField(max_length=50, blank=True, null=True)
     correo = models.CharField(max_length=100, blank=True, null=True)
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
+    
+    # NUEVO CAMPO DE IMAGEN:
+    imagen = models.ForeignKey(
+        AppkioskoImagen, 
+        on_delete=models.SET_NULL, 
+        blank=True, 
+        null=True,
+        verbose_name="Imagen del Establecimiento",
+        help_text="Selecciona una imagen para el establecimiento"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
     provincia = models.CharField(
@@ -17,7 +31,7 @@ class AppkioskoEstablecimientos(models.Model):
         verbose_name="Provincia",
         help_text="Provincia donde se encuentra el establecimiento"
     )
-
+ 
     ciudad = models.CharField(
         max_length=50,
         verbose_name="Ciudad",
@@ -111,3 +125,15 @@ class AppkioskoKioskostouch(models.Model):
 
     def __str__(self):
         return self.nombre
+
+@receiver(post_delete, sender=AppkioskoEstablecimientos)
+def eliminar_imagen_establecimiento(sender, instance, **kwargs):
+    if instance.imagen:
+        # Borra el archivo físico
+        if instance.imagen.ruta:
+            from django.conf import settings
+            ruta_fisica = os.path.join(settings.MEDIA_ROOT, instance.imagen.ruta.lstrip('/media/'))
+            if os.path.exists(ruta_fisica):
+                os.remove(ruta_fisica)
+        # Borra el objeto imagen
+        instance.imagen.delete()
