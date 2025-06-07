@@ -2,7 +2,9 @@
 
 <div class="pantalla-cocina-container">
   <p class="breadcrumb-title">GESTIÓN DE PANTALLAS DE COCINA</p>
-  <h1 class="section-title">Creación de nueva Pantalla de Cocina</h1>
+  <h1 class="section-title">
+    {{ isEditMode ? 'Editar Pantalla de Cocina' : 'Creación de nueva Pantalla de Cocina' }}
+  </h1>
 
   <form [formGroup]="form" class="form-container">
     <!-- Formulario de creación -->
@@ -92,7 +94,9 @@
 
   <!-- Botones de acción con el mismo estilo que crear.component -->
   <div class="form-actions">
-    <button type="button" class="primary__button" (click)="crearPantalla()">Crear</button>
+    <button type="button" class="primary__button" (click)="crearPantalla()">
+      {{ isEditMode ? 'Actualizar' : 'Crear' }}
+    </button>
   </div>
 </div>
 

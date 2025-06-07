@@ -14,6 +14,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { PantallaCocinaService } from '../../../services/pantalla-cocina.service';
 import { KioskoTouchService } from '../../../services/kiosko-touch.service';
 import { CatalogoService } from '../../../services/catalogo.service';
+import { MatDialog } from '@angular/material/dialog';
+import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component'; // Ajusta la ruta si es necesario
+
 
 @Component({
   selector: 'app-crear-pantalla-cocina',
@@ -49,7 +52,8 @@ export class CrearPantallaCocinaComponent implements OnInit {
     private route: ActivatedRoute,
     private pantallaCocinaService: PantallaCocinaService,
     private kioskoTouchService: KioskoTouchService,
-    private catalogoService: CatalogoService
+    private catalogoService: CatalogoService,
+    private dialog: MatDialog 
   ) {
     this.form = this.fb.group({
       nombrePantalla: ['', [Validators.required]],
@@ -83,6 +87,20 @@ export class CrearPantallaCocinaComponent implements OnInit {
       error: (error) => {
         console.error('Error cargando estados:', error);
       }
+    });
+  }
+
+  abrirDialogoExito(titulo: string, mensaje: string, callback?: () => void) {
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      data: {
+        title: titulo,
+        message: mensaje,
+        buttonText: 'Continuar'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      if (callback) callback();
     });
   }
 
@@ -197,12 +215,12 @@ export class CrearPantallaCocinaComponent implements OnInit {
 
   crearPantalla(): void {
     if (this.form.invalid) {
-      alert('Por favor, complete todos los campos requeridos.');
+      this.abrirDialogoExito('Campos incompletos', 'Por favor, complete todos los campos requeridos.');
       return;
     }
 
     if (this.kioscosAsociados.length === 0) {
-      alert('Debe asociar un kiosco a la pantalla.');
+      this.abrirDialogoExito('Kiosco requerido', 'Debe asociar un kiosco a la pantalla.');
       return;
     }
 
@@ -218,26 +236,32 @@ export class CrearPantallaCocinaComponent implements OnInit {
     if (this.isEditMode && this.pantallaId) {
       this.pantallaCocinaService.actualizarPantallaCocina(this.pantallaId, pantallaData).subscribe({
         next: () => {
-          alert('Pantalla de Cocina actualizada exitosamente!');
-          this.router.navigate(['/administrador/pantallas-cocina']);
+          this.abrirDialogoExito(
+            '¡Éxito!',
+            'Pantalla de Cocina actualizada exitosamente!',
+            () => this.router.navigate(['/administrador/gestion-pantallas-cocina'])
+          );
           this.loading = false;
         },
         error: (error) => {
           console.error('Error actualizando pantalla:', error);
-          alert('Error al actualizar la pantalla: ' + (error.error?.error || 'Error desconocido'));
+          this.abrirDialogoExito('Error', 'Error al actualizar la pantalla: ' + (error.error?.error || 'Error desconocido'));
           this.loading = false;
         }
       });
     } else {
       this.pantallaCocinaService.crearPantallaCocina(pantallaData).subscribe({
         next: () => {
-          alert('Pantalla de Cocina creada exitosamente!');
-          this.router.navigate(['/administrador/pantallas-cocina']);
+          this.abrirDialogoExito(
+            '¡Éxito!',
+            'Pantalla de Cocina creada exitosamente!',
+            () => this.router.navigate(['/administrador/gestion-pantallas-cocina'])
+          );
           this.loading = false;
         },
         error: (error) => {
           console.error('Error creando pantalla:', error);
-          alert('Error al crear la pantalla: ' + (error.error?.error || 'Error desconocido'));
+          this.abrirDialogoExito('Error', 'Error al crear la pantalla: ' + (error.error?.error || 'Error desconocido'));
           this.loading = false;
         }
       });

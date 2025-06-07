@@ -2,7 +2,9 @@
 
 <div class="kiosko-touch-container">
   <p class="breadcrumb-title">GESTIÓN DE KIOSKO TOUCH</p>
-  <h1 class="section-title">Creación de nuevo Kiosco Touch</h1>
+  <h1 class="section-title">
+    {{ isEditMode ? 'Editar Kiosco Touch' : 'Creación de nuevo Kiosco Touch' }}
+  </h1>
 
   <form [formGroup]="form" class="form-container">
     <!-- Formulario de creación -->
@@ -83,7 +85,9 @@
 
   <!-- Botones de acción -->
   <div class="form-actions">
-    <button type="button" class="primary__button" (click)="crearKiosco()">Crear</button>
+    <button type="button" class="primary__button" (click)="crearKiosco()">
+      {{ isEditMode ? 'Actualizar' : 'Crear' }}
+    </button>
   </div>
 </div>
 

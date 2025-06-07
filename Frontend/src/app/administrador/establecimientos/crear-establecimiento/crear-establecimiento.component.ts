@@ -13,6 +13,8 @@ import { EmpleadosService, EmpleadoDropdown } from '../../../services/empleados.
 import { CatalogoService } from '../../../services/catalogo.service';
 import { ActivatedRoute } from '@angular/router';
 import { EstablecimientosService } from '../../../services/establecimientos.service';
+import { MatDialog } from '@angular/material/dialog';
+import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component'; // Ajusta la ruta si es necesario
 
 @Component({
   selector: 'app-crear-establecimiento',
@@ -73,7 +75,8 @@ export class CrearEstablecimientoComponent implements OnInit {
     private route: ActivatedRoute,
     private empleadosService: EmpleadosService,
     private establecimientosService: EstablecimientosService,
-    private catalogoService: CatalogoService
+    private catalogoService: CatalogoService,
+    private dialog: MatDialog,
   ) {
     this.form = this.fb.group({
       nombreEstablecimiento: ['', [Validators.required]],
@@ -106,6 +109,20 @@ export class CrearEstablecimientoComponent implements OnInit {
     if (this.isEditMode) {
       this.cargarEstablecimientoParaEditar();
     }
+  }
+
+  abrirDialogoExito(titulo: string, mensaje: string, callback?: () => void) {
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      data: {
+        title: titulo,
+        message: mensaje,
+        buttonText: 'Continuar'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      if (callback) callback();
+    });
   }
 
   // ✅ MÉTODO SIMPLIFICADO - Solo cargar datos del establecimiento
@@ -291,7 +308,13 @@ export class CrearEstablecimientoComponent implements OnInit {
   crearEstablecimiento(): void {
     if (this.form.invalid) {
       this.marcarCamposComoTocados();
-      alert('Por favor, complete todos los campos requeridos.');
+      this.abrirDialogoExito('Campos incompletos', 'Por favor, complete todos los campos requeridos.');
+      return;
+    }
+
+    // Imagen obligatoria SIEMPRE: debe haber una imagen seleccionada o una imagen actual
+    if (!this.selectedFile && !this.imagenActual) {
+      this.abrirDialogoExito('Imagen requerida', 'Debe seleccionar una imagen para el establecimiento.');
       return;
     }
 
@@ -339,8 +362,11 @@ export class CrearEstablecimientoComponent implements OnInit {
       this.establecimientosService.actualizarEstablecimiento(this.establecimientoId, formData).subscribe({
         next: (response) => {
           console.log('✅ Establecimiento actualizado:', response);
-          alert('Establecimiento actualizado correctamente');
-          this.router.navigate(['/administrador/gestion-establecimientos']);
+          this.abrirDialogoExito(
+            '¡Éxito!',
+            'Establecimiento actualizado correctamente',
+            () => this.router.navigate(['/administrador/gestion-establecimientos'])
+          );
         },
         error: (error) => {
           console.error('❌ Error al actualizar establecimiento:', error);
@@ -352,8 +378,11 @@ export class CrearEstablecimientoComponent implements OnInit {
       this.establecimientosService.crearEstablecimiento(formData).subscribe({
         next: (response) => {
           console.log('✅ Establecimiento creado:', response);
-          alert('Establecimiento creado correctamente');
-          this.router.navigate(['/administrador/gestion-establecimientos']);
+              this.abrirDialogoExito(
+              '¡Éxito!',
+              'Establecimiento creado correctamente',
+              () => this.router.navigate(['/administrador/gestion-establecimientos'])
+            );
         },
         error: (error) => {
           console.error('❌ Error al crear establecimiento:', error);

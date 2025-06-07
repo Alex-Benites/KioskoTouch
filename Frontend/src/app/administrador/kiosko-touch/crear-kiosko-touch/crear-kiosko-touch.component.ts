@@ -17,7 +17,10 @@ import { KioskoTouchService } from '../../../services/kiosko-touch.service';
 import { Establecimiento } from '../../../models/establecimiento.model';
 import { CatalogoService } from '../../../services/catalogo.service';
 import { ActivatedRoute } from '@angular/router'; // Agregar import
- 
+import { MatDialog } from '@angular/material/dialog';
+import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component'; // Ajusta la ruta si es necesario
+
+
 @Component({
   selector: 'app-crear-kiosko-touch',
   templateUrl: './crear-kiosko-touch.component.html',
@@ -53,6 +56,7 @@ export class CrearKioskoTouchComponent {
     private router: Router,
     private route: ActivatedRoute,
     private catalogoService: CatalogoService,
+    private dialog: MatDialog,
 
   ) {
     this.form = this.fb.group({
@@ -78,6 +82,20 @@ export class CrearKioskoTouchComponent {
     if (this.isEditMode) {
       this.cargarKioscoParaEditar();
     }
+  }
+
+  abrirDialogoExito(titulo: string, mensaje: string, callback?: () => void) {
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      data: {
+        title: titulo,
+        message: mensaje,
+        buttonText: 'Continuar'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      if (callback) callback();
+    });
   }
 
   cargarEstados(): void {
@@ -215,7 +233,7 @@ export class CrearKioskoTouchComponent {
 
   crearKiosco(): void {
     if (this.form.invalid) {
-      alert('Por favor, complete todos los campos requeridos.');
+      this.abrirDialogoExito('Campos incompletos', 'Por favor, complete todos los campos requeridos.');
       return;
     }
 
@@ -236,9 +254,11 @@ export class CrearKioskoTouchComponent {
     if (this.isEditMode && this.kioscoId) {
       this.kioskoTouchService.actualizarKioscoTouch(this.kioscoId, kioscoData).subscribe({
         next: () => {
-          alert('Kiosco Touch actualizado exitosamente!');
-          this.router.navigate(['/administrador/kiosko-touch']);
-          this.loading = false;
+          this.abrirDialogoExito(
+            '¡Éxito!',
+            'Kiosco Touch actualizado exitosamente!',
+            () => this.router.navigate(['/administrador/gestion-kiosko-touch'])
+          );
         },
         error: (error) => {
           console.error('Error actualizando kiosco:', error);
@@ -249,8 +269,11 @@ export class CrearKioskoTouchComponent {
     } else {
       this.kioskoTouchService.crearKioscoTouch(kioscoData).subscribe({
         next: () => {
-          alert('Kiosco Touch creado exitosamente!');
-          this.router.navigate(['/administrador/kiosko-touch']);
+          this.abrirDialogoExito(
+            '¡Éxito!',
+            'Kiosco Touch creado exitosamente!',
+            () => this.router.navigate(['/administrador/gestion-kiosko-touch'])
+          );
           this.loading = false;
         },
         error: (error) => {

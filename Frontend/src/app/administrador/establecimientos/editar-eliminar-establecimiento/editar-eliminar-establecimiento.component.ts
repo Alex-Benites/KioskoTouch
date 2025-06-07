@@ -111,7 +111,7 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
       next: () => {
         this.establecimientos = this.establecimientos.filter(e => e.id !== establecimiento.id);
         this.aplicarFiltros();
-        alert(`Establecimiento "${establecimiento.nombre}" eliminado exitosamente.`);
+        
       },
       error: () => {
         alert('Error al eliminar el establecimiento.');

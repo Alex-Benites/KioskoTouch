@@ -123,7 +123,7 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
       next: () => {
         this.kioscos = this.kioscos.filter(k => k.id !== kiosco.id);
         this.aplicarFiltros();
-        alert(`Kiosco "${kiosco.nombre}" eliminado exitosamente.`);
+        //alert(`Kiosco "${kiosco.nombre}" eliminado exitosamente.`);
       },
       error: (error) => {
         console.error('Error al eliminar kiosco:', error);
@@ -139,5 +139,9 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
     console.log(`Estado de ${kiosco.nombre} cambiado a: ${nuevoEstado}`);
 
     this.aplicarFiltros();
+  }
+
+  getEstadoNombre(kiosco: any): string {
+    return typeof kiosco.estado === 'string' ? kiosco.estado : kiosco.estado?.nombre || '';
   }
 }

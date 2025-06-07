@@ -45,19 +45,21 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let kiosco of kioscosFiltrados" [class.inactive-row]="kiosco.estado === 'inactivo'">
+        <tr *ngFor="let kiosco of kioscosFiltrados" [class.inactive-row]="getEstadoNombre(kiosco) === 'inactivo'">
           <td>{{ kiosco.nombre }}</td>
           <td>{{ kiosco.token }}</td>
-          <td>{{ kiosco.establecimiento }}</td>
+          <td>{{ kiosco.establecimiento?.nombre || '-' }}</td>
           <td>
-            <span class="estado-badge" [class.activo]="kiosco.estado === 'activo'" [class.inactivo]="kiosco.estado === 'inactivo'">
-              {{ kiosco.estado === 'activo' ? 'Activo' : 'Inactivo' }}
+            <span class="estado-badge"
+                  [class.activo]="getEstadoNombre(kiosco) === 'activo'"
+                  [class.inactivo]="getEstadoNombre(kiosco) === 'inactivo'">
+              {{ getEstadoNombre(kiosco) | titlecase }}
             </span>
           </td>
           <td class="actions-cell">
             <!-- Toggle Switch para cambiar estado -->
             <mat-slide-toggle
-              [checked]="kiosco.estado === 'activo'"
+              [checked]="getEstadoNombre(kiosco) === 'activo'"
               (change)="cambiarEstado(kiosco, $event)"
               [color]="'primary'">
             </mat-slide-toggle>

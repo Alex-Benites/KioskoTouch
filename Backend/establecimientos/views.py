@@ -328,7 +328,9 @@ def listar_kioscos_touch(request):
             'estado': k.estado.nombre if k.estado else '',
             'establecimiento': {
                 'id': k.establecimiento.id,
-                'nombre': k.establecimiento.nombre
+                'nombre': k.establecimiento.nombre,
+                'ciudad': k.establecimiento.ciudad,
+                'provincia': k.establecimiento.provincia
             } if k.establecimiento else None
         }
         for k in kioscos
@@ -356,8 +358,8 @@ def kiosco_touch_detalle_o_eliminar(request, pk):
             'establecimiento': {
                 'id': kiosco.establecimiento.id,
                 'nombre': kiosco.establecimiento.nombre,
-                'ciudad': kiosko.establecimiento.ciudad,
-                'provincia': kiosko.establecimiento.provincia
+                'ciudad': kiosco.establecimiento.ciudad,
+                'provincia': kiosco.establecimiento.provincia
             } if kiosco.establecimiento else None
         }
         return Response(data)

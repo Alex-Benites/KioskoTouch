@@ -50,7 +50,7 @@
           <td>{{ pantalla.kiosco_touch?.nombre || 'Sin kiosco' }}</td>
           <td>
             <span class="estado-badge" [class.activo]="pantalla.estado === 'activo'" [class.inactivo]="pantalla.estado === 'inactivo'">
-              <td>{{ pantalla.kiosco_touch?.nombre || 'Sin kiosco' }}</td>
+              {{ pantalla.estado | titlecase }}
             </span>
           </td>
           <td class="actions-cell">
