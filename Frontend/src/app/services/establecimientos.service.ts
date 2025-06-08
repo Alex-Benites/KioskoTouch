@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Establecimiento } from '../models/establecimiento.model';
@@ -15,48 +15,25 @@ export class EstablecimientosService {
         console.log('🏗️ apiUrl:', this.apiUrl);
     }
 
-    private getHttpOptions() {
-        const token = localStorage.getItem('access_token');
-        return {
-            headers: new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-            })
-        };
-    }
-
-    private getHttpOptionsForUpload() {
-        const token = localStorage.getItem('access_token');
-        return {
-            headers: new HttpHeaders({
-            'Authorization': `Bearer ${token}`
-            })
-        };
-    }
-
-    // 🔥 MÉTODO SIMPLIFICADO - crearEstablecimiento (SIEMPRE FormData)
     crearEstablecimiento(establecimiento: FormData): Observable<any> {
         console.log('📤 Creando establecimiento con FormData');
-        return this.http.post<any>(`${this.apiUrl}/crear/`, establecimiento, this.getHttpOptionsForUpload());
+        return this.http.post<any>(`${this.apiUrl}/crear/`, establecimiento);
     }
 
-    // 🔥 MÉTODO SIMPLIFICADO - actualizarEstablecimiento (SIEMPRE FormData)
     actualizarEstablecimiento(id: number, establecimiento: FormData): Observable<any> {
         console.log('📤 Actualizando establecimiento con FormData');
-        return this.http.put<any>(`${this.apiUrl}/${id}/`, establecimiento, this.getHttpOptionsForUpload());
+        return this.http.put<any>(`${this.apiUrl}/${id}/`, establecimiento);
     }
 
     obtenerEstablecimientos(): Observable<Establecimiento[]> {
-        return this.http.get<Establecimiento[]>(`${this.apiUrl}/`, this.getHttpOptions());
+        return this.http.get<Establecimiento[]>(`${this.apiUrl}/`);
     }
 
     eliminarEstablecimiento(id: number): Observable<any> {
-        return this.http.delete<any>(`${this.apiUrl}/${id}/`, this.getHttpOptions());
+        return this.http.delete<any>(`${this.apiUrl}/${id}/`);
     }
 
     obtenerEstablecimientoPorId(id: number): Observable<Establecimiento> {
-        return this.http.get<Establecimiento>(`${this.apiUrl}/${id}/`, this.getHttpOptions());
+        return this.http.get<Establecimiento>(`${this.apiUrl}/${id}/`);
     }
-
-    // 🗑️ ELIMINAR: obtenerImagenes() y subirImagen() - Ya no los necesitamos
 }

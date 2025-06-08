@@ -11,7 +11,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.getAccessToken();
   
   let authReq = req;
-  if (token && !req.url.includes('/auth/login/') && !req.url.includes('/auth/logout/')) {
+  // ✅ SOLO excluir /auth/login/ del token - logout SÍ necesita token
+  if (token && !req.url.includes('/auth/login/')) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
@@ -22,10 +23,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       
-      // 🔑 401 = No autenticado → Ir al LOGIN
-      if (error.status === 401 && 
-          !req.url.includes('/auth/login/') && 
-          !req.url.includes('/auth/logout/')) {
+      // 🔑 401 = No autenticado → Ir al LOGIN (pero NO para login)
+      if (error.status === 401 && !req.url.includes('/auth/login/')) {
         
         console.warn('🔑 Token inválido o expirado. Redirigiendo al login...');
         
