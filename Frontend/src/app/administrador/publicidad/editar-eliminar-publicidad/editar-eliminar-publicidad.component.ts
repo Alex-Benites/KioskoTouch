@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 
 // Angular Material Modules
@@ -14,6 +14,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // Shared Components
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
 // Services and Models
 import { PublicidadService } from '../../../services/publicidad.service';
@@ -31,7 +33,6 @@ import { environment } from '../../../../environments/environment';
     MatButtonModule,
     MatCardModule,
     MatIconModule,
-    MatSnackBarModule,
     MatProgressSpinnerModule,
     HeaderAdminComponent,
     FooterAdminComponent
@@ -48,7 +49,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   private publicidadService = inject(PublicidadService);
 
   ngOnInit(): void {
@@ -73,7 +74,6 @@ export class EditarEliminarPublicidadComponent implements OnInit {
       next: (data) => {
         console.log('✅ Publicidades cargadas:', data);
         
-        // ✅ DEBUG: Verificar que lleguen las URLs
         data.forEach((pub, index) => {
           console.log(`🔍 Publicidad ${index + 1}:`, {
             id: pub.id,
@@ -93,7 +93,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
       },
       error: (error: ApiError) => {
         console.error('❌ Error al cargar publicidades:', error);
-        this.mostrarError('No se pudieron cargar las publicidades.');
+        alert('❌ No se pudieron cargar las publicidades.');
         this.isLoading = false;
       }
     });
@@ -178,37 +178,73 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   }
 
   confirmarEliminacion(id: number, nombre: string): void {
-    console.log('🗑️ Confirmar eliminación - ID:', id, 'Nombre:', nombre);
-    
-    const confirmacion = confirm(
-      `¿Estás seguro de que deseas eliminar la publicidad "${nombre}"?\n\n` +
-      `Esta acción no se puede deshacer.`
-    );
-    
-    if (confirmacion) {
-      this.procederEliminacion(id);
-    }
-  }
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: {
+        itemType: 'publicidad',
+      } as ConfirmationDialogData
+    });
 
-  private procederEliminacion(id: number): void {
-    console.log('🗑️ Procediendo a eliminar publicidad ID:', id);
-    this.isLoading = true;
-    
-    this.publicidadService.deletePublicidad(id).subscribe({
-      next: () => {
-        console.log('✅ Publicidad eliminada correctamente');
-        this.mostrarExito('Publicidad eliminada correctamente.');
-        this.cargarPublicidades();
-      },
-      error: (error: ApiError) => {
-        console.error('❌ Error al eliminar publicidad:', error);
-        this.mostrarError(error.message || 'No se pudo eliminar la publicidad.');
-        this.isLoading = false;
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('🗑️ Confirmado eliminar publicidad:', nombre);
+        this.eliminarPublicidad(id, nombre);
+      } else {
+        console.log('🚫 Eliminación cancelada');
       }
     });
   }
 
-  // ✅ CORREGIDO: Sin hack de prueba, URLs directas del backend
+eliminarPublicidad(id: number, nombre: string): void {
+  console.log('🗑️ Eliminando publicidad ID:', id);
+  this.isLoading = true;
+  
+  this.publicidadService.deletePublicidad(id).subscribe({
+    next: () => {
+      console.log('✅ Publicidad eliminada correctamente');
+      
+      // Remover de la lista local
+      this.todasLasPublicidades = this.todasLasPublicidades.filter(p => p.id !== id);
+      this.publicidadesFiltradas = this.publicidadesFiltradas.filter(p => p.id !== id);
+      this.isLoading = false;
+
+      // Sin dialog de éxito - eliminación silenciosa
+    },
+    error: (error: ApiError) => {
+      console.error('❌ Error al eliminar publicidad:', error);
+      this.isLoading = false;
+
+      let mensajeError = '❌ Error al eliminar la publicidad.';
+      if (error.status === 404) {
+        mensajeError = '❌ La publicidad no existe o ya fue eliminada.';
+      } else if (error.status === 403) {
+        mensajeError = '❌ No tienes permisos para eliminar esta publicidad.';
+      } else if (error.message) {
+        mensajeError = `❌ ${error.message}`;
+      }
+
+      alert(mensajeError);
+      this.cargarPublicidades();
+    }
+  });
+}
+
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // La lista ya se actualizó localmente
+    });
+  }
+
   getMediaUrl(publicidad: Publicidad): string {
     if (publicidad.media_url) {
       if (publicidad.media_url.startsWith('/media/')) {
@@ -219,12 +255,10 @@ export class EditarEliminarPublicidadComponent implements OnInit {
     return '';
   }
 
-  // ✅ Método para verificar si es video
   isVideoFile(publicidad: Publicidad): boolean {
     return publicidad.media_type === 'video' && !!publicidad.media_url;
   }
 
-  // ✅ Event handlers para media
   onMediaLoaded(event: Event): void {
     console.log('✅ Media cargada correctamente:', event.target);
   }
@@ -250,7 +284,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
     const video = event.target as HTMLVideoElement;
     if (video && video.tagName === 'VIDEO') {
       video.pause();
-      video.currentTime = 0; // Reinicia al inicio
+      video.currentTime = 0;
     }
   }
 
@@ -292,19 +326,5 @@ export class EditarEliminarPublicidadComponent implements OnInit {
     }
     
     return '';
-  }
-
-  private mostrarError(mensaje: string): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
-  }
-
-  private mostrarExito(mensaje: string): void {
-    this.snackBar.open(mensaje, 'OK', {
-      duration: 3000,
-      panelClass: ['success-snackbar']
-    });
   }
 }

@@ -1,8 +1,7 @@
-// ✅ crear-publicidad.component.ts COMPLETO
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 
 // Angular Material Modules
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,6 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // Shared Components
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
 // Services and Models
 import { PublicidadService } from '../../../services/publicidad.service';
@@ -37,7 +37,6 @@ import { environment } from '../../../../environments/environment';
     MatDatepickerModule,
     MatNativeDateModule,
     MatIconModule,
-    MatSnackBarModule,
     MatProgressSpinnerModule,
     HeaderAdminComponent,
     FooterAdminComponent
@@ -57,10 +56,9 @@ export class CrearPublicidadComponent implements OnInit {
   videoDuration: number | null = null;
   isLoading: boolean = false;
   
-  // ✅ PROPIEDADES PARA EDICIÓN (como crear-usuario)
   publicidadId: number | null = null;
   isEditMode: boolean = false;
-  pageTitle: string = 'Creación de Publicidad'; // ✅ VALOR POR DEFECTO
+  pageTitle: string = 'Creación de Publicidad';
   existingMediaUrl: string | null = null;
   
   // Estados disponibles (filtrados)
@@ -71,7 +69,7 @@ export class CrearPublicidadComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   private readonly publicidadService = inject(PublicidadService);
 
   // ========== CONSTANTES ==========
@@ -98,14 +96,12 @@ export class CrearPublicidadComponent implements OnInit {
   readonly allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
   readonly allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/avi'];
 
-  // ✅ CONSTRUCTOR VACÍO (como crear-usuario)
   constructor() {
-    // ✅ VACÍO como crear-usuario
+    // Vacío como patrón moderno
   }
 
   // ========== LIFECYCLE ==========
   ngOnInit(): void {
-    // ✅ COMO CREAR-USUARIO: Verificar modo edición aquí
     this.publicidadId = Number(this.route.snapshot.paramMap.get('id'));
     this.isEditMode = !!this.publicidadId && !isNaN(this.publicidadId);
 
@@ -153,12 +149,11 @@ export class CrearPublicidadComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar estados:', error);
         this.loadingEstados = false;
-        this.mostrarError('Error al cargar los estados disponibles');
+        alert('Error al cargar los estados disponibles');
       }
     });
   }
 
-  // ✅ MÉTODO PARA CARGAR DATOS EN MODO EDICIÓN
   private cargarPublicidadParaEditar(): void {
     if (!this.publicidadId) return;
     
@@ -173,7 +168,7 @@ export class CrearPublicidadComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ Error al cargar publicidad:', error);
-        this.mostrarError('No se pudo cargar la información de la publicidad');
+        alert('No se pudo cargar la información de la publicidad');
         this.isLoading = false;
         this.router.navigate(['/administrador/gestion-publicidad/editar-eliminar']);
       }
@@ -314,21 +309,21 @@ export class CrearPublicidadComponent implements OnInit {
 
     const tipoPublicidadSeleccionado = this.publicidadForm.get('tipoPublicidad')?.value;
     if (!tipoPublicidadSeleccionado) {
-      this.mostrarError('Primero debes seleccionar un tipo de publicidad (Banner o Video)');
+      alert('Primero debes seleccionar un tipo de publicidad (Banner o Video)');
       this.clearFileInput(input);
       return;
     }
 
     const validation = this.validateFile(file);
     if (!validation.valid) {
-      this.mostrarError(validation.error!);
+      alert(validation.error!);
       this.clearFileInput(input);
       return;
     }
 
     this.selectedMediaType = this.getMediaTypeFromFile(file);
     if (!this.selectedMediaType) {
-      this.mostrarError('El archivo seleccionado no coincide con el tipo de publicidad elegido.');
+      alert('El archivo seleccionado no coincide con el tipo de publicidad elegido.');
       this.clearFileInput(input);
       return;
     }
@@ -383,7 +378,7 @@ export class CrearPublicidadComponent implements OnInit {
     if (this.selectedFile) {
       const validation = this.validateFile(this.selectedFile);
       if (!validation.valid) {
-        this.mostrarError(`Archivo incompatible: ${validation.error}`);
+        alert(`Archivo incompatible: ${validation.error}`);
         this.eliminarMedia();
       }
     }
@@ -462,13 +457,13 @@ export class CrearPublicidadComponent implements OnInit {
 
   onSubmit(): void {
     if (this.publicidadForm.invalid) {
-      this.mostrarError('Por favor, completa todos los campos requeridos.');
+      alert('Por favor, completa todos los campos requeridos.');
       this.publicidadForm.markAllAsTouched();
       return;
     }
 
     if (!this.isEditMode && !this.selectedFile) {
-      this.mostrarError('Por favor, selecciona una imagen o video para la publicidad.');
+      alert('Por favor, selecciona una imagen o video para la publicidad.');
       return;
     }
 
@@ -479,8 +474,13 @@ export class CrearPublicidadComponent implements OnInit {
       this.publicidadService.updatePublicidad(this.publicidadId!, formData).subscribe({
         next: (response) => {
           this.isLoading = false;
-          this.mostrarExito('Publicidad actualizada exitosamente');
-          this.router.navigate(['/administrador/gestion-publicidad/editar-eliminar']);
+          console.log('✅ Publicidad actualizada exitosamente', response);
+
+          this.mostrarDialogExito(
+            'ACTUALIZACIÓN',
+            '¡La publicidad ha sido actualizada exitosamente!',
+            'Continuar'
+          );
         },
         error: (error: ApiError) => {
           this.isLoading = false;
@@ -491,8 +491,13 @@ export class CrearPublicidadComponent implements OnInit {
       this.publicidadService.createPublicidad(formData).subscribe({
         next: (response) => {
           this.isLoading = false;
-          this.mostrarExito('Publicidad creada exitosamente. ¡Puedes crear otra!');
-          this.resetFormulario();
+          console.log('✅ Publicidad creada exitosamente', response);
+
+          this.mostrarDialogExito(
+            'REGISTRO',
+            '¡La publicidad ha sido creada exitosamente!',
+            'Continuar'
+          );
         },
         error: (error: ApiError) => {
           this.isLoading = false;
@@ -502,15 +507,40 @@ export class CrearPublicidadComponent implements OnInit {
     }
   }
 
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      if (this.isEditMode) {
+        this.navegarAListaPublicidad();
+      } else {
+        this.resetFormulario();
+      }
+    });
+  }
+
+  private navegarAListaPublicidad(): void {
+    this.router.navigate(['/administrador/gestion-publicidad/editar-eliminar']);
+  }
+
   private handleSubmitError(error: ApiError): void {
     console.error('=== ERROR COMPLETO ===', error);
     
     if (error.errors && error.errors.length > 0) {
       const errorMessages = error.errors.map(e => `${e.field}: ${e.message}`).join('\n');
-      this.mostrarError(`Errores de validación:\n${errorMessages}`);
+      alert(`Errores de validación:\n${errorMessages}`);
     } else {
       const action = this.isEditMode ? 'actualizar' : 'crear';
-      this.mostrarError(error.message || `Error al ${action} la publicidad.`);
+      alert(error.message || `Error al ${action} la publicidad.`);
     }
   }
 
@@ -627,20 +657,6 @@ export class CrearPublicidadComponent implements OnInit {
     }
   }
 
-  private mostrarError(mensaje: string): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
-  }
-
-  private mostrarExito(mensaje: string): void {
-    this.snackBar.open(mensaje, 'OK', {
-      duration: 4000,
-      panelClass: ['success-snackbar']
-    });
-  }
-
   // ========== GETTERS PARA VALIDACIONES ==========
   get nombre() { return this.publicidadForm.get('nombre'); }
   get descripcion() { return this.publicidadForm.get('descripcion'); }
@@ -650,6 +666,4 @@ export class CrearPublicidadComponent implements OnInit {
   get estado() { return this.publicidadForm.get('estado'); }
   get tiempoIntervaloValor() { return this.publicidadForm.get('tiempoIntervaloValor'); }
   get tiempoIntervaloUnidad() { return this.publicidadForm.get('tiempoIntervaloUnidad'); }
-
-  
 }
