@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl, FormArray } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
-import { SuccessPopupComponent } from '../../../shared/success-popup/success-popup.component'; // ← AGREGAR IMPORT
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 import { CatalogoService } from '../../../services/catalogo.service';
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -25,82 +26,45 @@ import { Router, ActivatedRoute } from '@angular/router';
     MatButtonModule,
     MatCheckboxModule,
     HeaderAdminComponent,
-    FooterAdminComponent,
-    SuccessPopupComponent  // ← AGREGAR AQUÍ
+    FooterAdminComponent
   ],
   templateUrl: './crear.component.html',
   styleUrls: ['./crear.component.scss']
 })
 export class CrearComponent implements OnInit {
+  
+  private fb = inject(FormBuilder);
+  private catalogoService = inject(CatalogoService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private dialog = inject(MatDialog);
+
   productoForm: FormGroup;
   categorias: any[] = [];
   estados: any[] = [];
   imagePreview: string | null = null;
   selectedFile: File | null = null;
   ingredientes: any[] = [];
-  // Nuevas propiedades para modo edición
   ingredientesDisponibles: any[] = [];
   ingredientesSeleccionados: any[] = [];
   isEditMode = false;
   productoId: number | null = null;
-  currentImageUrl: string | null = null; // Para mostrar imagen actual
+  currentImageUrl: string | null = null;
   saving = false;
 
-  // 🆕 Agregar estas propiedades para el popup
-  mostrarPopupExito: boolean = false;
-  tituloPopup: string = '';
-  mensajePopup: string = '';
-
-  constructor(
-    private fb: FormBuilder,
-    private catalogoService: CatalogoService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
+  constructor() {
     this.productoForm = this.fb.group({
       nombre: ['', Validators.required],
       descripcion: ['', Validators.required],
       categoria: ['', Validators.required],
       precio: ['', [
-      Validators.required,
-      Validators.pattern(/^\d+(\.\d{1,2})?$/),
-      Validators.min(0.01)  // Mínimo 0.01 (1 centavo)
-    ]],
+        Validators.required,
+        Validators.pattern(/^\d+(\.\d{1,2})?$/),
+        Validators.min(0.01)
+      ]],
       disponibilidad: ['', Validators.required],
       imagen: [null, Validators.required],
-
     });
-  }
-
-  onFileSelected(event: any): void {
-    this.selectedFile = event.target.files[0] as File;
-    if (this.selectedFile) {
-      // ← VALIDAR TIPO DE ARCHIVO
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(this.selectedFile.type)) {
-        alert('⚠️ Solo se permiten archivos de imagen (JPG, PNG, GIF)');
-        this.eliminarImagen();
-        return;
-      }
-
-      // ← VALIDAR TAMAÑO (máximo 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (this.selectedFile.size > maxSize) {
-        alert('⚠️ La imagen no puede ser mayor a 5MB');
-        this.eliminarImagen();
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imagePreview = reader.result as string;
-      }
-      reader.readAsDataURL(this.selectedFile);
-
-      // ← ACTUALIZAR EL CONTROL DEL FORMULARIO
-      this.productoForm.get('imagen')?.setValue(this.selectedFile);
-      this.productoForm.get('imagen')?.markAsTouched();
-    }
   }
 
   ngOnInit(): void {
@@ -123,8 +87,36 @@ export class CrearComponent implements OnInit {
     }
   }
 
+  onFileSelected(event: any): void {
+    this.selectedFile = event.target.files[0] as File;
+    if (this.selectedFile) {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(this.selectedFile.type)) {
+        alert('⚠️ Solo se permiten archivos de imagen (JPG, PNG, GIF)');
+        this.eliminarImagen();
+        return;
+      }
 
-  // Método para cargar producto en modo edición
+      // Validar tamaño (máximo 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (this.selectedFile.size > maxSize) {
+        alert('⚠️ La imagen no puede ser mayor a 5MB');
+        this.eliminarImagen();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagePreview = reader.result as string;
+      }
+      reader.readAsDataURL(this.selectedFile);
+
+      this.productoForm.get('imagen')?.setValue(this.selectedFile);
+      this.productoForm.get('imagen')?.markAsTouched();
+    }
+  }
+
   private cargarProductoParaEditar(): void {
     if (!this.productoId) return;
 
@@ -134,42 +126,29 @@ export class CrearComponent implements OnInit {
       next: (producto) => {
         console.log('✅ Producto cargado completo:', producto);
 
-        // 📝 Llenar formulario con datos básicos
         this.productoForm.patchValue({
           nombre: producto.nombre,
           descripcion: producto.descripcion,
           precio: producto.precio,
-          categoria: producto.categoria,        // ✅ ID: 1
-          disponibilidad: producto.estado      // ✅ ID: 1
+          categoria: producto.categoria,
+          disponibilidad: producto.estado
         });
 
-        // 🔒 DESHABILITAR categoría en modo edición
+        // Deshabilitar categoría en modo edición
         this.productoForm.get('categoria')?.disable();
         console.log('🔒 Campo categoría deshabilitado para edición');
 
-        console.log('📝 Formulario rellenado con:', {
-          nombre: producto.nombre,
-          categoria: producto.categoria,
-          estado: producto.estado,
-          precio: producto.precio
-        });
-
-        // 🖼️ Manejar imagen actual
+        // Manejar imagen actual
         if (producto.imagen_url) {
           this.currentImageUrl = this.catalogoService.getFullImageUrl(producto.imagen_url);
           this.imagePreview = this.currentImageUrl;
-          console.log('🖼️ Imagen cargada:', this.currentImageUrl);
-
+          
           // Quitar validación obligatoria de imagen para edición
           this.productoForm.get('imagen')?.clearValidators();
           this.productoForm.get('imagen')?.updateValueAndValidity();
         }
 
-        // 🥗 Cargar ingredientes - usar "hamburguesas" directamente
-        console.log('🥗 Categoria del producto:', producto.categoria_nombre);
-        console.log('🥗 Ingredientes actuales:', producto.ingredientes_detalle);
-
-        // Convertir categoria_nombre a la categoría de ingredientes
+        // Cargar ingredientes
         let categoriaIngredientes = '';
         if (producto.categoria_nombre === 'Hamburguesa') {
           categoriaIngredientes = 'hamburguesas';
@@ -178,12 +157,11 @@ export class CrearComponent implements OnInit {
         } else if (producto.categoria_nombre === 'Ensalada') {
           categoriaIngredientes = 'ensaladas';
         }
-        // Agregar más conversiones según tus categorías
 
         if (categoriaIngredientes) {
           this.cargarIngredientesYMarcarSeleccionados(
-            categoriaIngredientes,               // ✅ "hamburguesas"
-            producto.ingredientes_detalle || []  // ✅ Array completo de ingredientes
+            categoriaIngredientes,
+            producto.ingredientes_detalle || []
           );
         }
 
@@ -199,24 +177,19 @@ export class CrearComponent implements OnInit {
 
   private cargarIngredientesYMarcarSeleccionados(categoria: string, ingredientesSeleccionados: any[]): void {
     console.log('🥗 [EDICIÓN] Cargando ingredientes para categoría:', categoria);
-    console.log('🥗 [EDICIÓN] Ingredientes a marcar como seleccionados:', ingredientesSeleccionados);
 
     this.catalogoService.getIngredientesPorCategoria(categoria).subscribe({
       next: (ingredientesDisponibles) => {
-        console.log('✅ [EDICIÓN] Ingredientes disponibles cargados:', ingredientesDisponibles);
-
-        // 🔄 Mapear ingredientes disponibles y marcar los seleccionados
+        // Mapear ingredientes disponibles y marcar los seleccionados
         this.ingredientesDisponibles = ingredientesDisponibles.map(ingrediente => {
-          // Verificar si este ingrediente está en la lista de seleccionados
           const estaSeleccionado = ingredientesSeleccionados.some(sel => sel.id === ingrediente.id);
-
           return {
             ...ingrediente,
             seleccionado: estaSeleccionado
           };
         });
 
-        // 🎯 Actualizar ingredientes seleccionados
+        // Actualizar ingredientes seleccionados
         this.ingredientesSeleccionados = ingredientesSeleccionados.map(ing => ({
           id: ing.id,
           nombre: ing.nombre,
@@ -226,9 +199,6 @@ export class CrearComponent implements OnInit {
           es_base: ing.es_base,
           permite_extra: ing.permite_extra
         }));
-
-        console.log('✅ [EDICIÓN] Ingredientes disponibles procesados:', this.ingredientesDisponibles);
-        console.log('✅ [EDICIÓN] Ingredientes marcados como seleccionados:', this.ingredientesSeleccionados);
       },
       error: (error) => {
         console.error('❌ [EDICIÓN] Error al cargar ingredientes:', error);
@@ -243,12 +213,10 @@ export class CrearComponent implements OnInit {
     const index = this.ingredientesSeleccionados.findIndex(item => item.id === ingrediente.id);
 
     if (index > -1) {
-      // Deseleccionar
       this.ingredientesSeleccionados.splice(index, 1);
       ingrediente.seleccionado = false;
       console.log('❌ Ingrediente deseleccionado:', ingrediente.nombre);
     } else {
-      // Seleccionar
       this.ingredientesSeleccionados.push({
         id: ingrediente.id,
         nombre: ingrediente.nombre,
@@ -261,9 +229,7 @@ export class CrearComponent implements OnInit {
     }
 
     console.log('📋 Ingredientes seleccionados actuales:', this.ingredientesSeleccionados.length, 'ingredientes');
-    console.log('📋 IDs seleccionados:', this.ingredientesSeleccionados.map(ing => `${ing.id}:${ing.nombre}`));
   }
-
 
   onCategoriaSeleccionada(event: MatSelectChange): void {
     if (this.isEditMode) {
@@ -277,7 +243,6 @@ export class CrearComponent implements OnInit {
     console.log('🏷️ Categoría seleccionada:', categoria);
 
     if (categoria) {
-      // 🔧 CORREGIR: Usar mapeo consistente
       let categoriaIngredientes = '';
 
       if (categoria.nombre === 'Hamburguesa') {
@@ -294,12 +259,9 @@ export class CrearComponent implements OnInit {
         categoriaIngredientes = 'bebidas';
       }
 
-      console.log('🥗 Mapeando categoría:', categoria.nombre, '→', categoriaIngredientes);
-
       if (categoriaIngredientes) {
         this.cargarIngredientesPorCategoria(categoriaIngredientes);
       } else {
-        console.warn('⚠️ No se encontró mapeo para la categoría:', categoria.nombre);
         this.ingredientesDisponibles = [];
       }
     } else {
@@ -317,16 +279,10 @@ export class CrearComponent implements OnInit {
 
     this.catalogoService.getIngredientesPorCategoria(categoriaNombre).subscribe({
       next: (ingredientes) => {
-        console.log('✅ Ingredientes cargados:', ingredientes);
-
-        // En modo creación: todos empiezan como no seleccionados
-        // En modo edición: mantener el estado actual
         this.ingredientesDisponibles = ingredientes.map(ing => ({
           ...ing,
-          seleccionado: false // Se actualizará después si es modo edición
+          seleccionado: false
         }));
-
-        console.log('📋 Ingredientes disponibles actualizados:', this.ingredientesDisponibles);
       },
       error: (error) => {
         console.error('❌ Error al cargar ingredientes:', error);
@@ -335,27 +291,22 @@ export class CrearComponent implements OnInit {
     });
   }
 
-
-
   getFullImageUrl(imagenUrl: string | undefined): string {
     return this.catalogoService.getFullImageUrl(imagenUrl);
   }
 
-
-
-   eliminarImagen(): void {
+  eliminarImagen(): void {
     this.imagePreview = null;
     this.selectedFile = null;
-    this.currentImageUrl = null; // Limpiar imagen actual también
+    this.currentImageUrl = null;
 
-    //Solo marcar como error si estamos en modo creación
     this.productoForm.get('imagen')?.setValue(null);
     if (!this.isEditMode) {
       this.productoForm.get('imagen')?.markAsTouched();
     }
   }
 
-  // ← AGREGAR MÉTODOS PARA MOSTRAR ERRORES
+  // Getters para errores
   get nombreError(): string {
     const control = this.productoForm.get('nombre');
     if (control?.hasError('required') && control?.touched) {
@@ -374,7 +325,6 @@ export class CrearComponent implements OnInit {
 
   get categoriaError(): string {
     const control = this.productoForm.get('categoria');
-    // En modo edición, no mostrar error ya que el campo está deshabilitado
     if (this.isEditMode) {
       return '';
     }
@@ -415,16 +365,15 @@ export class CrearComponent implements OnInit {
   }
 
   onSubmit(): void {
-    // 🔧 OBTENER VALOR de categoría incluso si está deshabilitado
+    // Obtener valor de categoría incluso si está deshabilitado
     let categoriaValue;
     if (this.isEditMode) {
-      // En modo edición, la categoría está deshabilitada, obtener su valor
       categoriaValue = this.productoForm.get('categoria')?.value;
     } else {
       categoriaValue = this.productoForm.get('categoria')?.value;
     }
 
-    // 🔧 VALIDACIÓN PERSONALIZADA para modo edición
+    // Validación personalizada para modo edición
     const formValid = this.isEditMode ?
       this.validarFormularioParaEdicion() :
       this.productoForm.valid;
@@ -435,7 +384,7 @@ export class CrearComponent implements OnInit {
       const formData = new FormData();
       formData.append('nombre', this.productoForm.get('nombre')?.value);
       formData.append('descripcion', this.productoForm.get('descripcion')?.value);
-      formData.append('categoria', categoriaValue); // 🔧 Usar valor obtenido
+      formData.append('categoria', categoriaValue);
       formData.append('precio', this.productoForm.get('precio')?.value);
       formData.append('estado', this.productoForm.get('disponibilidad')?.value);
 
@@ -444,17 +393,17 @@ export class CrearComponent implements OnInit {
         formData.append('imagen', this.selectedFile, this.selectedFile.name);
       }
 
-      // 🔧 SIEMPRE enviar ingredientes (incluso si está vacío)
+      // Siempre enviar ingredientes (incluso si está vacío)
       const ingredientesIds = this.ingredientesSeleccionados.map(ing => ing.id);
       formData.append('ingredientes', JSON.stringify(ingredientesIds));
 
-      console.log('📤 Enviando datos:');
-      console.log('   Categoría:', categoriaValue);
-      console.log('   Ingredientes seleccionados:', this.ingredientesSeleccionados);
-      console.log('   IDs de ingredientes:', ingredientesIds);
-      console.log('   Total ingredientes:', ingredientesIds.length);
+      console.log('📤 Enviando datos:', {
+        categoria: categoriaValue,
+        ingredientes: this.ingredientesSeleccionados,
+        ingredientesIds: ingredientesIds,
+        total: ingredientesIds.length
+      });
 
-      // Decidir si crear o actualizar
       if (this.isEditMode) {
         this.actualizarProducto(formData);
       } else {
@@ -472,39 +421,23 @@ export class CrearComponent implements OnInit {
     const disponibilidad = this.productoForm.get('disponibilidad')?.value;
     const categoria = this.productoForm.get('categoria')?.value;
 
-    // Validar que todos los campos requeridos estén completos
     const camposCompletos = nombre && descripcion && precio && disponibilidad && categoria;
-
-    // Validar formato de precio
     const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
-
-    console.log('🔍 Validación edición:', {
-      nombre: !!nombre,
-      descripcion: !!descripcion,
-      precio: precioValido,
-      disponibilidad: !!disponibilidad,
-      categoria: !!categoria,
-      valid: camposCompletos && precioValido
-    });
 
     return camposCompletos && precioValido;
   }
 
-
-  // 🆕 Método separado para crear producto (MODIFICAR)
   private crearProducto(formData: FormData): void {
     this.catalogoService.crearProducto(formData).subscribe({
       next: (response) => {
         console.log('✅ Producto creado exitosamente', response);
-
-        // ❌ QUITAR: alert('🎉 Producto creado exitosamente!');
-
-        // ✅ AGREGAR: Mostrar popup personalizado
-        this.tituloPopup = '¡PRODUCTO CREADO!';
-        this.mensajePopup = 'El producto ha sido creado exitosamente y está listo para ser usado';
-        this.mostrarPopupExito = true;
-
         this.saving = false;
+
+        this.mostrarDialogExito(
+          'CREADO',
+          '¡El producto ha sido creado exitosamente!',
+          'Continuar'
+        );
       },
       error: (error) => {
         console.error('❌ Error al crear el producto', error);
@@ -514,23 +447,19 @@ export class CrearComponent implements OnInit {
     });
   }
 
-
-  // 🆕 Método para actualizar producto (MODIFICAR)
   private actualizarProducto(formData: FormData): void {
     if (!this.productoId) return;
 
     this.catalogoService.actualizarProducto(this.productoId, formData).subscribe({
       next: (response) => {
         console.log('✅ Producto actualizado exitosamente', response);
-
-        // ❌ QUITAR: alert('🎉 Producto actualizado exitosamente!');
-
-        // ✅ AGREGAR: Mostrar popup personalizado
-        this.tituloPopup = '¡PRODUCTO ACTUALIZADO!';
-        this.mensajePopup = 'El producto ha sido actualizado exitosamente con los nuevos datos';
-        this.mostrarPopupExito = true;
-
         this.saving = false;
+
+        this.mostrarDialogExito(
+          'ACTUALIZADO',
+          '¡El producto ha sido actualizado exitosamente!',
+          'Continuar'
+        );
       },
       error: (error) => {
         console.error('❌ Error al actualizar el producto', error);
@@ -540,33 +469,39 @@ export class CrearComponent implements OnInit {
     });
   }
 
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
 
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
 
-  // 🆕 Agregar método para cerrar popup
-cerrarPopupExito(): void {
-  this.mostrarPopupExito = false;
-
-  if (this.isEditMode) {
-    // En modo edición: redirigir a la lista después de cerrar popup
-    this.router.navigate(['/administrador/gestion-productos/editar']);
-  } else {
-    // En modo creación: limpiar formulario
-    this.limpiarFormulario();
+    dialogRef.afterClosed().subscribe(() => {
+      if (this.isEditMode) {
+        this.navegarAListaProductos();
+      } else {
+        this.limpiarFormulario();
+      }
+    });
   }
-}
 
+  private navegarAListaProductos(): void {
+    this.router.navigate(['/administrador/gestion-productos']);
+  }
 
   private limpiarFormulario(): void {
     this.productoForm.reset();
     this.imagePreview = null;
     this.selectedFile = null;
     this.currentImageUrl = null;
-
-    // 🔧 CORREGIR: Limpiar arrays de ingredientes
     this.ingredientesDisponibles = [];
     this.ingredientesSeleccionados = [];
 
-    // Resetear valores por defecto
     this.productoForm.patchValue({
       disponibilidad: '',
       categoria: ''

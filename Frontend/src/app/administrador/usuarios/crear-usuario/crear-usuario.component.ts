@@ -257,8 +257,8 @@ export class CrearUsuarioComponent implements OnInit {
         this.saving = false;
         
         this.mostrarDialogExito(
-          'Registro exitoso',
-          'El usuario se ha creado exitosamente',
+          'REGISTRO',
+          '¡El usuario se ha creado exitosamente!',
           'Continuar'
         );
       },
@@ -298,8 +298,8 @@ export class CrearUsuarioComponent implements OnInit {
         this.saving = false;
         
         this.mostrarDialogExito(
-          'Actualización exitosa',
-          'El usuario se ha actualizado exitosamente',
+          'ACTUALIZACIÓN',
+          '¡El usuario se ha actualizado exitosamente!',
           'Continuar'
         );
       },
