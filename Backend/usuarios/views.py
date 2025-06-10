@@ -660,72 +660,70 @@ def _get_accion_from_codename(codename):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def crear_usuario(request):
-    """Crear un nuevo usuario empleado con permisos específicos"""
-
-    # 🔐 Verificar permisos
-    if not request.user.has_perm('auth.add_user'):
-        return Response({
-            'error': 'No tienes permisos para crear usuarios'
-        }, status=status.HTTP_403_FORBIDDEN)
-
-    print("\n" + "="*60)
-    print("🎯 DATOS RECIBIDOS PARA CREAR USUARIO:")
-    print("="*60)
-    print(f"Cédula: {request.data.get('cedula')}")
-    print(f"Nombres: {request.data.get('nombres')}")
-    print(f"Apellidos: {request.data.get('apellidos')}")
-    print(f"Username: {request.data.get('username')}")
-    print(f"Email: {request.data.get('email')}")
-    print(f"Grupos: {request.data.get('grupos')}")
-    print(f"Establecimiento: {request.data.get('establecimiento')}")
-    print("="*60 + "\n")
-
+    """Crear un nuevo usuario empleado"""
     try:
-        # Obtener datos del request
-        cedula = request.data.get('cedula')
-        nombres = request.data.get('nombres')
-        apellidos = request.data.get('apellidos')
-        fecha_nacimiento = request.data.get('fechaNacimiento')
-        telefono = request.data.get('telefono')
-        sexo = request.data.get('sexo')
-        username = request.data.get('username')
-        email = request.data.get('email')
-        password = request.data.get('password')
-        turno_trabajo = request.data.get('turnoTrabajo')
-        grupos_ids = request.data.get('grupos', [])
-        is_active = request.data.get('isActive', True)
-        establecimiento_id = request.data.get('establecimiento')
+        # ✅ DEFINIR LA VARIABLE DATA AL INICIO
+        data = request.data
+        
+        # 🔍 DEBUG: Mostrar datos recibidos
+        print("============================================================")
+        print("🎯 DATOS RECIBIDOS PARA CREAR USUARIO:")
+        print("============================================================")
+        print(f"Cédula: {data.get('cedula')}")
+        print(f"Nombres: {data.get('nombres')}")
+        print(f"Apellidos: {data.get('apellidos')}")
+        print(f"Username: {data.get('username')}")
+        print(f"Email: {data.get('email')}")
+        print(f"Grupos: {data.get('grupos')}")
+        print(f"Establecimiento: {data.get('establecimiento')}")
+        print("============================================================")
 
-        # 🔍 Validaciones básicas
-        if not cedula or not nombres or not apellidos or not username or not email or not password:
-            return Response({
-                'error': 'Campos requeridos: cédula, nombres, apellidos, username, email, password'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # Validaciones requeridas
+        campos_requeridos = ['cedula', 'nombres', 'apellidos', 'username', 'email', 'password']
+        for campo in campos_requeridos:
+            if not data.get(campo):
+                return Response({
+                    'error': f'El campo {campo} es requerido'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validar cédula única
-        if AppkioskoEmpleados.objects.filter(cedula=cedula).exists():
-            return Response({
-                'error': f'Ya existe un empleado con la cédula {cedula}'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # Extraer datos
+        cedula = data.get('cedula')
+        nombres = data.get('nombres')
+        apellidos = data.get('apellidos')
+        fecha_nacimiento = data.get('fechaNacimiento')
+        telefono = data.get('telefono', '')
+        sexo = data.get('sexo', '')
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        turno_trabajo = data.get('turnoTrabajo', '')
+        grupos_ids = data.get('grupos', [])
+        is_active = data.get('isActive', True)
+        establecimiento_id = data.get('establecimiento')  # ✅ PUEDE SER NULL
 
-        # Validar username único
+        # Validar que el username y email no existan
         if User.objects.filter(username=username).exists():
             return Response({
-                'error': f'Ya existe un usuario con el username {username}'
+                'error': 'El nombre de usuario ya existe'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validar email único
         if User.objects.filter(email=email).exists():
             return Response({
-                'error': f'Ya existe un usuario con el email {email}'
+                'error': 'El email ya está registrado'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validar grupos
+        if AppkioskoEmpleados.objects.filter(cedula=cedula).exists():
+            return Response({
+                'error': 'La cédula ya está registrada'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Obtener grupos
+        grupos = []
         if grupos_ids:
             grupos = Group.objects.filter(id__in=grupos_ids)
             if len(grupos) != len(grupos_ids):
                 return Response({
-                    'error': 'Algunos roles seleccionados no son válidos'
+                    'error': 'Uno o más grupos no existen'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
         # 🏗️ Crear en una transacción
@@ -756,30 +754,33 @@ def crear_usuario(request):
             if grupos_ids:
                 user.groups.set(grupos)
 
-            # 4. ✅ ASIGNAR ESTABLECIMIENTO SI SE PROPORCIONA
-            establecimiento_id = data.get('establecimiento')
-            if establecimiento_id:
+            # 4. ✅ ASIGNAR ESTABLECIMIENTO SOLO SI SE PROPORCIONA Y NO ES NULL
+            if establecimiento_id is not None and establecimiento_id != '':
                 try:
                     establecimiento = AppkioskoEstablecimientos.objects.get(id=establecimiento_id)
-                    # ✅ CORREGIR: usar 'nombre' en lugar de 'estado'
                     estado_activo = AppkioskoEstados.objects.filter(
                         nombre="Activo",
                         is_active=True
                     ).first()
                     
-                    # Si no existe un estado "Activo", usar el primer estado disponible
                     if not estado_activo:
                         estado_activo = AppkioskoEstados.objects.filter(is_active=True).first()
                     
-                    AppkioskoEstablecimientosusuarios.objects.create(
-                        establecimiento=establecimiento,
-                        empleado=empleado,
-                        fecha_inicio_trabajo=timezone.now(),
-                        estado=estado_activo
-                    )
-                    print(f"✅ Empleado asignado al establecimiento: {establecimiento.nombre}")
+                    if estado_activo:
+                        AppkioskoEstablecimientosusuarios.objects.create(
+                            establecimiento=establecimiento,
+                            empleado=empleado,
+                            fecha_inicio_trabajo=timezone.now(),
+                            estado=estado_activo
+                        )
+                        print(f"✅ Empleado asignado al establecimiento: {establecimiento.nombre}")
+                    else:
+                        print("⚠️ No se encontró un estado activo para asignar")
+                        
                 except AppkioskoEstablecimientos.DoesNotExist:
                     print(f"⚠️ Establecimiento ID {establecimiento_id} no encontrado")
+            else:
+                print("ℹ️ No se asignó establecimiento (valor null o vacío)")
 
             # Log de éxito
             print(f"✅ USUARIO CREADO:")
@@ -789,22 +790,13 @@ def crear_usuario(request):
             print(f"   - Username: {user.username}")
             print(f"   - Email: {user.email}")
             print(f"   - Grupos: {[g.name for g in user.groups.all()]}")
-            print(f"   - Establecimiento: {establecimiento_id}")
+            print(f"   - Establecimiento: {establecimiento_id if establecimiento_id else 'No asignado'}")
 
-        return Response({
-            'message': f'Usuario {nombres} {apellidos} creado exitosamente',
-            'usuario': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'nombres': nombres,
-                'apellidos': apellidos,
-                'cedula': cedula,
-                'empleado_id': empleado.id,
-                'grupos': [{'id': g.id, 'name': g.name} for g in user.groups.all()],
-                'is_active': user.is_active
-            }
-        }, status=status.HTTP_201_CREATED)
+            return Response({
+                'message': 'Usuario creado exitosamente',
+                'user_id': user.id,
+                'empleado_id': empleado.id
+            }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         print(f"❌ ERROR CREANDO USUARIO: {str(e)}")
@@ -884,6 +876,22 @@ def empleado_detalle_actualizar(request, empleado_id):
                     'error': 'No tienes permisos para ver usuarios'
                 }, status=status.HTTP_403_FORBIDDEN)
 
+            # ✅ BUSCAR ESTABLECIMIENTO ACTUAL DEL EMPLEADO
+            establecimiento_actual = None
+            if empleado:
+                relacion_activa = AppkioskoEstablecimientosusuarios.objects.filter(
+                    empleado=empleado,
+                    fecha_fin_trabajo__isnull=True
+                ).select_related('establecimiento').first()
+                
+                if relacion_activa:
+                    establecimiento_actual = {
+                        'id': relacion_activa.establecimiento.id,
+                        'nombre': relacion_activa.establecimiento.nombre,
+                        'direccion': relacion_activa.establecimiento.direccion,
+                        'fecha_inicio': relacion_activa.fecha_inicio_trabajo
+                    }
+
             return Response({
                 'empleado': {
                     'id': user.id,
@@ -898,7 +906,9 @@ def empleado_detalle_actualizar(request, empleado_id):
                     'turno_trabajo': empleado.turno_trabajo if empleado else '',
                     'is_active': user.is_active,
                     'date_joined': user.date_joined,
-                    'roles': [{'id': grupo.id, 'name': grupo.name} for grupo in user.groups.all()]
+                    'roles': [{'id': grupo.id, 'name': grupo.name} for grupo in user.groups.all()],
+                    # ✅ AGREGAR ESTABLECIMIENTO ACTUAL
+                    'establecimiento_actual': establecimiento_actual
                 }
             }, status=status.HTTP_200_OK)
 
@@ -940,67 +950,63 @@ def empleado_detalle_actualizar(request, empleado_id):
                 empleado.sexo = data.get('sexo', empleado.sexo)
                 empleado.turno_trabajo = data.get('turnoTrabajo', empleado.turno_trabajo)
                 empleado.save()
-            else:
-                # Crear empleado si no existe y se proporcionan datos
-                if data.get('cedula'):
-                    empleado = AppkioskoEmpleados.objects.create(
-                        user=user,
-                        cedula=data.get('cedula'),
-                        nombres=data.get('nombres', user.first_name),
-                        apellidos=data.get('apellidos', user.last_name),
-                        fecha_nacimiento=data.get('fechaNacimiento'),
-                        telefono=data.get('telefono', ''),
-                        sexo=data.get('sexo', ''),
-                        turno_trabajo=data.get('turnoTrabajo', '')
-                    )
 
-            # ✅ MANEJAR ESTABLECIMIENTO EN ACTUALIZACIÓN
+            # ✅ MANEJAR ESTABLECIMIENTO EN ACTUALIZACIÓN (PUEDE SER NULL)
             establecimiento_id = data.get('establecimiento')
-            if establecimiento_id and empleado:
-                try:
-                    # Buscar relación existente activa
+            if empleado:
+                if establecimiento_id is not None and establecimiento_id != '':
+                    # Asignar establecimiento
+                    try:
+                        relacion_existente = AppkioskoEstablecimientosusuarios.objects.filter(
+                            empleado=empleado,
+                            fecha_fin_trabajo__isnull=True
+                        ).first()
+
+                        establecimiento = AppkioskoEstablecimientos.objects.get(id=establecimiento_id)
+                        estado_activo = AppkioskoEstados.objects.filter(
+                            nombre="Activo",
+                            is_active=True
+                        ).first()
+
+                        if not estado_activo:
+                            estado_activo = AppkioskoEstados.objects.filter(is_active=True).first()
+
+                        if relacion_existente:
+                            if relacion_existente.establecimiento.id != int(establecimiento_id):
+                                relacion_existente.fecha_fin_trabajo = timezone.now()
+                                relacion_existente.save()
+                                
+                                if estado_activo:
+                                    AppkioskoEstablecimientosusuarios.objects.create(
+                                        establecimiento=establecimiento,
+                                        empleado=empleado,
+                                        fecha_inicio_trabajo=timezone.now(),
+                                        estado=estado_activo
+                                    )
+                                print(f"✅ Empleado reasignado al establecimiento: {establecimiento.nombre}")
+                        else:
+                            if estado_activo:
+                                AppkioskoEstablecimientosusuarios.objects.create(
+                                    establecimiento=establecimiento,
+                                    empleado=empleado,
+                                    fecha_inicio_trabajo=timezone.now(),
+                                    estado=estado_activo
+                                )
+                            print(f"✅ Empleado asignado al establecimiento: {establecimiento.nombre}")
+
+                    except AppkioskoEstablecimientos.DoesNotExist:
+                        print(f"⚠️ Establecimiento ID {establecimiento_id} no encontrado")
+                else:
+                    # ✅ REMOVER ESTABLECIMIENTO (establecimiento_id es null o vacío)
                     relacion_existente = AppkioskoEstablecimientosusuarios.objects.filter(
                         empleado=empleado,
                         fecha_fin_trabajo__isnull=True
                     ).first()
-
-                    establecimiento = AppkioskoEstablecimientos.objects.get(id=establecimiento_id)
-                    # ✅ CORREGIR: usar 'nombre' en lugar de 'estado'
-                    estado_activo = AppkioskoEstados.objects.filter(
-                        nombre="Activo",
-                        is_active=True
-                    ).first()
                     
-                    # Si no existe un estado "Activo", usar el primer estado disponible
-                    if not estado_activo:
-                        estado_activo = AppkioskoEstados.objects.filter(is_active=True).first()
-
                     if relacion_existente:
-                        # Si cambió de establecimiento, finalizar la relación anterior
-                        if relacion_existente.establecimiento.id != establecimiento_id:
-                            relacion_existente.fecha_fin_trabajo = timezone.now()
-                            relacion_existente.save()
-                            
-                            # Crear nueva relación
-                            AppkioskoEstablecimientosusuarios.objects.create(
-                                establecimiento=establecimiento,
-                                empleado=empleado,
-                                fecha_inicio_trabajo=timezone.now(),
-                                estado=estado_activo
-                            )
-                            print(f"✅ Empleado reasignado al establecimiento: {establecimiento.nombre}")
-                    else:
-                        # No hay relación, crear nueva
-                        AppkioskoEstablecimientosusuarios.objects.create(
-                            establecimiento=establecimiento,
-                            empleado=empleado,
-                            fecha_inicio_trabajo=timezone.now(),
-                            estado=estado_activo
-                        )
-                        print(f"✅ Empleado asignado al establecimiento: {establecimiento.nombre}")
-
-                except AppkioskoEstablecimientos.DoesNotExist:
-                    print(f"⚠️ Establecimiento ID {establecimiento_id} no encontrado")
+                        relacion_existente.fecha_fin_trabajo = timezone.now()
+                        relacion_existente.save()
+                        print(f"✅ Empleado removido del establecimiento: {relacion_existente.establecimiento.nombre}")
 
             return Response({
                 'mensaje': 'Empleado actualizado exitosamente',
@@ -1025,55 +1031,43 @@ def empleado_detalle_actualizar(request, empleado_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def eliminar_empleado(request, empleado_id):
-    """Eliminar un empleado de la base de datos"""
-
-    # Verificar permisos (implementar después)
-    if not request.user.has_perm('auth.delete_user'):
-        return Response({
-            'error': 'No tienes permisos para eliminar usuarios'
-        }, status=status.HTTP_403_FORBIDDEN)
-
+    """Eliminar empleado y sus relaciones"""
     try:
         user = User.objects.get(id=empleado_id)
-
-        # Verificar que no se elimine a sí mismo
-        if user.id == request.user.id:
-            return Response({
-                'error': 'No puedes eliminar tu propia cuenta'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Verificar que no sea superuser
-        if user.is_superuser:
-            return Response({
-                'error': 'No se puede eliminar una cuenta de superusuario'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Guardar info para respuesta
-        username = user.username
-        nombre_completo = f"{user.first_name} {user.last_name}".strip()
-
-        # Eliminar empleado relacionado si existe
+        
+        # 🧹 LIMPIAR RELACIONES ANTES DE ELIMINAR
         try:
             empleado = AppkioskoEmpleados.objects.get(user=user)
-            nombre_completo = f"{empleado.nombres} {empleado.apellidos}".strip()
-            empleado.delete()
+            
+            # Finalizar relaciones activas
+            relaciones_activas = AppkioskoEstablecimientosusuarios.objects.filter(
+                empleado=empleado,
+                fecha_fin_trabajo__isnull=True
+            )
+            
+            for relacion in relaciones_activas:
+                relacion.fecha_fin_trabajo = timezone.now()
+                relacion.save()
+                
+            print(f"✅ {relaciones_activas.count()} relaciones finalizadas")
+            
         except AppkioskoEmpleados.DoesNotExist:
             pass
-
-        # Eliminar usuario
+        
+        # Eliminar usuario (esto eliminará el empleado si usas CASCADE)
         user.delete()
-
+        
         return Response({
-            'message': f'Usuario {nombre_completo or username} eliminado exitosamente'
+            'message': 'Usuario eliminado correctamente'
         }, status=status.HTTP_200_OK)
-
+        
     except User.DoesNotExist:
         return Response({
             'error': 'Usuario no encontrado'
         }, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({
-            'error': f'Error al eliminar usuario: {str(e)}'
+            'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])

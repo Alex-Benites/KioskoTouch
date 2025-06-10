@@ -125,10 +125,23 @@ export class CrearUsuarioComponent implements OnInit {
     this.loading = true;
     this.usuariosService.obtenerEmpleado(this.userId).subscribe({
       next: (response) => {
-              console.log('✅ Datos recibidos del backend:', response);
-      const empleado = response.empleado;
-      console.log('✅ Datos del empleado:', empleado);
+        console.log('✅ Datos recibidos del backend:', response);
+        const empleado = response.empleado;
+        console.log('✅ Datos del empleado:', empleado);
         
+        // ✅ DETERMINAR EL ESTABLECIMIENTO A MOSTRAR
+        let establecimientoSeleccionado = null;
+        let mensajeEstablecimiento = '';
+
+        if (empleado.establecimiento_actual) {
+          establecimientoSeleccionado = empleado.establecimiento_actual.id;
+          mensajeEstablecimiento = `Establecimiento actual: ${empleado.establecimiento_actual.nombre}`;
+          console.log('✅ Empleado tiene establecimiento:', empleado.establecimiento_actual);
+        } else {
+          mensajeEstablecimiento = 'Este empleado no tiene establecimiento asignado';
+          console.log('⚠️ Empleado sin establecimiento asignado');
+        }
+
         this.usuarioForm.patchValue({
           cedula: empleado.cedula,
           nombres: empleado.nombres,
@@ -141,8 +154,11 @@ export class CrearUsuarioComponent implements OnInit {
           turnoTrabajo: empleado.turno_trabajo,
           grupos: empleado.roles.length > 0 ? empleado.roles[0].id : null,
           isActive: empleado.is_active,
-          establecimiento: null
+          establecimiento: establecimientoSeleccionado  // ✅ ASIGNAR EL ESTABLECIMIENTO ACTUAL
         });
+
+        // ✅ MOSTRAR MENSAJE EN CONSOLA PARA DEBUG
+        console.log(`📍 ${mensajeEstablecimiento}`);
 
         // Remover validaciones de contraseña en modo edición
         this.usuarioForm.get('password')?.clearValidators();

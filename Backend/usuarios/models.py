@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 class AppkioskoClientes(models.Model):
     cedula = models.CharField(unique=True, max_length=10)
@@ -29,7 +31,7 @@ class AppkioskoEmpleados(models.Model):
     telefono = models.CharField(max_length=10, blank=True, null=True)
     sexo = models.CharField(max_length=50, blank=True, null=True)
     turno_trabajo = models.CharField(max_length=20, blank=True, null=True)
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -104,3 +106,26 @@ class PasswordResetToken(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.token} - {'USED' if self.used else 'ACTIVE'}"
+
+@receiver(post_delete, sender=User)
+def limpiar_relaciones_empleado(sender, instance, **kwargs):
+    """Limpiar relaciones cuando se elimina un usuario"""
+    try:
+        empleado = AppkioskoEmpleados.objects.get(user=instance)
+        # Finalizar relaciones activas en lugar de eliminarlas
+        from establecimientos.models import AppkioskoEstablecimientosusuarios
+        from django.utils import timezone
+        
+        relaciones_activas = AppkioskoEstablecimientosusuarios.objects.filter(
+            empleado=empleado,
+            fecha_fin_trabajo__isnull=True
+        )
+        
+        for relacion in relaciones_activas:
+            relacion.fecha_fin_trabajo = timezone.now()
+            relacion.save()
+            
+        print(f"✅ Relaciones de establecimiento finalizadas para empleado: {empleado}")
+        
+    except AppkioskoEmpleados.DoesNotExist:
+        pass
