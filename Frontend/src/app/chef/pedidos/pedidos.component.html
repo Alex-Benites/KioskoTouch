@@ -21,10 +21,25 @@
       </ng-template>
       
       <div class="tab-content">
+        <!-- Botón de acción general -->
+        <div class="actions-bar" *ngIf="getSelectedPedidos(pedidosActivos).length > 0">
+          <button 
+            class="btn-action finalizar" 
+            (click)="finalizarPedidosSeleccionados()">
+            <mat-icon>check_circle</mat-icon>
+            Finalizar Seleccionados ({{ getSelectedPedidos(pedidosActivos).length }})
+          </button>
+        </div>
+
         <div class="pedidos-grid">
           @for (pedido of pedidosActivos; track pedido.id) {
-            <div class="pedido-card">
-              <div class="pedido-header">
+            <div class="pedido-card" [class]="getTipoClasePedido(pedido.estado)">
+              <!-- Header rojo con checkbox -->
+              <div class="pedido-header-red">
+                <mat-checkbox 
+                  [checked]="pedido.selected"
+                  (change)="togglePedidoSelection(pedido)">
+                </mat-checkbox>
                 <span class="pedido-numero">#{{ pedido.numero }}</span>
                 <span class="pedido-tiempo">{{ pedido.tiempo_transcurrido }}</span>
               </div>
@@ -38,11 +53,10 @@
                 }
               </div>
               
-              <div class="pedido-actions">
-                <button class="btn-finalizar" (click)="finalizarPedido(pedido.id)">
-                  <mat-icon>check</mat-icon>
-                  Finalizar
-                </button>
+              <div class="pedido-estado">
+                <span class="estado-badge" [class]="'estado-' + pedido.estado">
+                  {{ pedido.estado === 'pendiente' ? 'Pendiente' : 'En Preparación' }}
+                </span>
               </div>
             </div>
           } @empty {
@@ -66,10 +80,25 @@
       </ng-template>
       
       <div class="tab-content">
+        <!-- Botón de acción general -->
+        <div class="actions-bar" *ngIf="getSelectedPedidos(pedidosFinalizados).length > 0">
+          <button 
+            class="btn-action restaurar" 
+            (click)="restaurarPedidosSeleccionados()">
+            <mat-icon>restore</mat-icon>
+            Restaurar Seleccionados ({{ getSelectedPedidos(pedidosFinalizados).length }})
+          </button>
+        </div>
+
         <div class="pedidos-grid">
           @for (pedido of pedidosFinalizados; track pedido.id) {
             <div class="pedido-card finalizado">
-              <div class="pedido-header">
+              <!-- Header rojo con checkbox -->
+              <div class="pedido-header-red">
+                <mat-checkbox 
+                  [checked]="pedido.selected"
+                  (change)="togglePedidoSelection(pedido)">
+                </mat-checkbox>
                 <span class="pedido-numero">#{{ pedido.numero }}</span>
                 <span class="pedido-hora">{{ pedido.hora_finalizacion }}</span>
               </div>
