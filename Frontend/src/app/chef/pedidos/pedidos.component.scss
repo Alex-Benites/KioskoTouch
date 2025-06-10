@@ -1,0 +1,136 @@
+// pedidos.component.scss
+.pedidos-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 30px;
+  
+  .page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1A1A1A;
+    margin: 0;
+  }
+}
+
+.chef-pedidos-tabs {
+  ::ng-deep .mat-mdc-tab-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .badge-count {
+      background: #d32f2f;
+      color: white;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  }
+}
+
+.tab-content {
+  padding: 20px 0;
+}
+
+.pedidos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.pedido-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-left: 4px solid #ff9800;
+  
+  &.finalizado {
+    border-left-color: #4caf50;
+    opacity: 0.8;
+  }
+}
+
+.pedido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  
+  .pedido-numero {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+  
+  .pedido-tiempo,
+  .pedido-hora {
+    font-size: 0.9rem;
+    color: #666;
+  }
+}
+
+.pedido-items {
+  margin-bottom: 15px;
+  
+  .item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 5px;
+    
+    .cantidad {
+      font-weight: 600;
+      color: #d32f2f;
+    }
+    
+    .nombre {
+      color: #1A1A1A;
+    }
+  }
+}
+
+.pedido-actions {
+  .btn-finalizar {
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    
+    &:hover {
+      background: #45a049;
+    }
+  }
+}
+
+.pedido-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.no-pedidos {
+  text-align: center;
+  color: #666;
+  padding: 40px;
+  
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+}

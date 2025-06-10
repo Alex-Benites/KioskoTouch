@@ -1,0 +1,101 @@
+<app-header-admin></app-header-admin>
+
+<div class="pedidos-container">
+  <div class="page-header">
+    <h1 class="page-title">Gestión de Pedidos</h1>
+  </div>
+
+  <mat-tab-group 
+    class="chef-pedidos-tabs" 
+    (selectedTabChange)="onTabChange($event.index)"
+    [selectedIndex]="selectedTabIndex">
+    
+    <!-- Tab Pedidos Activos -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>restaurant</mat-icon>
+        <span>Pedidos Activos</span>
+        <span class="badge-count" *ngIf="pedidosActivos.length > 0">
+          {{ pedidosActivos.length }}
+        </span>
+      </ng-template>
+      
+      <div class="tab-content">
+        <div class="pedidos-grid">
+          @for (pedido of pedidosActivos; track pedido.id) {
+            <div class="pedido-card">
+              <div class="pedido-header">
+                <span class="pedido-numero">#{{ pedido.numero }}</span>
+                <span class="pedido-tiempo">{{ pedido.tiempo_transcurrido }}</span>
+              </div>
+              
+              <div class="pedido-items">
+                @for (item of pedido.items; track item.id) {
+                  <div class="item">
+                    <span class="cantidad">{{ item.cantidad }}x</span>
+                    <span class="nombre">{{ item.nombre }}</span>
+                  </div>
+                }
+              </div>
+              
+              <div class="pedido-actions">
+                <button class="btn-finalizar" (click)="finalizarPedido(pedido.id)">
+                  <mat-icon>check</mat-icon>
+                  Finalizar
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div class="no-pedidos">
+              <mat-icon>restaurant_menu</mat-icon>
+              <p>No hay pedidos activos</p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
+    
+    <!-- Tab Pedidos Finalizados -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>check_circle</mat-icon>
+        <span>Pedidos Finalizados</span>
+        <span class="badge-count" *ngIf="pedidosFinalizados.length > 0">
+          {{ pedidosFinalizados.length }}
+        </span>
+      </ng-template>
+      
+      <div class="tab-content">
+        <div class="pedidos-grid">
+          @for (pedido of pedidosFinalizados; track pedido.id) {
+            <div class="pedido-card finalizado">
+              <div class="pedido-header">
+                <span class="pedido-numero">#{{ pedido.numero }}</span>
+                <span class="pedido-hora">{{ pedido.hora_finalizacion }}</span>
+              </div>
+              
+              <div class="pedido-items">
+                @for (item of pedido.items; track item.id) {
+                  <div class="item">
+                    <span class="cantidad">{{ item.cantidad }}x</span>
+                    <span class="nombre">{{ item.nombre }}</span>
+                  </div>
+                }
+              </div>
+              
+              <div class="pedido-status">
+                <mat-icon>check_circle</mat-icon>
+                <span>Completado</span>
+              </div>
+            </div>
+          } @empty {
+            <div class="no-pedidos">
+              <mat-icon>history</mat-icon>
+              <p>No hay pedidos finalizados hoy</p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
