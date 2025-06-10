@@ -1,16 +1,13 @@
-// pedidos.component.scss
-
-// ✅ Container ocupa toda la pantalla
 .pedidos-container {
   background: #F2F2F2;
   min-height: 100vh;
-  padding: 0; // Sin padding para usar toda la pantalla
+  padding: 0;
 }
 
 .page-header {
   background: #F2F2F2;
   padding: 20px 30px;
-  margin-bottom: 0; // Sin margin para continuidad
+  margin-bottom: 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   
   .page-title {
@@ -21,9 +18,8 @@
   }
 }
 
-// ✅ Tabs ocupan toda la altura disponible
 .chef-pedidos-tabs {
-  height: calc(100vh - 120px); // Altura total menos header
+  height: calc(100vh - 120px);
   
   ::ng-deep {
     .mat-mdc-tab-group {
@@ -31,25 +27,33 @@
     }
     
     .mat-mdc-tab-body-wrapper {
-      height: calc(100% - 48px); // Altura total menos las pestañas
+      height: calc(100% - 48px);
       background: #F2F2F2;
     }
     
     .mat-mdc-tab-body-content {
       height: 100%;
-      overflow-y: auto; // Scroll si es necesario
+      overflow-y: auto;
     }
     
-    // ✅ CAMBIAR: Header de tabs ahora gris en lugar de blanco
     .mat-mdc-tab-header {
-      background: #F2F2F2; // ← Era white, ahora #F2F2F2
+      background: #F2F2F2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .mdc-tab__text-label {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      line-height: 1 !important;
+      z-index: 2 !important;
 
+      mat-icon{
+        color: #d32f2f;
+      }
     }
     
     .mat-mdc-tab-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
       padding: 0 24px;
       min-width: 160px;
       
@@ -61,28 +65,29 @@
         font-size: 12px;
         font-weight: 600;
       }
-    }
-    
-    // ✅ AGREGAR: Estilos para pestañas activas e inactivas
-    .mat-mdc-tab-label {
+      
       &.mdc-tab--active {
-        background: #F2F2F2; // Pestaña activa ligeramente más clara
+        background: rgba(255, 255, 255, 0.7);
         border-radius: 8px 8px 0 0;
       }
       
       &:not(.mdc-tab--active) {
-        background: transparent; // Pestañas inactivas transparentes
+        background: transparent;
         
         &:hover {
-          background: rgba(255, 255, 255, 0.3); // Hover sutil
+          background: rgba(255, 255, 255, 0.3);
           border-radius: 8px 8px 0 0;
         }
       }
     }
     
+    .mdc-tab-indicator__content--underline {
+      background-color: #d32f2f;
+      height: 3px;
+    }
   }
 }
-// ✅ Content del tab ocupa toda la altura
+
 .tab-content {
   height: 100%;
   padding: 30px;
@@ -109,7 +114,7 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   border-left: 4px solid #ff9800;
   transition: transform 0.2s, box-shadow 0.2s;
-  height: fit-content; // Se ajusta al contenido
+  height: fit-content;
   
   &:hover {
     transform: translateY(-2px);
@@ -205,7 +210,6 @@
   border-radius: 10px;
 }
 
-// ✅ No pedidos centrado en toda la altura disponible
 .no-pedidos {
   display: flex;
   flex-direction: column;
@@ -213,9 +217,9 @@
   justify-content: center;
   text-align: center;
   color: #666;
-  width: 100%; // ✅ AGREGAR: Ancho completo
-  height: 100%; // ✅ MANTENER
-  min-height: 60vh; // ✅ CAMBIAR: De 400px a 60vh para mejor centrado
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
   
   mat-icon {
     font-size: 64px;
@@ -232,7 +236,6 @@
   }
 }
 
-// ✅ Responsive design
 @media (max-width: 768px) {
   .pedidos-grid {
     grid-template-columns: 1fr;
