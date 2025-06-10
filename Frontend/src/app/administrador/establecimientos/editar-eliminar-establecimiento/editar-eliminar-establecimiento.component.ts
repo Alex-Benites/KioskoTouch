@@ -41,7 +41,7 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
   filtroEstado: string = '';
   filtroProvincia: string = '';
   textoBusqueda: string = '';
-  loading = false; 
+  loading = false;
 
   constructor(
     private dialog: MatDialog,
@@ -74,19 +74,37 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
   }
 
   aplicarFiltros(): void {
+    console.log('🔍 Filtro Estado:', this.filtroEstado);
+
     this.establecimientosFiltrados = this.establecimientos.filter(establecimiento => {
-      // ✅ MEJOR: Usar estado_nombre si el backend lo devuelve
-      const cumpleFiltroEstado = !this.filtroEstado || 
-        (establecimiento.estado_nombre && establecimiento.estado_nombre === this.filtroEstado);
-      
-      const cumpleFiltroProvincia = !this.filtroProvincia || establecimiento.provincia === this.filtroProvincia;
-      
-      const cumpleBusquedaTexto = !this.textoBusqueda ||
-        establecimiento.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
-        establecimiento.ciudad.toLowerCase().includes(this.textoBusqueda.toLowerCase());
-        
-      return cumpleFiltroEstado && cumpleFiltroProvincia && cumpleBusquedaTexto;
+      // Usar acceso dinámico para evitar errores de TypeScript
+      const establecimientoAny = establecimiento as any;
+
+      // El estado viene como número desde el backend
+      const estadoActual = establecimientoAny.estado;
+
+      console.log(`🔍 Comparando: estadoActual="${estadoActual}" vs filtro="${this.filtroEstado}"`);
+
+      // Filtro por estado - comparar como números
+      const cumpleEstado = !this.filtroEstado ||
+                           estadoActual.toString() === this.filtroEstado;
+
+      // Filtro por provincia
+      const cumpleProvincia = !this.filtroProvincia ||
+                             establecimiento.provincia === this.filtroProvincia;
+
+      // Filtro por texto
+      const cumpleTexto = !this.textoBusqueda ||
+                         establecimiento.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
+                         establecimiento.ciudad.toLowerCase().includes(this.textoBusqueda.toLowerCase());
+
+      const resultado = cumpleEstado && cumpleProvincia && cumpleTexto;
+      console.log(`✅ ${establecimiento.nombre}: cumpleEstado=${cumpleEstado}, resultado final=${resultado}`);
+
+      return resultado;
     });
+
+    console.log('🎯 Total filtrados:', this.establecimientosFiltrados.length);
   }
 
   abrirDialogoEliminar(establecimiento: Establecimiento): void {
@@ -111,11 +129,24 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
       next: () => {
         this.establecimientos = this.establecimientos.filter(e => e.id !== establecimiento.id);
         this.aplicarFiltros();
-        
+
       },
       error: () => {
         alert('Error al eliminar el establecimiento.');
       }
     });
+  }
+
+  // Métodos helper para el estado
+  obtenerEstadoTexto(establecimiento: any): string {
+    return establecimiento.estado === 1 ? 'Activo' : 'Inactivo';
+  }
+
+  estaActivo(establecimiento: any): boolean {
+    return establecimiento.estado === 1;
+  }
+
+  estaInactivo(establecimiento: any): boolean {
+    return establecimiento.estado === 2;
   }
 }
