@@ -16,6 +16,8 @@ from django.db import transaction
 from .models import PasswordResetToken
 from django.utils import timezone
 
+from establecimientos.models import AppkioskoEstablecimientos, AppkioskoEstablecimientosusuarios
+from comun.models import AppkioskoEstados
 # Create your views here.
 
 def get_user_permissions(user):
@@ -754,6 +756,31 @@ def crear_usuario(request):
             if grupos_ids:
                 user.groups.set(grupos)
 
+            # 4. ✅ ASIGNAR ESTABLECIMIENTO SI SE PROPORCIONA
+            establecimiento_id = data.get('establecimiento')
+            if establecimiento_id:
+                try:
+                    establecimiento = AppkioskoEstablecimientos.objects.get(id=establecimiento_id)
+                    # ✅ CORREGIR: usar 'nombre' en lugar de 'estado'
+                    estado_activo = AppkioskoEstados.objects.filter(
+                        nombre="Activo",
+                        is_active=True
+                    ).first()
+                    
+                    # Si no existe un estado "Activo", usar el primer estado disponible
+                    if not estado_activo:
+                        estado_activo = AppkioskoEstados.objects.filter(is_active=True).first()
+                    
+                    AppkioskoEstablecimientosusuarios.objects.create(
+                        establecimiento=establecimiento,
+                        empleado=empleado,
+                        fecha_inicio_trabajo=timezone.now(),
+                        estado=estado_activo
+                    )
+                    print(f"✅ Empleado asignado al establecimiento: {establecimiento.nombre}")
+                except AppkioskoEstablecimientos.DoesNotExist:
+                    print(f"⚠️ Establecimiento ID {establecimiento_id} no encontrado")
+
             # Log de éxito
             print(f"✅ USUARIO CREADO:")
             print(f"   - User ID: {user.id}")
@@ -762,6 +789,7 @@ def crear_usuario(request):
             print(f"   - Username: {user.username}")
             print(f"   - Email: {user.email}")
             print(f"   - Grupos: {[g.name for g in user.groups.all()]}")
+            print(f"   - Establecimiento: {establecimiento_id}")
 
         return Response({
             'message': f'Usuario {nombres} {apellidos} creado exitosamente',
@@ -925,6 +953,54 @@ def empleado_detalle_actualizar(request, empleado_id):
                         sexo=data.get('sexo', ''),
                         turno_trabajo=data.get('turnoTrabajo', '')
                     )
+
+            # ✅ MANEJAR ESTABLECIMIENTO EN ACTUALIZACIÓN
+            establecimiento_id = data.get('establecimiento')
+            if establecimiento_id and empleado:
+                try:
+                    # Buscar relación existente activa
+                    relacion_existente = AppkioskoEstablecimientosusuarios.objects.filter(
+                        empleado=empleado,
+                        fecha_fin_trabajo__isnull=True
+                    ).first()
+
+                    establecimiento = AppkioskoEstablecimientos.objects.get(id=establecimiento_id)
+                    # ✅ CORREGIR: usar 'nombre' en lugar de 'estado'
+                    estado_activo = AppkioskoEstados.objects.filter(
+                        nombre="Activo",
+                        is_active=True
+                    ).first()
+                    
+                    # Si no existe un estado "Activo", usar el primer estado disponible
+                    if not estado_activo:
+                        estado_activo = AppkioskoEstados.objects.filter(is_active=True).first()
+
+                    if relacion_existente:
+                        # Si cambió de establecimiento, finalizar la relación anterior
+                        if relacion_existente.establecimiento.id != establecimiento_id:
+                            relacion_existente.fecha_fin_trabajo = timezone.now()
+                            relacion_existente.save()
+                            
+                            # Crear nueva relación
+                            AppkioskoEstablecimientosusuarios.objects.create(
+                                establecimiento=establecimiento,
+                                empleado=empleado,
+                                fecha_inicio_trabajo=timezone.now(),
+                                estado=estado_activo
+                            )
+                            print(f"✅ Empleado reasignado al establecimiento: {establecimiento.nombre}")
+                    else:
+                        # No hay relación, crear nueva
+                        AppkioskoEstablecimientosusuarios.objects.create(
+                            establecimiento=establecimiento,
+                            empleado=empleado,
+                            fecha_inicio_trabajo=timezone.now(),
+                            estado=estado_activo
+                        )
+                        print(f"✅ Empleado asignado al establecimiento: {establecimiento.nombre}")
+
+                except AppkioskoEstablecimientos.DoesNotExist:
+                    print(f"⚠️ Establecimiento ID {establecimiento_id} no encontrado")
 
             return Response({
                 'mensaje': 'Empleado actualizado exitosamente',

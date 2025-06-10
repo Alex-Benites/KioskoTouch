@@ -24,8 +24,11 @@ import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/succe
 import { UsuariosService } from '../../../services/usuarios.service';
 import { RolesService } from '../../../services/roles.service';
 
+import { EstablecimientosService } from '../../../services/establecimientos.service';
+
 // Models
 import { GruposResponse, Grupo } from '../../../models/roles.model';
+import { Establecimiento } from '../../../models/establecimiento.model';
 
 @Component({
   selector: 'app-crear-usuario',
@@ -57,6 +60,7 @@ export class CrearUsuarioComponent implements OnInit {
   private dialog = inject(MatDialog);
   private usuariosService = inject(UsuariosService);
   private rolesService = inject(RolesService);
+  private establecimientosService = inject(EstablecimientosService);
 
   usuarioForm!: FormGroup;
   isEditMode = false;
@@ -67,11 +71,7 @@ export class CrearUsuarioComponent implements OnInit {
   hideConfirmPassword = true;
 
   // Datos para los selects
-  establecimientos = [
-    { id: 1, nombre: 'Establecimiento Central' },
-    { id: 2, nombre: 'Sucursal Norte' },
-    { id: 3, nombre: 'Sucursal Sur' }
-  ];
+  establecimientos: Establecimiento[] = [];
 
   rolesDisponibles: Grupo[] = [];
 
@@ -90,6 +90,7 @@ export class CrearUsuarioComponent implements OnInit {
 
     // Cargar datos necesarios
     this.cargarRoles();
+    this.cargarEstablecimientos();
   }
 
   private initializeForm(): void {
@@ -173,6 +174,19 @@ export class CrearUsuarioComponent implements OnInit {
     });
   }
 
+  private cargarEstablecimientos(): void {
+    this.establecimientosService.obtenerEstablecimientos().subscribe({
+      next: (establecimientos: Establecimiento[]) => {
+        this.establecimientos = establecimientos;
+        console.log('✅ Establecimientos cargados:', this.establecimientos);
+      },
+      error: (error) => {
+        console.error('Error al cargar establecimientos:', error);
+        this.mostrarError('Error al cargar los establecimientos disponibles');
+      }
+    });
+  }
+
   // Validador personalizado para cédula ecuatoriana
   private cedulaEcuatorianaValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -246,8 +260,9 @@ export class CrearUsuarioComponent implements OnInit {
       formData.grupos = [formData.grupos];
     }
     
-    formData.establecimiento = null;
     delete formData.confirmPassword;
+    // ❌ ELIMINAR O COMENTAR ESTA LÍNEA SI EXISTE:
+    // delete formData.establecimiento;
 
     console.log('🎯 Datos a enviar para crear usuario:', formData);
 
@@ -283,11 +298,12 @@ export class CrearUsuarioComponent implements OnInit {
       formData.grupos = [formData.grupos];
     }
     
-    formData.establecimiento = null;
     delete formData.confirmPassword;
     if (!formData.password) {
       delete formData.password;
     }
+    // ❌ ELIMINAR O COMENTAR ESTA LÍNEA SI EXISTE:
+    // delete formData.establecimiento;
 
     console.log('🎯 Datos a enviar para actualizar usuario:', formData);
 
