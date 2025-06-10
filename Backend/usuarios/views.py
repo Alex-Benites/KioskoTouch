@@ -661,6 +661,13 @@ def _get_accion_from_codename(codename):
 @permission_classes([IsAuthenticated])
 def crear_usuario(request):
     """Crear un nuevo usuario empleado"""
+    
+    # 🔐 Verificar permisos
+    if not request.user.has_perm('auth.add_user'):
+        return Response({
+            'error': 'No tienes permisos para crear usuarios'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
     try:
         # ✅ DEFINIR LA VARIABLE DATA AL INICIO
         data = request.data
