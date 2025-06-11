@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,6 +14,8 @@ import { PublicidadService } from '../../../services/publicidad.service';
 import { Producto, Estado, Categoria, Menu } from '../../../models/catalogo.model';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -29,6 +31,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./crear-promocion.component.scss']
 })
 export class CrearPromocionComponent implements OnInit {
+  private dialog = inject(MatDialog);
   promocionForm: FormGroup;
   imagePreview: string | null = null;
   selectedFile: File | null = null;
@@ -300,7 +303,11 @@ export class CrearPromocionComponent implements OnInit {
     } else {
       this.publicidadService.crearPromocion(formData).subscribe({
         next: (resp) => {
-          alert('Promoción creada exitosamente');
+          this.mostrarDialogExito(
+            'CREADO',
+            '¡La Promocion ha sido creada exitosamente!',
+            'Continuar'
+          );
           this.router.navigate(['/administrador/gestion-promociones']);
         },
         error: (err) => {
@@ -342,7 +349,11 @@ actualizarPromocion(formData: FormData): void {
 
   this.publicidadService.actualizarPromocion(this.promocionId, formData).subscribe({
     next: (response) => {
-      alert('🎉 Promoción actualizada exitosamente!');
+      this.mostrarDialogExito(
+        'CREADO',
+        '¡La Promocion ha sido actualizada exitosamente!',
+        'Continuar'
+      );
       this.saving = false;
       this.router.navigate(['/administrador/gestion-promociones']);
     },
@@ -388,7 +399,29 @@ eliminarMenus(): void {
 tieneProductoOMenuSeleccionado(): boolean {
   return this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0;
 }
+private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+  const dialogData: SuccessDialogData = {
+    title,
+    message,
+    buttonText
+  };
 
+  const dialogRef = this.dialog.open(SuccessDialogComponent, {
+    disableClose: true,
+    data: dialogData
+  });
+
+  dialogRef.afterClosed().subscribe(() => {
+    if (this.isEditMode) {
+      this.navegarAListaMenus();
+    } else {
+      this.router.navigate(['/administrador/gestion-promociones']);
+    }
+  });
+}
+private navegarAListaMenus(): void {
+  this.router.navigate(['/administrador/gestion-promociones/crear']);
+}
 private cargarPromocionParaEditar(): void {
   if (!this.promocionId) return;
 

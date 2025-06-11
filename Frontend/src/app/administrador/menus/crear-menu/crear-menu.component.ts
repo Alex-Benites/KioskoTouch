@@ -1,4 +1,4 @@
-import { Component,OnInit } from '@angular/core';
+import { Component,OnInit, inject } from '@angular/core';
 import { FormBuilder, FormsModule, FormGroup, Validators, ReactiveFormsModule, FormControl, FormArray } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -6,12 +6,14 @@ import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { CatalogoService } from '../../../services/catalogo.service';
 import {  Producto, Estado } from '../../../models/catalogo.model';
-import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregar ActivatedRoute
+import { Router, ActivatedRoute } from '@angular/router';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 import { environment } from '../../../../environments/environment'; 
 
 @Component({
@@ -33,6 +35,7 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./crear-menu.component.scss']
 })
 export class CrearMenuComponent implements OnInit {
+  private dialog = inject(MatDialog);
   menuForm: FormGroup;
   estados: any[] = [];
   imagePreview: string | null = null;
@@ -349,9 +352,11 @@ export class CrearMenuComponent implements OnInit {
     this.catalogoService.crearMenu(formData).subscribe({
       next: (response) => {
         console.log('✅ menu creado exitosamente', response);
-        alert('🎉 menu creado exitosamente!');
-        this.limpiarFormulario();
-        this.saving = false;
+        this.mostrarDialogExito(
+          'CREADO',
+          '¡El Menu ha sido creado exitosamente!',
+          'Continuar'
+        );
       },
       error: (error) => {
         console.error('❌ Error al crear el menu', error);
@@ -369,9 +374,12 @@ export class CrearMenuComponent implements OnInit {
     this.catalogoService.actualizarMenu(this.menuId, formData).subscribe({
       next: (response) => {
         console.log('✅ menu actualizado exitosamente', response);
-        alert('🎉 menu actualizado exitosamente!');
         this.saving = false;
-        // 🆕 Redirigir a la lista después de editar
+        this.mostrarDialogExito(
+          'ACTUALIZADO',
+          '¡El Menu ha sido actualizado exitosamente!',
+          'Continuar'
+        );
         this.router.navigate(['/administrador/gestion-menus/editar-eliminar']);
       },
       error: (error) => {
@@ -381,8 +389,29 @@ export class CrearMenuComponent implements OnInit {
       }
     });
   }
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
 
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
 
+    dialogRef.afterClosed().subscribe(() => {
+      if (this.isEditMode) {
+        this.navegarAListaMenus();
+      } else {
+        this.limpiarFormulario();
+      }
+    });
+  }
+  private navegarAListaMenus(): void {
+    this.router.navigate(['/administrador/gestion-menus/crear']);
+  }
 
   private limpiarFormulario(): void {
     this.menuForm.reset();
