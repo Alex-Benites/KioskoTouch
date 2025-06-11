@@ -133,5 +133,10 @@ export class CatalogoService {
     });
   }
 
-  
+  // ✅ CAMBIAR este método que ya tienes
+  getEstablecimientos(): Observable<any[]> {
+    const url = `${this.apiUrl}/establecimientos/`;
+    return this.http.get<any[]>(url, this.getHttpOptions());
+  }
+
 }

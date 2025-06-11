@@ -22,10 +22,10 @@
       <mat-form-field appearance="outline" class="filter-field">
         <mat-select [(value)]="filtroKiosco" (selectionChange)="aplicarFiltros()">
           <mat-option value="">Seleccione kiosco</mat-option>
-          <mat-option value="kiosco1">Kiosco 1</mat-option>
-          <mat-option value="kiosco2">Kiosco 2</mat-option>
-          <mat-option value="kiosco3">Kiosco 3</mat-option>
-          <mat-option value="kiosco4">Kiosco 4</mat-option>
+          <!-- ✅ CAMBIAR: Cargar kioscos dinámicamente -->
+          <mat-option *ngFor="let kiosco of kioscos" [value]="kiosco.id">
+            {{ kiosco.nombre }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
     </div>
@@ -44,27 +44,23 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let pantalla of pantallasFiltradas" [class.inactive-row]="pantalla.estado === 'inactivo'">
-          <td>{{ pantalla.nombre }}</td>
-          <td>{{ pantalla.token }}</td>
-          <td>{{ pantalla.kiosco_touch?.nombre || 'Sin kiosco' }}</td>
+        <!-- ✅ CAMBIAR: Iterar sobre las filas expandidas -->
+        <tr *ngFor="let fila of filasExpandidas" [class.inactive-row]="fila.pantalla.estado === 'inactivo'">
+          <td>{{ fila.pantalla.nombre }}</td>
+          <td>{{ fila.pantalla.token }}</td>
+          <td>{{ fila.kiosco?.nombre || 'Sin kiosco' }}</td>
           <td>
-            <span class="estado-badge" [class.activo]="pantalla.estado === 'activo'" [class.inactivo]="pantalla.estado === 'inactivo'">
-              {{ pantalla.estado | titlecase }}
+            <span class="estado-badge"
+                  [class.activo]="fila.pantalla.estado === 'activo'"
+                  [class.inactivo]="fila.pantalla.estado === 'inactivo'">
+              {{ fila.pantalla.estado | titlecase }}
             </span>
           </td>
           <td class="actions-cell">
-            <!-- Toggle Switch para cambiar estado -->
-            <mat-slide-toggle
-              [checked]="pantalla.estado === 'activo'"
-              (change)="cambiarEstado(pantalla, $event)"
-              [color]="'primary'">
-            </mat-slide-toggle>
-
             <!-- Botón Editar con imagen personalizada -->
             <button mat-icon-button
                     class="action-button edit-button"
-                    (click)="editarPantalla(pantalla)"
+                    (click)="editarPantalla(fila.pantalla)"
                     matTooltip="Editar pantalla">
               <img src="assets/admin/ADMIN_7.png" alt="Editar" class="custom-icon">
             </button>
@@ -72,7 +68,7 @@
             <!-- Botón Eliminar con imagen personalizada -->
             <button mat-icon-button
                     class="action-button delete-button"
-                    (click)="abrirDialogoEliminar(pantalla)"
+                    (click)="abrirDialogoEliminar(fila.pantalla)"
                     matTooltip="Eliminar pantalla">
               <img src="assets/admin/ADMIN_7_1.png" alt="Eliminar" class="custom-icon">
             </button>
@@ -82,7 +78,7 @@
     </table>
 
     <!-- Mensaje cuando no hay datos -->
-    <div class="no-data" *ngIf="pantallasFiltradas.length === 0">
+    <div class="no-data" *ngIf="filasExpandidas.length === 0">
       <p>No se encontraron pantallas con los filtros aplicados.</p>
     </div>
   </div>

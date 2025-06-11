@@ -40,6 +40,8 @@ import { SuccessDialogComponent } from '../../../shared/success-dialog/success-d
 export class CrearPantallaCocinaComponent implements OnInit {
   form: FormGroup;
   kioscos: any[] = [];
+  kioscosFiltrados: any[] = []; // ✅ AGREGAR esta propiedad
+  establecimientos: any[] = []; // ✅ AGREGAR esta propiedad
   kioscosAsociados: any[] = [];
   loading = false;
   estados: { id: number, nombre: string }[] = [];
@@ -53,21 +55,20 @@ export class CrearPantallaCocinaComponent implements OnInit {
     private pantallaCocinaService: PantallaCocinaService,
     private kioskoTouchService: KioskoTouchService,
     private catalogoService: CatalogoService,
-    private dialog: MatDialog 
+    private dialog: MatDialog
   ) {
     this.form = this.fb.group({
       nombrePantalla: ['', [Validators.required]],
       estadoPantalla: [''],
       token: ['', [Validators.required]],
-      // ✅ AGREGAR ESTOS CAMPOS QUE ESTÁN CAUSANDO ERRORES
       kioscoAsociado: [''],
-      buscarCiudad: [''],
-      buscarEstablecimiento: ['']
+      establecimientoFiltro: [''] // ✅ AGREGAR este control
     });
   }
 
   ngOnInit(): void {
     this.cargarEstados();
+    this.cargarEstablecimientos(); // ✅ AGREGAR esta llamada
     this.generarToken();
 
     // Detectar modo edición
@@ -80,6 +81,40 @@ export class CrearPantallaCocinaComponent implements OnInit {
         this.cargarPantallaParaEditar();
       }
     });
+  }
+
+  // ✅ AGREGAR este método
+  cargarEstablecimientos(): void {
+    this.catalogoService.getEstablecimientos().subscribe({
+      next: (establecimientos) => {
+        this.establecimientos = establecimientos;
+        console.log('✅ Establecimientos cargados:', this.establecimientos);
+      },
+      error: (error) => {
+        console.error('❌ Error cargando establecimientos:', error);
+      }
+    });
+  }
+
+  // ✅ AGREGAR este método
+  filtrarPorEstablecimiento(): void {
+    const establecimientoSeleccionado = this.form.get('establecimientoFiltro')?.value;
+
+    console.log('🔍 Filtro aplicado:', establecimientoSeleccionado);
+    console.log('📱 Kioscos disponibles:', this.kioscos);
+
+    if (!establecimientoSeleccionado || establecimientoSeleccionado === '') {
+      this.kioscosFiltrados = [...this.kioscos];
+    } else {
+      // ✅ USAR kiosco.establecimiento.id porque el establecimiento es un objeto
+      this.kioscosFiltrados = this.kioscos.filter(kiosco => {
+        const establecimientoId = kiosco.establecimiento?.id;
+        console.log(`🔍 Comparando kiosco "${kiosco.nombre}": establecimientoId=${establecimientoId}, seleccionado=${establecimientoSeleccionado}`);
+        return establecimientoId === establecimientoSeleccionado;
+      });
+    }
+
+    console.log('📱 Kioscos filtrados resultado:', this.kioscosFiltrados);
   }
 
   cargarEstados(): void {
@@ -110,20 +145,22 @@ export class CrearPantallaCocinaComponent implements OnInit {
   cargarKioscos(): Promise<void> {
     console.log('🔍 INICIANDO carga de kioskos...');
     this.loading = true;
-    
+
     return new Promise((resolve, reject) => {
       this.kioskoTouchService.obtenerKioscosTouch().subscribe({
         next: (data) => {
           console.log('✅ Kioskos recibidos del backend:', data);
-          
+
           if (data && Array.isArray(data)) {
             this.kioscos = data.map(k => ({ ...k, seleccionado: false }));
+            this.kioscosFiltrados = [...this.kioscos]; // ✅ INICIALIZAR filtrados
             console.log('✅ Kioskos procesados:', this.kioscos);
           } else {
             console.warn('⚠️ Los datos no son un array válido');
             this.kioscos = [];
+            this.kioscosFiltrados = []; // ✅ INICIALIZAR filtrados vacío
           }
-          
+
           this.loading = false;
           resolve(); // ✅ Resolver la promesa cuando termine
         },
@@ -131,6 +168,7 @@ export class CrearPantallaCocinaComponent implements OnInit {
           console.error('❌ ERROR cargando kioscos:', error);
           alert('Error al cargar kioscos: ' + (error.message || 'Error desconocido'));
           this.loading = false;
+          this.kioscosFiltrados = []; // ✅ INICIALIZAR filtrados vacío en error
           reject(error); // ✅ Rechazar en caso de error
         }
       });
@@ -139,14 +177,14 @@ export class CrearPantallaCocinaComponent implements OnInit {
 
   cargarPantallaParaEditar(): void {
     if (!this.pantallaId) return;
-    
+
     console.log('🔧 Cargando pantalla para editar, ID:', this.pantallaId);
     console.log('🔧 Kioskos disponibles ANTES de buscar:', this.kioscos); // ✅ DEBUG
-    
+
     this.pantallaCocinaService.obtenerPantallaCoci‌naPorId(this.pantallaId).subscribe({
       next: (pantalla) => {
         console.log('✅ Datos de pantalla recibidos:', pantalla);
-        
+
         // Cargar datos básicos de la pantalla
         this.form.patchValue({
           nombrePantalla: pantalla.nombre,
@@ -158,7 +196,7 @@ export class CrearPantallaCocinaComponent implements OnInit {
         if (pantalla.kioskos_asociados && Array.isArray(pantalla.kioskos_asociados)) {
           console.log('📱 Kioskos asociados a la pantalla:', pantalla.kioskos_asociados);
           console.log('📱 Kioskos disponibles para buscar:', this.kioscos.length); // ✅ DEBUG
-          
+
           // Buscar los kioskos en la lista cargada
           const kioscosAsociados = pantalla.kioskos_asociados.map((kioscoId: number) => {
             const kiosco = this.kioscos.find(k => k.id === kioscoId);
@@ -168,11 +206,11 @@ export class CrearPantallaCocinaComponent implements OnInit {
             }
             return null;
           }).filter((k: any) => k !== null);
-          
+
           console.log('✅ Kioskos encontrados y asociados:', kioscosAsociados);
           this.kioscosAsociados = kioscosAsociados;
           this.actualizarCampoKioscoAsociado();
-          
+
         } else {
           console.log('⚠️ No hay kioskos asociados a esta pantalla');
         }
@@ -198,7 +236,7 @@ export class CrearPantallaCocinaComponent implements OnInit {
     console.log('🔧 AGREGAR KIOSCO - Estado antes:');
     console.log('📱 Kioskos actualmente asociados:', this.kioscosAsociados);
     console.log('📱 Kioskos seleccionados para agregar:', this.kioscos.filter(k => k.seleccionado));
-    
+
     const kioscosSeleccionados = this.kioscos.filter(k => k.seleccionado);
 
     if (kioscosSeleccionados.length === 0) {
@@ -209,9 +247,9 @@ export class CrearPantallaCocinaComponent implements OnInit {
     // ✅ PERMITIR MÚLTIPLES KIOSKOS
     kioscosSeleccionados.forEach(kioscoSeleccionado => {
       const kioscoYaAsociado = this.kioscosAsociados.find(ka => ka.id === kioscoSeleccionado.id);
-      console.log(`🔍 Verificando kiosco ${kioscoSeleccionado.nombre} (ID: ${kioscoSeleccionado.id}):`, 
+      console.log(`🔍 Verificando kiosco ${kioscoSeleccionado.nombre} (ID: ${kioscoSeleccionado.id}):`,
                  kioscoYaAsociado ? 'YA ASOCIADO' : 'NUEVO');
-      
+
       if (!kioscoYaAsociado) {
         this.kioscosAsociados.push(kioscoSeleccionado);
         console.log(`✅ Kiosco agregado: ${kioscoSeleccionado.nombre}`);
@@ -263,7 +301,7 @@ export class CrearPantallaCocinaComponent implements OnInit {
       console.log('🔧 GUARDANDO PANTALLA - Verificación:');
       console.log('📱 Kioskos asociados actuales:', this.kioscosAsociados);
       console.log('📱 IDs que se van a enviar:', this.kioscosAsociados.map(k => k.id));
-      
+
       if (this.kioscosAsociados.length === 0) {
         alert('Debe asociar al menos un kiosco antes de crear la pantalla.');
         return;
@@ -284,7 +322,7 @@ export class CrearPantallaCocinaComponent implements OnInit {
       if (this.isEditMode && this.pantallaId) {
         // Modo edición
         console.log('🔧 Modo EDICIÓN - Actualizando pantalla ID:', this.pantallaId);
-        
+
         this.pantallaCocinaService.actualizarPantallaCocina(this.pantallaId, pantallaData).subscribe({
           next: (response) => {
             console.log('✅ Respuesta del backend (edición):', response);

@@ -15,7 +15,7 @@ import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { PantallaCocinaService } from '../../../services/pantalla-cocina.service';
 import { PantallaCocina } from '../../../models/pantalla-cocina-editar.model';
-
+import { KioskoTouchService } from '../../../services/kiosko-touch.service'; // ✅ AGREGAR este import
 
 @Component({
   selector: 'app-editar-eliminar-pantalla-cocina',
@@ -38,61 +38,144 @@ import { PantallaCocina } from '../../../models/pantalla-cocina-editar.model';
   ]
 })
 export class EditarEliminarPantallaCocinaComponent implements OnInit {
-  pantallas: PantallaCocina[] = [];
-  pantallasFiltradas: PantallaCocina[] = [];
+  pantallas: any[] = [];
+  pantallasFiltradas: any[] = [];
+  filasExpandidas: any[] = [];
+  kioscos: any[] = []; // ✅ AGREGAR esta propiedad
+
   filtroEstado: string = '';
   filtroKiosco: string = '';
-  textoBusqueda: string = '';
-  loading = false;
+  loading: boolean = false; // ✅ AGREGAR esta propiedad
+  textoBusqueda: string = ''; // ✅ AGREGAR esta propiedad
+
+  // ✅ AGREGAR nueva propiedad
+  todasLasFilasExpandidas: any[] = []; // Nueva propiedad para almacenar todas las filas
 
   constructor(
-    private dialog: MatDialog,
     private pantallaCocinaService: PantallaCocinaService,
+    private kioskoTouchService: KioskoTouchService, // ✅ AGREGAR este servicio
+    private dialog: MatDialog,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.cargarKioscos(); // ✅ AGREGAR esta llamada
     this.cargarPantallas();
   }
 
-  cargarPantallas(): void {
+  // ✅ AGREGAR este método
+  cargarKioscos(): void {
     this.loading = true;
-    this.pantallaCocinaService.obtenerPantallasCocina().subscribe({
-      next: (data) => {
-        this.pantallas = data;
-        this.pantallasFiltradas = [...data];
+    this.kioskoTouchService.obtenerKioscosTouch().subscribe({
+      next: (data: any) => {
+        this.kioscos = data;
         this.loading = false;
-        console.log('✅ Pantallas cargadas:', this.pantallas.length);
+        console.log('✅ Kioscos cargados para filtro:', this.kioscos);
       },
-      error: (error) => {
+      error: (error: any) => {
+        console.error('❌ Error cargando kioscos:', error);
+        this.kioscos = [];
         this.loading = false;
-        console.error('❌ Error al cargar pantallas:', error);
-        alert('Error al cargar pantallas');
-        this.pantallas = [];
-        this.pantallasFiltradas = [];
       }
     });
   }
 
+  // ✅ MODIFICAR completamente el método aplicarFiltros
   aplicarFiltros(): void {
-    this.pantallasFiltradas = this.pantallas.filter(pantalla => {
-      const cumpleFiltroEstado = !this.filtroEstado || pantalla.estado === this.filtroEstado;
-      const cumpleFiltroKiosco = !this.filtroKiosco || 
-        (pantalla.kiosco_touch && pantalla.kiosco_touch.nombre === this.filtroKiosco);
-      const cumpleBusquedaTexto = !this.textoBusqueda ||
-        pantalla.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
-        (pantalla.kiosco_touch && pantalla.kiosco_touch.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()));
-      
-      return cumpleFiltroEstado && cumpleFiltroKiosco && cumpleBusquedaTexto;
+    // Primero expandir TODAS las pantallas (sin filtrar)
+    this.expandirTodasLasPantallas();
+
+    // Luego filtrar las filas expandidas
+    let filasResultado = [...this.todasLasFilasExpandidas];
+
+    // Filtrar por estado si está seleccionado
+    if (this.filtroEstado && this.filtroEstado !== '') {
+      filasResultado = filasResultado.filter(fila =>
+        fila.pantalla.estado?.toLowerCase() === this.filtroEstado.toLowerCase()
+      );
+    }
+
+    // Filtrar por kiosco si está seleccionado
+    if (this.filtroKiosco && this.filtroKiosco !== '') {
+      filasResultado = filasResultado.filter(fila =>
+        fila.kiosco && fila.kiosco.id === parseInt(this.filtroKiosco)
+      );
+    }
+
+    this.filasExpandidas = filasResultado;
+
+    console.log('🔍 Filtros aplicados:', {
+      estado: this.filtroEstado,
+      kiosco: this.filtroKiosco,
+      filasResultado: this.filasExpandidas.length
     });
-    
-    console.log(`🔍 Filtros aplicados: ${this.pantallasFiltradas.length} de ${this.pantallas.length} pantallas`);
+  }
+
+  // ✅ CREAR nuevo método para expandir todas las pantallas
+  expandirTodasLasPantallas(): void {
+    this.todasLasFilasExpandidas = [];
+
+    this.pantallas.forEach(pantalla => {
+      if (pantalla.kioskos_asociados && pantalla.kioskos_asociados.length > 0) {
+        pantalla.kioskos_asociados.forEach((kiosco: any) => {
+          this.todasLasFilasExpandidas.push({
+            pantalla: pantalla,
+            kiosco: kiosco
+          });
+        });
+      } else {
+        this.todasLasFilasExpandidas.push({
+          pantalla: pantalla,
+          kiosco: null
+        });
+      }
+    });
+  }
+
+  // ✅ MODIFICAR el método cargarPantallas
+  cargarPantallas(): void {
+    this.loading = true;
+    this.pantallaCocinaService.obtenerPantallasCocina().subscribe({
+      next: (data: any) => {
+        this.pantallas = data;
+        this.expandirTodasLasPantallas(); // Expandir todas primero
+        this.filasExpandidas = [...this.todasLasFilasExpandidas]; // Mostrar todas inicialmente
+        this.loading = false;
+        console.log('✅ Pantallas cargadas:', this.pantallas);
+      },
+      error: (error: any) => {
+        console.error('❌ Error cargando pantallas:', error);
+        this.filasExpandidas = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  // ✅ SIMPLIFICAR expandirPantallasConKioscos (ya no se usa en filtros)
+  expandirPantallasConKioscos(): void {
+    this.filasExpandidas = [];
+
+    this.pantallasFiltradas.forEach(pantalla => {
+      if (pantalla.kioskos_asociados && pantalla.kioskos_asociados.length > 0) {
+        pantalla.kioskos_asociados.forEach((kiosco: any) => {
+          this.filasExpandidas.push({
+            pantalla: pantalla,
+            kiosco: kiosco
+          });
+        });
+      } else {
+        this.filasExpandidas.push({
+          pantalla: pantalla,
+          kiosco: null
+        });
+      }
+    });
   }
 
   cambiarEstado(pantalla: PantallaCocina, event: any): void {
     const nuevoEstado = event.checked ? 'activo' : 'inactivo';
     const estadoAnterior = pantalla.estado;
-    
+
     // Actualizar localmente primero
     pantalla.estado = nuevoEstado;
 
@@ -161,7 +244,15 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     this.filtroEstado = '';
     this.filtroKiosco = '';
     this.textoBusqueda = '';
-    this.pantallasFiltradas = [...this.pantallas];
+    this.filasExpandidas = [...this.todasLasFilasExpandidas]; // Mostrar todas las filas
     console.log('🧹 Filtros limpiados');
+  }
+
+  // ✅ Si tienes un método de limpiar búsqueda, actualízalo
+  limpiarBusqueda(): void {
+    this.textoBusqueda = '';
+    this.filtroEstado = '';
+    this.filtroKiosco = '';
+    this.aplicarFiltros();
   }
 }

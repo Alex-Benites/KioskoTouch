@@ -54,35 +54,34 @@
     <div class="vinculacion-section">
       <h3>Vinculación/Desvinculación del Kiosco Touch</h3>
 
+      <!-- Dropdown para filtrar por establecimiento -->
       <div class="search-bar">
         <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Buscar ciudad</mat-label>
-          <input matInput placeholder="Buscar" formControlName="buscarCiudad" />
-          <button mat-icon-button matSuffix type="button">
-            <mat-icon>search</mat-icon>
-          </button>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Buscar establecimiento</mat-label>
-          <input matInput placeholder="Buscar" formControlName="buscarEstablecimiento" />
-          <button mat-icon-button matSuffix type="button">
-            <mat-icon>search</mat-icon>
-          </button>
+          <mat-label>Filtrar por establecimiento</mat-label>
+          <mat-select formControlName="establecimientoFiltro" (selectionChange)="filtrarPorEstablecimiento()">
+            <mat-option value="">Todos los establecimientos</mat-option>
+            <mat-option *ngFor="let establecimiento of establecimientos" [value]="establecimiento.id">
+              {{ establecimiento.nombre }}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
       </div>
 
       <div class="kioscos-list">
-        <div class="kiosco-item" *ngFor="let kiosco of kioscos">
+        <div class="kiosco-item" *ngFor="let kiosco of kioscosFiltrados">
           <img src="assets/admin/ADMIN_29_1.png" alt="Kiosco" />
           <div class="kiosco-info">
             <p class="kiosco-nombre">{{ kiosco.nombre }}</p>
-            
           </div>
           <mat-checkbox
             [checked]="kiosco.seleccionado"
             (change)="onKioscoSeleccionado(kiosco, $event)">
           </mat-checkbox>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        <div class="no-results" *ngIf="kioscosFiltrados.length === 0">
+          <p>No se encontraron kioscos en el establecimiento seleccionado.</p>
         </div>
       </div>
 
