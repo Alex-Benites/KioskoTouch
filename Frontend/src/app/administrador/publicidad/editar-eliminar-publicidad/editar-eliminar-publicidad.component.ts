@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 // Angular Material Modules
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -35,7 +36,8 @@ import { environment } from '../../../../environments/environment';
     MatIconModule,
     MatProgressSpinnerModule,
     HeaderAdminComponent,
-    FooterAdminComponent
+    FooterAdminComponent,
+    RouterLink
   ],
   templateUrl: './editar-eliminar-publicidad.component.html',
   styleUrls: ['./editar-eliminar-publicidad.component.scss']
