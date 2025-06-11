@@ -1,0 +1,1 @@
+// Faltaba este archivo para que el test de pantalla-cocina funcionara

@@ -3,7 +3,9 @@ import { Component, OnInit, OnDestroy, Renderer2, signal, computed, inject } fro
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PedidoService } from '../../services/pedido.service';
+import { CatalogoService } from '../../services/catalogo.service';
 import { Producto, Categoria } from '../../models/catalogo.model';
+import { catchError, forkJoin, of } from 'rxjs';
 
 // ✅ Interfaz extendida para productos con badges promocionales
 interface ProductoConBadge extends Producto {
@@ -20,349 +22,17 @@ interface ProductoConBadge extends Producto {
 })
 export class MenuComponent implements OnInit, OnDestroy {
   
-  // ✅ Categorías mock expandidas
-  private categorias = signal<Categoria[]>([
-    { 
-      id: 1, 
-      nombre: 'Hamburguesas', 
-      imagen_url: 'img/cliente/hamburguesa-icon.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 2, 
-      nombre: 'Papas', 
-      imagen_url: 'img/cliente/papas-icon.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 3, 
-      nombre: 'Pizza', 
-      imagen_url: 'img/cliente/pizza-icon.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 4, 
-      nombre: 'Pollo', 
-      imagen_url: 'img/cliente/pollo-icon.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 5, 
-      nombre: 'Ensaladas', 
-      imagen_url: 'img/cliente/ensalada-icon.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 6, 
-      nombre: 'Bebidas', 
-      imagen_url: 'img/cliente/bebida-icon.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ]);
+  // ✅ Signals para datos del backend
+  private categorias = signal<Categoria[]>([]);
+  private productos = signal<ProductoConBadge[]>([]);
   
-  // ✅ Productos mock - SOLO con badges de descuento (rojos)
-  private productos = signal<ProductoConBadge[]>([
-    // HAMBURGUESAS (categoria: 1)
-    { 
-      id: 1,
-      nombre: 'Cheese Burger', 
-      descripcion: 'Deliciosa hamburguesa con queso cheddar',
-      precio: 4.75, 
-      categoria: 1,
-      estado: 1,
-      imagenUrl: 'img/cliente/cheese-burger.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 2,
-      nombre: 'Vegetable Burger', 
-      descripcion: 'Hamburguesa 100% vegetariana',
-      precio: 3.50, 
-      categoria: 1,
-      estado: 1,
-      imagenUrl: 'img/cliente/vegetable-burger.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 3,
-      nombre: 'Meet Burger', 
-      descripcion: 'Hamburguesa clásica de carne',
-      precio: 3.50, 
-      categoria: 1,
-      estado: 1,
-      imagenUrl: 'img/cliente/meet-burger.png',
-      promoBadge: '10%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 4,
-      nombre: 'Double Cheese Burger', 
-      descripcion: 'Doble carne, doble queso',
-      precio: 6.25, 
-      categoria: 1,
-      estado: 1,
-      imagenUrl: 'img/cliente/double-cheese-burger.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 5,
-      nombre: 'BBQ Burger', 
-      descripcion: 'Hamburguesa con salsa BBQ',
-      precio: 5.50, 
-      categoria: 1,
-      estado: 1,
-      imagenUrl: 'img/cliente/bbq-burger.png',
-      promoBadge: '15%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 6,
-      nombre: 'Bacon Burger', 
-      descripcion: 'Hamburguesa con bacon crujiente',
-      precio: 5.75, 
-      categoria: 1,
-      estado: 1,
-      imagenUrl: 'img/cliente/bacon-burger.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-
-    // PAPAS (categoria: 2)
-    { 
-      id: 7,
-      nombre: 'Papas Medianas', 
-      descripcion: 'Papas fritas doradas y crujientes',
-      precio: 2.50, 
-      categoria: 2,
-      estado: 1,
-      imagenUrl: 'img/cliente/papas-medianas.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 8,
-      nombre: 'Papas Grandes', 
-      descripcion: 'Porción grande de papas fritas',
-      precio: 3.25, 
-      categoria: 2,
-      estado: 1,
-      imagenUrl: 'img/cliente/papas-grandes.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 9,
-      nombre: 'Papas con Queso', 
-      descripcion: 'Papas cubiertas con queso derretido',
-      precio: 4.00, 
-      categoria: 2,
-      estado: 1,
-      imagenUrl: 'img/cliente/papas-queso.png',
-      promoBadge: '20%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 10,
-      nombre: 'Papas con Bacon', 
-      descripcion: 'Papas con bacon y queso',
-      precio: 4.75, 
-      categoria: 2,
-      estado: 1,
-      imagenUrl: 'img/cliente/papas-bacon.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-
-    // PIZZAS (categoria: 3)
-    { 
-      id: 11,
-      nombre: 'Pizza Margarita', 
-      descripcion: 'Pizza clásica con tomate y mozzarella',
-      precio: 8.50, 
-      categoria: 3,
-      estado: 1,
-      imagenUrl: 'img/cliente/pizza-margarita.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 12,
-      nombre: 'Pizza Pepperoni', 
-      descripcion: 'Pizza con pepperoni y queso',
-      precio: 9.75, 
-      categoria: 3,
-      estado: 1,
-      imagenUrl: 'img/cliente/pizza-pepperoni.png',
-      promoBadge: '25%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 13,
-      nombre: 'Pizza Hawaiana', 
-      descripcion: 'Pizza con jamón y piña',
-      precio: 10.25, 
-      categoria: 3,
-      estado: 1,
-      imagenUrl: 'img/cliente/pizza-hawaiana.png',
-      promoBadge: '15%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-
-    // POLLO (categoria: 4)
-    { 
-      id: 14,
-      nombre: 'Chicken Wings', 
-      descripcion: '8 alitas de pollo picantes',
-      precio: 6.50, 
-      categoria: 4,
-      estado: 1,
-      imagenUrl: 'img/cliente/chicken-wings.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 15,
-      nombre: 'Chicken Strips', 
-      descripcion: 'Tiras de pollo empanizadas',
-      precio: 5.75, 
-      categoria: 4,
-      estado: 1,
-      imagenUrl: 'img/cliente/chicken-strips.png',
-      promoBadge: '30%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 16,
-      nombre: 'Pollo Entero', 
-      descripcion: 'Pollo entero a la parrilla',
-      precio: 12.99, 
-      categoria: 4,
-      estado: 1,
-      imagenUrl: 'img/cliente/pollo-entero.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-
-    // ENSALADAS (categoria: 5)
-    { 
-      id: 17,
-      nombre: 'Ensalada César', 
-      descripcion: 'Lechuga, pollo, crutones y aderezo césar',
-      precio: 4.50, 
-      categoria: 5,
-      estado: 1,
-      imagenUrl: 'img/cliente/ensalada-cesar.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 18,
-      nombre: 'Ensalada Griega', 
-      descripcion: 'Tomate, pepino, aceitunas y queso feta',
-      precio: 4.25, 
-      categoria: 5,
-      estado: 1,
-      imagenUrl: 'img/cliente/ensalada-griega.png',
-      promoBadge: '10%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 19,
-      nombre: 'Ensalada Mixta', 
-      descripcion: 'Ensalada fresca con vegetales variados',
-      precio: 3.75, 
-      categoria: 5,
-      estado: 1,
-      imagenUrl: 'img/cliente/ensalada-mixta.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-
-    // BEBIDAS (categoria: 6)
-    { 
-      id: 20,
-      nombre: 'Coca Cola', 
-      descripcion: 'Refresco de cola 500ml',
-      precio: 2.00, 
-      categoria: 6,
-      estado: 1,
-      imagenUrl: 'img/cliente/coca-cola.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 21,
-      nombre: 'Fanta Naranja', 
-      descripcion: 'Refresco de naranja 500ml',
-      precio: 2.00, 
-      categoria: 6,
-      estado: 1,
-      imagenUrl: 'img/cliente/fanta.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 22,
-      nombre: 'Agua Natural', 
-      descripcion: 'Agua purificada 500ml',
-      precio: 1.50, 
-      categoria: 6,
-      estado: 1,
-      imagenUrl: 'img/cliente/agua.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 23,
-      nombre: 'Jugo de Naranja', 
-      descripcion: 'Jugo natural de naranja 300ml',
-      precio: 2.75, 
-      categoria: 6,
-      estado: 1,
-      imagenUrl: 'img/cliente/jugo-naranja.png',
-      promoBadge: '5%',
-      promoBadgeClass: 'discount',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 24,
-      nombre: 'Café Americano', 
-      descripcion: 'Café negro americano caliente',
-      precio: 1.75, 
-      categoria: 6,
-      estado: 1,
-      imagenUrl: 'img/cliente/cafe.png',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ]);
+  // ✅ Estados de carga y error
+  cargandoCategorias = signal<boolean>(true);
+  cargandoProductos = signal<boolean>(true);
+  errorCarga = signal<string | null>(null);
 
   // ✅ Estado del componente con signals
-  categoriaSeleccionada = signal<number>(1);
+  categoriaSeleccionada = signal<number | null>(null);
   mostrarPopupLogin = signal<boolean>(false);
   idioma = signal<string>('es');
 
@@ -370,16 +40,25 @@ export class MenuComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private pedidoService = inject(PedidoService);
+  private catalogoService = inject(CatalogoService);
 
   // ✅ Computed signals
   categoriaActualObj = computed(() => 
     this.categorias().find(cat => cat.id === this.categoriaSeleccionada())
   );
 
-  productosFiltrados = computed(() => 
-    this.productos().filter(p => 
-      p.categoria === this.categoriaSeleccionada() && p.estado === 1
-    )
+  productosFiltrados = computed(() => {
+    const categoriaId = this.categoriaSeleccionada();
+    if (!categoriaId) return [];
+    
+    return this.productos().filter(p => 
+      p.categoria === categoriaId && p.estado === 1
+    );
+  });
+
+  // ✅ Estado de carga general
+  cargando = computed(() => 
+    this.cargandoCategorias() || this.cargandoProductos()
   );
 
   // ✅ Getters para el template
@@ -388,6 +67,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   get productosActuales() { return this.productosFiltrados(); }
   get mostrarLogin() { return this.mostrarPopupLogin(); }
   get idiomaActual() { return this.idioma(); }
+  get estaCargando() { return this.cargando(); }
+  get hayError() { return this.errorCarga(); }
 
   // ✅ Acceso a signals del servicio con valores seguros
   get totalPedidoSeguro(): number {
@@ -410,11 +91,7 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.renderer.addClass(document.body, 'fondo-home');
-    
-    const primeraCategoria = this.categorias()[0];
-    if (primeraCategoria) {
-      this.categoriaSeleccionada.set(primeraCategoria.id);
-    }
+    this.cargarDatos();
     
     console.log('🍽️ MenuComponent inicializado');
     console.log('📝 Tipo de pedido:', this.tipoPedido());
@@ -423,6 +100,92 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.renderer.removeClass(document.body, 'fondo-home');
+  }
+
+  // ✅ Método para cargar datos del backend
+  private cargarDatos(): void {
+    this.errorCarga.set(null);
+    
+    // Cargar categorías y productos en paralelo
+    forkJoin({
+      categorias: this.catalogoService.getCategorias().pipe(
+        catchError(error => {
+          console.error('❌ Error cargando categorías:', error);
+          return of([]);
+        })
+      ),
+      productos: this.catalogoService.getProductos().pipe(
+        catchError(error => {
+          console.error('❌ Error cargando productos:', error);
+          return of([]);
+        })
+      )
+    }).subscribe({
+      next: ({ categorias, productos }) => {
+        console.log('✅ Datos cargados:', { categorias: categorias.length, productos: productos.length });
+        
+        // Actualizar categorías
+        this.categorias.set(categorias);
+        this.cargandoCategorias.set(false);
+        
+        // Procesar productos con badges promocionales
+        const productosConBadges = this.procesarProductosConBadges(productos);
+        this.productos.set(productosConBadges);
+        this.cargandoProductos.set(false);
+        
+        // Seleccionar primera categoría si hay categorías disponibles
+        if (categorias.length > 0 && !this.categoriaSeleccionada()) {
+          this.categoriaSeleccionada.set(categorias[0].id);
+          console.log('📂 Primera categoría seleccionada:', categorias[0].nombre);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error general cargando datos:', error);
+        this.errorCarga.set('Error al cargar los datos del menú');
+        this.cargandoCategorias.set(false);
+        this.cargandoProductos.set(false);
+      }
+    });
+  }
+
+  // ✅ Método para procesar productos y agregar badges promocionales
+  private procesarProductosConBadges(productos: Producto[]): ProductoConBadge[] {
+    return productos.map(producto => {
+      const productoConBadge: ProductoConBadge = { ...producto };
+      
+      // Lógica para agregar badges promocionales basada en ciertos criterios
+      // Puedes personalizar esta lógica según tus necesidades
+      if (this.deberíaTenerDescuento(producto)) {
+        const descuento = this.calcularDescuento(producto);
+        productoConBadge.promoBadge = `${descuento}%`;
+        productoConBadge.promoBadgeClass = 'discount';
+      }
+      
+      return productoConBadge;
+    });
+  }
+
+  // ✅ Lógica personalizable para determinar si un producto debe tener descuento
+  private deberíaTenerDescuento(producto: Producto): boolean {
+    // Ejemplo: productos con precio > $5 tienen 10% descuento
+    // productos con precio > $8 tienen 15% descuento
+    // productos con precio > $10 tienen 20% descuento
+    return producto.precio > 5;
+  }
+
+  // ✅ Lógica para calcular el porcentaje de descuento
+  private calcularDescuento(producto: Producto): number {
+    if (producto.precio > 10) return 20;
+    if (producto.precio > 8) return 15;
+    if (producto.precio > 5) return 10;
+    return 0;
+  }
+
+  // ✅ Método para recargar datos
+  recargarDatos(): void {
+    this.cargandoCategorias.set(true);
+    this.cargandoProductos.set(true);
+    this.cargarDatos();
   }
 
   seleccionarCategoria(categoria: Categoria): void {
@@ -476,10 +239,18 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   obtenerImagenProducto(producto: ProductoConBadge): string {
-    return producto.imagenUrl || 'assets/placeholder-producto.png';
+    // Usar el método del servicio para obtener la URL completa de la imagen
+    if (producto.imagenUrl) {
+      return this.catalogoService.getFullImageUrl(producto.imagenUrl);
+    }
+    return 'assets/placeholder-producto.png';
   }
 
   obtenerImagenCategoria(categoria: Categoria): string {
-    return categoria.imagen_url || 'assets/placeholder-categoria.png';
+    // Usar el método del servicio para obtener la URL completa de la imagen
+    if (categoria.imagen_url) {
+      return this.catalogoService.getFullImageUrl(categoria.imagen_url);
+    }
+    return 'assets/placeholder-categoria.png';
   }
 }

@@ -4,8 +4,8 @@ $kiosko-red: #C3453A;
 $kiosko-background-light: #f4f4f4;
 $kiosko-card-border-color: #D5D5D5;
 $font-family-base: 'Lato', sans-serif;
-$category-active-bg: #D5D5D5; // Color para categoría activa
-$category-inactive-bg: #FFFFFF; // Color para categoría inactiva
+$category-active-bg: #D5D5D5;
+$category-inactive-bg: #FFFFFF;
 
 * {
   box-sizing: border-box;
@@ -82,7 +82,6 @@ $category-inactive-bg: #FFFFFF; // Color para categoría inactiva
 
     &:hover {
       transform: scale(1.05);
-      // border-color: color.scale($kiosko-red, $lightness: -5%, $alpha: -0.5); // Eliminado por error y solicitud
     }
 
     &.active {
@@ -227,21 +226,26 @@ $category-inactive-bg: #FFFFFF; // Color para categoría inactiva
 
     .promo-badge {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: -12px; // Ajusta para que sobresalga un poco por arriba
+      right: -12px; // Ajusta para que sobresalga un poco por la derecha
+      width: 55px; // Tamaño del círculo
+      height: 55px; // Tamaño del círculo
       background-color: $kiosko-red;
       color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
+      border-radius: 50%; // Esto lo hace circular
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem; // Tamaño del texto dentro del badge (ej. "10%")
       font-weight: bold;
-      text-transform: uppercase;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      z-index: 3;
+      line-height: 1; // Ayuda a centrar el texto si es una sola línea
+      text-align: center;
+      box-shadow: 0 3px 7px rgba(0, 0, 0, 0.25); // Sombra para el badge
+      z-index: 3; // Asegura que esté por encima de otros elementos
+      // text-transform: none; // Remueve el uppercase si no lo quieres
 
-      &.discount {
-        background-color: $kiosko-red;
-        color: white;
+      &.discount { // Si usas esta clase, hereda los estilos anteriores
+        // Puedes añadir estilos específicos para .discount aquí si es necesario
       }
     }
   }
@@ -373,6 +377,13 @@ $category-inactive-bg: #FFFFFF; // Color para categoría inactiva
         padding: 8px 15px;
         font-size: 0.85rem;
       }
+      .promo-badge { // Ajuste ligero para tablet si es necesario
+        width: 50px;
+        height: 50px;
+        font-size: 0.9rem;
+        top: -10px;
+        right: -10px;
+      }
     }
   }
 
@@ -444,6 +455,13 @@ $category-inactive-bg: #FFFFFF; // Color para categoría inactiva
         padding: 7px 12px;
         font-size: 0.8rem;
       }
+      .promo-badge { // Ajuste ligero para móvil
+        width: 45px;
+        height: 45px;
+        font-size: 0.8rem;
+        top: -8px;
+        right: -8px;
+      }
     }
   }
 
@@ -470,4 +488,71 @@ $category-inactive-bg: #FFFFFF; // Color para categoría inactiva
       max-width: none;
     }
   }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid $kiosko-red;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  p {
+    font-size: 1.2rem;
+    color: #666;
+    margin: 0;
+  }
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  .error-message {
+    font-size: 1.1rem;
+    color: #d32f2f;
+    margin-bottom: 20px;
+  }
+  
+  .retry-button {
+    background-color: $kiosko-red;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: color.scale($kiosko-red, $lightness: -10%);
+    }
+  }
+}
+
+.no-categories-message {
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  padding: 20px 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

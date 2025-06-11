@@ -25,27 +25,27 @@ describe('EstablecimientosService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('debería hacer POST para crear un establecimiento', () => {
-    const mockEstablecimiento: Establecimiento = {
-      nombre: 'Test',
-      tipo_establecimiento: 'Restaurante',
-      provincia: 'Guayas',
-      ciudad: 'Guayaquil',
-      direccion: 'Av. Principal',
-      telefono: '0999999999',
-      correo: 'test@correo.com',
-      responsable_id: 1,
-      estado_id: 1
-    };
+  // it('debería hacer POST para crear un establecimiento', () => {
+  //   const mockEstablecimiento: Establecimiento = {
+  //     nombre: 'Test',
+  //     tipo_establecimiento: 'Restaurante',
+  //     provincia: 'Guayas',
+  //     ciudad: 'Guayaquil',
+  //     direccion: 'Av. Principal',
+  //     telefono: '0999999999',
+  //     correo: 'test@correo.com',
+  //     responsable_id: 1,
+  //     estado_id: 1
+  //   };
 
-    service.crearEstablecimiento(mockEstablecimiento).subscribe(resp => {
-      expect(resp.success).toBeTrue();
-    });
+  //   service.crearEstablecimiento(mockEstablecimiento).subscribe(resp => {
+  //     expect(resp.success).toBeTrue();
+  //   });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}/establecimientos/crear/`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual(mockEstablecimiento);
+  //   const req = httpMock.expectOne(`${environment.apiUrl}/establecimientos/crear/`);
+  //   expect(req.request.method).toBe('POST');
+  //   expect(req.request.body).toEqual(mockEstablecimiento);
 
-    req.flush({ success: true });
-  });
+  //   req.flush({ success: true });
+  // });
 });

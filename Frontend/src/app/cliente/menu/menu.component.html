@@ -8,49 +8,74 @@
     <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
 
-  <div class="menu-content-layout">
-    <!-- Barra Lateral de Categorías -->
-    <aside class="category-sidebar">
-      @for (categoria of categoriasLista; track categoria.id) {
-        <div
-          class="category-item"
-          [class.active]="categoria.id === categoriaActual?.id"
-          (click)="seleccionarCategoria(categoria)">
-          <img [src]="obtenerImagenCategoria(categoria)" [alt]="categoria.nombre" class="category-item__icon">
-        </div>
-      }
-    </aside>
+  <!-- Indicador de carga global -->
+  @if (estaCargando) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Cargando menú...</p>
+    </div>
+  }
 
-    <!-- Contenido Principal: Título del Menú y Productos -->
-    <main class="main-menu-content">
-      <div class="menu-title-section">
-        <span class="menu-title-label">MENÚ</span>
-        <h2 class="menu-category-name">{{ categoriaActual?.nombre || 'Seleccione Categoría' }}</h2>
-      </div>
+  <!-- Mensaje de error -->
+  @if (hayError) {
+    <div class="error-container">
+      <p class="error-message">{{ hayError }}</p>
+      <button class="retry-button" (click)="recargarDatos()">Reintentar</button>
+    </div>
+  }
 
-      <section class="products-grid">
-        @if (productosActuales.length > 0) {
-          @for (producto of productosActuales; track producto.id) {
-            <div class="product-card">
-              @if (producto.promoBadge) {
-                <span class="promo-badge" [ngClass]="producto.promoBadgeClass || ''">{{ producto.promoBadge }}</span>
-              }
-              <img [src]="obtenerImagenProducto(producto)" [alt]="producto.nombre" class="product-card__image">
-              <h3 class="product-card__name">{{ producto.nombre }}</h3>
-              <div class="product-card__footer">
-                <span class="product-card__price">${{ producto.precio.toFixed(2) }}</span>
-                <button class="product-card__order-button" (click)="agregarProducto(producto)">
-                  Ordenar
-                </button>
-              </div>
-            </div>
-          }
-        } @else {
-          <p class="no-products-message">No hay productos disponibles en esta categoría.</p>
+  <!-- Contenido principal -->
+  @if (!estaCargando && !hayError) {
+    <div class="menu-content-layout">
+      <!-- Barra Lateral de Categorías -->
+      <aside class="category-sidebar">
+        @for (categoria of categoriasLista; track categoria.id) {
+          <div
+            class="category-item"
+            [class.active]="categoria.id === categoriaActual?.id"
+            (click)="seleccionarCategoria(categoria)">
+            <img [src]="obtenerImagenCategoria(categoria)" [alt]="categoria.nombre" class="category-item__icon">
+          </div>
+        } @empty {
+          <p class="no-categories-message">No hay categorías disponibles</p>
         }
-      </section>
-    </main>
-  </div>
+      </aside>
+
+      <!-- Contenido Principal: Título del Menú y Productos -->
+      <main class="main-menu-content">
+        <div class="menu-title-section">
+          <span class="menu-title-label">MENÚ</span>
+          <h2 class="menu-category-name">{{ categoriaActual?.nombre || 'Seleccione Categoría' }}</h2>
+        </div>
+
+        <section class="products-grid">
+          @if (productosActuales.length > 0) {
+            @for (producto of productosActuales; track producto.id) {
+              <div class="product-card">
+                @if (producto.promoBadge) {
+                  <span class="promo-badge" [ngClass]="producto.promoBadgeClass || ''">{{ producto.promoBadge }}</span>
+                }
+                <div class="product-card__image-wrapper">
+                  <img [src]="obtenerImagenProducto(producto)" [alt]="producto.nombre" class="product-card__image">
+                </div>
+                <div class="product-card__content">
+                  <h3 class="product-card__name">{{ producto.nombre }}</h3>
+                  <div class="product-card__footer">
+                    <span class="product-card__price">${{ producto.precio.toFixed(2) }}</span>
+                    <button class="product-card__order-button" (click)="agregarProducto(producto)">
+                      Ordenar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          } @else {
+            <p class="no-products-message">No hay productos disponibles en esta categoría.</p>
+          }
+        </section>
+      </main>
+    </div>
+  }
 
   <!-- Footer: Resumen del Pedido -->
   <footer class="order-summary-footer">
