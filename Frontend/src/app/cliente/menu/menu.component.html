@@ -1,43 +1,12 @@
 <div class="menu-page-container">
   <!-- Banner Promocional Superior -->
   <div class="promo-banner-top">
-    <img src="img/cliente/promo-banner-superior.png" alt="Nuestra Nueva Hamburguesa">
+    <img src="assets/cliente/USUARIO_5.png" alt="Nuestra Nueva Hamburguesa">
   </div>
 
   <header class="menu-header">
-    <h1 class="menu-header__title">KIOSCO GO!</h1>
+    <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
-
-  <!-- Sección de Idiomas Comentada -->
-  <!--
-  <section class="home__languages-container">
-    <p class="home__title">Menú</p>
-    <article class="home__languages">
-      <label>
-        <span class="flag english__language"></span>
-        Inglés
-        <input
-          class="language__selector"
-          type="radio"
-          name="idioma"
-          value="en"
-          [checked]="idiomaActual === 'en'"
-          (change)="cambiarIdioma($event)">
-      </label>
-      <label>
-        <span class="flag spanish__language"></span>
-        Español
-        <input
-          class="language__selector"
-          type="radio"
-          name="idioma"
-          value="es"
-          [checked]="idiomaActual === 'es'"
-          (change)="cambiarIdioma($event)">
-      </label>
-    </article>
-  </section>
-  -->
 
   <div class="menu-content-layout">
     <!-- Barra Lateral de Categorías -->
@@ -85,25 +54,27 @@
 
   <!-- Footer: Resumen del Pedido -->
   <footer class="order-summary-footer">
-    <h2 class="order-summary__title">Mi Orden</h2>
-    @if (cantidadItemsSeguro > 0) {
-      <div class="order-summary__details">
-        <span>Total: ${{ totalPedidoSeguro.toFixed(2) }}</span>
-        <span>Productos: {{ cantidadItemsSeguro }}</span>
+    <h2 class="order-summary-footer__title">Mi Orden</h2>
+    <div class="order-summary-footer__content">
+      @if (cantidadItemsSeguro > 0) {
+        <div class="order-summary-footer__details">
+          <span>Total: ${{ totalPedidoSeguro.toFixed(2) }}</span>
+          <span>Productos: {{ cantidadItemsSeguro }}</span>
+        </div>
+      } @else {
+        <p class="order-summary-footer__empty-message">Tu pedido está vacío</p>
+      }
+      <div class="order-summary-footer__actions">
+        <button class="primary__button order-summary-footer__button" (click)="limpiarPedido()">
+          Cancelar pedido
+        </button>
+        <button
+          class="primary__button order-summary-footer__button"
+          (click)="continuar()"
+          [disabled]="!puedeontinuar">
+          Continuar
+        </button>
       </div>
-    } @else {
-      <p class="order-summary__empty-message">Tu pedido está vacío</p>
-    }
-    <div class="order-summary__actions">
-      <button class="order-summary__button order-summary__cancel-button" (click)="limpiarPedido()">
-        Cancelar pedido
-      </button>
-      <button
-        class="order-summary__button order-summary__continue-button"
-        (click)="continuar()"
-        [disabled]="!puedeontinuar">
-        Continuar
-      </button>
     </div>
   </footer>
 

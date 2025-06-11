@@ -1,20 +1,8 @@
 @use "sass:color";
 
-$kiosko-red: #d92325;
-$kiosko-red-dark: #b01719;
-$kiosko-yellow-promo: #f7b731;
-$kiosko-green-continue: #28a745;
-$kiosko-text-dark: #333333;
-$kiosko-text-light: #ffffff;
+$kiosko-red: #C3453A; // Color actualizado para botones y badges
 $kiosko-background-light: #f4f4f4;
-$kiosko-background-medium: #e9e9e9;
-$kiosko-card-background: #ffffff;
-$kiosko-border-color: #dddddd;
 $font-family-base: 'Lato', sans-serif;
-$font-family-logo: 'Lobster', sans-serif;
-
-// ✅ Solo color para badges de descuento (rojos)
-$badge-discount: #e74c3c;
 
 * {
   box-sizing: border-box;
@@ -41,9 +29,17 @@ $badge-discount: #e74c3c;
   padding: 15px 30px;
   background-color: $kiosko-background-light;
   text-align: left;
+  display: flex;
+  justify-content: left;
+
+  img {
+    max-width: 300px;
+    height: auto;
+    object-fit: contain;
+  }
 
   &__title {
-    font-family: $font-family-logo;
+    font-family: $font-family-base;
     color: $kiosko-red;
     font-size: clamp(2.5rem, 5vw, 3.5rem);
     font-weight: bold;
@@ -60,7 +56,7 @@ $badge-discount: #e74c3c;
 
 .category-sidebar {
   flex: 0 0 100px;
-  background-color: $kiosko-background-medium;
+  background-color: #e9e9e9;
   border-radius: 8px;
   padding: 15px 10px;
   display: flex;
@@ -72,7 +68,7 @@ $badge-discount: #e74c3c;
   .category-item {
     width: 70px;
     height: 70px;
-    background-color: $kiosko-card-background;
+    background-color: white;
     border-radius: 8px;
     display: flex;
     justify-content: center;
@@ -83,7 +79,7 @@ $badge-discount: #e74c3c;
 
     &:hover {
       transform: scale(1.05);
-      border-color: $kiosko-red-dark;
+      border-color: color.scale($kiosko-red, $lightness: -10%);
     }
 
     &.active {
@@ -118,7 +114,7 @@ $badge-discount: #e74c3c;
 
   .menu-category-name {
     font-size: clamp(1.8rem, 4vw, 2.8rem);
-    color: $kiosko-text-dark;
+    color: #333333;
     font-weight: 600;
     margin-top: 5px;
   }
@@ -126,14 +122,14 @@ $badge-discount: #e74c3c;
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   padding: 10px;
   overflow-y: auto;
   flex-grow: 1;
 
   .product-card {
-    background-color: $kiosko-card-background;
+    background-color: white;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 15px;
@@ -160,7 +156,7 @@ $badge-discount: #e74c3c;
     &__name {
       font-size: clamp(1rem, 2.5vw, 1.2rem);
       font-weight: 600;
-      color: $kiosko-text-dark;
+      color: #333333;
       margin-bottom: 8px;
       min-height: 2.4em;
     }
@@ -176,12 +172,12 @@ $badge-discount: #e74c3c;
     &__price {
       font-size: clamp(1.1rem, 2.5vw, 1.3rem);
       font-weight: bold;
-      color: $kiosko-text-dark;
+      color: #333333;
     }
 
     &__order-button {
       background-color: $kiosko-red;
-      color: $kiosko-text-light;
+      color: white;
       border: none;
       border-radius: 20px;
       padding: 8px 18px;
@@ -191,7 +187,7 @@ $badge-discount: #e74c3c;
       transition: background-color 0.2s ease, transform 0.1s ease;
 
       &:hover {
-        background-color: $kiosko-red-dark;
+        background-color: color.scale($kiosko-red, $lightness: -10%);
         transform: scale(1.05);
       }
 
@@ -200,13 +196,12 @@ $badge-discount: #e74c3c;
       }
     }
 
-    // ✅ Solo badges de descuento (rojos)
     .promo-badge {
       position: absolute;
       top: 10px;
       right: 10px;
-      background-color: $badge-discount;
-      color: $kiosko-text-light;
+      background-color: $kiosko-red; // Color de badge actualizado
+      color: white;
       padding: 4px 8px;
       border-radius: 4px;
       font-size: 0.75rem;
@@ -214,10 +209,9 @@ $badge-discount: #e74c3c;
       text-transform: uppercase;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-      // Solo la clase discount es necesaria
-      &.discount {
-        background-color: $badge-discount;
-        color: $kiosko-text-light;
+      &.discount { // Si tienes una clase específica para descuentos, también se actualiza
+        background-color: $kiosko-red;
+        color: white;
       }
     }
   }
@@ -232,133 +226,75 @@ $badge-discount: #e74c3c;
 }
 
 .order-summary-footer {
-  background-color: $kiosko-red;
-  color: $kiosko-text-light;
-  padding: 20px 30px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
   width: 100%;
   box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
 
   &__title {
-    font-size: clamp(1.5rem, 3vw, 2rem);
+    background-color: $kiosko-red;
+    color: white;
+    font-size: clamp(1.5rem, 3vw, 1.8rem);
     font-weight: 600;
-    margin: 0 0 10px 0;
+    margin: 0;
+    padding: 15px 30px;
+    text-align: center;
+  }
+
+  &__content {
+    background-color: $kiosko-background-light;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
   }
 
   &__empty-message, &__details {
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    margin-bottom: 15px;
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: #333333;
+    text-align: center;
+    margin-bottom: 5px;
   }
+  
   &__details {
     display: flex;
     gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   &__actions {
     display: flex;
     gap: 15px;
     width: 100%;
-    max-width: 500px;
+    max-width: 400px;
     justify-content: center;
   }
 
   &__button {
-    flex-grow: 1;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-size: clamp(0.9rem, 2.2vw, 1.1rem);
-    font-weight: 500;
-    border: none;
-    cursor: pointer;
-    transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    flex: 1;
+    background-color: $kiosko-red;
+    border-radius: 8px;
 
     &:hover:not(:disabled) {
-      transform: translateY(-1px);
+      background-color: color.scale($kiosko-red, $lightness: -7%);
     }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-    }
-  }
-
-  &__cancel-button {
-    background-color: $kiosko-background-medium;
-    color: $kiosko-text-dark;
-    &:hover:not(:disabled) {
-      background-color: color.scale($kiosko-background-medium, $lightness: 10%);
-    }
-  }
-
-  &__continue-button {
-    background-color: $kiosko-green-continue;
-    color: $kiosko-text-light;
-     &:hover:not(:disabled) {
-      background-color: color.scale($kiosko-green-continue, $lightness: -10%);
-    }
-  }
-}
-
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.popup {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  width: auto;
-  min-width: 300px;
-  max-width: 90%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  text-align: center;
-  position: relative;
-
-  h2 {
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    color: $kiosko-text-dark;
-  }
-
-  img {
-    max-width: 200px;
-    height: auto;
-    margin: 0 auto;
-    display: block;
-  }
-}
-
-.popup-close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #888;
-  cursor: pointer;
-  &:hover {
-    color: $kiosko-text-dark;
   }
 }
 
 @media (max-width: 768px) {
+  .menu-header {
+    padding: 10px 20px;
+    
+    img {
+      max-width: 150px;
+    }
+  }
+
   .menu-content-layout {
     flex-direction: column;
+    gap: 15px;
   }
 
   .category-sidebar {
@@ -375,45 +311,90 @@ $badge-discount: #e74c3c;
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
   }
 
   .order-summary-footer {
-    padding: 15px;
+    &__title {
+      padding: 12px 15px;
+      font-size: 1.3rem;
+    }
+    
+    &__content {
+      padding: 15px;
+    }
+    
     &__actions {
-      flex-direction: column;
       gap: 10px;
+      max-width: 350px;
     }
   }
 }
 
 @media (max-width: 480px) {
-  .menu-header__title {
-    font-size: 2rem;
+  .menu-header {
+    img {
+      max-width: 120px;
+    }
   }
-  .menu-category-name {
-    font-size: 1.5rem;
+
+  .menu-title-section {
+    .menu-category-name {
+      font-size: 1.5rem;
+    }
   }
+
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 5px;
   }
-  .product-card__name {
-    font-size: 0.9rem;
+
+  .product-card {
+    padding: 10px;
+    
+    &__image {
+      max-width: 80px;
+      height: 80px;
+    }
+    
+    &__name {
+      font-size: 0.8rem;
+      min-height: 2em;
+    }
+    
+    &__price {
+      font-size: 0.9rem;
+    }
+    
+    &__order-button {
+      padding: 6px 10px;
+      font-size: 0.7rem;
+    }
   }
-  .product-card__price {
-    font-size: 1rem;
-  }
-  .product-card__order-button {
-    padding: 6px 12px;
-    font-size: 0.75rem;
-  }
-  .order-summary-footer__title {
-    font-size: 1.2rem;
-  }
-  .order-summary__empty-message, .order-summary__details {
-    font-size: 0.9rem;
-  }
-  .order-summary__button {
-    font-size: 0.85rem;
+
+  .order-summary-footer {
+    &__title {
+      font-size: 1.2rem;
+      padding: 10px 12px;
+    }
+    
+    &__content {
+      padding: 12px;
+      gap: 10px;
+    }
+    
+    &__empty-message, &__details {
+      font-size: 0.9rem;
+      margin-bottom: 0;
+    }
+    
+    &__actions {
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: none;
+    }
   }
 }
