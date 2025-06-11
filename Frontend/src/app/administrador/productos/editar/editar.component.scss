@@ -10,7 +10,7 @@
 }
 
 
-.breadcrumb-title { 
+.breadcrumb-title {
   font-size: 20px;
   color: #888;
   font-weight: bold;
@@ -51,12 +51,63 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: box-shadow 0.2s;
-    &:hover {
-      box-shadow: 0 2px 8px #0002;
+    //transition: all 0.3s ease; // Transición suave
+
+    img {
+      object-fit: cover;
+      border-radius: 4px;
+      margin-right: 8px;
+      // ✅ QUITAR el filter que hacía las imágenes blancas
     }
-    i {
-      font-size: 1.2rem;
+
+    // ✅ MODIFICAR estado activo - SIN alterar las imágenes
+    &.active {
+      background-color: #e74c3c; // Fondo rojo cuando está activo
+      color: white;
+      border: 2px solid #c0392b;
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); // Sombra para destacar
+      transform: translateY(-2px); // Efecto de elevación
+
+      span {
+        color: white; // Solo el texto en blanco
+        font-weight: bold; // Texto en negrita
+      }
+
+      // ✅ ELIMINAR ESTO: NO alterar las imágenes
+      // img {
+      //   filter: brightness(0) invert(1);
+      // }
+    }
+
+    // ✅ AGREGAR efecto hover
+    &:hover:not(.active) {
+      background-color: #f8f9fa;
+      border-color: #e74c3c;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    // ✅ AGREGAR estado cuando no está activo
+    &:not(.active) {
+      background-color: #ffffff;
+      color: #333333;
+      border: 1px solid #e0e0e0;
+    }
+  }
+}
+
+// ✅ MODIFICAR estilos para el botón "Todas" también
+.categoria-btn.todas {
+  &.active {
+    background-color: #2c3e50; // Color diferente para "Todas"
+    border-color: #1a252f;
+
+    .fas {
+      color: white; // Solo el ícono en blanco, no las imágenes
+    }
+
+    span {
+      color: white; // Solo el texto en blanco
     }
   }
 }
@@ -144,6 +195,32 @@
       object-fit: cover;  // Para mantener proporciones
       border-radius: 4px; // Opcional: esquinas redondeadas
       margin-right: 8px;  // Espacio entre imagen y texto
+    }
+  }
+}
+
+.no-productos {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 120px; // ✅ REDUCIR altura mucho más pequeña
+  text-align: center;
+
+  p {
+    margin: 0;
+    padding: 0; // ✅ QUITAR padding
+    background-color: transparent; // ✅ QUITAR fondo
+    color: #666;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border: none; // ✅ QUITAR borde punteado
+    white-space: nowrap;
+    box-shadow: none; // ✅ QUITAR sombra
+
+    // ✅ QUITAR el ícono también si quieres solo texto
+    &::before {
+      content: none;
     }
   }
 }

@@ -1,42 +1,63 @@
 <app-header-admin></app-header-admin>
 
 
-<div class="form-container">   
+<div class="form-container">
     <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
     <h1 class="form-main-title">Edición de Producto</h1>
 
     <div class="categorias">
         <label>Buscar por categoría</label>
         <div class="categorias-list">
-        @for (cat of categorias; track cat.id) {
-            <button class="categoria-btn">
-            <i ></i>
-            <img [src]="getFullImageUrl(cat.imagen_url)" [alt]="cat.nombre" />
-            {{ cat.nombre }}
+            <!-- ✅ MODIFICAR botón "Todas" con clase activa -->
+            <button class="categoria-btn todas"
+                    [class.active]="categoriaSeleccionada === null"
+                    (click)="filtrarPorCategoria(null)">
+                <i class="fas fa-th"></i>
+                <span>Todas</span>
             </button>
-        }
+
+            <!-- ✅ MODIFICAR botones de categorías con clase activa -->
+            @for (cat of categorias; track cat.id) {
+                <button class="categoria-btn"
+                        [class.active]="categoriaSeleccionada === cat.id"
+                        (click)="filtrarPorCategoria(cat.id)">
+                    <img [src]="getFullImageUrl(cat.imagen_url)" [alt]="cat.nombre" />
+                    <span>{{ cat.nombre }}</span>
+                </button>
+            }
         </div>
     </div>
 
     <div class="buscador">
         <label>Buscar producto</label>
         <div class="buscador-input">
-        <input type="text" placeholder="Buscar" [(ngModel)]="search" />
-        <i class="fas fa-search"></i>
+            <!-- ✅ AGREGAR evento de búsqueda -->
+            <input type="text"
+                   placeholder="Buscar"
+                   [(ngModel)]="search"
+                   (input)="filtrarProductos()" />
+            <i class="fas fa-search"></i>
         </div>
     </div>
 
     <div class="productos-grid">
-        @for (producto of productos; track producto.id) {
-        <div class="producto-card">
-            
-            <img [src]="getFullImageUrl(producto.imagenUrl)" [alt]="producto.nombre" />
-            <div class="producto-nombre">{{ producto.nombre }}</div>
-            <button class="editar-btn" (click)="editarProducto(producto)">Editar</button>
-        </div>
+        <!-- ✅ CAMBIAR: Usar productosFiltrados en lugar de productos -->
+        @for (producto of productosFiltrados; track producto.id) {
+            <div class="producto-card">
+                <img [src]="getFullImageUrl(producto.imagenUrl)" [alt]="producto.nombre" />
+                <div class="producto-nombre">{{ producto.nombre }}</div>
+                <button class="editar-btn" (click)="editarProducto(producto)">Editar</button>
+            </div>
+        }
+
+        <!-- ✅ AGREGAR mensaje cuando no hay productos -->
+        @if (productosFiltrados.length === 0 && !loading) {
+            <div class="no-productos">
+                <p>No se encontraron productos con los filtros aplicados.</p>
+            </div>
         }
     </div>
-    
+
 </div>
 
 <app-footer-admin [backRoute]="'/administrador/gestion-productos'"></app-footer-admin>
