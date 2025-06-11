@@ -108,16 +108,18 @@ export class CrearKioskoTouchComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarEstados();
-    this.cargarEstablecimientos();
-    this.generarToken(); // Generar token automáticamente al cargar
+    this.generarToken();
 
     // Detectar modo edición
     this.kioscoId = Number(this.route.snapshot.paramMap.get('id'));
     this.isEditMode = !!this.kioscoId && !isNaN(this.kioscoId);
 
-    if (this.isEditMode) {
-      this.cargarKioscoParaEditar();
-    }
+    // ✅ CAMBIAR: Cargar establecimientos PRIMERO, luego el kiosco
+    this.cargarEstablecimientos().then(() => {
+      if (this.isEditMode) {
+        this.cargarKioscoParaEditar();
+      }
+    });
   }
 
   abrirDialogoExito(titulo: string, mensaje: string, callback?: () => void) {
@@ -145,45 +147,87 @@ export class CrearKioskoTouchComponent implements OnInit {
     });
   }
 
+  // ✅ MODIFICAR: Hacer cargarEstablecimientos async
+  cargarEstablecimientos(): Promise<void> {
+    console.log('🔍 INICIANDO carga de establecimientos...');
+    this.loading = true;
+    
+    return new Promise((resolve, reject) => {
+      this.establecimientosService.obtenerEstablecimientos().subscribe({
+        next: (data) => {
+          console.log('✅ Establecimientos recibidos:', data);
+          this.establecimientos = data.map(e => ({ ...e, seleccionado: false }));
+          this.establecimientosFiltrados = [...this.establecimientos];
+          console.log('✅ Establecimientos procesados:', this.establecimientos.length);
+          this.loading = false;
+          resolve(); // ✅ Resolver cuando termine
+        },
+        error: (error) => {
+          console.error('❌ Error cargando establecimientos:', error);
+          alert('Error al cargar establecimientos');
+          this.loading = false;
+          reject(error); // ✅ Rechazar en caso de error
+        }
+      });
+    });
+  }
+
+  // ✅ MODIFICAR: Agregar debug y corregir la lógica
   cargarKioscoParaEditar(): void {
     if (!this.kioscoId) return;
+    
+    console.log('🔧 Cargando kiosco para editar, ID:', this.kioscoId);
+    console.log('🔧 Establecimientos disponibles:', this.establecimientos.length);
+    
     this.kioskoTouchService.obtenerKioscoTouchPorId(this.kioscoId).subscribe({
       next: (kiosco) => {
+        console.log('✅ Datos de kiosco recibidos:', kiosco);
+        
+        // Cargar datos básicos del kiosco
         this.form.patchValue({
           nombreKiosco: kiosco.nombre,
           token: kiosco.token,
           estadoKiosco: kiosco.estado_id
         });
 
-        // Si hay establecimiento asociado, agregarlo a la lista
+        // ✅ VERIFICAR: ¿Qué estructura tiene el establecimiento en la respuesta?
+        console.log('🏢 Establecimiento en respuesta:', kiosco.establecimiento);
+        console.log('🏢 establecimiento_id:', kiosco.establecimiento_id);
+
+        // ✅ CORREGIR: Buscar el establecimiento correctamente
         if (kiosco.establecimiento) {
+          // Si viene el objeto completo del establecimiento
+          const establecimientoId = kiosco.establecimiento.id || kiosco.establecimiento_id;
+          console.log('🔍 Buscando establecimiento con ID:', establecimientoId);
+          
+          const establecimiento = this.establecimientos.find(e => e.id === establecimientoId);
+          console.log('🔍 Establecimiento encontrado:', establecimiento);
+          
+          if (establecimiento) {
+            this.establecimientosAsociados = [{ ...establecimiento, seleccionado: false }];
+            this.actualizarCampoEstablecimientoAsociado();
+            console.log('✅ Establecimiento asociado cargado:', establecimiento.nombre);
+          } else {
+            console.warn('⚠️ No se encontró el establecimiento en la lista');
+          }
+        } else if (kiosco.establecimiento_id) {
+          // Si solo viene el ID
+          console.log('🔍 Buscando por establecimiento_id:', kiosco.establecimiento_id);
+          
           const establecimiento = this.establecimientos.find(e => e.id === kiosco.establecimiento_id);
           if (establecimiento) {
             this.establecimientosAsociados = [{ ...establecimiento, seleccionado: false }];
             this.actualizarCampoEstablecimientoAsociado();
+            console.log('✅ Establecimiento asociado cargado:', establecimiento.nombre);
           }
+        } else {
+          console.log('⚠️ No hay establecimiento asociado a este kiosco');
         }
       },
       error: (error) => {
+        console.error('❌ Error al cargar el kiosco:', error);
         alert('Error al cargar el kiosco');
-        this.router.navigate(['/administrador/kiosko-touch']);
-      }
-    });
-  }
-
-
-  cargarEstablecimientos(): void {
-    this.loading = true;
-    this.establecimientosService.obtenerEstablecimientos().subscribe({
-      next: (data) => {
-        this.establecimientos = data.map(e => ({ ...e, seleccionado: false }));
-        this.establecimientosFiltrados = [...this.establecimientos]; // Mostrar todos inicialmente
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error cargando establecimientos:', error);
-        alert('Error al cargar establecimientos');
-        this.loading = false;
+        this.router.navigate(['/administrador/gestion-kiosko-touch']);
       }
     });
   }
