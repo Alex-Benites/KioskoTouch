@@ -17,67 +17,69 @@
 
   <!-- Tabla de productos -->
   <div class="productos-table-container" *ngIf="!loading && productos.length > 0">
-    <!-- Barra de búsqueda -->
-    <div class="search-bar">
-      <label for="buscarProducto">Buscar Producto:</label>
-      <input id="buscarProducto" type="text" placeholder="Buscar" />
-      <button>
-        <img src="assets/admin/ADMIN_9.png" alt="Buscar" />
-      </button>
+    <!-- Campo de búsqueda DENTRO del contenedor -->
+    <div class="search-container">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="filtroCategoria"
+          (input)="filtrarPorCategoria()"
+          placeholder="Buscar producto por categoria"
+          class="search-input">
+        <img src="assets/admin/ADMIN_9.png" alt="Buscar" class="search-icon">
+      </div>
     </div>
 
-    <table mat-table [dataSource]="productos" class="productos-table">
-      <!-- Nombre -->
+    <!-- Tabla de productos -->
+    <table mat-table [dataSource]="productosFiltrados" class="productos-table">
+      <!-- Columna Nombre -->
       <ng-container matColumnDef="nombre">
         <th mat-header-cell *matHeaderCellDef>Nombre</th>
         <td mat-cell *matCellDef="let producto">{{ producto.nombre }}</td>
       </ng-container>
 
-      <!-- Categoría -->
+      <!-- Columna Categoría -->
       <ng-container matColumnDef="categoria">
         <th mat-header-cell *matHeaderCellDef>Categoría</th>
-        <td mat-cell *matCellDef="let producto">{{ producto.categoria_nombre }}</td>
+        <td mat-cell *matCellDef="let producto">{{ producto.categoria_nombre || producto.categoria?.nombre || 'Sin categoría' }}</td>
       </ng-container>
 
-      <!-- Precio -->
+      <!-- Columna Precio -->
       <ng-container matColumnDef="precio">
         <th mat-header-cell *matHeaderCellDef>Precio</th>
-        <td mat-cell *matCellDef="let producto">{{ producto.precio | currency }}</td>
+        <td mat-cell *matCellDef="let producto">${{ producto.precio | number:'1.2-2' }}</td>
       </ng-container>
 
-      <!-- Estado -->
+      <!-- ✅ AGREGAR Columna Estado -->
       <ng-container matColumnDef="estado">
         <th mat-header-cell *matHeaderCellDef>Estado</th>
         <td mat-cell *matCellDef="let producto">
-          <span [class]="producto.estado_nombre === 'Activo' ? 'estado-activo' : 'estado-inactivo'">
-            {{ producto.estado_nombre }}
+          <span [class]="producto.estado === 1 || producto.estado === 'activo' ? 'estado-activo' : 'estado-inactivo'">
+            {{ producto.estado === 1 || producto.estado === 'activo' ? 'Activo' : 'Inactivo' }}
           </span>
         </td>
       </ng-container>
 
-      <!-- Acciones -->
+      <!-- Columna Acciones -->
       <ng-container matColumnDef="acciones">
         <th mat-header-cell *matHeaderCellDef>Acciones</th>
-        <td mat-cell *matCellDef="let producto">
-          <img
-            src="assets/admin/ADMIN_7.png"
-            alt="Editar"
-            class="action-icon"
-            (click)="editarProducto(producto)"
-          />
-          <img
-            src="assets/admin/ADMIN_7_1.png"
-            alt="Eliminar"
-            class="action-icon"
-            (click)="abrirDialogoEliminar(producto)"
-            [style.opacity]="eliminando ? '0.5' : '1'"
-          />
+        <td mat-cell *matCellDef="let producto" class="acciones-cell">
+          <img src="assets/admin/ADMIN_7_1.png"
+               alt="Eliminar"
+               class="action-icon"
+               (click)="abrirDialogoEliminar(producto)"
+               title="Eliminar producto">
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
+  </div>
+
+  <!-- Mensaje cuando no hay productos filtrados -->
+  <div *ngIf="!loading && productosFiltrados.length === 0 && productos.length > 0" class="no-data">
+    <p>No se encontraron productos con los filtros aplicados.</p>
   </div>
 
   <!-- Loading de eliminación -->

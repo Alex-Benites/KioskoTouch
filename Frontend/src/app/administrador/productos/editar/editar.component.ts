@@ -24,6 +24,13 @@ export class EditarComponent implements OnInit {
   categoriaSeleccionada: number | null = null;
   loading: boolean = false;
 
+  // ✅ MODIFICAR propiedades del carrusel
+  indiceActual: number = 0;
+  itemsVisibles: number = 5; // ✅ CAMBIAR a 5 items visibles
+  itemWidth: number = 180; // ✅ AJUSTAR ancho (sin gap extra)
+  desplazamiento: number = 0;
+  totalItems: number = 0;
+
   constructor(
     private catalogoService: CatalogoService,
     private router: Router
@@ -32,6 +39,31 @@ export class EditarComponent implements OnInit {
   ngOnInit(): void {
     this.cargarCategorias();
     this.cargarProductos();
+  }
+
+  // ✅ MODIFICAR métodos del carrusel para que sea infinito
+  anteriorCategoria(): void {
+    if (this.indiceActual > 0) {
+      this.indiceActual--;
+    } else {
+      // ✅ NUEVO: Si está en el inicio, ir al final
+      this.indiceActual = Math.max(0, this.totalItems - this.itemsVisibles);
+    }
+    this.actualizarDesplazamiento();
+  }
+
+  siguienteCategoria(): void {
+    if (this.indiceActual < this.totalItems - this.itemsVisibles) {
+      this.indiceActual++;
+    } else {
+      // ✅ NUEVO: Si está en el final, volver al inicio
+      this.indiceActual = 0;
+    }
+    this.actualizarDesplazamiento();
+  }
+
+  actualizarDesplazamiento(): void {
+    this.desplazamiento = -this.indiceActual * this.itemWidth;
   }
 
   // ✅ MANTENER este método
@@ -157,12 +189,14 @@ export class EditarComponent implements OnInit {
     this.catalogoService.getCategorias().subscribe({
       next: (data) => {
         this.categorias = data;
+        this.totalItems = this.categorias.length + 1; // +1 por el botón "Todas"
         console.log('✅ Categorías cargadas:', this.categorias);
         console.log('📊 IDs de categorías:', this.categorias.map(c => ({ id: c.id, nombre: c.nombre })));
       },
       error: (error) => {
         console.error('❌ Error cargando categorías:', error);
         this.categorias = [];
+        this.totalItems = 1; // Solo "Todas"
       }
     });
   }

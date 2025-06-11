@@ -29,85 +29,178 @@
 
 .categorias {
   margin-bottom: 24px;
+
   label {
     font-weight: 500;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     display: block;
   }
-  .categorias-list {
+
+  // ✅ MODIFICAR estilos del carrusel
+  .carrusel-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 8px;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    width: 100%;
+    position: relative;
+    max-width: 1200px; // ✅ AGREGAR ancho máximo
+    margin: 0 auto; // ✅ AGREGAR para centrar el contenedor
   }
+
+  .carrusel-btn {
+    background: #e74c3c;
+    border: none;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    z-index: 10;
+    position: relative;
+
+    // ✅ CREAR forma de flecha con CSS
+    &.prev {
+      clip-path: polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%);
+      border-radius: 0;
+    }
+
+    &.next {
+      clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);
+      border-radius: 0;
+    }
+
+    &:hover {
+      background-color: #c0392b;
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+    }
+
+    i {
+      font-size: 1rem;
+      color: white;
+    }
+  }
+
+  .carrusel-wrapper {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 12px;
+    max-width: 1400px; // ✅ LIMITAR ancho máximo para mostrar 5 items
+    margin: 0 5px;
+    padding-left: 5px
+  }
+
+  .carrusel-track {
+    display: flex;
+    gap: 16px;
+    transition: transform 0.4s ease-in-out;
+    padding: 8px 0;
+  }
+
+  .carrusel-item {
+    flex-shrink: 0;
+    width: 160px; // ✅ AJUSTAR ancho para que quepan 5 (900px / 5 = 180px - gap)
+  }
+
+  // ✅ AJUSTAR categorias-btn para el nuevo tamaño
   .categoria-btn {
     background: #fff;
     border: none;
     border-radius: 12px;
     box-shadow: 0 1px 4px #0001;
-    padding: 10px 22px;
-    font-size: 1rem;
+    padding: 10px 14px; // ✅ REDUCIR un poco más el padding
+    font-size: 0.85rem; // ✅ REDUCIR más el tamaño de fuente
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 6px; // ✅ REDUCIR gap entre imagen y texto
     cursor: pointer;
-    //transition: all 0.3s ease; // Transición suave
+    transition: all 0.3s ease;
+    width: 100%;
+    height: 100px; // ✅ REDUCIR altura para que quepan bien 8
+    justify-content: center;
 
     img {
+      width: 40px; // ✅ REDUCIR más el tamaño imagen
+      height: 40px;
       object-fit: cover;
-      border-radius: 4px;
-      margin-right: 8px;
-      // ✅ QUITAR el filter que hacía las imágenes blancas
+      border-radius: 8px;
+      margin-right: 0;
     }
 
-    // ✅ MODIFICAR estado activo - SIN alterar las imágenes
+    span {
+      font-size: 0.8rem; // ✅ REDUCIR más el tamaño texto
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    // Estado activo
     &.active {
-      background-color: #e74c3c; // Fondo rojo cuando está activo
+      background-color: #e74c3c;
       color: white;
       border: 2px solid #c0392b;
-      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); // Sombra para destacar
-      transform: translateY(-2px); // Efecto de elevación
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+      transform: scale(1.05);
 
       span {
-        color: white; // Solo el texto en blanco
-        font-weight: bold; // Texto en negrita
+        color: white;
+        font-weight: bold;
       }
-
-      // ✅ ELIMINAR ESTO: NO alterar las imágenes
-      // img {
-      //   filter: brightness(0) invert(1);
-      // }
     }
 
-    // ✅ AGREGAR efecto hover
+    // Hover
     &:hover:not(.active) {
       background-color: #f8f9fa;
-      border-color: #e74c3c;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e74c3c;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    // ✅ AGREGAR estado cuando no está activo
+    // No activo
     &:not(.active) {
       background-color: #ffffff;
       color: #333333;
       border: 1px solid #e0e0e0;
     }
   }
-}
 
-// ✅ MODIFICAR estilos para el botón "Todas" también
-.categoria-btn.todas {
-  &.active {
-    background-color: #2c3e50; // Color diferente para "Todas"
-    border-color: #1a252f;
+  // ✅ Estilos para botón "Todas"
+  .categoria-btn.todas {
+    &.active {
+      background-color: #e74c3c; // ✅ CAMBIAR a rojo igual que las otras
+      border-color: #c0392b;     // ✅ CAMBIAR a rojo más oscuro
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); // ✅ AGREGAR sombra roja
 
-    .fas {
-      color: white; // Solo el ícono en blanco, no las imágenes
+      .fas {
+        color: white;
+        font-size: 1.3rem; // ✅ AJUSTAR tamaño ícono
+      }
+
+      span {
+        color: white;
+        font-weight: bold; // ✅ AGREGAR negrita como las otras
+      }
+
+      // ✅ AGREGAR el mismo efecto de escala
+      transform: scale(1.05);
     }
 
-    span {
-      color: white; // Solo el texto en blanco
+    .fas {
+      font-size: 1.3rem; // ✅ AJUSTAR tamaño ícono
+      color: #666;
+    }
+
+    // ✅ AGREGAR el mismo hover que las otras categorías
+    &:hover:not(.active) {
+      background-color: #f8f9fa;
+      border: 1px solid #e74c3c;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
   }
 }

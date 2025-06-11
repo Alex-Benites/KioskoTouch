@@ -12,6 +12,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 import { CatalogoService } from '../../../services/catalogo.service';
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-eliminar',
@@ -23,24 +24,39 @@ import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    HeaderAdminComponent
+    HeaderAdminComponent,
+    FormsModule
   ],
   templateUrl: './eliminar.component.html',
   styleUrls: ['./eliminar.component.scss']
 })
 export class EliminarComponent implements OnInit {
-  
   private dialog = inject(MatDialog);
   private catalogoService = inject(CatalogoService);
   private router = inject(Router);
 
   displayedColumns: string[] = ['nombre', 'categoria', 'precio', 'estado', 'acciones'];
   productos: Producto[] = [];
+  productosFiltrados: Producto[] = []; // Nueva propiedad
   loading = false;
   eliminando = false;
+  filtroCategoria: string = ''; // Nueva propiedad
+  categorias: Categoria[] = []; // Agregar esta propiedad
 
   ngOnInit(): void {
+    this.cargarCategorias();
     this.cargarProductos();
+  }
+
+  cargarCategorias(): void {
+    this.catalogoService.getCategorias().subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+      }
+    });
   }
 
   cargarProductos(): void {
@@ -50,6 +66,7 @@ export class EliminarComponent implements OnInit {
     this.catalogoService.getProductos().subscribe({
       next: (productos) => {
         this.productos = productos;
+        this.productosFiltrados = productos; // Inicializar filtrados
         this.loading = false;
         console.log('✅ Productos cargados:', productos.length);
         console.log('📦 Productos:', productos);
@@ -60,11 +77,24 @@ export class EliminarComponent implements OnInit {
         alert('❌ Error al cargar los productos. Por favor, intenta de nuevo.');
       }
     });
-  } 
+  }
 
-  editarProducto(producto: any): void {
-    console.log('Editar producto:', producto);
-    this.router.navigate(['/administrador/gestion-productos/crear', producto.id]);
+  // Método para obtener el nombre de la categoría por ID
+  getNombreCategoria(categoriaId: number): string {
+    const categoria = this.categorias.find(c => c.id === categoriaId);
+    return categoria ? categoria.nombre : 'Sin categoría';
+  }
+
+  // Filtrar por nombre de categoría
+  filtrarPorCategoria(): void {
+    if (!this.filtroCategoria.trim()) {
+      this.productosFiltrados = this.productos;
+    } else {
+      this.productosFiltrados = this.productos.filter(producto => {
+        const nombreCategoria = this.getNombreCategoria(producto.categoria);
+        return nombreCategoria.toLowerCase().includes(this.filtroCategoria.toLowerCase());
+      });
+    }
   }
 
   abrirDialogoEliminar(producto: any): void {

@@ -7,24 +7,46 @@
 
     <div class="categorias">
         <label>Buscar por categoría</label>
-        <div class="categorias-list">
-            <!-- ✅ MODIFICAR botón "Todas" con clase activa -->
-            <button class="categoria-btn todas"
-                    [class.active]="categoriaSeleccionada === null"
-                    (click)="filtrarPorCategoria(null)">
-                <i class="fas fa-th"></i>
-                <span>Todas</span>
+
+        <!-- ✅ NUEVO: Carrusel de categorías -->
+        <div class="carrusel-container">
+            <!-- ✅ QUITAR disabled ya que será infinito -->
+            <button class="carrusel-btn prev" (click)="anteriorCategoria()">
+                <i class="fas fa-chevron-left"></i>
             </button>
 
-            <!-- ✅ MODIFICAR botones de categorías con clase activa -->
-            @for (cat of categorias; track cat.id) {
-                <button class="categoria-btn"
-                        [class.active]="categoriaSeleccionada === cat.id"
-                        (click)="filtrarPorCategoria(cat.id)">
-                    <img [src]="getFullImageUrl(cat.imagen_url)" [alt]="cat.nombre" />
-                    <span>{{ cat.nombre }}</span>
-                </button>
-            }
+            <div class="carrusel-wrapper">
+                <div class="carrusel-track"
+                     [style.transform]="'translateX(' + desplazamiento + 'px)'">
+
+                    <!-- Botón "Todas" -->
+                    <div class="carrusel-item">
+                        <button class="categoria-btn todas"
+                                [class.active]="categoriaSeleccionada === null"
+                                (click)="filtrarPorCategoria(null)">
+                            <i class="fas fa-th"></i>
+                            <span>Todas</span>
+                        </button>
+                    </div>
+
+                    <!-- Categorías -->
+                    @for (cat of categorias; track cat.id) {
+                        <div class="carrusel-item">
+                            <button class="categoria-btn"
+                                    [class.active]="categoriaSeleccionada === cat.id"
+                                    (click)="filtrarPorCategoria(cat.id)">
+                                <img [src]="getFullImageUrl(cat.imagen_url)" [alt]="cat.nombre" />
+                                <span>{{ cat.nombre }}</span>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ✅ QUITAR disabled ya que será infinito -->
+            <button class="carrusel-btn next" (click)="siguienteCategoria()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
     </div>
 
