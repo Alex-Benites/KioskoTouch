@@ -54,26 +54,36 @@
     <div class="vinculacion-section">
       <h3>Vinculación/Desvinculación del Establecimiento</h3>
 
+      <!-- ✅ CAMBIAR: Dropdown de provincias -->
       <div class="search-bar">
         <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Buscar ciudad</mat-label>
-          <input matInput placeholder="Buscar" formControlName="buscarCiudad" />
-          <button mat-icon-button matSuffix type="button">
-            <mat-icon>search</mat-icon>
-          </button>
+          <mat-label>Filtrar por provincia</mat-label>
+          <mat-select formControlName="provinciaFiltro" (selectionChange)="filtrarPorProvincia()">
+            <mat-option value="">Todas las provincias</mat-option>
+            <mat-option *ngFor="let provincia of provinciasEcuador" [value]="provincia">
+              {{ provincia }}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
       </div>
 
+      <!-- ✅ SIMPLIFICAR: Solo mostrar nombre del establecimiento -->
       <div class="establecimientos-list">
-        <div class="establecimiento-item" *ngFor="let establecimiento of establecimientos">
+        <div class="establecimiento-item" *ngFor="let establecimiento of establecimientosFiltrados">
           <img src="assets/admin/ADMIN_23.png" alt="Establecimiento" />
           <div class="establecimiento-info">
+            <!-- ✅ CAMBIAR: Solo mostrar el nombre, quitar la provincia -->
             <p class="establecimiento-nombre">{{ establecimiento.nombre }}</p>
           </div>
           <mat-checkbox
             [checked]="establecimiento.seleccionado"
             (change)="onEstablecimientoSeleccionado(establecimiento, $event)">
           </mat-checkbox>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        <div class="no-results" *ngIf="establecimientosFiltrados.length === 0">
+          <p>No se encontraron establecimientos en la provincia seleccionada.</p>
         </div>
       </div>
 
@@ -90,5 +100,14 @@
     </button>
   </div>
 </div>
+
+<!-- ✅ AGREGAR: Popup al final del archivo, antes del footer -->
+<app-success-popup
+  [visible]="mostrarPopup"
+  [title]="tituloPopup"
+  [message]="mensajePopup"
+  [buttonText]="'Aceptar'"
+  (onClose)="cerrarPopup()">
+</app-success-popup>
 
 <app-footer-admin></app-footer-admin>

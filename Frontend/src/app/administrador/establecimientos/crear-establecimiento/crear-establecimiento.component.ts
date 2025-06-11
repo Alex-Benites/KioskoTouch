@@ -39,11 +39,11 @@ export class CrearEstablecimientoComponent implements OnInit {
   imagenMapaUrl: string | null = null;
   archivoMapa: File | null = null;
   estados: { id: number, nombre: string }[] = [];
-  
-  // Para la cascada provincia → ciudad
-  ciudadesDisponibles: string[] = []; 
 
-  // Lista de empleados desde la base de datos 
+  // Para la cascada provincia → ciudad
+  ciudadesDisponibles: string[] = [];
+
+  // Lista de empleados desde la base de datos
   empleadosDisponibles: EmpleadoDropdown[] = [];
   loadingEmpleados: boolean = false;
 
@@ -55,6 +55,9 @@ export class CrearEstablecimientoComponent implements OnInit {
   // Variables de control
   establecimientoId: number | null = null;
   isEditMode = false;
+
+  // ← AGREGAR esta propiedad
+  mostrarCampoImagen: boolean = false; // ← AGREGAR esta propiedad
 
   private ciudadesPorProvincia: { [key: string]: string[] } = {
     'Guayas': ['Guayaquil', 'Durán', 'Milagro', 'Daule', 'Samborondón'],
@@ -95,10 +98,10 @@ export class CrearEstablecimientoComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('🚀 ngOnInit - Iniciando componente');
-    
+
     this.cargarEmpleados();
     this.cargarEstados();
-    
+
     // Detectar modo edición
     this.establecimientoId = Number(this.route.snapshot.paramMap.get('id'));
     this.isEditMode = !!this.establecimientoId && !isNaN(this.establecimientoId);
@@ -128,14 +131,14 @@ export class CrearEstablecimientoComponent implements OnInit {
   // ✅ MÉTODO SIMPLIFICADO - Solo cargar datos del establecimiento
   cargarEstablecimientoParaEditar(): void {
     if (!this.establecimientoId) return;
-    
+
     console.log('🔄 Cargando establecimiento para editar, ID:', this.establecimientoId);
-    
+
     this.establecimientosService.obtenerEstablecimientoPorId(this.establecimientoId).subscribe({
       next: (establecimiento) => {
         console.log('📋 Establecimiento cargado:', establecimiento);
         console.log('🖼️ Imagen URL:', establecimiento.imagen_url);
-        
+
         // ✅ MOSTRAR IMAGEN ACTUAL SI EXISTE
         if (establecimiento.imagen_url) {
           this.imagenActual = establecimiento.imagen_url;
@@ -165,7 +168,7 @@ export class CrearEstablecimientoComponent implements OnInit {
           responsableAsignado: establecimiento.responsable_id,
           cargoAsignado: responsable ? responsable.cargo : ''
         });
-        
+
         console.log('📋 Form values después de cargar:', this.form.value);
       },
       error: (error) => {
@@ -238,15 +241,8 @@ export class CrearEstablecimientoComponent implements OnInit {
   // ✅ MÉTODO PARA LIMPIAR ARCHIVO SELECCIONADO
   clearFile(): void {
     this.selectedFile = null;
-    this.imagePreview = null;
-    
-    // Limpiar el input file
-    const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
-    
-    console.log('🗑️ Archivo de imagen limpiado');
+    this.imagePreview = '';
+    this.mostrarCampoImagen = false; // ← AGREGAR esta línea
   }
 
   // Método para cuando se selecciona una provincia
@@ -327,7 +323,7 @@ export class CrearEstablecimientoComponent implements OnInit {
 
     // ✅ SIEMPRE USAR FormData (más simple y consistente)
     const formData = new FormData();
-    
+
     // Agregar datos del formulario
     const formValue = this.form.value;
     formData.append('nombre', formValue.nombreEstablecimiento);

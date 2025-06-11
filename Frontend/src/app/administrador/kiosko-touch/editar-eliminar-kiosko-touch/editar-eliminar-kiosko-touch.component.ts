@@ -13,22 +13,8 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { KioskoTouchService } from '../../../services/kiosko-touch.service';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-// ✅ IMPORTAR LA INTERFAZ DESDE EL ARCHIVO SEPARADO:
+import { EstablecimientosService } from '../../../services/establecimientos.service'; // ✅ AGREGAR
 import { KioscoTouch } from '../../../models/kiosco-touch-editar.model';
-
-// ❌ ELIMINAR LA INTERFAZ LOCAL:
-// interface KioscoTouch {
-//   id: number;
-//   nombre: string;
-//   token: string;
-//   estado: string;
-//   establecimiento?: {
-//     id: number;
-//     nombre: string;
-//   } | null;
-// }
-
 @Component({
   selector: 'app-editar-eliminar-kiosko-touch',
   templateUrl: './editar-eliminar-kiosko-touch.component.html',
@@ -42,7 +28,6 @@ import { KioscoTouch } from '../../../models/kiosco-touch-editar.model';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatSlideToggleModule,
     MatInputModule,
     RouterModule,
     FooterAdminComponent,
@@ -50,50 +35,86 @@ import { KioscoTouch } from '../../../models/kiosco-touch-editar.model';
   ]
 })
 export class EditarEliminarKioskoTouchComponent implements OnInit {
-  kioscos: KioscoTouch[] = [];
-  kioscosFiltrados: KioscoTouch[] = [];
+  kioscos: any[] = [];
+  kioscosFiltrados: any[] = [];
   filtroEstado: string = '';
   filtroEstablecimiento: string = '';
-  textoBusqueda: string = '';
-  loading = false;
+  establecimientos: any[] = [];
+  loading: boolean = false;
 
   constructor(
     private dialog: MatDialog,
-    private kioskoTouchService: KioskoTouchService,
+    private kioscoTouchService: KioskoTouchService,
+    private establecimientosService: EstablecimientosService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.cargarEstablecimientos();
     this.cargarKioscos();
+  }
+
+  cargarEstablecimientos(): void {
+    console.log('🔄 Cargando establecimientos...');
+    this.establecimientosService.obtenerEstablecimientos().subscribe({
+      next: (data: any[]) => {
+        this.establecimientos = data;
+        console.log('✅ Establecimientos cargados:', this.establecimientos);
+      },
+      error: (error: any) => {
+        console.error('❌ Error al cargar establecimientos:', error);
+        this.establecimientos = [];
+      }
+    });
   }
 
   cargarKioscos(): void {
     this.loading = true;
-    this.kioskoTouchService.obtenerKioscosTouch().subscribe({
-      next: (data) => {
+    // ✅ CORREGIR: Usar el método correcto del servicio
+    this.kioscoTouchService.obtenerKioscosTouch().subscribe({
+      next: (data: any[]) => {
         this.kioscos = data;
         this.kioscosFiltrados = [...data];
         this.loading = false;
+        console.log('✅ Kioscos cargados:', this.kioscos);
       },
-      error: (error) => {
+      error: (error: any) => {
+        console.error('❌ Error al cargar kioscos:', error);
         this.loading = false;
-        console.error('Error al cargar kioscos:', error);
-        alert('Error al cargar kioscos');
       }
     });
   }
 
   aplicarFiltros(): void {
-    this.kioscosFiltrados = this.kioscos.filter(kiosco => {
-      const cumpleFiltroEstado = !this.filtroEstado || kiosco.estado === this.filtroEstado;
-      const cumpleFiltroEstablecimiento = !this.filtroEstablecimiento || 
-        (kiosco.establecimiento && kiosco.establecimiento.nombre === this.filtroEstablecimiento);
-      const cumpleBusquedaTexto = !this.textoBusqueda ||
-        kiosco.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
-        (kiosco.establecimiento && kiosco.establecimiento.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()));
-      
-      return cumpleFiltroEstado && cumpleFiltroEstablecimiento && cumpleBusquedaTexto;
+    console.log('🔍 Aplicando filtros:', {
+      filtroEstado: this.filtroEstado,
+      filtroEstablecimiento: this.filtroEstablecimiento
     });
+
+    this.kioscosFiltrados = this.kioscos.filter(kiosco => {
+      // Filtro por estado
+      const estadoKiosco = this.getEstadoNombre(kiosco);
+      const cumpleEstado = !this.filtroEstado ||
+                          estadoKiosco.toLowerCase() === this.filtroEstado.toLowerCase();
+
+      // ✅ CORREGIR: Filtro por establecimiento
+      const establecimientoId = kiosco.establecimiento?.id;
+
+      // Convertir ambos a string y hacer comparación estricta
+      const cumpleEstablecimiento = !this.filtroEstablecimiento ||
+                                   String(establecimientoId) === String(this.filtroEstablecimiento);
+
+      console.log(`Kiosco ${kiosco.nombre}:`);
+      console.log(`  Estado: "${estadoKiosco}" vs filtro: "${this.filtroEstado}" = ${cumpleEstado}`);
+      console.log(`  Establecimiento: "${establecimientoId}" (${typeof establecimientoId}) vs filtro: "${this.filtroEstablecimiento}" (${typeof this.filtroEstablecimiento}) = ${cumpleEstablecimiento}`);
+
+      const resultado = cumpleEstado && cumpleEstablecimiento;
+      console.log(`  ✅ Resultado final: ${resultado}`);
+
+      return resultado;
+    });
+
+    console.log('🎯 Total kioscos filtrados:', this.kioscosFiltrados.length);
   }
 
   editarKiosco(kiosco: KioscoTouch): void {
@@ -119,26 +140,18 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
   }
 
   eliminarKiosco(kiosco: KioscoTouch): void {
-    this.kioskoTouchService.eliminarKioscoTouch(kiosco.id).subscribe({
+    // ✅ CORREGIR: Nombre correcto del servicio
+    this.kioscoTouchService.eliminarKioscoTouch(kiosco.id).subscribe({
       next: () => {
         this.kioscos = this.kioscos.filter(k => k.id !== kiosco.id);
         this.aplicarFiltros();
-        //alert(`Kiosco "${kiosco.nombre}" eliminado exitosamente.`);
+        console.log('✅ Kiosco eliminado correctamente');
       },
-      error: (error) => {
-        console.error('Error al eliminar kiosco:', error);
+      error: (error: any) => {
+        console.error('❌ Error al eliminar kiosco:', error);
         alert('Error al eliminar el kiosco.');
       }
     });
-  }
-
-  cambiarEstado(kiosco: KioscoTouch, event: any): void {
-    const nuevoEstado = event.checked ? 'activo' : 'inactivo';
-    kiosco.estado = nuevoEstado;
-
-    console.log(`Estado de ${kiosco.nombre} cambiado a: ${nuevoEstado}`);
-
-    this.aplicarFiltros();
   }
 
   getEstadoNombre(kiosco: any): string {

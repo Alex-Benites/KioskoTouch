@@ -343,9 +343,9 @@ def listar_kioscos_touch(request):
 @permission_classes([IsAuthenticated])
 def kiosco_touch_detalle_o_eliminar(request, pk):
     try:
-        kiosco = AppkioskoKioskostouch.objects.get(pk=pk)
+        kiosco = AppkioskoKioskostouch.objects.get(pk=pk)  # ✅ Usar 'kiosco' consistentemente
     except AppkioskoKioskostouch.DoesNotExist:
-        return Response({'success': False, 'error': 'No existe'}, status=404)
+        return Response({'error': 'Kiosco no encontrado'}, status=404)
 
     if request.method == 'GET':
         data = {
@@ -353,16 +353,16 @@ def kiosco_touch_detalle_o_eliminar(request, pk):
             'nombre': kiosco.nombre,
             'token': kiosco.token,
             'estado_id': kiosco.estado.id if kiosco.estado else None,
-            'estado': kiosco.estado.nombre if kiosco.estado else '',
-            'establecimiento_id': kiosco.establecimiento.id if kiosco.establecimiento else None,
+            'estado_nombre': kiosco.estado.nombre if kiosco.estado else '',
             'establecimiento': {
                 'id': kiosco.establecimiento.id,
-                'nombre': kiosco.establecimiento.nombre,
+                'nombre': kiosco.establecimiento.nombre,  # ✅ CAMBIAR 'kiosko' por 'kiosco'
                 'ciudad': kiosco.establecimiento.ciudad,
                 'provincia': kiosco.establecimiento.provincia
             } if kiosco.establecimiento else None
         }
         return Response(data)
+    
     elif request.method == 'PUT':
         data = request.data
         try:
@@ -407,7 +407,7 @@ def crear_pantalla_cocina(request):
     data = request.data
     
     try:
-        # Buscar estado
+        # Buscar estado (mantener igual)
         estado = None
         if 'estado' in data and data['estado']:
             estado_valor = data['estado']
@@ -419,27 +419,39 @@ def crear_pantalla_cocina(request):
             except AppkioskoEstados.DoesNotExist:
                 return Response({'success': False, 'error': f'Estado "{estado_valor}" no encontrado'}, status=400)
         
-        # Buscar kiosco touch
-        kiosco_touch = None
-        kiosco_id = data.get('kiosco_touch_asociado')
-        if kiosco_id:
-            kiosco_touch = AppkioskoKioskostouch.objects.get(id=kiosco_id)
+        # ✅ CAMBIAR: Recibir LISTA de kioskos en lugar de uno solo
+        kioskos_ids = data.get('kioskos_asociados', [])
+        if not kioskos_ids:
+            # Compatibilidad: si viene el campo viejo, convertirlo a lista
+            kiosco_id = data.get('kiosco_touch_asociado')
+            if kiosco_id:
+                kioskos_ids = [kiosco_id]
+        
+        # Validar que existan los kioskos
+        kioskos = AppkioskoKioskostouch.objects.filter(id__in=kioskos_ids)
+        if kioskos_ids and len(kioskos) != len(kioskos_ids):
+            return Response({'success': False, 'error': 'Uno o más kioskos no encontrados'}, status=400)
+        
+        # Obtener establecimiento del primer kiosco (o manejar como prefieras)
+        establecimiento = kioskos.first().establecimiento if kioskos.exists() else None
         
         # Crear la pantalla
         pantalla = AppkioskoPantallascocina.objects.create(
             nombre=data.get('nombre'),
             token=data.get('token'),
             estado=estado,
-            establecimiento=kiosco_touch.establecimiento if kiosco_touch else None
+            establecimiento=establecimiento
         )
+        
+        # ✅ ASOCIAR LOS KIOSKOS
+        if kioskos.exists():
+            pantalla.kioskos_asociados.set(kioskos)
         
         return Response({
             'success': True, 
             'id': pantalla.id, 
-            'message': 'Pantalla de Cocina creada correctamente'
+            'message': f'Pantalla de Cocina creada con {len(kioskos)} kiosco(s) asociado(s)'
         })
-    except AppkioskoKioskostouch.DoesNotExist:
-        return Response({'success': False, 'error': 'Kiosco Touch no encontrado'}, status=400)
     except Exception as e:
         print("❌ Error al crear pantalla cocina:", e)
         return Response({'success': False, 'error': str(e)}, status=400)
@@ -447,17 +459,24 @@ def crear_pantalla_cocina(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listar_pantallas_cocina(request):
-    pantallas = AppkioskoPantallascocina.objects.all()
+    pantallas = AppkioskoPantallascocina.objects.prefetch_related('kioskos_asociados').all()
     data = [
         {
             'id': p.id,
             'nombre': p.nombre,
             'token': p.token,
             'estado': p.estado.nombre if p.estado else '',
-            'kiosco_touch': {
+            'establecimiento': {
                 'id': p.establecimiento.id,
                 'nombre': p.establecimiento.nombre
-            } if p.establecimiento else None
+            } if p.establecimiento else None,
+            # ✅ AGREGAR: Lista de kioskos asociados
+            'kioskos_asociados': [
+                {
+                    'id': k.id,
+                    'nombre': k.nombre
+                } for k in p.kioskos_asociados.all()
+            ]
         }
         for p in pantallas
     ]
@@ -469,7 +488,7 @@ def pantalla_cocina_detalle_o_eliminar(request, pk):
     try:
         pantalla = AppkioskoPantallascocina.objects.get(pk=pk)
     except AppkioskoPantallascocina.DoesNotExist:
-        return Response({'success': False, 'error': 'No existe'}, status=404)
+        return Response({'error': 'Pantalla no encontrada'}, status=404)
 
     if request.method == 'GET':
         data = {
@@ -477,44 +496,90 @@ def pantalla_cocina_detalle_o_eliminar(request, pk):
             'nombre': pantalla.nombre,
             'token': pantalla.token,
             'estado_id': pantalla.estado.id if pantalla.estado else None,
-            'estado': pantalla.estado.nombre if pantalla.estado else '',
-            'kiosco_touch_id': pantalla.establecimiento.id if pantalla.establecimiento else None,
-            'kiosco_touch': {
+            'estado_nombre': pantalla.estado.nombre if pantalla.estado else '',
+            'establecimiento': {
                 'id': pantalla.establecimiento.id,
                 'nombre': pantalla.establecimiento.nombre
-            } if pantalla.establecimiento else None
+            } if pantalla.establecimiento else None,
+            # ✅ CRUCIAL: Incluir los kioskos asociados
+            'kioskos_asociados': list(pantalla.kioskos_asociados.values_list('id', flat=True)),
+            'kioskos_detalle': [
+                {
+                    'id': k.id,
+                    'nombre': k.nombre,
+                    'token': k.token,
+                    'establecimiento': k.establecimiento.nombre if k.establecimiento else None
+                }
+                for k in pantalla.kioskos_asociados.all()
+            ]
         }
         return Response(data)
+    
     elif request.method == 'PUT':
-        data = request.data
-        try:
-            # Buscar estado
-            estado = None
-            if 'estado' in data and data['estado']:
-                estado_valor = data['estado']
-                if isinstance(estado_valor, int) or estado_valor.isdigit():
-                    estado = AppkioskoEstados.objects.get(id=int(estado_valor))
-                else:
-                    estado = AppkioskoEstados.objects.get(nombre=estado_valor)
-            
-            # Buscar kiosco touch
-            kiosco_touch = None
-            kiosco_id = data.get('kiosco_touch_asociado')
-            if kiosco_id:
-                kiosco_touch = AppkioskoKioskostouch.objects.get(id=kiosco_id)
-            
-            # Actualizar campos
-            pantalla.nombre = data.get('nombre', pantalla.nombre)
-            pantalla.token = data.get('token', pantalla.token)
-            if estado:
+        # ✅ AGREGAR: Lógica de actualización
+        print(f"🔧 PUT - Actualizando pantalla ID: {pk}")
+        print(f"📤 Datos recibidos: {request.data}")
+        
+        # Actualizar campos básicos
+        if 'nombre' in request.data:
+            pantalla.nombre = request.data['nombre']
+        
+        if 'token' in request.data:
+            pantalla.token = request.data['token']
+        
+        if 'estado' in request.data and request.data['estado']:
+            try:
+                estado = AppkioskoEstados.objects.get(id=request.data['estado'])  # ✅ CORREGIR AQUÍ
                 pantalla.estado = estado
-            if kiosco_touch:
-                pantalla.establecimiento = kiosco_touch.establecimiento
-            pantalla.save()
+            except AppkioskoEstados.DoesNotExist:  # ✅ Y AQUÍ TAMBIÉN
+                pass
+        
+        pantalla.save()
+        print(f"✅ Campos básicos guardados")
+
+        # ✅ CRUCIAL: Actualizar kioskos asociados
+        if 'kioskos_asociados' in request.data:
+            kioskos_ids = request.data['kioskos_asociados']
+            print(f"📱 Actualizando kioskos asociados: {kioskos_ids}")
             
-            return Response({'success': True, 'message': 'Pantalla de Cocina actualizada correctamente'})
-        except Exception as e:
-            return Response({'success': False, 'error': str(e)}, status=400)
+            # Limpiar asociaciones existentes
+            pantalla.kioskos_asociados.clear()
+            print(f"🗑️ Relaciones anteriores eliminadas")
+            
+            # Agregar nuevas asociaciones
+            for kiosco_id in kioskos_ids:
+                try:
+                    kiosco = AppkioskoKioskostouch.objects.get(id=kiosco_id)
+                    pantalla.kioskos_asociados.add(kiosco)
+                    print(f"✅ Kiosco {kiosco_id} asociado correctamente")
+                except AppkioskoKioskostouch.DoesNotExist:
+                    print(f"❌ Kiosco {kiosco_id} no encontrado")
+            
+            # Verificar resultado final
+            kioskos_finales = list(pantalla.kioskos_asociados.values_list('id', flat=True))
+            print(f"📱 Kioskos asociados FINAL: {kioskos_finales}")
+
+        return Response({
+            'success': True,
+            'message': 'Pantalla de Cocina actualizada correctamente'
+        })
+    
     elif request.method == 'DELETE':
-        pantalla.delete()
-        return Response({'success': True})
+        print(f"🗑️ Eliminando pantalla ID: {pk}")
+        
+        try:
+            # Eliminar la pantalla (las relaciones ManyToMany se eliminan automáticamente)
+            pantalla.delete()
+            print(f"✅ Pantalla {pk} eliminada correctamente")
+            
+            return Response({
+                'success': True,
+                'message': 'Pantalla de cocina eliminada correctamente'
+            })
+            
+        except Exception as e:
+            print(f"❌ Error al eliminar pantalla {pk}: {e}")
+            return Response({
+                'success': False,
+                'error': f'Error al eliminar la pantalla: {str(e)}'
+            }, status=500)

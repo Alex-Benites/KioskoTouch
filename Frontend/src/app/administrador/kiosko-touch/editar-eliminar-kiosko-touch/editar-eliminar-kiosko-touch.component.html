@@ -11,8 +11,9 @@
       <mat-form-field appearance="outline" class="filter-field">
         <mat-select [(value)]="filtroEstado" (selectionChange)="aplicarFiltros()">
           <mat-option value="">Todos</mat-option>
-          <mat-option value="activo">Activo</mat-option>
-          <mat-option value="inactivo">Inactivo</mat-option>
+          <!-- ✅ USAR: Valores exactos que devuelve getEstadoNombre() -->
+          <mat-option value="activado">Activado</mat-option>
+          <mat-option value="desactivado">Desactivado</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
@@ -21,12 +22,12 @@
       <label>Establecimiento</label>
       <mat-form-field appearance="outline" class="filter-field">
         <mat-select [(value)]="filtroEstablecimiento" (selectionChange)="aplicarFiltros()">
-          <mat-option value="">Seleccione establecimiento</mat-option>
-          <mat-option value="Local 1: Sur">Local 1: Sur</mat-option>
-          <mat-option value="Local 2: Norte">Local 2: Norte</mat-option>
-          <mat-option value="Local 3: Centro">Local 3: Centro</mat-option>
-          <mat-option value="Local 4: Sur">Local 4: Sur</mat-option>
-          <mat-option value="Local 5: Centro">Local 5: Centro</mat-option>
+          <mat-option value="">Todos los establecimientos</mat-option>
+          <!-- ✅ REEMPLAZAR: Usar establecimientos reales de la BD -->
+          <mat-option *ngFor="let establecimiento of establecimientos"
+                      [value]="establecimiento.id">
+            {{ establecimiento.nombre }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
     </div>
@@ -57,12 +58,6 @@
             </span>
           </td>
           <td class="actions-cell">
-            <!-- Toggle Switch para cambiar estado -->
-            <mat-slide-toggle
-              [checked]="getEstadoNombre(kiosco) === 'activo'"
-              (change)="cambiarEstado(kiosco, $event)"
-              [color]="'primary'">
-            </mat-slide-toggle>
 
             <!-- Botón Editar con imagen personalizada -->
             <button mat-icon-button

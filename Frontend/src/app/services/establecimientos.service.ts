@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Establecimiento } from '../models/establecimiento.model';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -35,5 +36,14 @@ export class EstablecimientosService {
 
     obtenerEstablecimientoPorId(id: number): Observable<Establecimiento> {
         return this.http.get<Establecimiento>(`${this.apiUrl}/${id}/`);
+    }
+
+    // ✅ AGREGAR: Método para obtener solo establecimientos activos para filtros
+    obtenerEstablecimientosParaFiltro(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/establecimientos/`).pipe(
+            map((establecimientos: any[]) =>
+                establecimientos.filter(est => (est as any).estado === 1) // Solo activos
+            )
+        );
     }
 }

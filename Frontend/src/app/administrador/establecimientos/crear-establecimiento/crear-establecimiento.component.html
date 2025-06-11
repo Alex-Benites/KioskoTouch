@@ -11,7 +11,7 @@
     <div class="form-section">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Nombre del establecimiento</mat-label>
-        <input matInput placeholder="Cheese Burger" formControlName="nombreEstablecimiento" />
+        <input matInput placeholder="Ingrese un nombre" formControlName="nombreEstablecimiento" />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -92,30 +92,34 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Estado del Establecimiento</mat-label>
-        <mat-select formControlName="estadoEstablecimiento">
-          <mat-option *ngFor="let estado of estados" [value]="estado.id">
-            {{ estado.nombre | titlecase }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+
     </div>
 
     <!-- Columna de imagen -->
     <div class="image-upload-column">
       <p class="image-upload-label">Imagen del establecimiento</p>
 
-      <!-- Mostrar imagen actual en modo edición -->
-      <div *ngIf="isEditMode && imagenActual && !imagePreview" class="imagen-actual">
-        <p><strong>Imagen actual:</strong></p>
-        <img [src]="'http://localhost:8000' + imagenActual"
-             alt="Imagen actual"
-             class="imagen-preview">
+      <!-- MODO EDICIÓN: Solo mostrar imagen actual -->
+      <div *ngIf="isEditMode && imagenActual && !imagePreview" class="imagen-actual-container">
+        <div class="imagen-actual">
+          <p><strong>Imagen actual:</strong></p>
+          <img [src]="'http://localhost:8000' + imagenActual"
+               alt="Imagen actual"
+               class="imagen-preview">
+        </div>
+
+        <!-- Botón para cambiar imagen -->
+        <div class="cambiar-imagen-actions">
+          <button type="button"
+                  class="cambiar-imagen-button"
+                  (click)="mostrarCampoImagen = true">
+            Cambiar imagen
+          </button>
+        </div>
       </div>
 
-      <!-- Sección de subida de imagen -->
-      <div class="nueva-imagen-section">
+      <!-- CAMPO PARA SUBIR IMAGEN: Solo en creación O cuando se quiere cambiar -->
+      <div *ngIf="!isEditMode || !imagenActual || imagePreview || mostrarCampoImagen" class="nueva-imagen-section">
         <div class="image-upload-container" (click)="fileInput.click()">
           <input hidden type="file" #fileInput
                  (change)="onFileSelected($event)"
@@ -132,11 +136,11 @@
           </div>
         </div>
 
-        <div *ngIf="imagePreview" class="image-actions">
+        <div *ngIf="imagePreview || mostrarCampoImagen" class="image-actions">
           <button type="button"
                   class="primary__button delete-image-button"
-                  (click)="clearFile()">
-            Quitar imagen
+                  (click)="clearFile(); mostrarCampoImagen = false">
+            {{ imagePreview ? 'Quitar imagen' : 'Cancelar cambio' }}
           </button>
         </div>
 
@@ -145,6 +149,18 @@
           <p><strong>Tamaño:</strong> {{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
         </div>
       </div>
+
+      <!-- Estado del establecimiento -->
+      <div class="estado-section">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Estado del Establecimiento</mat-label>
+          <mat-select formControlName="estadoEstablecimiento">
+            <mat-option *ngFor="let estado of estados" [value]="estado.id">
+              {{ estado.nombre | titlecase }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
     </div>
   </form>
 
@@ -152,9 +168,6 @@
   <div class="form-actions">
     <button type="button" class="primary__button" (click)="crearEstablecimiento()">
       {{ isEditMode ? 'Actualizar' : 'Crear' }}
-    </button>
-    <button type="button" class="secondary__button" (click)="cancelar()">
-      Cancelar
     </button>
   </div>
 </div>
