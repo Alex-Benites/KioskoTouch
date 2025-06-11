@@ -96,6 +96,11 @@ class AppkioskoPantallascocina(models.Model):
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
     token = models.CharField(max_length=255, blank=True, null=True)
     establecimiento = models.ForeignKey(AppkioskoEstablecimientos, on_delete=models.CASCADE, blank=True, null=True)
+    kioskos_asociados = models.ManyToManyField(
+        'AppkioskoKioskostouch', 
+        blank=True, 
+        related_name='pantallas_asociadas'
+    )
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -113,7 +118,6 @@ class AppkioskoKioskostouch(models.Model):
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
     token = models.CharField(max_length=255, blank=True, null=True)
     establecimiento = models.ForeignKey(AppkioskoEstablecimientos, on_delete=models.CASCADE, blank=True, null=True)
-    pantallas_cocina = models.ForeignKey(AppkioskoPantallascocina, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 

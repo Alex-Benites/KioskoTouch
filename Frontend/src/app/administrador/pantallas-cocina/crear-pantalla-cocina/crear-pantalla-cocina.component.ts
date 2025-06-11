@@ -59,6 +59,7 @@ export class CrearPantallaCocinaComponent implements OnInit {
       nombrePantalla: ['', [Validators.required]],
       estadoPantalla: [''],
       token: ['', [Validators.required]],
+      // ✅ AGREGAR ESTOS CAMPOS QUE ESTÁN CAUSANDO ERRORES
       kioscoAsociado: [''],
       buscarCiudad: [''],
       buscarEstablecimiento: ['']
@@ -67,16 +68,18 @@ export class CrearPantallaCocinaComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarEstados();
-    this.cargarKioscos();
     this.generarToken();
 
     // Detectar modo edición
     this.pantallaId = Number(this.route.snapshot.paramMap.get('id'));
     this.isEditMode = !!this.pantallaId && !isNaN(this.pantallaId);
 
-    if (this.isEditMode) {
-      this.cargarPantallaParaEditar();
-    }
+    // ✅ CAMBIAR: Cargar kioskos PRIMERO, luego la pantalla
+    this.cargarKioscos().then(() => {
+      if (this.isEditMode) {
+        this.cargarPantallaParaEditar();
+      }
+    });
   }
 
   cargarEstados(): void {
@@ -104,43 +107,80 @@ export class CrearPantallaCocinaComponent implements OnInit {
     });
   }
 
-  cargarKioscos(): void {
+  cargarKioscos(): Promise<void> {
+    console.log('🔍 INICIANDO carga de kioskos...');
     this.loading = true;
-    this.kioskoTouchService.obtenerKioscosTouch().subscribe({
-      next: (data) => {
-        this.kioscos = data.map(k => ({ ...k, seleccionado: false }));
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error cargando kioscos:', error);
-        alert('Error al cargar kioscos');
-        this.loading = false;
-      }
+    
+    return new Promise((resolve, reject) => {
+      this.kioskoTouchService.obtenerKioscosTouch().subscribe({
+        next: (data) => {
+          console.log('✅ Kioskos recibidos del backend:', data);
+          
+          if (data && Array.isArray(data)) {
+            this.kioscos = data.map(k => ({ ...k, seleccionado: false }));
+            console.log('✅ Kioskos procesados:', this.kioscos);
+          } else {
+            console.warn('⚠️ Los datos no son un array válido');
+            this.kioscos = [];
+          }
+          
+          this.loading = false;
+          resolve(); // ✅ Resolver la promesa cuando termine
+        },
+        error: (error) => {
+          console.error('❌ ERROR cargando kioscos:', error);
+          alert('Error al cargar kioscos: ' + (error.message || 'Error desconocido'));
+          this.loading = false;
+          reject(error); // ✅ Rechazar en caso de error
+        }
+      });
     });
   }
 
   cargarPantallaParaEditar(): void {
     if (!this.pantallaId) return;
+    
+    console.log('🔧 Cargando pantalla para editar, ID:', this.pantallaId);
+    console.log('🔧 Kioskos disponibles ANTES de buscar:', this.kioscos); // ✅ DEBUG
+    
     this.pantallaCocinaService.obtenerPantallaCoci‌naPorId(this.pantallaId).subscribe({
       next: (pantalla) => {
+        console.log('✅ Datos de pantalla recibidos:', pantalla);
+        
+        // Cargar datos básicos de la pantalla
         this.form.patchValue({
           nombrePantalla: pantalla.nombre,
           token: pantalla.token,
           estadoPantalla: pantalla.estado_id
         });
 
-        // Si hay kiosco asociado, agregarlo a la lista
-        if (pantalla.kiosco_touch) {
-          const kiosco = this.kioscos.find(k => k.id === pantalla.kiosco_touch_id);
-          if (kiosco) {
-            this.kioscosAsociados = [{ ...kiosco, seleccionado: false }];
-            this.actualizarCampoKioscoAsociado();
-          }
+        // ✅ NUEVO: Cargar MÚLTIPLES kioskos asociados
+        if (pantalla.kioskos_asociados && Array.isArray(pantalla.kioskos_asociados)) {
+          console.log('📱 Kioskos asociados a la pantalla:', pantalla.kioskos_asociados);
+          console.log('📱 Kioskos disponibles para buscar:', this.kioscos.length); // ✅ DEBUG
+          
+          // Buscar los kioskos en la lista cargada
+          const kioscosAsociados = pantalla.kioskos_asociados.map((kioscoId: number) => {
+            const kiosco = this.kioscos.find(k => k.id === kioscoId);
+            console.log(`🔍 Buscando kiosco ID ${kioscoId}:`, kiosco ? 'ENCONTRADO' : 'NO ENCONTRADO'); // ✅ DEBUG
+            if (kiosco) {
+              return { ...kiosco, seleccionado: false };
+            }
+            return null;
+          }).filter((k: any) => k !== null);
+          
+          console.log('✅ Kioskos encontrados y asociados:', kioscosAsociados);
+          this.kioscosAsociados = kioscosAsociados;
+          this.actualizarCampoKioscoAsociado();
+          
+        } else {
+          console.log('⚠️ No hay kioskos asociados a esta pantalla');
         }
       },
       error: (error) => {
+        console.error('❌ Error al cargar la pantalla:', error);
         alert('Error al cargar la pantalla');
-        this.router.navigate(['/administrador/pantallas-cocina']);
+        this.router.navigate(['/administrador/gestion-pantallas-cocina']);
       }
     });
   }
@@ -155,6 +195,10 @@ export class CrearPantallaCocinaComponent implements OnInit {
   }
 
   agregarKiosco(): void {
+    console.log('🔧 AGREGAR KIOSCO - Estado antes:');
+    console.log('📱 Kioskos actualmente asociados:', this.kioscosAsociados);
+    console.log('📱 Kioskos seleccionados para agregar:', this.kioscos.filter(k => k.seleccionado));
+    
     const kioscosSeleccionados = this.kioscos.filter(k => k.seleccionado);
 
     if (kioscosSeleccionados.length === 0) {
@@ -162,20 +206,21 @@ export class CrearPantallaCocinaComponent implements OnInit {
       return;
     }
 
-    // Solo permitir un kiosco asociado (según tu modelo original)
-    if (kioscosSeleccionados.length > 1) {
-      alert('Solo se puede asociar un kiosco por pantalla.');
-      return;
-    }
+    // ✅ PERMITIR MÚLTIPLES KIOSKOS
+    kioscosSeleccionados.forEach(kioscoSeleccionado => {
+      const kioscoYaAsociado = this.kioscosAsociados.find(ka => ka.id === kioscoSeleccionado.id);
+      console.log(`🔍 Verificando kiosco ${kioscoSeleccionado.nombre} (ID: ${kioscoSeleccionado.id}):`, 
+                 kioscoYaAsociado ? 'YA ASOCIADO' : 'NUEVO');
+      
+      if (!kioscoYaAsociado) {
+        this.kioscosAsociados.push(kioscoSeleccionado);
+        console.log(`✅ Kiosco agregado: ${kioscoSeleccionado.nombre}`);
+      } else {
+        alert(`El kiosco "${kioscoSeleccionado.nombre}" ya ha sido asociado.`);
+      }
+    });
 
-    const kioscoYaAsociado = this.kioscosAsociados.find(ka => ka.id === kioscosSeleccionados[0].id);
-
-    if (kioscoYaAsociado) {
-      alert(`El kiosco "${kioscosSeleccionados[0].nombre}" ya ha sido asociado.`);
-      return;
-    }
-
-    this.kioscosAsociados = [kioscosSeleccionados[0]];
+    console.log('📱 Kioskos asociados DESPUÉS de agregar:', this.kioscosAsociados);
     this.actualizarCampoKioscoAsociado();
     this.kioscos.forEach(k => k.seleccionado = false);
   }
@@ -214,57 +259,72 @@ export class CrearPantallaCocinaComponent implements OnInit {
   }
 
   crearPantalla(): void {
-    if (this.form.invalid) {
-      this.abrirDialogoExito('Campos incompletos', 'Por favor, complete todos los campos requeridos.');
-      return;
-    }
+    if (this.form.valid) {
+      console.log('🔧 GUARDANDO PANTALLA - Verificación:');
+      console.log('📱 Kioskos asociados actuales:', this.kioscosAsociados);
+      console.log('📱 IDs que se van a enviar:', this.kioscosAsociados.map(k => k.id));
+      
+      if (this.kioscosAsociados.length === 0) {
+        alert('Debe asociar al menos un kiosco antes de crear la pantalla.');
+        return;
+      }
 
-    if (this.kioscosAsociados.length === 0) {
-      this.abrirDialogoExito('Kiosco requerido', 'Debe asociar un kiosco a la pantalla.');
-      return;
-    }
+      this.loading = true;
 
-    const pantallaData = {
-      nombre: this.form.get('nombrePantalla')?.value,
-      token: this.form.get('token')?.value,
-      estado: this.form.get('estadoPantalla')?.value,
-      kiosco_touch_asociado: this.kioscosAsociados[0].id
-    };
+      const pantallaData = {
+        nombre: this.form.get('nombrePantalla')?.value,
+        token: this.form.get('token')?.value,
+        estado: this.form.get('estadoPantalla')?.value,
+        // ✅ IMPORTANTE: Enviar TODOS los kioskos asociados
+        kioskos_asociados: this.kioscosAsociados.map(k => k.id)
+      };
 
-    this.loading = true;
+      console.log('📤 Datos que se envían al backend:', pantallaData);
 
-    if (this.isEditMode && this.pantallaId) {
-      this.pantallaCocinaService.actualizarPantallaCocina(this.pantallaId, pantallaData).subscribe({
-        next: () => {
-          this.abrirDialogoExito(
-            '¡Éxito!',
-            'Pantalla de Cocina actualizada exitosamente!',
-            () => this.router.navigate(['/administrador/gestion-pantallas-cocina'])
-          );
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error actualizando pantalla:', error);
-          this.abrirDialogoExito('Error', 'Error al actualizar la pantalla: ' + (error.error?.error || 'Error desconocido'));
-          this.loading = false;
-        }
-      });
+      if (this.isEditMode && this.pantallaId) {
+        // Modo edición
+        console.log('🔧 Modo EDICIÓN - Actualizando pantalla ID:', this.pantallaId);
+        
+        this.pantallaCocinaService.actualizarPantallaCocina(this.pantallaId, pantallaData).subscribe({
+          next: (response) => {
+            console.log('✅ Respuesta del backend (edición):', response);
+            this.loading = false;
+            if (response.success) {
+              this.abrirDialogoExito('¡Pantalla Actualizada!', 'La pantalla de cocina se ha actualizado correctamente.', () => {
+                this.router.navigate(['/administrador/gestion-pantallas-cocina']);
+              });
+            } else {
+              alert(`Error: ${response.error}`);
+            }
+          },
+          error: (error) => {
+            console.error('❌ Error al actualizar pantalla:', error);
+            this.loading = false;
+            alert('Error al actualizar la pantalla de cocina');
+          }
+        });
+      } else {
+        // Modo creación
+        this.pantallaCocinaService.crearPantallaCocina(pantallaData).subscribe({
+          next: (response) => {
+            this.loading = false;
+            if (response.success) {
+              this.abrirDialogoExito('¡Pantalla Creada!', 'La pantalla de cocina se ha creado correctamente.', () => {
+                this.router.navigate(['/administrador/gestion-pantallas-cocina']);
+              });
+            } else {
+              alert(`Error: ${response.error}`);
+            }
+          },
+          error: (error) => {
+            this.loading = false;
+            console.error('Error al crear pantalla:', error);
+            alert('Error al crear la pantalla de cocina');
+          }
+        });
+      }
     } else {
-      this.pantallaCocinaService.crearPantallaCocina(pantallaData).subscribe({
-        next: () => {
-          this.abrirDialogoExito(
-            '¡Éxito!',
-            'Pantalla de Cocina creada exitosamente!',
-            () => this.router.navigate(['/administrador/gestion-pantallas-cocina'])
-          );
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error creando pantalla:', error);
-          this.abrirDialogoExito('Error', 'Error al crear la pantalla: ' + (error.error?.error || 'Error desconocido'));
-          this.loading = false;
-        }
-      });
+      alert('Por favor, complete todos los campos requeridos.');
     }
   }
 }

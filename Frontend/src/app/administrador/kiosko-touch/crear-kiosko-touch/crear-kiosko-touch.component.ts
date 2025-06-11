@@ -409,4 +409,17 @@ export class CrearKioskoTouchComponent implements OnInit {
     this.form.get('token')?.setValue('');
     console.log('Token borrado');
   }
+
+  copiarToken(): void {
+    const token = this.form.get('token')?.value;
+    if (token) {
+      navigator.clipboard.writeText(token).then(() => {
+        console.log('Token copiado al portapapeles:', token);
+      }).catch(err => {
+        console.error('Error al copiar el token:', err);
+      });
+    } else {
+      console.warn('No hay token para copiar.');
+    }
+  }
 }
