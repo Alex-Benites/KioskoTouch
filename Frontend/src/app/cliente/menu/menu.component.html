@@ -49,28 +49,51 @@
         </div>
 
         <section class="products-grid">
-          @if (productosActuales.length > 0) {
-            @for (producto of productosActuales; track producto.id) {
-              <div class="product-card">
-                @if (producto.promoBadge) {
-                  <span class="promo-badge" [ngClass]="producto.promoBadgeClass || ''">{{ producto.promoBadge }}</span>
-                }
-                <div class="product-card__image-wrapper">
-                  <img [src]="obtenerImagenProducto(producto)" [alt]="producto.nombre" class="product-card__image">
-                </div>
-                <div class="product-card__content">
-                  <h3 class="product-card__name">{{ producto.nombre }}</h3>
-                  <div class="product-card__footer">
-                    <span class="product-card__price">${{ producto.precio.toFixed(2) }}</span>
-                    <button class="product-card__order-button" (click)="agregarProducto(producto)">
-                      Ordenar
-                    </button>
+          @if (categoriaActual?.nombre?.toLowerCase() === 'combos') {
+            @if (productosActuales.length > 0) {
+              @for (menu of productosActuales; track $index) {
+                <div class="product-card">
+                  <div class="product-card__image-wrapper">
+                    <img [src]="obtenerImagenProducto(menu)" [alt]="menu.nombre" class="product-card__image">
+                  </div>
+                  <div class="product-card__content">
+                    <h3 class="product-card__name">{{ menu.nombre }}</h3>
+                    <div class="product-card__footer">
+                      <span class="product-card__price">${{ menu.precio | number:'1.2-2' }}</span>
+                      <button class="product-card__order-button" (click)="agregarProducto(menu)">
+                        Ordenar
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              }
+            } @else {
+              <p class="no-products-message">No hay menús disponibles en esta categoría.</p>
             }
           } @else {
-            <p class="no-products-message">No hay productos disponibles en esta categoría.</p>
+            @if (productosActuales.length > 0) {
+              @for (producto of productosActuales; track $index) {
+                <div class="product-card">
+                  @if (tienePromoBadge(producto)) {
+                    <span class="promo-badge" [ngClass]="producto.promoBadgeClass || ''">{{ producto.promoBadge }}</span>
+                  }
+                  <div class="product-card__image-wrapper">
+                    <img [src]="obtenerImagenProducto(producto)" [alt]="producto.nombre" class="product-card__image">
+                  </div>
+                  <div class="product-card__content">
+                    <h3 class="product-card__name">{{ producto.nombre }}</h3>
+                    <div class="product-card__footer">
+                      <span class="product-card__price">${{ producto.precio | number:'1.2-2' }}</span>
+                      <button class="product-card__order-button" (click)="agregarProducto(producto)">
+                        Ordenar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            } @else {
+              <p class="no-products-message">No hay productos disponibles en esta categoría.</p>
+            }
           }
         </section>
       </main>

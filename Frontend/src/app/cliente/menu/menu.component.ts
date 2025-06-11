@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PedidoService } from '../../services/pedido.service';
 import { CatalogoService } from '../../services/catalogo.service';
-import { Producto, Categoria } from '../../models/catalogo.model';
+import { Producto, Categoria, Menu } from '../../models/catalogo.model'; // Asegúrate de importar Menu
 import { catchError, forkJoin, of } from 'rxjs';
 
 // ✅ Interfaz extendida para productos con badges promocionales
@@ -21,14 +21,16 @@ interface ProductoConBadge extends Producto {
   styleUrl: './menu.component.scss'
 })
 export class MenuComponent implements OnInit, OnDestroy {
-  
+
   // ✅ Signals para datos del backend
   private categorias = signal<Categoria[]>([]);
   private productos = signal<ProductoConBadge[]>([]);
-  
+  private menus = signal<Menu[]>([]);
+
   // ✅ Estados de carga y error
   cargandoCategorias = signal<boolean>(true);
   cargandoProductos = signal<boolean>(true);
+  cargandoMenus = signal<boolean>(true);
   errorCarga = signal<string | null>(null);
 
   // ✅ Estado del componente con signals
@@ -43,21 +45,29 @@ export class MenuComponent implements OnInit, OnDestroy {
   private catalogoService = inject(CatalogoService);
 
   // ✅ Computed signals
-  categoriaActualObj = computed(() => 
+  categoriaActualObj = computed(() =>
     this.categorias().find(cat => cat.id === this.categoriaSeleccionada())
   );
 
   productosFiltrados = computed(() => {
     const categoriaId = this.categoriaSeleccionada();
     if (!categoriaId) return [];
-    
-    return this.productos().filter(p => 
+
+    const categoriaActual = this.categorias().find(cat => cat.id === categoriaId);
+
+    // Si la categoría es "Combos", mostrar solo menús
+    if (categoriaActual && categoriaActual.nombre?.toLowerCase() === 'combos') {
+      return this.menus().filter(m => m.estado === 1); // Solo menús activos
+    }
+
+    // Para otras categorías, solo productos
+    return this.productos().filter(p =>
       p.categoria === categoriaId && p.estado === 1
     );
   });
 
   // ✅ Estado de carga general
-  cargando = computed(() => 
+  cargando = computed(() =>
     this.cargandoCategorias() || this.cargandoProductos()
   );
 
@@ -92,7 +102,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.renderer.addClass(document.body, 'fondo-home');
     this.cargarDatos();
-    
+
     console.log('🍽️ MenuComponent inicializado');
     console.log('📝 Tipo de pedido:', this.tipoPedido());
     console.log('📄 Resumen:', this.resumenPedido());
@@ -105,8 +115,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   // ✅ Método para cargar datos del backend
   private cargarDatos(): void {
     this.errorCarga.set(null);
-    
-    // Cargar categorías y productos en paralelo
+
     forkJoin({
       categorias: this.catalogoService.getCategorias().pipe(
         catchError(error => {
@@ -119,20 +128,41 @@ export class MenuComponent implements OnInit, OnDestroy {
           console.error('❌ Error cargando productos:', error);
           return of([]);
         })
+      ),
+      menus: this.catalogoService.getMenus().pipe(
+        catchError(error => {
+          console.error('❌ Error cargando menús:', error);
+          return of([]);
+        })
       )
     }).subscribe({
-      next: ({ categorias, productos }) => {
+      next: ({ categorias, productos, menus }) => {
         console.log('✅ Datos cargados:', { categorias: categorias.length, productos: productos.length });
-        
+
         // Actualizar categorías
         this.categorias.set(categorias);
         this.cargandoCategorias.set(false);
-        
-        // Procesar productos con badges promocionales
-        const productosConBadges = this.procesarProductosConBadges(productos);
+
+        // Mapea imagen_url a imagenUrl en productos
+        const productosConBadges = this.procesarProductosConBadges(
+          productos.map(p => ({
+            ...p,
+            imagenUrl: (p as any).imagenUrl || (p as any).imagen_url || '',
+            precio: Number((p as any).precio) || 0
+          }))
+        );
         this.productos.set(productosConBadges);
         this.cargandoProductos.set(false);
-        
+
+        // Mapea imagen_url a imagenUrl en menús
+        const menusConImagen = menus.map(m => ({
+          ...m,
+          imagenUrl: (m as any).imagenUrl || (m as any).imagen_url || '',
+          precio: Number((m as any).precio) || 0
+        }));
+        this.menus.set(menusConImagen);
+        this.cargandoMenus.set(false);
+
         // Seleccionar primera categoría si hay categorías disponibles
         if (categorias.length > 0 && !this.categoriaSeleccionada()) {
           this.categoriaSeleccionada.set(categorias[0].id);
@@ -144,6 +174,7 @@ export class MenuComponent implements OnInit, OnDestroy {
         this.errorCarga.set('Error al cargar los datos del menú');
         this.cargandoCategorias.set(false);
         this.cargandoProductos.set(false);
+        this.cargandoMenus.set(false);
       }
     });
   }
@@ -152,7 +183,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   private procesarProductosConBadges(productos: Producto[]): ProductoConBadge[] {
     return productos.map(producto => {
       const productoConBadge: ProductoConBadge = { ...producto };
-      
+
       // Lógica para agregar badges promocionales basada en ciertos criterios
       // Puedes personalizar esta lógica según tus necesidades
       if (this.deberíaTenerDescuento(producto)) {
@@ -160,7 +191,7 @@ export class MenuComponent implements OnInit, OnDestroy {
         productoConBadge.promoBadge = `${descuento}%`;
         productoConBadge.promoBadgeClass = 'discount';
       }
-      
+
       return productoConBadge;
     });
   }
@@ -208,16 +239,19 @@ export class MenuComponent implements OnInit, OnDestroy {
     console.log('🌐 Idioma cambiado a:', target.value);
   }
 
-  agregarProducto(producto: ProductoConBadge): void {
-    console.log('🛒 Agregando producto:', producto.nombre);
-    
+  agregarProducto(producto: ProductoConBadge | Menu): void {
+    console.log('🛒 Agregando producto o menú:', producto.nombre);
+
+    // Usa el precio correcto según el tipo
+    const precio = 'precio' in producto ? producto.precio : 0;
+
     this.pedidoService.agregarProducto(
       producto.id,
-      producto.precio,
+      precio,
       1
     );
-    
-    console.log('✅ Producto agregado. Total actual:', this.totalPedidoSeguro);
+
+    console.log('✅ Producto o menú agregado. Total actual:', this.totalPedidoSeguro);
   }
 
   // ✅ MÉTODO AGREGADO: limpiarPedido
@@ -229,7 +263,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   continuar(): void {
     const total = this.totalPedidoSeguro;
     const cantidad = this.cantidadItemsSeguro;
-    
+
     if (cantidad > 0) {
       console.log(`🚀 Continuando con ${cantidad} productos, total: $${total}`);
       this.router.navigate(['/cliente/carrito']);
@@ -238,9 +272,9 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 
-  obtenerImagenProducto(producto: ProductoConBadge): string {
-    // Usar el método del servicio para obtener la URL completa de la imagen
-    if (producto.imagenUrl) {
+  // Cambia el método para obtener la imagen de menú o producto
+  obtenerImagenProducto(producto: ProductoConBadge | Menu): string {
+    if ('imagenUrl' in producto && producto.imagenUrl) {
       return this.catalogoService.getFullImageUrl(producto.imagenUrl);
     }
     return 'assets/placeholder-producto.png';
@@ -252,5 +286,9 @@ export class MenuComponent implements OnInit, OnDestroy {
       return this.catalogoService.getFullImageUrl(categoria.imagen_url);
     }
     return 'assets/placeholder-categoria.png';
+  }
+
+  tienePromoBadge(obj: any): obj is ProductoConBadge {
+    return 'promoBadge' in obj && !!obj.promoBadge;
   }
 }

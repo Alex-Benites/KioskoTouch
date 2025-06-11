@@ -131,6 +131,7 @@ $category-inactive-bg: #FFFFFF;
   padding: 10px;
   overflow-y: auto;
   flex-grow: 1;
+  align-items: start;
 
   .product-card {
     background-color: $kiosko-background-light;
@@ -145,6 +146,9 @@ $category-inactive-bg: #FFFFFF;
     position: relative;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     overflow: visible;
+    height: 280px;
+    min-height: 0;
+    max-height: 300px;
 
     &:hover {
       transform: translateY(-3px);
@@ -153,8 +157,8 @@ $category-inactive-bg: #FFFFFF;
 
     &__image-wrapper {
       width: 100%;
-      padding-top: 20px;
-      margin-bottom: -40px;
+      padding-top: 10px;
+      margin-bottom: 0;
       position: relative;
       z-index: 2;
     }
@@ -173,19 +177,19 @@ $category-inactive-bg: #FFFFFF;
     &__content {
       background-color: $kiosko-background-light;
       width: 100%;
-      padding: 50px 15px 15px 15px;
+      padding: 10px 10px 10px 10px;
       border-radius: 0 0 11px 11px;
       z-index: 1;
       display: flex;
       flex-direction: column;
-      flex-grow: 1;
+      flex-grow: 0;
     }
 
     &__name {
       font-size: clamp(1.1rem, 2.5vw, 1.3rem);
       font-weight: 600;
       color: #333333;
-      margin-bottom: 15px;
+      margin-bottom: 8px;
       min-height: auto;
     }
 
@@ -194,7 +198,7 @@ $category-inactive-bg: #FFFFFF;
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      margin-top: auto;
+      margin-top: 0;
     }
 
     &__price {
@@ -290,7 +294,7 @@ $category-inactive-bg: #FFFFFF;
     text-align: center;
     margin-bottom: 5px;
   }
-  
+
   &__details {
     display: flex;
     gap: 20px;
@@ -321,7 +325,7 @@ $category-inactive-bg: #FFFFFF;
 @media (max-width: 768px) {
   .menu-header {
     padding: 10px 20px;
-    
+
     img {
       max-width: 150px;
     }
@@ -392,11 +396,11 @@ $category-inactive-bg: #FFFFFF;
       padding: 12px 15px;
       font-size: 1.3rem;
     }
-    
+
     &__content {
       padding: 15px;
     }
-    
+
     &__actions {
       gap: 10px;
       max-width: 350px;
@@ -416,7 +420,7 @@ $category-inactive-bg: #FFFFFF;
       font-size: 1.5rem;
     }
   }
-  
+
   .category-sidebar {
     padding: 10px;
     gap: 10px;
@@ -432,7 +436,7 @@ $category-inactive-bg: #FFFFFF;
 
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px; 
+    gap: 15px;
 
     .product-card {
       &__image-wrapper {
@@ -470,17 +474,17 @@ $category-inactive-bg: #FFFFFF;
       font-size: 1.2rem;
       padding: 10px 12px;
     }
-    
+
     &__content {
       padding: 12px;
       gap: 10px;
     }
-    
+
     &__empty-message, &__details {
       font-size: 0.9rem;
       margin-bottom: 0;
     }
-    
+
     &__actions {
       flex-direction: column;
       gap: 8px;
@@ -497,7 +501,7 @@ $category-inactive-bg: #FFFFFF;
   justify-content: center;
   padding: 60px 20px;
   text-align: center;
-  
+
   .loading-spinner {
     width: 50px;
     height: 50px;
@@ -507,7 +511,7 @@ $category-inactive-bg: #FFFFFF;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
   }
-  
+
   p {
     font-size: 1.2rem;
     color: #666;
@@ -522,13 +526,13 @@ $category-inactive-bg: #FFFFFF;
   justify-content: center;
   padding: 60px 20px;
   text-align: center;
-  
+
   .error-message {
     font-size: 1.1rem;
     color: #d32f2f;
     margin-bottom: 20px;
   }
-  
+
   .retry-button {
     background-color: $kiosko-red;
     color: white;
@@ -538,7 +542,7 @@ $category-inactive-bg: #FFFFFF;
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    
+
     &:hover {
       background-color: color.scale($kiosko-red, $lightness: -10%);
     }
