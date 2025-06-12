@@ -13,6 +13,7 @@ import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/succe
 import { CatalogoService } from '../../../services/catalogo.service';
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Tamano, ProductoTamano } from '../../../models/tamano.model';  // Agregar ProductoTamano aquí
 
 @Component({ 
   selector: 'app-crear-producto',
@@ -51,6 +52,9 @@ export class CrearComponent implements OnInit {
   productoId: number | null = null;
   currentImageUrl: string | null = null;
   saving = false;
+  
+  // Nuevas propiedades para tamaños
+  tamanos: Tamano[] = [];
 
   constructor() {
     this.productoForm = this.fb.group({
@@ -64,6 +68,9 @@ export class CrearComponent implements OnInit {
       ]],
       disponibilidad: ['', Validators.required],
       imagen: [null, Validators.required],
+      // Nuevo campo para tamaños
+      aplicaTamanos: [false]
+      // Los campos de precio por tamaño se agregarán dinámicamente
     });
   }
 
@@ -80,43 +87,65 @@ export class CrearComponent implements OnInit {
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
     });
+    
+    // Cargar tamaños disponibles
+    this.cargarTamanos();
 
     // Si estamos en modo edición, cargar el producto
     if (this.isEditMode) {
       this.cargarProductoParaEditar();
     }
+
+    // Agregar escucha para cambios en aplicaTamanos
+    this.productoForm.get('aplicaTamanos')?.valueChanges.subscribe(tieneTamanos => {
+      const precioControl = this.productoForm.get('precio');
+      
+      if (tieneTamanos) {
+        // Si tiene tamaños, deshabilitar el campo precio y quitar validaciones
+        precioControl?.disable();
+        console.log('📏 Precios por tamaño habilitados - Precio base deshabilitado');
+      } else {
+        // Si no tiene tamaños, habilitar el campo precio y añadir validaciones
+        precioControl?.enable();
+        precioControl?.setValidators([
+          Validators.required,
+          Validators.pattern(/^\d+(\.\d{1,2})?$/),
+          Validators.min(0.01)
+        ]);
+        precioControl?.updateValueAndValidity();
+        console.log('💰 Precio base habilitado - Precios por tamaño deshabilitados');
+      }
+    });
   }
 
-  onFileSelected(event: any): void {
-    this.selectedFile = event.target.files[0] as File;
-    if (this.selectedFile) {
-      // Validar tipo de archivo
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(this.selectedFile.type)) {
-        alert('⚠️ Solo se permiten archivos de imagen (JPG, PNG, GIF)');
-        this.eliminarImagen();
-        return;
+  // Nuevo método para cargar tamaños
+  cargarTamanos(): void {
+    console.log('📏 Cargando tamaños disponibles');
+    this.catalogoService.getTamanos().subscribe({
+      next: (tamanos) => {
+        this.tamanos = tamanos;
+        console.log('✅ Tamaños cargados:', tamanos.length);
+        
+        // Agregar campos dinámicos para cada tamaño
+        this.tamanos.forEach(tamano => {
+          const controlName = 'precio_' + tamano.codigo.toLowerCase();
+          this.productoForm.addControl(
+            controlName,
+            new FormControl('', [
+              Validators.pattern(/^\d+(\.\d{1,2})?$/),
+              Validators.min(0.01)
+            ])
+          );
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar tamaños:', error);
+        this.tamanos = [];
       }
-
-      // Validar tamaño (máximo 5MB)
-      const maxSize = 5 * 1024 * 1024;
-      if (this.selectedFile.size > maxSize) {
-        alert('⚠️ La imagen no puede ser mayor a 5MB');
-        this.eliminarImagen();
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imagePreview = reader.result as string;
-      }
-      reader.readAsDataURL(this.selectedFile);
-
-      this.productoForm.get('imagen')?.setValue(this.selectedFile);
-      this.productoForm.get('imagen')?.markAsTouched();
-    }
+    });
   }
 
+  // Método modificado para cargar producto con soporte de tamaños
   private cargarProductoParaEditar(): void {
     if (!this.productoId) return;
 
@@ -131,8 +160,25 @@ export class CrearComponent implements OnInit {
           descripcion: producto.descripcion,
           precio: producto.precio,
           categoria: producto.categoria,
-          disponibilidad: producto.estado
+          disponibilidad: producto.estado,
+          // Campo para tamaños
+          aplicaTamanos: producto.aplica_tamanos || false
         });
+
+        // Si el producto tiene tamaños, configurar los precios
+        if (producto.aplica_tamanos && producto.tamanos_detalle?.length) {
+          console.log('📏 Configurando precios por tamaño:', producto.tamanos_detalle);
+          
+          // Esperar a que los campos se creen
+          setTimeout(() => {
+            producto.tamanos_detalle.forEach((tamano: ProductoTamano) => {  // Añadir tipo explícito aquí
+              const controlName = 'precio_' + tamano.codigo_tamano.toLowerCase();
+              if (this.productoForm.get(controlName)) {
+                this.productoForm.get(controlName)?.setValue(tamano.precio);
+              }
+            });
+          }, 500);
+        }
 
         // Deshabilitar categoría en modo edición
         this.productoForm.get('categoria')?.disable();
@@ -373,10 +419,10 @@ export class CrearComponent implements OnInit {
       categoriaValue = this.productoForm.get('categoria')?.value;
     }
 
-    // Validación personalizada para modo edición
+    // Validación personalizada para modo edición o creación
     const formValid = this.isEditMode ?
       this.validarFormularioParaEdicion() :
-      this.productoForm.valid;
+      this.validarFormulario();
 
     if (formValid) {
       this.saving = true;
@@ -385,8 +431,18 @@ export class CrearComponent implements OnInit {
       formData.append('nombre', this.productoForm.get('nombre')?.value);
       formData.append('descripcion', this.productoForm.get('descripcion')?.value);
       formData.append('categoria', categoriaValue);
-      formData.append('precio', this.productoForm.get('precio')?.value);
       formData.append('estado', this.productoForm.get('disponibilidad')?.value);
+
+      // Manejar precio según aplica_tamanos
+      const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value || false;
+      
+      if (aplicaTamanos) {
+        // Si tiene tamaños, enviar un precio base de 0
+        formData.append('precio', '0');
+      } else {
+        // Si no tiene tamaños, enviar el precio normal
+        formData.append('precio', this.productoForm.get('precio')?.value);
+      }
 
       // Solo agregar imagen si hay una nueva seleccionada
       if (this.selectedFile) {
@@ -397,11 +453,32 @@ export class CrearComponent implements OnInit {
       const ingredientesIds = this.ingredientesSeleccionados.map(ing => ing.id);
       formData.append('ingredientes', JSON.stringify(ingredientesIds));
 
+      // Manejar tamaños y precios
+      formData.append('aplica_tamanos', aplicaTamanos ? 'true' : 'false');
+      
+      if (aplicaTamanos) {
+        const preciosTamanos: { [key: string]: number } = {};
+        
+        this.tamanos.forEach(tamano => {
+          const controlName = 'precio_' + tamano.codigo.toLowerCase();
+          const precio = this.productoForm.get(controlName)?.value;
+          
+          if (precio) {
+            preciosTamanos[tamano.nombre.toLowerCase()] = parseFloat(precio);
+          }
+        });
+        
+        formData.append('precios_tamanos', JSON.stringify(preciosTamanos));
+        
+        console.log('📏 Enviando precios por tamaño:', preciosTamanos);
+      }
+
       console.log('📤 Enviando datos:', {
         categoria: categoriaValue,
         ingredientes: this.ingredientesSeleccionados,
         ingredientesIds: ingredientesIds,
-        total: ingredientesIds.length
+        total: ingredientesIds.length,
+        aplicaTamanos: aplicaTamanos
       });
 
       if (this.isEditMode) {
@@ -425,6 +502,43 @@ export class CrearComponent implements OnInit {
     const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
 
     return camposCompletos && precioValido;
+  }
+
+  private validarFormulario(): boolean {
+    const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
+    
+    if (aplicaTamanos) {
+      // Si tiene tamaños, validar que al menos un tamaño tenga precio
+      let tienePreciosTamano = false;
+      
+      this.tamanos.forEach(tamano => {
+        const controlName = 'precio_' + tamano.codigo.toLowerCase();
+        const precioTamano = this.productoForm.get(controlName)?.value;
+        
+        if (precioTamano && parseFloat(precioTamano) > 0) {
+          tienePreciosTamano = true;
+        }
+      });
+      
+      if (!tienePreciosTamano) {
+        alert('⚠️ Debe definir al menos un precio por tamaño');
+        return false;
+      }
+      
+      // Ignorar validación del precio base
+      return this.validarCamposObligatorios(['nombre', 'descripcion', 'categoria', 'disponibilidad']);
+    } else {
+      // Validación normal con precio base incluido
+      return this.productoForm.valid;
+    }
+  }
+
+  // Método auxiliar para validar campos específicos
+  private validarCamposObligatorios(campos: string[]): boolean {
+    return campos.every(campo => {
+      const control = this.productoForm.get(campo);
+      return control && !control.invalid;
+    });
   }
 
   private crearProducto(formData: FormData): void {
@@ -506,5 +620,33 @@ export class CrearComponent implements OnInit {
       disponibilidad: '',
       categoria: ''
     });
+  }
+
+  // Añadir este método para manejar la selección de archivos
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      
+      // Validar que sea una imagen
+      if (!this.selectedFile.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        this.selectedFile = null;
+        return;
+      }
+
+      // Crear URL para vista previa
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagePreview = reader.result as string;
+        
+        // Actualizar el valor del control del formulario
+        this.productoForm.patchValue({ imagen: this.selectedFile });
+      };
+      reader.readAsDataURL(this.selectedFile);
+      
+      console.log('🖼️ Imagen seleccionada:', this.selectedFile.name);
+    }
   }
 }

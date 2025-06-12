@@ -10,6 +10,7 @@ from .views import (
     listar_productos_con_ingredientes,  
     get_estados,
     get_menu_imagen,
+    get_tamanos,
 )
 from . import views  
 
@@ -33,6 +34,9 @@ urlpatterns = [
     
     # === ESTADOS ===
     path('estados/', get_estados, name='estados-list'),
+    
+    # === TAMAÑOS ===
+    path('tamanos/', get_tamanos, name='tamanos-list'),
 
     # === MENUS ===
     path('menus/', MenuListCreateAPIView.as_view(), name='menu-list-create'),

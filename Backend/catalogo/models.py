@@ -48,6 +48,24 @@ class AppkioskoIngredientes(models.Model):
         return f"{self.nombre} ({self.get_categoria_producto_display()})"
 
 
+class AppkioskoTamanos(models.Model):
+    nombre = models.CharField(max_length=50)  # 'Pequeño', 'Mediano', 'Grande'
+    codigo = models.CharField(max_length=10)  # 'P', 'M', 'G'
+    orden = models.IntegerField(default=0)    # Para ordenar los tamaños
+    activo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'appkiosko_tamanos'
+        verbose_name = 'Tamaño'
+        verbose_name_plural = 'Tamaños'
+        ordering = ['orden', 'nombre']
+
+    def __str__(self):
+        return self.nombre
+
 class AppkioskoProductos(models.Model):
     nombre = models.CharField(max_length=50)
     descripcion = models.TextField(blank=True, null=True)
@@ -56,10 +74,20 @@ class AppkioskoProductos(models.Model):
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    # Nuevo campo para indicar si el producto tiene diferentes tamaños
+    aplica_tamanos = models.BooleanField(default=False)
 
     ingredientes = models.ManyToManyField(
         AppkioskoIngredientes, 
         through='AppkioskoProductosIngredientes',
+        blank=True,
+        related_name='productos'
+    )
+    
+    # Nueva relación con tamaños
+    tamanos = models.ManyToManyField(
+        AppkioskoTamanos,
+        through='AppkioskoProductoTamanos',
         blank=True,
         related_name='productos'
     )
@@ -126,5 +154,24 @@ class AppkioskoProductosIngredientes(models.Model):
     def __str__(self):
         tipo = "Base" if self.es_base else "Adicional"
         return f"{self.producto.nombre} - {self.ingrediente.nombre} ({tipo})"
+
+# Nuevo modelo para relacionar productos con tamaños y precios
+class AppkioskoProductoTamanos(models.Model):
+    producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE)
+    tamano = models.ForeignKey(AppkioskoTamanos, on_delete=models.CASCADE)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    activo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'appkiosko_producto_tamanos'
+        unique_together = (('producto', 'tamano'),)
+        verbose_name = 'Precio por Tamaño'
+        verbose_name_plural = 'Precios por Tamaño'
+
+    def __str__(self):
+        return f"{self.producto.nombre} - {self.tamano.nombre}: ${self.precio}"
 
 

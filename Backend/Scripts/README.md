@@ -88,3 +88,7 @@ python Scripts/ingredientes.py migrar_imagenes
 
 # mega script 
 python Scripts/mega_crear_todo.py
+
+
+
+python Scripts/tamanios.py crear

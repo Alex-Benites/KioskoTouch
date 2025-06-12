@@ -5,7 +5,10 @@ from .models import (
     AppkioskoIngredientes, 
     AppkioskoProductosIngredientes,
     AppkioskoMenus, 
-    AppkioskoMenuproductos
+    AppkioskoMenuproductos,
+    # Nuevos modelos
+    AppkioskoTamanos,
+    AppkioskoProductoTamanos
 )
 from comun.models import AppkioskoImagen, AppkioskoEstados
 from django.core.files.storage import default_storage
@@ -16,6 +19,21 @@ import os
 import uuid
 from django.db import connection
 
+# Nuevo serializer para tamaños
+class TamanoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AppkioskoTamanos
+        fields = ['id', 'nombre', 'codigo', 'orden', 'activo']
+
+# Nuevo serializer para la relación producto-tamaño-precio
+class ProductoTamanoSerializer(serializers.ModelSerializer):
+    nombre_tamano = serializers.CharField(source='tamano.nombre', read_only=True)
+    codigo_tamano = serializers.CharField(source='tamano.codigo', read_only=True)
+    
+    class Meta:
+        model = AppkioskoProductoTamanos
+        fields = ['id', 'tamano', 'nombre_tamano', 'codigo_tamano', 'precio', 'activo']
+
 class ProductoSerializer(serializers.ModelSerializer):
     categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
     estado_nombre = serializers.CharField(source='estado.descripcion', read_only=True)
@@ -24,12 +42,18 @@ class ProductoSerializer(serializers.ModelSerializer):
     ingredientes_detalle = serializers.SerializerMethodField()
     imagen = serializers.ImageField(write_only=True, required=False)
     
+    # Nuevos campos para tamaños
+    aplica_tamanos = serializers.BooleanField(default=False)
+    precios_tamanos = serializers.JSONField(write_only=True, required=False)
+    tamanos_detalle = serializers.SerializerMethodField()
+    
     class Meta:
         model = AppkioskoProductos
         fields = [
             'id', 'nombre', 'descripcion', 'precio', 
             'categoria', 'categoria_nombre', 'estado', 'estado_nombre',
             'imagen_url', 'ingredientes', 'ingredientes_detalle', 'imagen',
+            'aplica_tamanos', 'precios_tamanos', 'tamanos_detalle',  # Nuevos campos
             'created_at', 'updated_at'
         ]
 
@@ -77,55 +101,49 @@ class ProductoSerializer(serializers.ModelSerializer):
         except Exception:
             return []
 
-    def validate_ingredientes(self, value):
-        """Valida el JSON de ingredientes"""
-        if not value:
+    # Nuevo método para obtener los tamaños y precios del producto
+    def get_tamanos_detalle(self, obj):
+        """Obtiene los tamaños y precios asociados al producto"""
+        if not obj.aplica_tamanos:
             return []
         
-        try:
-            ingredientes_ids = json.loads(value)
-            if not isinstance(ingredientes_ids, list):
-                raise serializers.ValidationError("Los ingredientes deben ser una lista de IDs")
-            
-            # Validar que todos los IDs existan
-            for ing_id in ingredientes_ids:
-                if not isinstance(ing_id, int):
-                    raise serializers.ValidationError(f"ID de ingrediente inválido: {ing_id}")
-                
-                if not AppkioskoIngredientes.objects.filter(id=ing_id).exists():
-                    raise serializers.ValidationError(f"Ingrediente con ID {ing_id} no existe")
-            
-            return ingredientes_ids
-            
-        except json.JSONDecodeError:
-            raise serializers.ValidationError("Formato JSON inválido para ingredientes")
+        tamanos = AppkioskoProductoTamanos.objects.filter(
+            producto=obj, activo=True
+        ).select_related('tamano')
+        
+        return ProductoTamanoSerializer(tamanos, many=True).data
 
     def create(self, validated_data):
-        """Crear producto con ingredientes e imagen"""
+        """Crear producto con ingredientes, imagen y tamaños"""
         # Extraer datos especiales
         ingredientes_ids = validated_data.pop('ingredientes', [])
         imagen = validated_data.pop('imagen', None)
+        precios_tamanos = validated_data.pop('precios_tamanos', None)
         
         # Crear el producto
         producto = AppkioskoProductos.objects.create(**validated_data)
         print(f"✅ Producto creado: {producto.nombre} (ID: {producto.id})")
         
-        # Procesar ingredientes
+        # Procesar ingredientes (código existente)
         if ingredientes_ids:
             count_ingredientes = self._crear_ingredientes_producto(producto, ingredientes_ids)
             print(f"🥗 {count_ingredientes} ingredientes asociados")
         
-        # Procesar imagen
+        # Procesar imagen (código existente)
         if imagen:
             imagen_url = self._crear_imagen_producto(producto, imagen)
             if imagen_url:
                 print(f"📸 Imagen guardada: {imagen_url}")
         
+        # Nuevo: Procesar tamaños y precios
+        if producto.aplica_tamanos and precios_tamanos:
+            self._guardar_precios_tamanos(producto, json.loads(precios_tamanos) if isinstance(precios_tamanos, str) else precios_tamanos)
+            print(f"📏 Precios por tamaño guardados")
+        
         return producto
 
-
     def update(self, instance, validated_data):
-        """Actualizar producto with ingredientes e imagen"""
+        """Actualizar producto with ingredientes, imagen y tamaños"""
         print(f"🔄 Actualizando producto: {instance.nombre}")
         
         # 🔧 GUARDAR CATEGORÍA ORIGINAL ANTES DE ACTUALIZAR
@@ -134,6 +152,7 @@ class ProductoSerializer(serializers.ModelSerializer):
         # Extraer datos especiales ANTES de actualizar el producto
         ingredientes_ids = validated_data.pop('ingredientes', None)
         imagen = validated_data.pop('imagen', None)
+        precios_tamanos = validated_data.pop('precios_tamanos', None)
         
         print(f"🥗 Ingredientes recibidos para actualizar: {ingredientes_ids}")
         
@@ -166,10 +185,45 @@ class ProductoSerializer(serializers.ModelSerializer):
             print(f"📸 Actualizando imagen...")
             self._actualizar_imagen(instance, imagen)
         
+        # Nuevo: Actualizar precios por tamaño
+        if precios_tamanos is not None:
+            print(f"📏 Actualizando precios por tamaño...")
+            self._guardar_precios_tamanos(
+                instance, 
+                json.loads(precios_tamanos) if isinstance(precios_tamanos, str) else precios_tamanos
+            )
+        
         print(f"✅ Producto {instance.nombre} actualizado completamente")
         return instance
-    
 
+    # Nuevo método para guardar los precios por tamaño
+    def _guardar_precios_tamanos(self, producto, precios_dict):
+        """Guarda los precios por tamaño del producto"""
+        # Eliminar precios anteriores
+        AppkioskoProductoTamanos.objects.filter(producto=producto).delete()
+        
+        # Crear registros para cada tamaño
+        for tamano_nombre, precio in precios_dict.items():
+            # Mapear nombres a códigos
+            codigo_tamano = {
+                'pequeño': 'P', 
+                'mediano': 'M', 
+                'grande': 'G'
+            }.get(tamano_nombre.lower())
+            
+            if codigo_tamano and precio:
+                try:
+                    tamano = AppkioskoTamanos.objects.get(codigo=codigo_tamano)
+                    AppkioskoProductoTamanos.objects.create(
+                        producto=producto,
+                        tamano=tamano,
+                        precio=float(precio)
+                    )
+                    print(f"   ✅ Guardado precio {precio} para tamaño {tamano.nombre}")
+                except (AppkioskoTamanos.DoesNotExist, ValueError) as e:
+                    print(f"   ❌ Error guardando precio para {tamano_nombre}: {e}")
+    
+    # Mantener los métodos existentes sin cambios
     def _obtener_siguiente_id_disponible(self):
         """Busca el próximo ID disponible en toda la tabla"""
         ultimo_id = AppkioskoProductosIngredientes.objects.aggregate(

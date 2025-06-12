@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Producto, Categoria, Estado, Menu } from '../models/catalogo.model';
 import { environment } from '../../environments/environment';
+import { Tamano } from '../models/tamano.model';
 
 @Injectable({
   providedIn: 'root'
@@ -139,4 +140,28 @@ export class CatalogoService {
     return this.http.get<any[]>(url, this.getHttpOptions());
   }
 
+  // Nuevo método para obtener tamaños disponibles
+  getTamanos(): Observable<Tamano[]> {
+    const url = `${this.apiUrl}/catalogo/tamanos/`;
+    return this.http.get<Tamano[]>(url, this.getHttpOptions());
+  }
+
+  // Método para filtrar productos que tienen tamaños
+  getProductosConTamanos(): Observable<Producto[]> {
+    const url = `${this.apiUrl}/catalogo/productos/listado-completo/?aplica_tamanos=true`;
+    return this.http.get<Producto[]>(url, this.getHttpOptions());
+  }
+
+  // Método práctico para obtener el precio según el tamaño seleccionado
+  getPrecioPorTamano(producto: Producto, codigoTamano: string): number {
+    if (!producto.aplica_tamanos || !producto.tamanos_detalle) {
+      return producto.precio; // Precio base si no aplica tamaños
+    }
+    
+    const tamanoEncontrado = producto.tamanos_detalle.find(
+      t => t.codigo_tamano.toLowerCase() === codigoTamano.toLowerCase()
+    );
+    
+    return tamanoEncontrado ? tamanoEncontrado.precio : producto.precio;
+  }
 }

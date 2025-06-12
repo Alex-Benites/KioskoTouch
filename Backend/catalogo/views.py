@@ -7,9 +7,18 @@ from .models import (
     AppkioskoIngredientes, 
     AppkioskoProductosIngredientes,
     AppkioskoMenus,
-    AppkioskoMenuproductos
+    AppkioskoMenuproductos,
+    # Nuevos modelos
+    AppkioskoTamanos,
+    AppkioskoProductoTamanos
 )
-from .serializers import ProductoSerializer, CategoriaSerializer, MenuSerializer
+from .serializers import (
+    ProductoSerializer, 
+    CategoriaSerializer, 
+    MenuSerializer,
+    # Nuevo serializer
+    TamanoSerializer
+)
 from comun.models import AppkioskoEstados, AppkioskoImagen
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
@@ -466,3 +475,23 @@ class MenuDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
                 'success': False,
                 'error': f'Error al eliminar menú: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# Agregar esta nueva vista para listar tamaños
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_tamanos(request):
+    """Obtener todos los tamaños disponibles"""
+    try:
+        print(f"📏 Obteniendo lista de tamaños disponibles")
+        
+        # Obtener solo tamaños activos, ordenados por el campo 'orden'
+        tamanos = AppkioskoTamanos.objects.filter(activo=True).order_by('orden')
+        
+        serializer = TamanoSerializer(tamanos, many=True)
+        
+        print(f"   ✅ {tamanos.count()} tamaños encontrados")
+        
+        return Response(serializer.data)
+    except Exception as e:
+        print(f"❌ Error obteniendo tamaños: {str(e)}")
+        return Response({'error': str(e)}, status=400)

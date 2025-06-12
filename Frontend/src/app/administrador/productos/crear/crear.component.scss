@@ -225,3 +225,74 @@ mat-error {
   font-style: italic;
 }
 
+/* Estilos para la sección de tamaños */
+
+.tamanos-section {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tamanos-section h2 {
+  color: #333;
+  margin-bottom: 16px;
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+.tamanos-toggle {
+  margin-bottom: 20px;
+}
+
+.tamanos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.tamano-card {
+  background: white;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tamano-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tamano-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.tamano-nombre {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.tamano-precio-field {
+  width: 100%;
+}
+
+.precio-deshabilitado {
+  opacity: 0.7;
+  
+  input {
+    color: #999;
+    background-color: #f5f5f5;
+  }
+  
+  ::placeholder {
+    color: #ccc;
+  }
+}
+
+

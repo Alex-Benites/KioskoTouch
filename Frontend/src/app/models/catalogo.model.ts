@@ -1,3 +1,5 @@
+import { ProductoTamano } from './tamano.model';
+
 export interface Producto {
   id: number; // Quitar el ? para hacerlo obligatorio
   nombre: string;
@@ -9,6 +11,10 @@ export interface Producto {
   imagenUrl?: string; // Agregar esta propiedad para la URL de la imagen
   created_at: string;
   updated_at: string;
+
+  aplica_tamanos?: boolean;
+  tamanos_detalle?: ProductoTamano[];
+  precios_tamanos?: { [key: string]: number }; // Para enviar al crear/actualizar
 }
 
 export interface Categoria {

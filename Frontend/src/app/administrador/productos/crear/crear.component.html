@@ -39,10 +39,16 @@
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Precio del producto</mat-label>
+        <!-- Modificar el campo de precio para mostrar un estado diferente cuando está deshabilitado -->
+
+        <mat-form-field appearance="outline" class="form-field" 
+                       [class.precio-deshabilitado]="productoForm.get('aplicaTamanos')?.value">
+          <mat-label>{{ productoForm.get('aplicaTamanos')?.value ? 'Precio base (deshabilitado)' : 'Precio del producto' }}</mat-label>
           <input matInput type="number" formControlName="precio" placeholder="Ej: 9.99">
           <mat-error *ngIf="precioError">{{ precioError }}</mat-error>
+          <mat-hint *ngIf="productoForm.get('aplicaTamanos')?.value">
+            Los precios se definirán por tamaño
+          </mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -77,6 +83,35 @@
         }
       </div>
     </div> 
+
+    <!-- Nueva sección de tamaños -->
+    <div class="tamanos-section">
+      <h2>Opciones de Tamaño</h2>
+      
+      <div class="tamanos-toggle">
+        <mat-checkbox formControlName="aplicaTamanos">
+          Este producto tiene diferentes tamaños con precios distintos
+        </mat-checkbox>
+      </div>
+
+      @if (productoForm.get('aplicaTamanos')?.value) {
+      <div class="tamanos-grid">
+        @for (tamano of tamanos; track tamano.id) {
+        <div class="tamano-card">
+          <div class="tamano-info">
+            <span class="tamano-nombre">{{ tamano.nombre }}</span>
+            <mat-form-field appearance="outline" class="tamano-precio-field">
+              <mat-label>Precio {{ tamano.nombre }}</mat-label>
+              <input matInput type="number" [formControlName]="'precio_' + tamano.codigo.toLowerCase()" 
+                     placeholder="0.00" step="0.01">
+              <span matPrefix>$</span>
+            </mat-form-field>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
 
     <!-- Sección de Ingredientes -->
     <div class="ingredientes-section">
