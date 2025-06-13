@@ -1,0 +1,23 @@
+<div class="dialog-container permission-denied-dialog">
+  <div class="icon-container">
+    <img [src]="imagePath" alt="Permiso Denegado" class="dialog-icon">
+  </div>
+
+  <h2 mat-dialog-title class="dialog-title">
+    ACCESO DENEGADO
+  </h2>
+
+  <mat-dialog-content class="dialog-content">
+    <p>No tienes permiso para esta acción</p>
+    <p class="dialog-subtitle">Contacta al administrador si necesitas acceso.</p>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <button 
+      class="primary__button close-button" 
+      (click)="onClose()" 
+      cdkFocusInitial>
+      Entendido
+    </button>
+  </mat-dialog-actions>
+</div>
