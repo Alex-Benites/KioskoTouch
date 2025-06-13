@@ -366,3 +366,18 @@ def get_promocion_imagen(request, promocion_id):
         return Response({'imagen_url': None})
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
+# ✅ SOLO AGREGAR esta nueva vista al final del archivo
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_tamanos_promociones(request):
+    """Obtener todos los tamaños disponibles para promociones"""
+    try:
+        from catalogo.models import AppkioskoTamanos
+        from catalogo.serializers import TamanoSerializer
+        
+        tamanos = AppkioskoTamanos.objects.filter(activo=True).order_by('orden', 'nombre')
+        serializer = TamanoSerializer(tamanos, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)

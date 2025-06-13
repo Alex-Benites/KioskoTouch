@@ -29,13 +29,20 @@ class AppkioskoPromociones(models.Model):
 class AppkioskoPromocionproductos(models.Model):
     producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True)
     promocion = models.ForeignKey(AppkioskoPromociones, on_delete=models.CASCADE, blank=True, null=True)
+    tamano = models.ForeignKey(
+        'catalogo.AppkioskoTamanos', 
+        on_delete=models.CASCADE, 
+        blank=True, 
+        null=True,
+        help_text="Tamaño específico del producto en esta promoción (opcional)"
+    )
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     class Meta:
         managed = True
         db_table = 'appkiosko_promocionproductos'
-        unique_together = (('producto', 'promocion'),)
+        unique_together = (('producto', 'promocion', 'tamano'),)
         verbose_name = 'Promoción Producto'
         verbose_name_plural = 'Promociones Productos'
 

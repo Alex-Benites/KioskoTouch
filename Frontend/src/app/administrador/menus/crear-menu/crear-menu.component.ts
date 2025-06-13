@@ -149,8 +149,6 @@ export class CrearMenuComponent implements OnInit {
   private cargarmenuParaEditar(): void {
     if (!this.menuId) return;
 
-    console.log('🔄 Cargando menu para editar, ID:', this.menuId);
-
     this.catalogoService.obtenerMenuPorId(this.menuId).subscribe({
       next: (menu) => {
         console.log('✅ menu cargado completo:', menu);
@@ -176,11 +174,28 @@ export class CrearMenuComponent implements OnInit {
 
         // Cargar productos seleccionados (usando productos_detalle del backend)
         if (menu.productos_detalle && Array.isArray(menu.productos_detalle)) {
-          this.productosSeleccionados = menu.productos_detalle.map((p: any) => ({
-            producto: typeof p.producto === 'object' ? p.producto.id : p.producto, // Soporta ambos casos
-            cantidad: p.cantidad
-          }));
+          this.productosSeleccionados = menu.productos_detalle.map((p: any) => {
+            const productoData: any = {
+              producto: typeof p.producto === 'object' ? p.producto.id : p.producto,
+              cantidad: p.cantidad
+            };
+            
+            // ✅ AGREGAR tamaño si existe
+            if (p.tamano_nombre) {
+              const tamano = this.tamanos.find(t => t.nombre === p.tamano_nombre);
+              if (tamano) {
+                productoData.tamano = tamano.id;
+                console.log(`✅ Producto ${p.nombre} cargado con tamaño ${p.tamano_nombre}`);
+              }
+            } else {
+              console.log(`✅ Producto ${p.nombre} cargado sin tamaño`);
+            }
+            
+            return productoData;
+          });
+          
           this.menuForm.get('productos')?.setValue(this.productosSeleccionados);
+          console.log('📋 Productos cargados:', this.productosSeleccionados);
         } else {
           this.productosSeleccionados = [];
           this.menuForm.get('productos')?.setValue([]);
@@ -190,26 +205,38 @@ export class CrearMenuComponent implements OnInit {
         console.log('🛒 Productos seleccionados:', this.productosSeleccionados);
       },
       error: (error) => {
-        console.error('❌ Error al cargar menu:', error);
-        alert('❌ Error al cargar el menu. Redirigiendo...');
-        this.router.navigate(['/administrador/gestion-menus']);
+        console.error('❌ Error al cargar el menú:', error);
       }
     });
   }
 
 
 
+  // ✅ ACTUALIZAR este getter para incluir tamaños
   get productosSeleccionadosTexto(): string {
-    // Muestra: "Hamburguesa sencilla (x2), Papas (x1)"
-    return this.productosSeleccionados
-      .filter(p => p.producto && p.cantidad > 0)
-      .map(p => {
-        const prod = this.productos.find(x => x.id === p.producto);
-        if (!prod) return '';
-        return p.cantidad > 1 ? `${prod.nombre} (x${p.cantidad})` : prod.nombre;
-      })
-      .filter(Boolean)
-      .join(', ');
+    if (!this.productosSeleccionados || this.productosSeleccionados.length === 0) {
+      return '';
+    }
+    
+    return this.productosSeleccionados.map(prodSel => {
+      const producto = this.productos.find(p => p.id === prodSel.producto);
+      if (!producto) return 'Producto no encontrado';
+      
+      let texto = `${producto.nombre}`;
+      
+      // ✅ AGREGAR tamaño si existe
+      if (prodSel.tamano) {
+        const tamano = this.tamanos.find(t => t.id === prodSel.tamano);
+        if (tamano) {
+          texto += ` (${tamano.nombre})`;
+        }
+      }
+      
+      // ✅ AGREGAR cantidad
+      texto += ` - Cant: ${prodSel.cantidad}`;
+      
+      return texto;
+    }).join(', ');
   }
 
   agregarProducto(producto: Producto, tamanoId?: number): void {

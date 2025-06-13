@@ -109,7 +109,7 @@
           <input
             matInput
             placeholder="Seleccione un Producto"
-            formControlName="productosSeleccionados"
+            [value]="productosSeleccionadosTexto"
             [readonly]="true"
             style="pointer-events: none"
           />
@@ -128,7 +128,7 @@
           <input
             matInput
             placeholder="Seleccione un Menú"
-            formControlName="menusSeleccionados"
+            [value]="menusSeleccionadosTexto"
             [readonly]="true"
             style="pointer-events: none"
           />
@@ -233,13 +233,27 @@
               [alt]="producto.nombre"
             />
             <div class="producto-actions">
-              <button
-                class="btn"
-                type="button"
-                (click)="agregarProducto(producto)"
-              >
-                Agregar
-              </button>
+              <!-- ✅ REEMPLAZAR el botón simple con selector de tamaños -->
+              <div *ngIf="producto.aplica_tamanos" class="tamanos-selector">
+                <p>Selecciona tamaño:</p>
+                <button
+                  *ngFor="let tamano of tamanos"
+                  (click)="agregarProducto(producto, tamano.id)"
+                  class="btn-tamano"
+                  type="button">
+                  {{ tamano.nombre }}
+                </button>
+              </div>
+              
+              <!-- ✅ BOTÓN normal si no aplica tamaños -->
+              <div *ngIf="!producto.aplica_tamanos">
+                <button
+                  class="btn"
+                  type="button"
+                  (click)="agregarProducto(producto)">
+                  Agregar
+                </button>
+              </div>
             </div>
           </div>
           }

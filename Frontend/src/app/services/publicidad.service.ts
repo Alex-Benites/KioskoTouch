@@ -154,4 +154,10 @@ export class PublicidadService {
       });
     });
   }
+
+  // ✅ SOLO AGREGAR este método
+  getTamanos(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tamanos/`)
+      .pipe(catchError(this.handleError));
+  }
 }

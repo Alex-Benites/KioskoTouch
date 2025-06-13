@@ -421,9 +421,13 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
 
 class PromocionProductoDetalleSerializer(serializers.ModelSerializer):
     producto = ProductoSerializer(read_only=True)
+    # ✅ AGREGAR estos campos para tamaños
+    tamano_nombre = serializers.CharField(source='tamano.nombre', read_only=True, allow_null=True)
+    tamano_codigo = serializers.CharField(source='tamano.codigo', read_only=True, allow_null=True)
+    
     class Meta:
         model = AppkioskoPromocionproductos
-        fields = ['id', 'producto']
+        fields = ['id', 'producto', 'tamano_nombre', 'tamano_codigo']  # ✅ AGREGAR campos de tamaño
 
 class PromocionMenuDetalleSerializer(serializers.ModelSerializer):
     menu = MenuSerializer(read_only=True)
@@ -432,9 +436,7 @@ class PromocionMenuDetalleSerializer(serializers.ModelSerializer):
         fields = ['id', 'menu']
 
 class PromocionSerializer(serializers.ModelSerializer):
-    productos = serializers.ListField(
-        child=serializers.CharField(), write_only=True, required=False
-    )
+    productos = serializers.ListField(write_only=True, required=False)
     menus = serializers.ListField(
         child=serializers.CharField(), write_only=True, required=False
     )
@@ -442,16 +444,18 @@ class PromocionSerializer(serializers.ModelSerializer):
     menus_detalle = serializers.SerializerMethodField(read_only=True)
     imagen = serializers.ImageField(write_only=True, required=False)
     imagen_url = serializers.SerializerMethodField(read_only=True)
+    # ✅ QUITAR esta línea - no la necesitamos como campo separado
+    # productos_con_tamanos = serializers.ListField(write_only=True, required=False)
 
     class Meta:
         model = AppkioskoPromociones
         fields = [
-            'id', 'nombre', 'descripcion', 'valor_descuento',
-            'fecha_inicio_promo', 'fecha_fin_promo', 'tipo_promocion',
-            'codigo_promocional', 'limite_uso_usuario', 'estado', 'limite_uso_total',
-            'created_at', 'updated_at',
+            'id', 'nombre', 'descripcion', 'fecha_inicio_promo', 'fecha_fin_promo',
+            'valor_descuento', 'tipo_promocion', 'codigo_promocional',
+            'limite_uso_total', 'limite_uso_usuario', 'estado',
             'productos', 'menus', 'productos_detalle', 'menus_detalle',
-            'imagen', 'imagen_url'
+            'imagen', 'imagen_url', 'created_at', 'updated_at'
+            # ✅ NO incluir 'productos_con_tamanos' aquí
         ]
 
     def get_imagen_url(self, obj):
@@ -465,48 +469,127 @@ class PromocionSerializer(serializers.ModelSerializer):
             return None
 
     def get_productos_detalle(self, obj):
-        rels = AppkioskoPromocionproductos.objects.filter(promocion=obj)
+        rels = AppkioskoPromocionproductos.objects.filter(promocion=obj).select_related('producto', 'tamano')  # ✅ AGREGAR select_related('tamano')
         return PromocionProductoDetalleSerializer(rels, many=True).data
 
+    # ✅ AGREGAR método para procesar productos con tamaños desde form-data
+    def to_internal_value(self, data):
+        # Procesar productos con tamaños si vienen como form-data
+        productos_procesados = []
+        i = 0
+        while True:
+            key_producto = f'productos[{i}][producto]'
+            key_tamano = f'productos[{i}][tamano]'
+            
+            if key_producto in data:
+                prod_id = data.get(key_producto)
+                tamano_id = data.get(key_tamano)
+                
+                if isinstance(prod_id, list):
+                    prod_id = prod_id[0]
+                if isinstance(tamano_id, list):
+                    tamano_id = tamano_id[0]
+                
+                if prod_id and str(prod_id).isdigit():
+                    producto_data = {'producto': prod_id}
+                    if tamano_id and tamano_id != '' and tamano_id != 'null':
+                        producto_data['tamano'] = tamano_id
+                    productos_procesados.append(producto_data)
+                i += 1
+            else:
+                break
+        
+        print(f"DEBUG productos procesados: {productos_procesados}")
+        # ✅ CREAR los datos internos correctamente
+        internal_data = super().to_internal_value(data)
+        
+        # ✅ AGREGAR productos_con_tamanos a los datos validados
+        if productos_procesados:
+            internal_data['productos_con_tamanos'] = productos_procesados
+            print(f"DEBUG: Agregando productos_con_tamanos: {productos_procesados}")
+        
+        return internal_data
+
     def get_menus_detalle(self, obj):
-        rels = AppkioskoPromocionmenu.objects.filter(promocion=obj)
-        return PromocionMenuDetalleSerializer(rels, many=True).data
+        """Obtener menús asociados a la promoción"""
+        try:
+            rels = AppkioskoPromocionmenu.objects.filter(promocion=obj).select_related('menu')
+            return MenuSerializer([rel.menu for rel in rels], many=True).data
+        except Exception as e:
+            print(f"Error obteniendo menús: {e}")
+            return []
+
 
     def validate_productos(self, value):
-        # Filtrar valores vacíos o especiales
-        value = [v for v in value if str(v).isdigit()]
-        # No duplicados
-        if len(value) != len(set(value)):
-            raise serializers.ValidationError("No puedes agregar el mismo producto más de una vez.")
-        # Validar existencia
-        for prod_id in value:
-            if not AppkioskoProductos.objects.filter(id=prod_id).exists():
-                raise serializers.ValidationError(f"Producto con ID {prod_id} no existe.")
-        return value
-
-    def validate_menus(self, value):
-        value = [v for v in value if str(v).isdigit()]
-        if len(value) != len(set(value)):
-            raise serializers.ValidationError("No puedes agregar el mismo menú más de una vez.")
-        for menu_id in value:
-            if not AppkioskoMenus.objects.filter(id=menu_id).exists():
-                raise serializers.ValidationError(f"Menú con ID {menu_id} no existe.")
-        return value
+        # ✅ ACTUALIZAR validación para manejar tanto strings como objetos
+        if not value:
+            return value
+            
+        # Si viene como lista de strings (método anterior), convertir
+        if isinstance(value[0], str):
+            return value
+            
+        # Si viene como lista de objetos (nuevo método con tamaños)
+        productos_procesados = []
+        for item in value:
+            if isinstance(item, dict) and 'producto' in item:
+                productos_procesados.append(str(item['producto']))
+            else:
+                productos_procesados.append(str(item))
+        
+        return productos_procesados
 
     def create(self, validated_data):
         productos = validated_data.pop('productos', [])
+        productos_con_tamanos = validated_data.pop('productos_con_tamanos', [])
         menus = validated_data.pop('menus', [])
         imagen = validated_data.pop('imagen', None)
+        
+        print(f"DEBUG create - productos: {productos}")
+        print(f"DEBUG create - productos_con_tamanos: {productos_con_tamanos}")
+        
         promocion = AppkioskoPromociones.objects.create(**validated_data)
-        # Asociar productos
-        for prod_id in productos:
-            AppkioskoPromocionproductos.objects.create(promocion=promocion, producto_id=prod_id)
-        # Asociar menús
+        
+        # ✅ CORREGIR: Solo usar productos_con_tamanos si existen, sino usar productos
+        if productos_con_tamanos:
+            print("✅ Usando productos_con_tamanos")
+            for prod_data in productos_con_tamanos:
+                producto_id = int(prod_data.get('producto'))
+                tamano_id = prod_data.get('tamano')
+                
+                promocion_producto_data = {
+                    'promocion': promocion,
+                    'producto_id': producto_id
+                }
+                
+                if tamano_id and str(tamano_id).isdigit():
+                    promocion_producto_data['tamano_id'] = int(tamano_id)
+                    print(f"DEBUG: Creando producto {producto_id} con tamaño {tamano_id}")
+                else:
+                    print(f"DEBUG: Creando producto {producto_id} sin tamaño")
+                
+                AppkioskoPromocionproductos.objects.create(**promocion_producto_data)
+                
+        elif productos:
+            print("✅ Usando productos (método anterior)")
+            # ✅ CORREGIR: Verificar que productos sea lista de strings/números válidos
+            for prod_id in productos:
+                if str(prod_id).isdigit():
+                    AppkioskoPromocionproductos.objects.create(
+                        promocion=promocion, 
+                        producto_id=int(prod_id)
+                    )
+                else:
+                    print(f"⚠️ Ignorando producto inválido: {prod_id}")
+        
+        # Asociar menús (sin cambios)
         for menu_id in menus:
-            AppkioskoPromocionmenu.objects.create(promocion=promocion, menu_id=menu_id)
-        # Guardar imagen si se envía
+            if str(menu_id).isdigit():
+                AppkioskoPromocionmenu.objects.create(promocion=promocion, menu_id=int(menu_id))
+        
         if imagen:
             self._crear_imagen_promocion(promocion, imagen)
+        
         return promocion
 
     def update(self, instance, validated_data):

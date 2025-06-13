@@ -4,6 +4,7 @@ from .views import (
     PromocionListCreateAPIView,
     PromocionDetailAPIView,
     get_promocion_imagen,
+    get_tamanos_promociones,
 )
 
 urlpatterns = [
@@ -21,4 +22,7 @@ urlpatterns = [
     path('promociones/', PromocionListCreateAPIView.as_view(), name='promocion-list-create'),
     path('promociones/<int:pk>/', PromocionDetailAPIView.as_view(), name='promocion-detail'),
     path('promociones/<int:promocion_id>/imagen/', get_promocion_imagen, name='promocion-imagen'),
+
+    # Tamaños de promociones
+    path('tamanos/', get_tamanos_promociones, name='tamanos-promociones-list'),
 ]

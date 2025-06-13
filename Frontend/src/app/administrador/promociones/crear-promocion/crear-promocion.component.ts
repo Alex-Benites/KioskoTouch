@@ -17,6 +17,13 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 import { FormsModule } from '@angular/forms';
+import { Tamano } from '../../../models/tamano.model';
+import { Observable, forkJoin } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
+interface ProductoConTamano extends Producto {
+  tamanoSeleccionado?: Tamano | null;
+}
 
 @Component({
   selector: 'app-crear-promocion',
@@ -42,11 +49,12 @@ export class CrearPromocionComponent implements OnInit {
   productos: Producto[] = [];
   menus: Menu[] = [];
   menusSeleccionados: Menu[] = [];
-  productosSeleccionados: Producto [] = [];
+  productosSeleccionados: ProductoConTamano [] = [];
   categorias: Categoria[] = [];
   search: string = '';
   loading = false;
   estados: any[] = [];
+  tamanos: Tamano[] = []; // ✅ AGREGAR estas propiedades
   constructor(
     private fb: FormBuilder,
     private catalogoService: CatalogoService,
@@ -84,22 +92,56 @@ export class CrearPromocionComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.promocionId = Number(this.route.snapshot.paramMap.get('id'));
-    this.isEditMode = !!this.promocionId && !isNaN(this.promocionId);
+    // ✅ AGREGAR estas líneas AL INICIO para detectar el modo edición
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.promocionId = parseInt(id, 10);
+      this.isEditMode = true;
+    }
 
+    this.cargarEstados();
+    this.cargarTamanos();
+    
+    // ✅ CAMBIAR: Cargar productos PRIMERO y LUEGO la promoción
+    this.cargarProductos().subscribe(() => {
+      console.log('✅ Productos cargados, ahora verificando modo edición...');
+      if (this.isEditMode) {
+        console.log('🔄 MODO EDICIÓN - promocionId:', this.promocionId);
+        this.cargarPromocionParaEditar();
+      }
+    });
+    
+    // ✅ CAMBIAR: Cargar menús PRIMERO 
+    this.cargarMenus().subscribe(() => {
+      console.log('✅ Menús cargados');
+    });
+  }
+
+  cargarEstados(): void {
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
     });
-    this.catalogoService.getProductos().subscribe(data => {
-      this.productos = data;
-      this.loadProductImages();
-    });
-    this.cargarMenus();
-
-    if (this.isEditMode && this.promocionId) {
-      this.cargarPromocionParaEditar();
-    }
   }
+
+  cargarTamanos(): void {
+    this.publicidadService.getTamanos().subscribe((data: Tamano[]) => {
+      this.tamanos = data;
+    });
+  }
+
+  // En el método cargarProductos, AGREGAR la carga de imágenes:
+  private cargarProductos(): Observable<any> {
+    return this.catalogoService.obtenerProductos().pipe(
+      tap(productos => {
+        this.productos = productos.filter((producto: Producto) => producto.estado === 4);
+        console.log('📦 Productos cargados:', this.productos);
+        // ✅ AGREGAR esta línea
+        this.loadProductImages();
+      })
+    );
+  }
+
+
   loadProductImages(): void {
     this.productos.forEach(producto => {
       if (producto.id) {
@@ -118,25 +160,21 @@ export class CrearPromocionComponent implements OnInit {
       }
     });
   }
-  cargarMenus(): void {
-  this.loading = true;
-  this.catalogoService.getMenus().subscribe({
-    next: (menus) => {
-      this.menus = menus.map(menu => {
-        this.catalogoService.getMenuImagen(menu.id).subscribe(response => {
-          menu.imagenUrl = response.imagen_url;
-        });
-        menu.menuLista = this.getProductosLista(menu);
-        return menu;
-      });
-      this.loading = false;
-    },
-    error: (error) => {
-      this.loading = false;
-      alert('❌ Error al cargar los menus. Por favor, intenta de nuevo.');
-    }
-  });
-}
+
+  // ✅ CORREGIR este método (línea 162-172)
+  private cargarMenus(): Observable<any> {
+    return this.catalogoService.obtenerMenus().pipe(
+      tap(menus => {
+        // ✅ CAMBIAR: menu.estado?.id === 4 por menu.estado === 4
+        this.menus = menus.filter((menu: Menu) => menu.estado === 4);
+        console.log('🍽️ Menús cargados:', this.menus);
+        
+        // Cargar imágenes después
+        this.loadMenuImages();
+      })
+    );
+  }
+
   getProductosLista(menu: any): string[] {
   if (!menu.productos_detalle || !Array.isArray(menu.productos_detalle)) return [];
   return menu.productos_detalle.map((p: any) => {
@@ -283,7 +321,12 @@ export class CrearPromocionComponent implements OnInit {
 
     // Siempre envía el campo, aunque esté vacío
     if (productosIds.length > 0) {
-      productosIds.forEach(id => formData.append('productos', id.toString()));
+      this.productosSeleccionados.forEach((producto, index) => {
+        formData.append(`productos[${index}][producto]`, producto.id.toString());
+        if (producto.tamanoSeleccionado) {
+          formData.append(`productos[${index}][tamano]`, producto.tamanoSeleccionado.id.toString());
+        }
+      });
     } else {
       formData.append('productos', '__empty__');
     }
@@ -344,143 +387,264 @@ private validarFormularioParaEdicion(): boolean {
   return camposCompletos && descuentoValido && limiteTotalValido && limiteUsuarioValido;
 }
 
-actualizarPromocion(formData: FormData): void {
-  if (!this.promocionId) return;
+  actualizarPromocion(formData: FormData): void {
+    if (!this.promocionId) return;
 
-  this.publicidadService.actualizarPromocion(this.promocionId, formData).subscribe({
-    next: (response) => {
-      this.mostrarDialogExito(
-        'CREADO',
-        '¡La Promocion ha sido actualizada exitosamente!',
-        'Continuar'
-      );
-      this.saving = false;
-      this.router.navigate(['/administrador/gestion-promociones']);
-    },
-    error: (error) => {
-      console.error('❌ Error al actualizar la promoción', error);
-      alert('❌ Error al actualizar la promoción. Revisa los datos e intenta nuevamente.');
-      this.saving = false;
-    }
-  });
-}
-  agregarProducto(producto: Producto): void {
-  if (this.productosSeleccionados.some(p => p.id === producto.id)) {
-    alert('El producto ya fue ingresado');
-    return;
-  }
-  this.productosSeleccionados.push(producto);
-  this.promocionForm.get('productosSeleccionados')?.setValue(
-    this.productosSeleccionados.map(p => p.nombre).join(', ')
-  );
-}
-
-agregarMenu(menu: Menu): void {
-  if (this.menusSeleccionados.some(m => m.id === menu.id)) {
-    alert('El menú ya fue ingresado');
-    return;
-  }
-  this.menusSeleccionados.push(menu);
-  this.promocionForm.get('menusSeleccionados')?.setValue(
-    this.menusSeleccionados.map(m => m.nombre).join(', ')
-  );
-}
-
-eliminarProductos(): void {
-  this.productosSeleccionados = [];
-  this.promocionForm.get('productosSeleccionados')?.setValue('');
-}
-
-eliminarMenus(): void {
-  this.menusSeleccionados = [];
-  this.promocionForm.get('menusSeleccionados')?.setValue('');
-}
-
-tieneProductoOMenuSeleccionado(): boolean {
-  return this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0;
-}
-private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
-  const dialogData: SuccessDialogData = {
-    title,
-    message,
-    buttonText
-  };
-
-  const dialogRef = this.dialog.open(SuccessDialogComponent, {
-    disableClose: true,
-    data: dialogData
-  });
-
-  dialogRef.afterClosed().subscribe(() => {
-    if (this.isEditMode) {
-      this.navegarAListaMenus();
-    } else {
-      this.router.navigate(['/administrador/gestion-promociones']);
-    }
-  });
-}
-private navegarAListaMenus(): void {
-  this.router.navigate(['/administrador/gestion-promociones/crear']);
-}
-private cargarPromocionParaEditar(): void {
-  if (!this.promocionId) return;
-
-  this.publicidadService.obtenerPromocionPorId(this.promocionId).subscribe({
-    next: (promocion) => {
-      // Llenar formulario con datos de la promoción
-      this.promocionForm.patchValue({
-        nombre: promocion.nombre,
-        descripcion: promocion.descripcion,
-        tipo_promocion: promocion.tipo_promocion,
-        valor_descuento: promocion.valor_descuento,
-        codigo_promocional: promocion.codigo_promocional,
-        limite_uso_total: promocion.limite_uso_total,
-        limite_uso_usuario: promocion.limite_uso_usuario,
-        fecha_inicio_promo: promocion.fecha_inicio_promo,
-        fecha_fin_promo: promocion.fecha_fin_promo,
-        estado: promocion.estado,
-        imagen: null
-      });
-
-      // Manejar imagen actual
-      if (promocion.imagen_url) {
-        this.currentImageUrl = this.publicidadService.getFullImageUrl(promocion.imagen_url);
-        this.imagePreview = this.currentImageUrl;
-        this.promocionForm.get('imagen')?.clearValidators();
-        this.promocionForm.get('imagen')?.updateValueAndValidity();
-      }
-
-      // Cargar productos seleccionados
-      if (promocion.productos_detalle && Array.isArray(promocion.productos_detalle)) {
-        this.productosSeleccionados = promocion.productos_detalle
-          .map((p: any) => this.productos.find(prod => prod.id === (p.producto?.id ?? p.producto)))
-          .filter((p: Producto | undefined): p is Producto => !!p);
-        this.promocionForm.get('productosSeleccionados')?.setValue(
-          this.productosSeleccionados.map(p => p.nombre).join(', ')
+    this.publicidadService.actualizarPromocion(this.promocionId, formData).subscribe({
+      next: (response) => {
+        this.mostrarDialogExito(
+          'CREADO',
+          '¡La Promocion ha sido actualizada exitosamente!',
+          'Continuar'
         );
-      } else {
-        this.productosSeleccionados = [];
-        this.promocionForm.get('productosSeleccionados')?.setValue('');
+        this.saving = false;
+        this.router.navigate(['/administrador/gestion-promociones']);
+      },
+      error: (error) => {
+        console.error('❌ Error al actualizar la promoción', error);
+        alert('❌ Error al actualizar la promoción. Revisa los datos e intenta nuevamente.');
+        this.saving = false;
       }
-
-      // Cargar menús seleccionados
-      if (promocion.menus_detalle && Array.isArray(promocion.menus_detalle)) {
-        this.menusSeleccionados = promocion.menus_detalle
-          .map((m: any) => this.menus.find(menu => menu.id === (m.menu?.id ?? m.menu)))
-          .filter((m: Menu | undefined): m is Menu => !!m);
-        this.promocionForm.get('menusSeleccionados')?.setValue(
-          this.menusSeleccionados.map(m => m.nombre).join(', ')
-        );
-      } else {
-        this.menusSeleccionados = [];
-        this.promocionForm.get('menusSeleccionados')?.setValue('');
-      }
-    },
-    error: (error) => {
-      console.error('❌ Error al cargar la promoción:', error);
-      alert('❌ Error al cargar la promoción. Redirigiendo...');
-      this.router.navigate(['/administrador/gestion-promociones']);
+    });
+  }
+    agregarProducto(producto: Producto, tamanoId?: number): void {
+    // Verificar si el producto requiere tamaño
+    if (producto.aplica_tamanos && !tamanoId) {
+      alert('⚠️ Este producto requiere seleccionar un tamaño');
+      return;
     }
-  });
-}
+    
+    // Verificar duplicados con el mismo tamaño
+    const yaExiste = this.productosSeleccionados.some(p => 
+      p.id === producto.id && 
+      (p.tamanoSeleccionado?.id || null) === (tamanoId || null)
+    );
+    
+    if (yaExiste) {
+      const tamanoTexto = tamanoId ? ' con este tamaño' : '';
+      alert(`El producto${tamanoTexto} ya fue ingresado`);
+      return;
+    }
+    
+    // ✅ USAR la interfaz Tamano correcta
+    const productoConTamano: ProductoConTamano = { 
+      ...producto,
+      tamanoSeleccionado: tamanoId ? this.tamanos.find(t => t.id === tamanoId) || null : null
+    };
+    
+    this.productosSeleccionados.push(productoConTamano);
+    this.actualizarVisualizacionProductos();
+  }
+
+  // ✅ AGREGAR método para actualizar visualización
+  private actualizarVisualizacionProductos(): void {
+    const productosTexto = this.productosSeleccionados.map(p => {
+      const tamanoStr = p.tamanoSeleccionado ? ` (${p.tamanoSeleccionado.nombre})` : '';
+      return `${p.nombre}${tamanoStr}`;
+    }).join(', ');
+    
+    this.promocionForm.get('productosSeleccionados')?.setValue(productosTexto);
+  }
+
+  eliminarProducto(producto: Producto): void {
+    this.productosSeleccionados = this.productosSeleccionados.filter(p => p.id !== producto.id);
+    this.actualizarVisualizacionProductos();
+  }
+
+  eliminarProductos(): void {
+    this.productosSeleccionados = [];
+    this.promocionForm.get('productosSeleccionados')?.setValue('');
+  }
+
+  eliminarMenus(): void {
+    this.menusSeleccionados = [];
+    this.promocionForm.get('menusSeleccionados')?.setValue('');
+  }
+
+  tieneProductoOMenuSeleccionado(): boolean {
+    return this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0;
+  }
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      if (this.isEditMode) {
+        this.navegarAListaMenus();
+      } else {
+        this.router.navigate(['/administrador/gestion-promociones']);
+      }
+    });
+  }
+  private navegarAListaMenus(): void {
+    this.router.navigate(['/administrador/gestion-promociones/crear']);
+  }
+  private cargarPromocionParaEditar(): void {
+    if (!this.promocionId) return;
+
+    this.publicidadService.obtenerPromocionPorId(this.promocionId).subscribe({
+      next: (promocion) => {
+        console.log('🔍 DEBUG 1 - Promoción completa del backend:', promocion);
+        console.log('📦 DEBUG 2 - productos_detalle:', promocion.productos_detalle);
+        console.log('🍽️ DEBUG 3 - menus_detalle:', promocion.menus_detalle);
+
+        // Llenar formulario con datos de la promoción
+        this.promocionForm.patchValue({
+          nombre: promocion.nombre,
+          descripcion: promocion.descripcion,
+          tipo_promocion: promocion.tipo_promocion,
+          valor_descuento: promocion.valor_descuento,
+          codigo_promocional: promocion.codigo_promocional,
+          limite_uso_total: promocion.limite_uso_total,
+          limite_uso_usuario: promocion.limite_uso_usuario,
+          fecha_inicio_promo: promocion.fecha_inicio_promo,
+          fecha_fin_promo: promocion.fecha_fin_promo,
+          estado: promocion.estado,
+          imagen: null
+        });
+
+        // Manejar imagen actual
+        if (promocion.imagen_url) {
+          this.currentImageUrl = this.publicidadService.getFullImageUrl(promocion.imagen_url);
+          this.imagePreview = this.currentImageUrl;
+          this.promocionForm.get('imagen')?.clearValidators();
+          this.promocionForm.get('imagen')?.updateValueAndValidity();
+        }
+
+        console.log('🛍️ DEBUG 4 - Productos disponibles:', this.productos);
+        console.log('📏 DEBUG 5 - Tamaños disponibles:', this.tamanos);
+
+        // ✅ VERIFICAR si entra al bloque de productos
+        console.log('🔍 DEBUG 6 - Verificando productos_detalle...');
+        console.log('   - productos_detalle existe?', !!promocion.productos_detalle);
+        console.log('   - es array?', Array.isArray(promocion.productos_detalle));
+        console.log('   - longitud:', promocion.productos_detalle?.length);
+
+        if (promocion.productos_detalle && Array.isArray(promocion.productos_detalle)) {
+          console.log('✅ DEBUG 7 - ENTRANDO al bloque de productos');
+          
+          // ✅ CAMBIAR: Procesar cada producto con su tamaño específico
+          this.productosSeleccionados = promocion.productos_detalle
+            .map((pd: any) => {
+              const producto = this.productos.find(prod => prod.id === (pd.producto?.id ?? pd.producto));
+              if (!producto) {
+                console.log(`❌ Producto no encontrado para ID: ${pd.producto?.id ?? pd.producto}`);
+                return null;
+              }
+              
+              // ✅ BUSCAR el tamaño por nombre (como viene del backend)
+              let tamanoSeleccionado = null;
+              if (pd.tamano_nombre) {
+                tamanoSeleccionado = this.tamanos.find(t => t.nombre === pd.tamano_nombre);
+                console.log(`🔍 Buscando tamaño "${pd.tamano_nombre}":`, tamanoSeleccionado);
+              }
+              
+              const productoConTamano: ProductoConTamano = {
+                ...producto,
+                tamanoSeleccionado: tamanoSeleccionado
+              };
+              
+              console.log(`✨ Producto procesado:`, productoConTamano);
+              return productoConTamano;
+            })
+            .filter((p: any): p is ProductoConTamano => !!p);
+          
+          console.log('🎉 DEBUG 11 - productosSeleccionados final:', this.productosSeleccionados);
+          
+          // ✅ ACTUALIZAR la visualización
+          this.actualizarVisualizacionProductos();
+        } else {
+          console.log('❌ DEBUG 7 - NO ENTRANDO al bloque de productos');
+          console.log('   - Motivo: productos_detalle no existe o no es array');
+        }
+
+        // ✅ DEBUG similar para menús
+        console.log('🔍 DEBUG 12 - Verificando menus_detalle...');
+        if (promocion.menus_detalle && Array.isArray(promocion.menus_detalle)) {
+          console.log('✅ DEBUG 13 - ENTRANDO al bloque de menús');
+          
+          this.menusSeleccionados = promocion.menus_detalle
+            .map((md: any) => {
+              const menuId = md.menu?.id ?? md.menu;
+              const menu = this.menus.find(m => m.id === menuId);
+              console.log(`🔍 Buscando menu ID ${menuId}:`, menu);
+              return menu;
+            })
+            .filter((m: any): m is Menu => !!m);
+          
+          console.log('🎉 Menús seleccionados final:', this.menusSeleccionados);
+          
+          // ✅ ACTUALIZAR la visualización
+          this.actualizarVisualizacionMenus();
+        } else {
+          console.log('❌ DEBUG 13 - NO ENTRANDO al bloque de menús');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar la promoción:', error);
+        alert('❌ Error al cargar la promoción. Redirigiendo...');
+        this.router.navigate(['/administrador/gestion-promociones']);
+      }
+    });
+  }
+
+  agregarMenu(menu: Menu): void {
+    // Verificar si el menú ya está seleccionado
+    const yaExiste = this.menusSeleccionados.some(m => m.id === menu.id);
+    
+    if (yaExiste) {
+      alert('El menú ya fue agregado');
+      return;
+    }
+    
+    this.menusSeleccionados.push(menu);
+    this.actualizarVisualizacionMenus();
+  }
+
+  // ✅ AGREGAR método para actualizar visualización de menús
+  private actualizarVisualizacionMenus(): void {
+    const menusTexto = this.menusSeleccionados.map(m => m.nombre).join(', ');
+    this.promocionForm.get('menusSeleccionados')?.setValue(menusTexto);
+  }
+
+  // ✅ AGREGAR estos getters
+  get productosSeleccionadosTexto(): string {
+    console.log('🔍 DEBUG getter productosSeleccionadosTexto ejecutado');
+    console.log('📦 productosSeleccionados actuales:', this.productosSeleccionados);
+    
+    if (!this.productosSeleccionados || this.productosSeleccionados.length === 0) {
+      console.log('❌ No hay productos seleccionados');
+      return '';
+    }
+    
+    return this.productosSeleccionados.map(prod => {
+      let texto = prod.nombre;
+      // ✅ AGREGAR tamaño si existe
+      if (prod.tamanoSeleccionado) {
+        texto += ` (${prod.tamanoSeleccionado.nombre})`;
+      }
+      console.log(`✨ Producto texto: ${texto}`);
+      return texto;
+    }).join(', ');
+  }
+
+  get menusSeleccionadosTexto(): string {
+    console.log('🔍 DEBUG getter menusSeleccionadosTexto ejecutado');
+    console.log('🍽️ menusSeleccionados actuales:', this.menusSeleccionados);
+    
+    if (!this.menusSeleccionados || this.menusSeleccionados.length === 0) {
+      console.log('❌ No hay menús seleccionados');
+      return '';
+    }
+    
+    return this.menusSeleccionados.map(menu => menu.nombre).join(', ');
+  }
 }
