@@ -50,21 +50,42 @@ export class MenuComponent implements OnInit, OnDestroy {
   );
 
   productosFiltrados = computed(() => {
-    const categoriaId = this.categoriaSeleccionada();
-    if (!categoriaId) return [];
+  const categoriaId = this.categoriaSeleccionada();
+  const todosLosProductos = this.productos();
+  
+  console.log('🔍 DEBUG FILTRADO:');
+  console.log('  - Categoría seleccionada ID:', categoriaId);
+  console.log('  - Total productos:', todosLosProductos.length);
+  console.log('  - Productos con campo activo:', todosLosProductos.map(p => ({ 
+    id: p.id, 
+    nombre: p.nombre, 
+    categoria: p.categoria, 
+    estado: p.estado,
+    activo: (p as any).activo  // ✅ Verificar el nuevo campo
+  })));
+  
+  if (!categoriaId) return [];
 
-    const categoriaActual = this.categorias().find(cat => cat.id === categoriaId);
+  const categoriaActual = this.categorias().find(cat => cat.id === categoriaId);
 
-    // Si la categoría es "Combos", mostrar solo menús
-    if (categoriaActual && categoriaActual.nombre?.toLowerCase() === 'combos') {
-      return this.menus().filter(m => m.estado === 1); // Solo menús activos
-    }
+  // Si la categoría es "Combos", mostrar solo menús
+  if (categoriaActual && categoriaActual.nombre?.toLowerCase() === 'combos') {
+    const menusFiltrados = this.menus().filter(m => (m as any).activo !== false);
+    console.log('  - Menús filtrados:', menusFiltrados.length);
+    return menusFiltrados;
+  }
 
-    // Para otras categorías, solo productos
-    return this.productos().filter(p =>
-      p.categoria === categoriaId && p.estado === 1
-    );
+  // Para otras categorías, solo productos
+  const productosFiltrados = todosLosProductos.filter(p => {
+    const coincideCategoria = p.categoria === categoriaId;
+    const estaActivo = (p as any).activo !== false; // ✅ Usar campo activo
+    console.log(`  - Producto ${p.nombre}: categoria=${p.categoria}, activo=${(p as any).activo}, coincide=${coincideCategoria}, pasa=${coincideCategoria && estaActivo}`);
+    return coincideCategoria && estaActivo;
   });
+  
+  console.log('  - Productos filtrados finales:', productosFiltrados.length);
+  return productosFiltrados;
+});
 
   // ✅ Estado de carga general
   cargando = computed(() =>
@@ -196,6 +217,10 @@ export class MenuComponent implements OnInit, OnDestroy {
     });
   }
 
+  limpiarPedido(): void {
+    this.pedidoService.limpiarPedido();
+  }
+
   // ✅ Lógica personalizable para determinar si un producto debe tener descuento
   private deberíaTenerDescuento(producto: Producto): boolean {
     // Ejemplo: productos con precio > $5 tienen 10% descuento
@@ -239,25 +264,91 @@ export class MenuComponent implements OnInit, OnDestroy {
     console.log('🌐 Idioma cambiado a:', target.value);
   }
 
-  agregarProducto(producto: ProductoConBadge | Menu): void {
-    console.log('🛒 Agregando producto o menú:', producto.nombre);
-
-    // Usa el precio correcto según el tipo
-    const precio = 'precio' in producto ? producto.precio : 0;
-
-    this.pedidoService.agregarProducto(
-      producto.id,
-      precio,
-      1
-    );
-
-    console.log('✅ Producto o menú agregado. Total actual:', this.totalPedidoSeguro);
+  // ✅ Método para obtener el precio a mostrar
+  obtenerPrecioMostrar(producto: ProductoConBadge): number {
+    // Si tiene precio_base (productos con tamaños), usar ese
+    if ((producto as any).precio_base !== undefined) {
+      return (producto as any).precio_base;
+    }
+    // Si no, usar precio normal
+    return producto.precio;
   }
 
-  // ✅ MÉTODO AGREGADO: limpiarPedido
-  limpiarPedido(): void {
-    this.pedidoService.limpiarPedido();
-    console.log('🗑️ Pedido cancelado desde MenuComponent');
+  // ✅ Método para obtener texto de precio de PRODUCTOS
+  obtenerTextoPrecio(item: ProductoConBadge | Menu): string {
+    // Si es un menú, devolver precio simple
+    if (this.esMenu(item)) {
+      return `$${item.precio.toFixed(2)}`;
+    }
+    
+    // Si es producto, usar lógica de tamaños
+    const producto = item as ProductoConBadge;
+    if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
+      const precioMin = Math.min(...producto.tamanos_detalle.map(t => t.precio));
+      const precioMax = Math.max(...producto.tamanos_detalle.map(t => t.precio));
+      
+      if (precioMin === precioMax) {
+        return `$${precioMin.toFixed(2)}`;
+      } else {
+        return `Desde $${precioMin.toFixed(2)}`;
+      }
+    }
+    
+    return `$${this.obtenerPrecioMostrar(producto).toFixed(2)}`;
+  }
+
+  // ✅ NUEVO: Método para obtener texto de precio de MENÚS
+  obtenerTextoPrecioMenu(menu: Menu): string {
+    return `$${menu.precio.toFixed(2)}`;
+  }
+
+  // ✅ NUEVO: Método genérico que funciona para ambos
+  obtenerTextoPrecioGenerico(item: ProductoConBadge | Menu): string {
+    if (this.esMenu(item)) {
+      return this.obtenerTextoPrecioMenu(item);
+    } else {
+      return this.obtenerTextoPrecio(item);
+    }
+  }
+
+  // ✅ Método mejorado para agregar producto (SIN agregarMenu)
+  agregarProducto(producto: ProductoConBadge | Menu): void {
+    if (this.esMenu(producto)) {
+      // ✅ TRATAR MENÚS COMO PRODUCTOS NORMALES
+      this.pedidoService.agregarProducto(producto.id, producto.precio, 1);
+    } else {
+      // Para productos con tamaños, mostrar selector de tamaño
+      if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 1) {
+        this.mostrarSelectorTamano(producto);
+      } else {
+        // Producto simple o con un solo tamaño
+        const precio = this.calcularPrecioFinal(producto);
+        this.pedidoService.agregarProducto(producto.id, precio, 1);
+      }
+    }
+  }
+
+  // ✅ Método auxiliar para calcular precio final
+  private calcularPrecioFinal(producto: ProductoConBadge): number {
+    if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length === 1) {
+      return producto.tamanos_detalle[0].precio;
+    }
+    return this.obtenerPrecioMostrar(producto);
+  }
+
+  // ✅ Nuevo método para mostrar selector de tamaño
+  private mostrarSelectorTamano(producto: ProductoConBadge): void {
+    // Aquí podrías abrir un modal/popup para seleccionar tamaño
+    // Por ahora, agregar el tamaño más pequeño por defecto
+    if (producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
+      const tamanoDefault = producto.tamanos_detalle[0]; // El más pequeño (orden)
+      this.pedidoService.agregarProducto(producto.id, tamanoDefault.precio, 1);
+    }
+  }
+
+  // ✅ Método auxiliar para verificar si es menú
+  private esMenu(item: ProductoConBadge | Menu): item is Menu {
+    return 'tipo_menu' in item;
   }
 
   continuar(): void {

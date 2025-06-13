@@ -83,7 +83,7 @@
                   <div class="product-card__content">
                     <h3 class="product-card__name">{{ producto.nombre }}</h3>
                     <div class="product-card__footer">
-                      <span class="product-card__price">${{ producto.precio | number:'1.2-2' }}</span>
+                      <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
                       <button class="product-card__order-button" (click)="agregarProducto(producto)">
                         Ordenar
                       </button>

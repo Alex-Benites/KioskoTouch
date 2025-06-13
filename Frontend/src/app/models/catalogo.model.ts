@@ -5,6 +5,7 @@ export interface Producto {
   nombre: string;
   descripcion: string;
   precio: number;
+  precio_base?: number; // ✅ Precio base (mínimo)
   categoria: number;
   estado: number;
   imagen?: File | null;

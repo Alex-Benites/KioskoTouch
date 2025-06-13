@@ -90,5 +90,5 @@ python Scripts/ingredientes.py migrar_imagenes
 python Scripts/mega_crear_todo.py
 
 
-
+# Crear tamaños script 
 python Scripts/tamanios.py crear

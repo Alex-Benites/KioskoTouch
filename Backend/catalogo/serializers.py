@@ -38,6 +38,8 @@ class ProductoSerializer(serializers.ModelSerializer):
     categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
     estado_nombre = serializers.CharField(source='estado.descripcion', read_only=True)
     imagen_url = serializers.SerializerMethodField()
+    activo = serializers.SerializerMethodField()
+
     ingredientes = serializers.CharField(write_only=True, required=False, allow_blank=True)
     ingredientes_detalle = serializers.SerializerMethodField()
     imagen = serializers.ImageField(write_only=True, required=False)
@@ -51,11 +53,47 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = AppkioskoProductos
         fields = [
             'id', 'nombre', 'descripcion', 'precio', 
-            'categoria', 'categoria_nombre', 'estado', 'estado_nombre',
+            'categoria', 'categoria_nombre', 'estado', 'estado_nombre','activo',
             'imagen_url', 'ingredientes', 'ingredientes_detalle', 'imagen',
             'aplica_tamanos', 'precios_tamanos', 'tamanos_detalle',  # Nuevos campos
             'created_at', 'updated_at'
         ]
+        
+    # ✅ AGREGAR ESTE MÉTODO
+    def get_precio_base(self, obj):
+        """
+        Obtiene el precio base del producto.
+        Si aplica tamaños, devuelve el precio del tamaño más pequeño.
+        Si no, devuelve el precio normal.
+        """
+        if obj.aplica_tamanos:
+            # Buscar el precio del tamaño más pequeño (menor orden)
+            precio_tamano = AppkioskoProductoTamanos.objects.filter(
+                producto=obj,
+                activo=True
+            ).select_related('tamano').order_by('tamano__orden').first()
+            
+            if precio_tamano:
+                return float(precio_tamano.precio)
+        
+        return float(obj.precio)
+
+
+    # ✅ MÉTODO PARA CALCULAR SI ESTÁ ACTIVO
+    def get_activo(self, obj):
+        """Determina si el producto está activo basándose en el estado"""
+        try:
+            # Si tienes relación directa con estados
+            if hasattr(obj, 'estado') and obj.estado:
+                return getattr(obj.estado, 'is_active', False) == 1
+            
+            # Fallback: considerar activo si estado es 4 (según tu tabla)
+            return obj.estado == 4
+            
+        except Exception as e:
+            print(f"Error calculando activo para producto {obj.id}: {e}")
+            return False
+
 
     def get_imagen_url(self, obj):
         """Obtiene la URL de la imagen del producto"""
@@ -633,6 +671,8 @@ class MenuProductoDetalleSerializer(serializers.ModelSerializer):
 
 class MenuSerializer(serializers.ModelSerializer):
     estado_nombre = serializers.CharField(source='estado.descripcion', read_only=True)
+    activo = serializers.SerializerMethodField()
+
     productos_detalle = serializers.SerializerMethodField()
     imagen_url = serializers.SerializerMethodField()
     imagen = serializers.ImageField(write_only=True, required=False)
@@ -642,10 +682,23 @@ class MenuSerializer(serializers.ModelSerializer):
         model = AppkioskoMenus
         fields = [
             'id', 'nombre', 'descripcion', 'precio',
-            'tipo_menu', 'estado', 'estado_nombre',
+            'tipo_menu', 'estado', 'estado_nombre','activo',
             'productos', 'productos_detalle', 'imagen', 'imagen_url',
             'created_at', 'updated_at'
         ]
+
+
+    # ✅ MÉTODO PARA CALCULAR SI EL MENÚ ESTÁ ACTIVO
+    def get_activo(self, obj):
+        """Determina si el menú está activo basándose en el estado"""
+        try:
+            if hasattr(obj, 'estado') and obj.estado:
+                return getattr(obj.estado, 'is_active', False) == 1
+            return obj.estado == 4
+        except Exception as e:
+            print(f"Error calculando activo para menú {obj.id}: {e}")
+            return False
+
 
     def get_imagen_url(self, obj):
         try:
