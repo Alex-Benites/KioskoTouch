@@ -74,6 +74,7 @@
                 <mat-option value="">Seleccionar...</mat-option>
                 <mat-option value="Masculino">Masculino</mat-option>
                 <mat-option value="Femenino">Femenino</mat-option>
+                <mat-option value="Otro">Otro</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
@@ -90,7 +91,14 @@
             <!-- Username -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Nombre de Usuario</mat-label>
-              <input matInput formControlName="username" placeholder="Ej: jperez">
+              <input 
+                matInput 
+                formControlName="username" 
+                placeholder="Ej: jperez"
+                [readonly]="isEditMode">
+              @if (isEditMode) {
+                <mat-hint>El nombre de usuario no se puede modificar</mat-hint>
+              }
               @if (usuarioForm.get('username')?.hasError('required')) {
                 <mat-error>El nombre de usuario es requerido.</mat-error>
               }

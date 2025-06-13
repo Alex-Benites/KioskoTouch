@@ -127,7 +127,6 @@ export class CrearUsuarioComponent implements OnInit {
       next: (response) => {
         console.log('✅ Datos recibidos del backend:', response);
         const empleado = response.empleado;
-        console.log('✅ Datos del empleado:', empleado);
         
         // ✅ DETERMINAR EL ESTABLECIMIENTO A MOSTRAR
         let establecimientoSeleccionado = null;
@@ -154,11 +153,11 @@ export class CrearUsuarioComponent implements OnInit {
           turnoTrabajo: empleado.turno_trabajo,
           grupos: empleado.roles.length > 0 ? empleado.roles[0].id : null,
           isActive: empleado.is_active,
-          establecimiento: establecimientoSeleccionado  // ✅ ASIGNAR EL ESTABLECIMIENTO ACTUAL
+          establecimiento: establecimientoSeleccionado
         });
 
-        // ✅ MOSTRAR MENSAJE EN CONSOLA PARA DEBUG
-        console.log(`📍 ${mensajeEstablecimiento}`);
+        // ✅ DESHABILITAR USERNAME EN MODO EDICIÓN
+        this.usuarioForm.get('username')?.disable();
 
         // Remover validaciones de contraseña en modo edición
         this.usuarioForm.get('password')?.clearValidators();
@@ -235,6 +234,7 @@ export class CrearUsuarioComponent implements OnInit {
     };
   }
 
+  // ✅ MEJORAR VALIDADOR DE CONTRASEÑAS
   private passwordMatchValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const password = control.get('password');
@@ -244,7 +244,20 @@ export class CrearUsuarioComponent implements OnInit {
         return null;
       }
 
-      return password.value === confirmPassword.value ? null : { passwordMismatch: true };
+      if (password.value !== confirmPassword.value) {
+        // ✅ ESTABLECER ERROR EN confirmPassword
+        confirmPassword.setErrors({ passwordMismatch: true });
+        return { passwordMismatch: true };
+      } else {
+        // ✅ LIMPIAR ERROR SI LAS CONTRASEÑAS COINCIDEN
+        const errors = confirmPassword.errors;
+        if (errors) {
+          delete errors['passwordMismatch'];
+          confirmPassword.setErrors(Object.keys(errors).length === 0 ? null : errors);
+        }
+      }
+
+      return null;
     };
   }
 
@@ -302,6 +315,11 @@ export class CrearUsuarioComponent implements OnInit {
   private actualizarUsuario(): void {
     const formData = { ...this.usuarioForm.value };
     
+    // ✅ INCLUIR USERNAME AUNQUE ESTÉ DISABLED
+    if (this.usuarioForm.get('username')?.disabled) {
+      formData.username = this.usuarioForm.get('username')?.value;
+    }
+    
     if (formData.fechaNacimiento) {
       formData.fechaNacimiento = this.formatDateForBackend(new Date(formData.fechaNacimiento));
     }
@@ -314,12 +332,9 @@ export class CrearUsuarioComponent implements OnInit {
     if (!formData.password) {
       delete formData.password;
     }
-    // ❌ ELIMINAR O COMENTAR ESTA LÍNEA SI EXISTE:
-    // delete formData.establecimiento;
 
     console.log('🎯 Datos a enviar para actualizar usuario:', formData);
 
-    // ✅ Usar el endpoint real de actualización
     this.usuariosService.actualizarEmpleado(this.userId!, formData).subscribe({
       next: (response) => {
         console.log('✅ Usuario actualizado:', response);
