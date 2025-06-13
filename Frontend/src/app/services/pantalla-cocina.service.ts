@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -11,33 +11,23 @@ export class PantallaCocinaService {
 
   constructor(private http: HttpClient) {}
 
-  private getHttpOptions() {
-    const token = localStorage.getItem('access_token');
-    return {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      })
-    };
-  }
-
   crearPantallaCocina(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/crear/`, data, this.getHttpOptions());
+    return this.http.post<any>(`${this.apiUrl}/crear/`, data);
   }
 
   obtenerPantallasCocina(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/`, this.getHttpOptions());
+    return this.http.get<any[]>(`${this.apiUrl}/`);
   }
 
   obtenerPantallaCoci‌naPorId(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}/`, this.getHttpOptions());
+    return this.http.get<any>(`${this.apiUrl}/${id}/`);
   }
 
   actualizarPantallaCocina(id: number, data: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}/`, data, this.getHttpOptions());
+    return this.http.put<any>(`${this.apiUrl}/${id}/`, data);
   }
 
   eliminarPantallaCocina(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}/`, this.getHttpOptions());
+    return this.http.delete<any>(`${this.apiUrl}/${id}/`);
   }
 }

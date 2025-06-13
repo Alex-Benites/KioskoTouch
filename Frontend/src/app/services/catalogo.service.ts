@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Producto, Categoria, Estado, Menu } from '../models/catalogo.model';
 import { environment } from '../../environments/environment';
@@ -14,14 +14,6 @@ export class CatalogoService {
 
   constructor(private http: HttpClient) { }
 
-  private getHttpOptions() {
-    return {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json'
-      })
-    };
-  }
-
   crearProducto(productoData: FormData): Observable<Producto> {
     const url = `${this.apiUrl}/catalogo/productos/`;
     return this.http.post<Producto>(url, productoData);
@@ -29,17 +21,17 @@ export class CatalogoService {
 
   getProductos(): Observable<Producto[]> {
     const url = `${this.apiUrl}/catalogo/productos/`;
-    return this.http.get<Producto[]>(url, this.getHttpOptions());
+    return this.http.get<Producto[]>(url);
   }
 
   getCategorias(): Observable<Categoria[]> {
     const url = `${this.apiUrl}/catalogo/categorias/`;
-    return this.http.get<Categoria[]>(url, this.getHttpOptions());
+    return this.http.get<Categoria[]>(url);
   }
 
   getEstados(): Observable<Estado[]> {
     const url = `${this.apiUrl}/comun/estados/`;
-    return this.http.get<Estado[]>(url, this.getHttpOptions());
+    return this.http.get<Estado[]>(url);
   }
 
   getProductoImagen(productoId: number): Observable<any> {
@@ -55,22 +47,6 @@ export class CatalogoService {
     return `${environment.baseUrl}${imagenUrl}`;
   }
 
-  //   // ⚠️ CAMBIAR: Método para URL completa de imagen dinámico
-  // getFullImageUrl(imagenUrl: string | undefined): string {
-  //   if (!imagenUrl) return 'assets/images/no-image.png';
-
-  //   // Si ya es una URL completa, devolverla tal como está
-  //   if (imagenUrl.startsWith('http')) {
-  //     return imagenUrl;
-  //   }
-
-  //   // Construir URL base dinámicamente
-  //   const baseUrl = environment.production
-  //     ? environment.apiUrl.replace('/api', '')  // Remover /api para imágenes
-  //     : 'http://127.0.0.1:8000';
-
-  //   return `${baseUrl}${imagenUrl}`;
-  // }
   obtenerProductoPorId(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/catalogo/productos/${id}/`);
   }
@@ -81,7 +57,7 @@ export class CatalogoService {
 
   eliminarProducto(id: number): Observable<any> {
     const url = `${this.apiUrl}/catalogo/productos/${id}/`;
-    return this.http.delete<any>(url, this.getHttpOptions());
+    return this.http.delete<any>(url);
   }
 
   obtenerProductos(): Observable<Producto[]> {
@@ -96,6 +72,7 @@ export class CatalogoService {
       });
     });
   }
+
   crearMenu(MenuData: FormData): Observable<Menu> {
     const url = `${this.apiUrl}/catalogo/menus/`;
     return this.http.post<Menu>(url, MenuData);
@@ -103,11 +80,13 @@ export class CatalogoService {
 
   getMenus(): Observable<Menu[]> {
     const url = `${this.apiUrl}/catalogo/menus/`;
-    return this.http.get<Menu[]>(url, this.getHttpOptions());
+    return this.http.get<Menu[]>(url);
   }
+
   getMenuImagen(menuId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/catalogo/menus/${menuId}/imagen/`);
   }
+
   obtenerMenuPorId(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/catalogo/menus/${id}/`);
   }
@@ -118,7 +97,7 @@ export class CatalogoService {
 
   eliminarMenu(id: number): Observable<any> {
     const url = `${this.apiUrl}/catalogo/menus/${id}/`;
-    return this.http.delete<any>(url, this.getHttpOptions());
+    return this.http.delete<any>(url);
   }
 
   obtenerMenus(): Observable<Menu[]> {
@@ -134,28 +113,24 @@ export class CatalogoService {
     });
   }
 
-  // ✅ CAMBIAR este método que ya tienes
   getEstablecimientos(): Observable<any[]> {
     const url = `${this.apiUrl}/establecimientos/`;
-    return this.http.get<any[]>(url, this.getHttpOptions());
+    return this.http.get<any[]>(url);
   }
 
-  // Nuevo método para obtener tamaños disponibles
   getTamanos(): Observable<Tamano[]> {
     const url = `${this.apiUrl}/catalogo/tamanos/`;
-    return this.http.get<Tamano[]>(url, this.getHttpOptions());
+    return this.http.get<Tamano[]>(url);
   }
 
-  // Método para filtrar productos que tienen tamaños
   getProductosConTamanos(): Observable<Producto[]> {
     const url = `${this.apiUrl}/catalogo/productos/listado-completo/?aplica_tamanos=true`;
-    return this.http.get<Producto[]>(url, this.getHttpOptions());
+    return this.http.get<Producto[]>(url);
   }
 
-  // Método práctico para obtener el precio según el tamaño seleccionado
   getPrecioPorTamano(producto: Producto, codigoTamano: string): number {
     if (!producto.aplica_tamanos || !producto.tamanos_detalle) {
-      return producto.precio; // Precio base si no aplica tamaños
+      return producto.precio;
     }
     
     const tamanoEncontrado = producto.tamanos_detalle.find(
