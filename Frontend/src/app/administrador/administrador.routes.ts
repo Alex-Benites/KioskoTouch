@@ -1,63 +1,83 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '../guards/auth.guard';
+import { loginGuard } from '../guards/login.guard';
+import { permissionGuard } from '../guards/permission.guard';
+
+// 🏠 Componentes básicos
 import { LoginComponent } from './login/login.component';
-import { HomeComponent } from './home/home.component';
 import { RestablecerContrasenaComponent } from './restablecer-contrasena/restablecer-contrasena.component';
+import { HomeComponent } from './home/home.component';
+import { UnauthorizedComponent } from '../shared/unauthorized/unauthorized.component';
+
+// 👥 Componentes de usuarios
 import { UsuariosComponent } from './usuarios/usuarios.component';
 import { CrearUsuarioComponent } from './usuarios/crear-usuario/crear-usuario.component';
 import { EditarEliminarUsuarioComponent } from './usuarios/editar-eliminar-usuario/editar-eliminar-usuario.component';
 import { CrearRolComponent } from './usuarios/crear-rol/crear-rol.component';
 import { EditarEliminarRolComponent } from './usuarios/editar-eliminar-rol/editar-eliminar-rol.component';
+
+// 🍔 Componentes de productos
 import { ProductosComponent } from './productos/productos.component';
 import { CrearComponent } from './productos/crear/crear.component';
 import { EditarComponent } from './productos/editar/editar.component';
 import { EliminarComponent } from './productos/eliminar/eliminar.component';
+
+// 🥬 Componentes de ingredientes
+import { IngredientesComponent } from './ingredientes/ingredientes.component';
+import { CrearIngredienteComponent } from './ingredientes/crear-ingrediente/crear-ingrediente.component';
+import { EditarEliminarIngredienteComponent } from './ingredientes/editar-eliminar-ingrediente/editar-eliminar-ingrediente.component';
+
+// 🍽️ Componentes de menús
 import { MenusComponent } from './menus/menus.component';
 import { CrearMenuComponent } from './menus/crear-menu/crear-menu.component';
 import { EditarEliminarMenuComponent } from './menus/editar-eliminar-menu/editar-eliminar-menu.component';
+
+// 🎯 Componentes de promociones
 import { PromocionesComponent } from './promociones/promociones.component';
 import { CrearPromocionComponent } from './promociones/crear-promocion/crear-promocion.component';
 import { EditarEliminarPromocionComponent } from './promociones/editar-eliminar-promocion/editar-eliminar-promocion.component';
 import { EstadisticasPromocionComponent } from './promociones/estadisticas-promocion/estadisticas-promocion.component';
+
+// 🍳 Componentes de pantallas cocina
 import { PantallasCocinaComponent } from './pantallas-cocina/pantallas-cocina.component';
 import { CrearPantallaCocinaComponent } from './pantallas-cocina/crear-pantalla-cocina/crear-pantalla-cocina.component';
 import { EditarEliminarPantallaCocinaComponent } from './pantallas-cocina/editar-eliminar-pantalla-cocina/editar-eliminar-pantalla-cocina.component';
+
+// 🏢 Componentes de establecimientos
 import { EstablecimientosComponent } from './establecimientos/establecimientos.component';
-import { CrearEstablecimientoComponent } from './establecimientos/crear-establecimiento/crear-establecimiento.component'; // Agregar
-import { EditarEliminarEstablecimientoComponent } from './establecimientos/editar-eliminar-establecimiento/editar-eliminar-establecimiento.component'; // Agregar
+import { CrearEstablecimientoComponent } from './establecimientos/crear-establecimiento/crear-establecimiento.component';
+import { EditarEliminarEstablecimientoComponent } from './establecimientos/editar-eliminar-establecimiento/editar-eliminar-establecimiento.component';
+
+// 📺 Componentes de publicidad
 import { PublicidadComponent } from './publicidad/publicidad.component';
-import { KioskoTouchComponent } from './kiosko-touch/kiosko-touch.component';
-import { CrearKioskoTouchComponent } from './kiosko-touch/crear-kiosko-touch/crear-kiosko-touch.component'; // Agregar
-import { EditarEliminarKioskoTouchComponent } from './kiosko-touch/editar-eliminar-kiosko-touch/editar-eliminar-kiosko-touch.component'; // Agregar
-import { UnauthorizedComponent } from '../shared/unauthorized/unauthorized.component';
-import { loginGuard } from '../guards/login.guard';
-import { authGuard } from '../guards/auth.guard';
-import { permissionGuard } from '../guards/permission.guard';
-import { IngredientesComponent } from './ingredientes/ingredientes.component';
-import { CrearIngredienteComponent } from './ingredientes/crear-ingrediente/crear-ingrediente.component';
-import { EditarEliminarIngredienteComponent } from './ingredientes/editar-eliminar-ingrediente/editar-eliminar-ingrediente.component';
 import { CrearPublicidadComponent } from './publicidad/crear-publicidad/crear-publicidad.component';
 import { EditarEliminarPublicidadComponent } from './publicidad/editar-eliminar-publicidad/editar-eliminar-publicidad.component';
 
+// 📱 Componentes de kiosko touch
+import { KioskoTouchComponent } from './kiosko-touch/kiosko-touch.component';
+import { CrearKioskoTouchComponent } from './kiosko-touch/crear-kiosko-touch/crear-kiosko-touch.component';
+import { EditarEliminarKioskoTouchComponent } from './kiosko-touch/editar-eliminar-kiosko-touch/editar-eliminar-kiosko-touch.component';
+
 export const administradorRoutes: Routes = [
-  // 🔓 Rutas públicas (sin autenticación)
+  // 🔓 Rutas públicas
   {
     path: 'login',
     component: LoginComponent,
-    canActivate: [loginGuard] // Previene acceso si ya está autenticado
+    canActivate: [loginGuard]
   },
   {
     path: 'restablecer-contrasena',
     component: RestablecerContrasenaComponent
   },
 
-  // 🔐 Rutas protegidas (requieren autenticación)
+  // 🔐 Rutas protegidas básicas
   {
     path: 'home',
     component: HomeComponent,
     canActivate: [authGuard]
   },
 
-  // 👥 Gestión de usuarios - Permisos: auth.user
+  // 👥 GESTIÓN DE USUARIOS - Solo validar VER
   {
     path: 'gestion-usuarios',
     component: UsuariosComponent,
@@ -66,37 +86,37 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-usuarios/crear-usuario',
     component: CrearUsuarioComponent,
-    canActivate: [authGuard, permissionGuard(['auth.add_user'])]
+    canActivate: [authGuard, permissionGuard(['auth.view_user'])]
   },
   {
-  path: 'gestion-usuarios/crear-usuario/:id',
-  component: CrearUsuarioComponent,
-  canActivate: [authGuard, permissionGuard(['auth.change_user'])]
+    path: 'gestion-usuarios/crear-usuario/:id',
+    component: CrearUsuarioComponent,
+    canActivate: [authGuard, permissionGuard(['auth.view_user'])]
   },
   {
     path: 'gestion-usuarios/editar-eliminar-usuario',
     component: EditarEliminarUsuarioComponent,
-    canActivate: [authGuard, permissionGuard(['auth.change_user', 'auth.delete_user'])]
+    canActivate: [authGuard, permissionGuard(['auth.view_user'])]
   },
 
-  // 🔐 Gestión de roles/grupos - Permisos: auth.group
+  // 🔐 GESTIÓN DE ROLES - Solo validar VER
   {
     path: 'gestion-usuarios/crear-rol',
     component: CrearRolComponent,
-    canActivate: [authGuard, permissionGuard(['auth.add_group'])]
+    canActivate: [authGuard, permissionGuard(['auth.view_group'])]
   },
   {
     path: 'gestion-usuarios/crear-rol/:id',
     component: CrearRolComponent,
-    canActivate: [authGuard, permissionGuard(['auth.change_group'])]
+    canActivate: [authGuard, permissionGuard(['auth.view_group'])]
   },
   {
     path: 'gestion-usuarios/editar-eliminar-rol',
     component: EditarEliminarRolComponent,
-    canActivate: [authGuard, permissionGuard(['auth.change_group', 'auth.delete_group'])]
+    canActivate: [authGuard, permissionGuard(['auth.view_group'])]
   },
 
-  // 🍔 Gestión de productos - Permisos: catalogo.appkioskoproductos
+  // 🍔 GESTIÓN DE PRODUCTOS - Solo validar VER
   {
     path: 'gestion-productos',
     component: ProductosComponent,
@@ -105,25 +125,25 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-productos/crear',
     component: CrearComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.add_appkioskoproductos'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoproductos'])]
   },
   {
     path: 'gestion-productos/editar',
     component: EditarComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskoproductos'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoproductos'])]
   },
   {
     path: 'gestion-productos/crear/:id',
     component: CrearComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskoproductos'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoproductos'])]
   },
   {
     path: 'gestion-productos/eliminar',
     component: EliminarComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.delete_appkioskoproductos'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoproductos'])]
   },
 
-  // 🥬 Gestión de ingredientes - Permisos: catalogo.appkioskoingredientes
+  // 🥬 GESTIÓN DE INGREDIENTES - Solo validar VER
   {
     path: 'gestion-ingredientes',
     component: IngredientesComponent,
@@ -132,15 +152,15 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-ingredientes/crear',
     component: CrearIngredienteComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.add_appkioskoingredientes'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])]
   },
   {
     path: 'gestion-ingredientes/editar-eliminar',
     component: EditarEliminarIngredienteComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskoingredientes', 'catalogo.delete_appkioskoingredientes'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])]
   },
 
-  // 📋 Gestión de menús - Permisos: catalogo.appkioskomenus
+  // 🍽️ GESTIÓN DE MENÚS - Solo validar VER
   {
     path: 'gestion-menus',
     component: MenusComponent,
@@ -149,20 +169,20 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-menus/crear',
     component: CrearMenuComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.add_appkioskomenus'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskomenus'])]
   },
   {
     path: 'gestion-menus/crear/:id',
     component: CrearMenuComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskomenus'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskomenus'])]
   },
   {
     path: 'gestion-menus/editar-eliminar',
     component: EditarEliminarMenuComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.change_appkioskomenus', 'catalogo.delete_appkioskomenus'])]
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskomenus'])]
   },
 
-  // 🎉 Gestión de promociones - Permisos: marketing.appkioskopromociones
+  // 🎯 GESTIÓN DE PROMOCIONES - Solo validar VER
   {
     path: 'gestion-promociones',
     component: PromocionesComponent,
@@ -171,17 +191,17 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-promociones/crear',
     component: CrearPromocionComponent,
-    canActivate: [authGuard, permissionGuard(['marketing.add_appkioskopromociones'])]
+    canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopromociones'])]
   },
   {
     path: 'gestion-promociones/crear/:id',
     component: CrearPromocionComponent,
-    canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopromociones'])]
+    canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopromociones'])]
   },
   {
     path: 'gestion-promociones/editar-eliminar',
     component: EditarEliminarPromocionComponent,
-    canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopromociones', 'marketing.delete_appkioskopromociones'])]
+    canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopromociones'])]
   },
   {
     path: 'gestion-promociones/estadisticas',
@@ -189,7 +209,7 @@ export const administradorRoutes: Routes = [
     canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopromociones'])]
   },
 
-  // 👨‍🍳 Gestión de pantallas de cocina - Permisos: establecimientos.appkioskopantallascocina
+  // 🍳 GESTIÓN DE PANTALLAS COCINA - Solo validar VER
   {
     path: 'gestion-pantallas-cocina',
     component: PantallasCocinaComponent,
@@ -198,20 +218,20 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-pantallas-cocina/crear',
     component: CrearPantallaCocinaComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskopantallascocina'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskopantallascocina'])]
   },
-   {
+  {
     path: 'gestion-pantallas-cocina/crear/:id',
     component: CrearPantallaCocinaComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskopantallascocina'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskopantallascocina'])]
   },
   {
     path: 'gestion-pantallas-cocina/editar-eliminar',
     component: EditarEliminarPantallaCocinaComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.change_appkioskopantallascocina', 'establecimientos.delete_appkioskopantallascocina'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskopantallascocina'])]
   },
 
-  // 🏢 Gestión de establecimientos - Permisos: establecimientos.appkioskoestablecimientos
+  // 🏢 GESTIÓN DE ESTABLECIMIENTOS - Solo validar VER
   {
     path: 'gestion-establecimientos',
     component: EstablecimientosComponent,
@@ -220,20 +240,20 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-establecimientos/crear',
     component: CrearEstablecimientoComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskoestablecimientos'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskoestablecimientos'])]
   },
   {
     path: 'gestion-establecimientos/crear/:id',
     component: CrearEstablecimientoComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.change_appkioskoestablecimientos'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskoestablecimientos'])]
   },
   {
     path: 'gestion-establecimientos/editar-eliminar',
     component: EditarEliminarEstablecimientoComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.change_appkioskoestablecimientos', 'establecimientos.delete_appkioskoestablecimientos'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskoestablecimientos'])]
   },
 
-  // 📺 Gestión de publicidad - Permisos: marketing.appkioskopublicidades
+  // 📺 GESTIÓN DE PUBLICIDAD - Solo validar VER
   {
     path: 'gestion-publicidad',
     component: PublicidadComponent,
@@ -242,20 +262,20 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-publicidad/crear',
     component: CrearPublicidadComponent,
-    canActivate: [authGuard, permissionGuard(['marketing.add_appkioskopublicidades'])]
+    canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopublicidades'])]
   },
-
   {
     path: 'gestion-publicidad/editar-eliminar',
     component: EditarEliminarPublicidadComponent,
-    canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopublicidades', 'marketing.delete_appkioskopublicidades'])]
+    canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopublicidades'])]
   },
   {
     path: 'gestion-publicidad/crear/:id',
     component: CrearPublicidadComponent,
-    canActivate: [authGuard, permissionGuard(['marketing.change_appkioskopublicidades'])]
+    canActivate: [authGuard, permissionGuard(['marketing.view_appkioskopublicidades'])]
   },
-  // 🖥️ Gestión de kiosko touch - Permisos: establecimientos.appkioskokioskostouch
+
+  // 📱 GESTIÓN DE KIOSKO TOUCH - Solo validar VER
   {
     path: 'gestion-kiosko-touch',
     component: KioskoTouchComponent,
@@ -264,22 +284,22 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-kiosko-touch/crear',
     component: CrearKioskoTouchComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskokioskostouch'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskokioskostouch'])]
   },
   {
     path: 'gestion-kiosko-touch/crear/:id',
     component: CrearKioskoTouchComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.add_appkioskokioskostouch'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskokioskostouch'])]
   },
   {
     path: 'gestion-kiosko-touch/editar-eliminar',
     component: EditarEliminarKioskoTouchComponent,
-    canActivate: [authGuard, permissionGuard(['establecimientos.change_appkioskokioskostouch', 'establecimientos.delete_appkioskokioskostouch'])]
+    canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskokioskostouch'])]
   },
 
-  // 🚫 Página de acceso no autorizado
+  // ❌ Página de no autorizado
   {
     path: 'unauthorized',
     component: UnauthorizedComponent
-  },
+  }
 ];
