@@ -123,18 +123,26 @@ class AppkioskoMenuproductos(models.Model):
     producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True)
     menu = models.ForeignKey(AppkioskoMenus, on_delete=models.CASCADE, blank=True, null=True)
     cantidad = models.IntegerField()
+    tamano = models.ForeignKey(
+        AppkioskoTamanos, 
+        on_delete=models.CASCADE, 
+        blank=True, 
+        null=True,
+        help_text="Tamaño específico del producto en este menú (opcional)"
+    )
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     class Meta:
         managed = True
+        # ✅ AGREGAR esta línea para especificar el nombre correcto de la tabla
         db_table = 'appkiosko_menuproductos'
-        unique_together = (('producto', 'menu'),)
-        verbose_name = 'Producto de Menú'
-        verbose_name_plural = 'Productos de Menú'
+        verbose_name = 'Producto del Menú'
+        verbose_name_plural = 'Productos del Menú'
 
     def __str__(self):
-        return f"{self.cantidad} x {self.producto.nombre} en {self.menu.nombre}"
+        tamano_str = f" ({self.tamano.nombre})" if self.tamano else ""
+        return f"{self.cantidad} x {self.producto.nombre}{tamano_str}"
 
 class AppkioskoProductosIngredientes(models.Model):
     producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True)

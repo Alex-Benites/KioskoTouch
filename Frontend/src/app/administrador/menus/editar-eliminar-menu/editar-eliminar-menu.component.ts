@@ -117,13 +117,14 @@ export class EditarEliminarMenuComponent implements OnInit {
         next: (response) => {
           console.log('✅ menu eliminado exitosamente:', response);
 
-          // Remover el menu de la lista local
-          this.menus = this.menus.filter(p => p.id !== menu.id);
-
           this.eliminando = false;
 
-          // Mostrar mensaje de éxito
-          alert(`✅ menu "${menu.nombre}" eliminado exitosamente`);
+       
+          // ✅ AGREGAR: Recargar la página automáticamente
+          this.cargarMenus();
+          
+          // ✅ OPCIONAL: También actualizar la lista filtrada
+          this.filtrarMenus();
         },
         error: (error) => {
           console.error('❌ Error al eliminar menu:', error);

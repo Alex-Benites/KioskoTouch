@@ -610,11 +610,17 @@ class MenuProductoDetalleSerializer(serializers.ModelSerializer):
     descripcion = serializers.CharField(source='producto.descripcion', read_only=True)
     precio = serializers.DecimalField(source='producto.precio', max_digits=10, decimal_places=2, read_only=True)
     imagen_url = serializers.SerializerMethodField()
+    # ✅ SOLO AGREGAR estos campos
+    tamano_nombre = serializers.CharField(source='tamano.nombre', read_only=True, allow_null=True)
+    tamano_codigo = serializers.CharField(source='tamano.codigo', read_only=True, allow_null=True)
 
     class Meta:
         model = AppkioskoMenuproductos
-        fields = ['id', 'producto', 'nombre', 'descripcion', 'precio', 'cantidad', 'imagen_url']
-
+        fields = [
+            'id', 'producto', 'nombre', 'descripcion', 'precio', 'cantidad', 'imagen_url',
+            'tamano_nombre', 'tamano_codigo'  # ✅ SOLO AGREGAR estos
+        ]
+    
     def get_imagen_url(self, obj):
         try:
             imagen = AppkioskoImagen.objects.get(
@@ -652,29 +658,46 @@ class MenuSerializer(serializers.ModelSerializer):
             return None
 
     def get_productos_detalle(self, obj):
-        productos_rel = AppkioskoMenuproductos.objects.filter(menu=obj)
+        productos_rel = AppkioskoMenuproductos.objects.filter(menu=obj).select_related('producto', 'tamano') 
         return MenuProductoDetalleSerializer(productos_rel, many=True).data
 
     def to_internal_value(self, data):
-        # Reconstruir productos si vienen como productos[0][producto], productos[0][cantidad], etc.
+        # Reconstruir productos si vienen como productos[0][producto], productos[0][cantidad], productos[0][tamano], etc.
         productos = []
         i = 0
         while True:
             key_producto = f'productos[{i}][producto]'
             key_cantidad = f'productos[{i}][cantidad]'
+            key_tamano = f'productos[{i}][tamano]'  # ✅ Ya está bien
+            
             if key_producto in data and key_cantidad in data:
                 prod_id = data.get(key_producto)
                 cantidad = data.get(key_cantidad)
-                # Si por alguna razón prod_id o cantidad son listas, toma el primer valor
+                tamano_id = data.get(key_tamano)  # ✅ Ya está bien
+                
+                # Si por alguna razón son listas, toma el primer valor
                 if isinstance(prod_id, list):
                     prod_id = prod_id[0]
                 if isinstance(cantidad, list):
                     cantidad = cantidad[0]
+                if isinstance(tamano_id, list):
+                    tamano_id = tamano_id[0]
+                
                 if prod_id is not None and cantidad is not None:
-                    productos.append({'producto': prod_id, 'cantidad': cantidad})
+                    producto_data = {'producto': prod_id, 'cantidad': cantidad}
+                    # ✅ CORREGIR: Verificar que tamano_id no sea string vacío
+                    if tamano_id and tamano_id != '' and tamano_id != 'null':
+                        producto_data['tamano'] = tamano_id
+                        print(f"DEBUG: Producto {prod_id} con tamaño {tamano_id}")  # ✅ AGREGAR debug
+                    else:
+                        print(f"DEBUG: Producto {prod_id} sin tamaño")  # ✅ AGREGAR debug
+                    productos.append(producto_data)
                 i += 1
             else:
                 break
+        
+        print(f"DEBUG productos procesados: {productos}")  # ✅ AGREGAR debug
+        
         # Reemplazar en data para que el resto del serializer funcione igual
         mutable_data = data.copy()
         mutable_data['productos'] = productos
@@ -702,8 +725,26 @@ class MenuSerializer(serializers.ModelSerializer):
         for prod in productos_data:
             producto_id = int(prod.get('producto'))
             cantidad = int(prod.get('cantidad', 1))
+            tamano_id = prod.get('tamano')  # ✅ AGREGAR esta línea
+            
             producto = AppkioskoProductos.objects.get(id=producto_id)
-            AppkioskoMenuproductos.objects.create(menu=menu, producto=producto, cantidad=cantidad)
+            
+            # ✅ MODIFICAR esta línea para incluir tamaño
+            menu_producto_data = {
+                'menu': menu,
+                'producto': producto,
+                'cantidad': cantidad
+            }
+            
+            # ✅ AGREGAR tamaño si existe
+            if tamano_id:
+                tamano = AppkioskoTamanos.objects.get(id=tamano_id)
+                menu_producto_data['tamano'] = tamano
+                print(f"DEBUG: Guardando producto {producto.nombre} con tamaño {tamano.nombre}")
+            else:
+                print(f"DEBUG: Guardando producto {producto.nombre} sin tamaño")
+            
+            AppkioskoMenuproductos.objects.create(**menu_producto_data)
 
         if imagen:
             self._crear_imagen_menu(menu, imagen)
@@ -725,8 +766,26 @@ class MenuSerializer(serializers.ModelSerializer):
             for prod in productos_data:
                 producto_id = prod.get('producto')
                 cantidad = prod.get('cantidad', 1)
+                tamano_id = prod.get('tamano')  # ✅ AGREGAR esta línea
+                
                 producto = AppkioskoProductos.objects.get(id=producto_id)
-                AppkioskoMenuproductos.objects.create(menu=instance, producto=producto, cantidad=cantidad)
+                
+                # ✅ MODIFICAR para incluir tamaño
+                menu_producto_data = {
+                    'menu': instance,
+                    'producto': producto,
+                    'cantidad': cantidad
+                }
+                
+                # ✅ AGREGAR tamaño si existe
+                if tamano_id:
+                    tamano = AppkioskoTamanos.objects.get(id=tamano_id)
+                    menu_producto_data['tamano'] = tamano
+                    print(f"DEBUG UPDATE: Guardando producto {producto.nombre} con tamaño {tamano.nombre}")
+                else:
+                    print(f"DEBUG UPDATE: Guardando producto {producto.nombre} sin tamaño")
+                
+                AppkioskoMenuproductos.objects.create(**menu_producto_data)
 
         # Actualizar imagen si se envía
         if imagen:

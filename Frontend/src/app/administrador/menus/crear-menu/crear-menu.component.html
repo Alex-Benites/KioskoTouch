@@ -148,9 +148,29 @@
               [alt]="producto.nombre"
             />
             <div class="producto-actions">
-              <button class="btn" type="button" (click)="agregarProducto(producto)">
-                Agregar
-              </button>
+              <!-- ✅ AGREGAR selector de tamaños si aplica -->
+              <div *ngIf="producto.aplica_tamanos" class="tamanos-selector">
+                <p>Selecciona tamaño:</p>
+                <button
+                  *ngFor="let tamano of tamanos"
+                  (click)="agregarProducto(producto, tamano.id)"
+                  class="btn-tamano"
+                  type="button"
+                >
+                  {{ tamano.nombre }}
+                </button>
+              </div>
+
+              <!-- ✅ BOTÓN normal si no aplica tamaños -->
+              <div *ngIf="!producto.aplica_tamanos">
+                <button
+                  (click)="agregarProducto(producto)"
+                  class="btn-agregar"
+                  type="button"
+                >
+                  Agregar
+                </button>
+              </div>
             </div>
           </div>
           }

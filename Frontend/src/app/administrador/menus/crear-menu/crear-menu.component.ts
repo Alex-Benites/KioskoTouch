@@ -12,6 +12,7 @@ import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { CatalogoService } from '../../../services/catalogo.service';
 import {  Producto, Estado } from '../../../models/catalogo.model';
+import {  Tamano } from '../../../models/tamano.model';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 import { environment } from '../../../../environments/environment'; 
@@ -45,8 +46,14 @@ export class CrearMenuComponent implements OnInit {
   currentImageUrl: string | null = null;
   saving = false;
   productos: Producto[] = [];
+  tamanos: Tamano[] = [];
+  productosConTamanos: Producto[] = [];
   search: string = '';
-  productosSeleccionados: { producto: number, cantidad: number }[] = [];
+  productosSeleccionados: { 
+    producto: number, 
+    cantidad: number,
+    tamano?: number  // ✅ NUEVO campo opcional
+  }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -111,6 +118,10 @@ export class CrearMenuComponent implements OnInit {
     this.catalogoService.getProductos().subscribe(data => {
       this.productos = data;
       this.loadProductImages(); // Solo para productos
+    });
+    // ✅ AGREGAR carga de tamaños
+    this.catalogoService.getTamanos().subscribe(data => {
+      this.tamanos = data;
     });
 
     // Si estamos en modo edición, cargar el menu
@@ -201,18 +212,34 @@ export class CrearMenuComponent implements OnInit {
       .join(', ');
   }
 
-  agregarProducto(producto: Producto): void {
+  agregarProducto(producto: Producto, tamanoId?: number): void {
     if (!producto || !producto.id) return;
-    const idx = this.productosSeleccionados.findIndex(p => p.producto === producto.id);
+    
+    // Si el producto aplica tamaños pero no se especificó uno, mostrar error
+    if (producto.aplica_tamanos && !tamanoId) {
+      alert('⚠️ Este producto requiere seleccionar un tamaño');
+      return;
+    }
+    
+    const key = `${producto.id}-${tamanoId || 'sin-tamano'}`;
+    const idx = this.productosSeleccionados.findIndex(p => 
+      p.producto === producto.id && 
+      (p.tamano || null) === (tamanoId || null)
+    );
+    
     if (idx > -1) {
       this.productosSeleccionados[idx].cantidad += 1;
     } else {
-      this.productosSeleccionados.push({ producto: producto.id, cantidad: 1 });
+      const nuevoProducto: any = { 
+        producto: producto.id, 
+        cantidad: 1 
+      };
+      if (tamanoId) {
+        nuevoProducto.tamano = tamanoId;
+      }
+      this.productosSeleccionados.push(nuevoProducto);
     }
-    // Solo deja productos con cantidad > 0 y producto válido
-    this.productosSeleccionados = this.productosSeleccionados.filter(
-      p => p.producto && p.cantidad > 0
-    );
+    
     this.menuForm.get('productos')?.setValue(this.productosSeleccionados);
   }
   eliminarProductos(): void {
@@ -306,6 +333,10 @@ export class CrearMenuComponent implements OnInit {
       productos.forEach((prod: any, i: number) => {
         formData.append(`productos[${i}][producto]`, prod.producto);
         formData.append(`productos[${i}][cantidad]`, prod.cantidad);
+        // ✅ AGREGAR tamaño si existe
+        if (prod.tamano) {
+          formData.append(`productos[${i}][tamano]`, prod.tamano);
+        }
       });
 
       if (this.selectedFile) {

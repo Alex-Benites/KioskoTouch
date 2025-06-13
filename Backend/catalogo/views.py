@@ -482,16 +482,8 @@ class MenuDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 def get_tamanos(request):
     """Obtener todos los tamaños disponibles"""
     try:
-        print(f"📏 Obteniendo lista de tamaños disponibles")
-        
-        # Obtener solo tamaños activos, ordenados por el campo 'orden'
-        tamanos = AppkioskoTamanos.objects.filter(activo=True).order_by('orden')
-        
+        tamanos = AppkioskoTamanos.objects.filter(activo=True).order_by('orden', 'nombre')
         serializer = TamanoSerializer(tamanos, many=True)
-        
-        print(f"   ✅ {tamanos.count()} tamaños encontrados")
-        
         return Response(serializer.data)
     except Exception as e:
-        print(f"❌ Error obteniendo tamaños: {str(e)}")
         return Response({'error': str(e)}, status=400)
