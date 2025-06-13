@@ -146,7 +146,7 @@ export class CrearUsuarioComponent implements OnInit {
           cedula: empleado.cedula,
           nombres: empleado.nombres,
           apellidos: empleado.apellidos,
-          fechaNacimiento: empleado.fecha_nacimiento ? new Date(empleado.fecha_nacimiento) : null,
+          fechaNacimiento: empleado.fecha_nacimiento ? this.parseBackendDate(empleado.fecha_nacimiento) : null,
           telefono: empleado.telefono,
           sexo: empleado.sexo,
           username: empleado.username,
@@ -268,8 +268,7 @@ export class CrearUsuarioComponent implements OnInit {
     const formData = { ...this.usuarioForm.value };
     
     if (formData.fechaNacimiento) {
-      const fecha = new Date(formData.fechaNacimiento);
-      formData.fechaNacimiento = fecha.toISOString().split('T')[0];
+      formData.fechaNacimiento = this.formatDateForBackend(new Date(formData.fechaNacimiento));
     }
     
     if (formData.grupos) {
@@ -277,8 +276,6 @@ export class CrearUsuarioComponent implements OnInit {
     }
     
     delete formData.confirmPassword;
-    // ❌ ELIMINAR O COMENTAR ESTA LÍNEA SI EXISTE:
-    // delete formData.establecimiento;
 
     console.log('🎯 Datos a enviar para crear usuario:', formData);
 
@@ -306,8 +303,7 @@ export class CrearUsuarioComponent implements OnInit {
     const formData = { ...this.usuarioForm.value };
     
     if (formData.fechaNacimiento) {
-      const fecha = new Date(formData.fechaNacimiento);
-      formData.fechaNacimiento = fecha.toISOString().split('T')[0];
+      formData.fechaNacimiento = this.formatDateForBackend(new Date(formData.fechaNacimiento));
     }
     
     if (formData.grupos) {
@@ -381,5 +377,17 @@ export class CrearUsuarioComponent implements OnInit {
       duration: 3000,
       panelClass: ['success-snackbar']
     });
+  }
+
+  private formatDateForBackend(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth()+1).padStart(2, '0'); 
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; 
+  }
+
+  private parseBackendDate(dateString: string): Date{
+    const [year,month,day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day); // Mes - 1 porque los meses en JS van de 0 a 11
   }
 }

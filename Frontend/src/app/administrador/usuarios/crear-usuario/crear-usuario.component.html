@@ -53,7 +53,7 @@
             <!-- Fecha de Nacimiento -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Fecha de Nacimiento</mat-label>
-              <input matInput [matDatepicker]="nacimientoPicker" formControlName="fechaNacimiento" placeholder="dd/mm/aaaa">
+              <input matInput [matDatepicker]="nacimientoPicker" formControlName="fechaNacimiento" placeholder="mm/dd/aaaa">
               <mat-datepicker-toggle matSuffix [for]="nacimientoPicker"></mat-datepicker-toggle>
               <mat-datepicker #nacimientoPicker></mat-datepicker>
             </mat-form-field>
