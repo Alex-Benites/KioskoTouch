@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router'; // 🆕 Agregado ActivatedRoute
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
@@ -25,8 +25,8 @@ import {
   GestionUI,
   AccionPermiso,
   CrearRolRequest,
-  EditarRolRequest, // 🆕 Agregado
-  DetalleRol, // 🆕 Agregado
+  EditarRolRequest,
+  DetalleRol,
   Permiso,
   GestionesData
 } from '../../../models/roles.model';
@@ -73,7 +73,7 @@ export class CrearRolComponent implements OnInit {
     private fb: FormBuilder,
     private rolesService: RolesService,
     private router: Router,
-    private route: ActivatedRoute, // 🆕 Agregado
+    private route: ActivatedRoute,
     private snackBar: MatSnackBar
   ) {
     this.inicializarFormulario();
@@ -159,6 +159,8 @@ export class CrearRolComponent implements OnInit {
         }
       });
       
+      // ✅ APLICAR LÓGICA DE DEPENDENCIAS DESPUÉS DE CARGAR
+      this.controlarEstadoVerControl(gestionGroup);
       // Actualizar el estado de "Todos"
       this.actualizarEstadoTodosFormControl(gestionGroup);
     });
@@ -232,18 +234,81 @@ export class CrearRolComponent implements OnInit {
     if (accion === 'todos') {
       this.toggleTodosFormControl(gestionGroup);
     } else {
+      // ✅ APLICAR LÓGICA DE DEPENDENCIAS
+      this.aplicarLogicaPermisos(gestionGroup, accion);
       this.actualizarEstadoTodosFormControl(gestionGroup);
     }
   }
 
   /**
-   * 🔄 Toggle "Todos"
+   * ✅ MEJORADO: Aplicar lógica de dependencias de permisos
+   */
+  private aplicarLogicaPermisos(gestionGroup: FormGroup, accion: AccionPermiso): void {
+    const verControl = gestionGroup.get('ver');
+    const accionesQueRequierenVer: AccionPermiso[] = ['crear', 'modificar', 'eliminar'];
+    
+    // ✅ NULL CHECK
+    if (!verControl) {
+      console.warn('Control "ver" no encontrado para esta gestión');
+      return;
+    }
+    
+    // Si se selecciona crear/modificar/eliminar, auto-marcar "ver"
+    if (accionesQueRequierenVer.includes(accion)) {
+      const accionControl = gestionGroup.get(accion);
+      
+      if (!accionControl) {
+        console.warn(`Control "${accion}" no encontrado para esta gestión`);
+        return;
+      }
+      
+      // Si la acción se acaba de marcar Y "ver" no está marcado Y "ver" está habilitado
+      if (accionControl.value && !verControl.value && !verControl.disabled) {
+        verControl.setValue(true, { emitEvent: false });
+        console.log(`ℹ️ Permiso "ver" marcado automáticamente por dependencia de "${accion}"`);
+      }
+    }
+    
+    // ✅ CONTROLAR ESTADO DE "VER" BASADO EN DEPENDENCIAS
+    this.controlarEstadoVerControl(gestionGroup);
+  }
+
+  /**
+   * ✅ NUEVO MÉTODO: Controlar si "ver" debe estar habilitado o bloqueado
+   */
+  private controlarEstadoVerControl(gestionGroup: FormGroup): void {
+    const verControl = gestionGroup.get('ver');
+    const crearControl = gestionGroup.get('crear');
+    const modificarControl = gestionGroup.get('modificar');
+    const eliminarControl = gestionGroup.get('eliminar');
+    
+    if (!verControl) return;
+    
+    // Verificar si alguna dependencia está activa
+    const tieneDependenciasActivas = 
+      (crearControl?.value && !crearControl?.disabled) ||
+      (modificarControl?.value && !modificarControl?.disabled) ||
+      (eliminarControl?.value && !eliminarControl?.disabled);
+    
+    if (tieneDependenciasActivas) {
+      // ✅ HAY DEPENDENCIAS: marcar "ver" y deshabilitarlo
+      verControl.setValue(true, { emitEvent: false });
+      verControl.disable({ emitEvent: false });
+    } else {
+      // ✅ NO HAY DEPENDENCIAS: habilitar "ver" para que el usuario pueda elegir
+      verControl.enable({ emitEvent: false });
+    }
+  }
+
+  /**
+   * 🔄 Toggle "Todos" - ACTUALIZADO
    */
   private toggleTodosFormControl(gestionGroup: FormGroup): void {
     const todosControl = gestionGroup.get('todos');
     const nuevoEstado = todosControl?.value;
     
     if (nuevoEstado) {
+      // Marcar todos los controles habilitados
       const controles = ['ver', 'crear', 'modificar', 'eliminar'];
       controles.forEach(control => {
         const controlInstance = gestionGroup.get(control);
@@ -252,6 +317,7 @@ export class CrearRolComponent implements OnInit {
         }
       });
     } else {
+      // Desmarcar todos
       gestionGroup.patchValue({
         ver: false,
         crear: false,
@@ -259,6 +325,9 @@ export class CrearRolComponent implements OnInit {
         eliminar: false
       }, { emitEvent: false });
     }
+    
+    // ✅ ACTUALIZAR ESTADO DE "VER" DESPUÉS DE CAMBIOS
+    this.controlarEstadoVerControl(gestionGroup);
   }
 
   /**
