@@ -10,9 +10,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component'; // ← NUEVO
 
 // Services
 import { UsuariosService } from '../../../services/usuarios.service';
+import { AuthService } from '../../../services/auth.service'; // ← NUEVO
 
 // Interfaces
 interface EmpleadoDisplay {
@@ -44,6 +46,7 @@ interface EmpleadoDisplay {
 export class EditarEliminarUsuarioComponent implements OnInit {
   
   private usuariosService = inject(UsuariosService);
+  private authService = inject(AuthService); // ← NUEVO
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -89,24 +92,43 @@ export class EditarEliminarUsuarioComponent implements OnInit {
     });
   }
 
+  // ✅ MÉTODO MEJORADO - Valida permisos antes de editar
   editarUsuario(usuario: EmpleadoDisplay): void {
-    console.log('🔧 Editar usuario:', usuario);
-    // Navegar al componente de crear-usuario en modo edición
+    console.log('🔧 Intentando editar usuario:', usuario);
+    
+    // 🔒 Validar permisos
+    if (!this.authService.hasPermission('auth.change_user')) {
+      console.log('❌ Sin permisos para editar usuarios');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    // ✅ Tiene permisos, proceder con la edición
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-usuarios/crear-usuario', usuario.id]);
   }
 
-   abrirDialogoEliminar(usuario: EmpleadoDisplay): void {
-    const dialogData: ConfirmationDialogData = {
-      itemType: 'usuario',
-    };
+  // ✅ MÉTODO MEJORADO - Valida permisos antes de eliminar
+  abrirDialogoEliminar(usuario: EmpleadoDisplay): void {
+    console.log('🗑️ Intentando eliminar usuario:', usuario);
+    
+    // 🔒 Validar permisos
+    if (!this.authService.hasPermission('auth.delete_user')) {
+      console.log('❌ Sin permisos para eliminar usuarios');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
 
+    // ✅ Tiene permisos, mostrar confirmación
+    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       disableClose: true,
-      data: dialogData
+      data: { itemType: 'usuario' }  // ← SOLO ESTO, como está definido
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        console.log('✅ Confirmado eliminar usuario:', usuario.username);
         this.eliminarUsuario(usuario);
       } else {
         console.log('❌ Eliminación cancelada');
@@ -121,14 +143,26 @@ export class EditarEliminarUsuarioComponent implements OnInit {
     
     this.usuariosService.eliminarEmpleado(usuario.id).subscribe({
       next: (response) => {
+        console.log('✅ Usuario eliminado exitosamente');
         this.mostrarExito(response.message);
         this.cargarUsuarios(); // Recargar lista
       },
       error: (error) => {
+        console.error('❌ Error al eliminar usuario:', error);
         const mensaje = error.error?.error || 'Error al eliminar el usuario';
         this.mostrarError(mensaje);
         this.loading = false;
       }
+    });
+  }
+
+  // 🆕 MÉTODO PARA MOSTRAR DIÁLOGO DE PERMISOS
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
     });
   }
 
@@ -145,6 +179,15 @@ export class EditarEliminarUsuarioComponent implements OnInit {
   // 🎨 Método para obtener texto del estado
   getEstadoTexto(isActive: boolean): string {
     return isActive ? 'Activo' : 'Inactivo';
+  }
+
+  // ✅ Métodos auxiliares para validar permisos (para uso en template si es necesario)
+  get puedeEditar(): boolean {
+    return this.authService.hasPermission('auth.change_user');
+  }
+
+  get puedeEliminar(): boolean {
+    return this.authService.hasPermission('auth.delete_user');
   }
 
   private mostrarError(mensaje: string): void {

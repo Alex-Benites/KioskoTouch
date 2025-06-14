@@ -1,4 +1,3 @@
-/* filepath: c:\Users\Abeni\OneDrive\Documentos\ProyectoKiosko\KioskoTouch\Frontend\src\app\administrador\usuarios\editar-eliminar-usuario\editar-eliminar-usuario.component.scss */
 .usuarios-container {
   padding: 20px 40px;
   background-color: #F2F2F2;
@@ -85,4 +84,80 @@
 
 .error-container button:hover {
   background-color: #b71c1c;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.usuario-row:hover {
+  background-color: #f8f9fa;
+}
+
+.estado-activo {
+  color: #28a745;
+  font-weight: 600;
+  padding: 4px 8px;
+  background-color: #d4edda;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.estado-inactivo {
+  color: #dc3545;
+  font-weight: 600;
+  padding: 4px 8px;
+  background-color: #f8d7da;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px;
+  text-align: center;
+  color: #6c757d;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #adb5bd;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #495057;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  color: #721c24;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
 }

@@ -1,50 +1,113 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 <app-header-admin></app-header-admin>
 
-<div class="form-container">
-  <p class="breadcrumb-title">GESTIÓN DE MENÚS</p>
-  <h1 class="form-main-title">Editar/Eliminar Menú</h1>
-  <p class="subtitle">Menús Disponibles</p>
+<div class="editar-eliminar-container">
+  <p class="breadcrumb">GESTIÓN DEL MENÚ</p>
+  <h1 class="section-title">Editar/Eliminar Menú</h1>
 
-  <div class="buscador">
-    <label for="buscar-menu" class="search-label">Buscar menú:</label>
-    <div class="search-input-wrapper">
-      <input
-        id="buscar-menu"
-        type="text"
-        [(ngModel)]="search"
-        (input)="filtrarMenus()"
-        placeholder="Ej: Compartir"
-        class="search-input"
-      />
-      <i class="fas fa-search search-icon"></i>
+  <!-- Barra de búsqueda -->
+  <div class="search-container">
+    <label for="search-menu">Buscar menú:</label>
+    <input
+      id="search-menu"
+      type="text"
+      [(ngModel)]="search"
+      (ngModelChange)="filtrarMenus()"
+      placeholder="Buscar por nombre..."
+      class="search-input"
+    />
+  </div>
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="loading-message">
+      <p>Cargando menús...</p>
     </div>
-  </div>
+  }
 
-  <div class="menus-grid">
-    <ng-container *ngFor="let menu of menusFiltrados">
-      <div class="menu-card">
-        <div class="menu-nombre">{{ menu.nombre }}</div>
-        <img
-          [src]="getFullImageUrl(menu.imagenUrl)"
-          [alt]="menu.nombre"
-          style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
-        />
-        <div class="menu-productos-lista">
-          <ul>
-            <li *ngFor="let prod of menu.productosLista">{{ prod }}</li>
-          </ul>
+  <!-- Lista de menús -->
+  @if (!loading && menusFiltrados.length > 0) {
+    <div class="menus-grid">
+      @for (menu of menusFiltrados; track menu.id) {
+        <div class="menu-card">
+          <!-- Imagen del menú -->
+          <div class="menu-image-container">
+            @if (menu.imagenUrl) {
+              <img 
+                [src]="getFullImageUrl(menu.imagenUrl)" 
+                [alt]="menu.nombre"
+                class="menu-image"
+              />
+            } @else {
+              <div class="no-image-placeholder">
+                <span>Sin imagen</span>
+              </div>
+            }
+          </div>
+
+          <!-- Información del menú -->
+          <div class="menu-info">
+            <h3 class="menu-name">{{ menu.nombre }}</h3>
+            
+            <!-- Lista de productos -->
+            @if (menu.productosLista && menu.productosLista.length > 0) {
+              <div class="productos-list">
+                <h4>Productos incluidos:</h4>
+                <ul>
+                  @for (producto of menu.productosLista; track $index) {
+                    <li>{{ producto }}</li>
+                  }
+                </ul>
+              </div>
+            } @else {
+              <p class="no-productos">Sin productos asignados</p>
+            }
+          </div>
+
+          <!-- Acciones - SIEMPRE VISIBLES -->
+          <div class="menu-actions">
+            <button
+              class="edit-button"
+              (click)="editarMenu(menu)"
+              [attr.aria-label]="'Editar menú ' + menu.nombre"
+            >
+              <img src="assets/admin/ADMIN_7.png" alt="Editar" />
+              Editar
+            </button>
+
+            <button
+              class="delete-button"
+              (click)="abrirDialogoEliminar(menu)"
+              [disabled]="eliminando"
+              [attr.aria-label]="'Eliminar menú ' + menu.nombre"
+            >
+              <img src="assets/admin/ADMIN_7_1.png" alt="Eliminar" />
+              @if (eliminando) {
+                <span>Eliminando...</span>
+              } @else {
+                <span>Eliminar</span>
+              }
+            </button>
+          </div>
         </div>
-        <div class="menu-actions">
-          <button class="btn" (click)="editarMenu(menu)">Editar</button>
-          <button class="btn" (click)="abrirDialogoEliminar(menu)">Eliminar</button>
-        </div>
-      </div>
-    </ng-container>
-  </div>
+      }
+    </div>
+  }
+
+  <!-- Estado vacío: Sin menús -->
+  @if (!loading && menus.length === 0) {
+    <div class="empty-state">
+      <h3>No hay menús registrados</h3>
+      <p>No se encontraron menús en el sistema.</p>
+    </div>
+  }
+
+  <!-- Estado vacío: Sin resultados de búsqueda -->
+  @if (!loading && menus.length > 0 && menusFiltrados.length === 0) {
+    <div class="empty-state">
+      <h3>No se encontraron menús</h3>
+      <p>No hay menús que coincidan con "{{ search }}".</p>
+    </div>
+  }
 </div>
 
-<app-footer-admin
-  [backRoute]="'/administrador/gestion-menus'"
-></app-footer-admin>
+<app-footer-admin [backRoute]="'/administrador/gestion-menus'"></app-footer-admin>
