@@ -8,9 +8,7 @@
     <div class="categorias">
         <label>Buscar por categoría</label>
 
-        <!-- ✅ NUEVO: Carrusel de categorías -->
         <div class="carrusel-container">
-            <!-- ✅ QUITAR disabled ya que será infinito -->
             <button class="carrusel-btn prev" (click)="anteriorCategoria()">
                 <i class="fas fa-chevron-left"></i>
             </button>
@@ -19,7 +17,6 @@
                 <div class="carrusel-track"
                      [style.transform]="'translateX(' + desplazamiento + 'px)'">
 
-                    <!-- Botón "Todas" -->
                     <div class="carrusel-item">
                         <button class="categoria-btn todas"
                                 [class.active]="categoriaSeleccionada === null"
@@ -29,7 +26,6 @@
                         </button>
                     </div>
 
-                    <!-- Categorías -->
                     @for (cat of categorias; track cat.id) {
                         <div class="carrusel-item">
                             <button class="categoria-btn"
@@ -43,7 +39,6 @@
                 </div>
             </div>
 
-            <!-- ✅ QUITAR disabled ya que será infinito -->
             <button class="carrusel-btn next" (click)="siguienteCategoria()">
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -53,7 +48,6 @@
     <div class="buscador">
         <label>Buscar producto</label>
         <div class="buscador-input">
-            <!-- ✅ AGREGAR evento de búsqueda -->
             <input type="text"
                    placeholder="Buscar"
                    [(ngModel)]="search"
@@ -63,7 +57,6 @@
     </div>
 
     <div class="productos-grid">
-        <!-- ✅ CAMBIAR: Usar productosFiltrados en lugar de productos -->
         @for (producto of productosFiltrados; track producto.id) {
             <div class="producto-card">
                 <img [src]="getFullImageUrl(producto.imagenUrl)" [alt]="producto.nombre" />
@@ -72,7 +65,6 @@
             </div>
         }
 
-        <!-- ✅ AGREGAR mensaje cuando no hay productos -->
         @if (productosFiltrados.length === 0 && !loading) {
             <div class="no-productos">
                 <p>No se encontraron productos con los filtros aplicados.</p>

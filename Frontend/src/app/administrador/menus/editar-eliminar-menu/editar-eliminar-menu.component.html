@@ -4,7 +4,6 @@
   <p class="breadcrumb">GESTIÓN DEL MENÚ</p>
   <h1 class="section-title">Editar/Eliminar Menú</h1>
 
-  <!-- Barra de búsqueda -->
   <div class="search-container">
     <label for="search-menu">Buscar menú:</label>
     <input
@@ -17,81 +16,74 @@
     />
   </div>
 
-  <!-- Loading -->
   @if (loading) {
     <div class="loading-message">
       <p>Cargando menús...</p>
     </div>
   }
 
-  <!-- Lista de menús -->
   @if (!loading && menusFiltrados.length > 0) {
-    <div class="menus-grid">
-      @for (menu of menusFiltrados; track menu.id) {
-        <div class="menu-card">
-          <!-- Imagen del menú -->
-          <div class="menu-image-container">
-            @if (menu.imagenUrl) {
-              <img 
-                [src]="getFullImageUrl(menu.imagenUrl)" 
-                [alt]="menu.nombre"
-                class="menu-image"
-              />
-            } @else {
-              <div class="no-image-placeholder">
-                <span>Sin imagen</span>
-              </div>
-            }
-          </div>
-
-          <!-- Información del menú -->
-          <div class="menu-info">
-            <h3 class="menu-name">{{ menu.nombre }}</h3>
-            
-            <!-- Lista de productos -->
-            @if (menu.productosLista && menu.productosLista.length > 0) {
-              <div class="productos-list">
-                <h4>Productos incluidos:</h4>
-                <ul>
-                  @for (producto of menu.productosLista; track $index) {
-                    <li>{{ producto }}</li>
-                  }
-                </ul>
-              </div>
-            } @else {
-              <p class="no-productos">Sin productos asignados</p>
-            }
-          </div>
-
-          <!-- Acciones - SIEMPRE VISIBLES -->
-          <div class="menu-actions">
-            <button
-              class="edit-button"
-              (click)="editarMenu(menu)"
-              [attr.aria-label]="'Editar menú ' + menu.nombre"
-            >
-              Editar
-            </button>
-
-            <button
-              class="delete-button"
-              (click)="abrirDialogoEliminar(menu)"
-              [disabled]="eliminando"
-              [attr.aria-label]="'Eliminar menú ' + menu.nombre"
-            >
-              @if (eliminando) {
-                <span>Eliminando...</span>
+    <div class="menus-section">
+      <div class="menus-scroll-grid">
+        @for (menu of menusFiltrados; track menu.id) {
+          <div class="menu-card">
+            <div class="menu-image-container">
+              @if (menu.imagenUrl) {
+                <img
+                  [src]="getFullImageUrl(menu.imagenUrl)"
+                  [alt]="menu.nombre"
+                  class="menu-image"
+                />
               } @else {
-                <span>Eliminar</span>
+                <div class="no-image-placeholder">
+                  <span>Sin imagen</span>
+                </div>
               }
-            </button>
+            </div>
+
+            <div class="menu-info">
+              <h3 class="menu-name">{{ menu.nombre }}</h3>
+              @if (menu.productosLista && menu.productosLista.length > 0) {
+                <div class="productos-list">
+                  <h4>Productos incluidos:</h4>
+                  <ul>
+                    @for (producto of menu.productosLista; track $index) {
+                      <li>{{ producto }}</li>
+                    }
+                  </ul>
+                </div>
+              } @else {
+                <p class="no-productos">Sin productos asignados</p>
+              }
+            </div>
+
+            <div class="menu-actions">
+              <button
+                class="edit-button"
+                (click)="editarMenu(menu)"
+                [attr.aria-label]="'Editar menú ' + menu.nombre"
+              >
+                Editar
+              </button>
+              <button
+                class="delete-button"
+                (click)="abrirDialogoEliminar(menu)"
+                [disabled]="eliminando"
+                [attr.aria-label]="'Eliminar menú ' + menu.nombre"
+              >
+                @if (eliminando) {
+                  <span>Eliminando...</span>
+                } @else {
+                  <span>Eliminar</span>
+                }
+              </button>
+            </div>
           </div>
-        </div>
-      }
+        }
+      </div>
     </div>
   }
 
-  <!-- Estado vacío: Sin menús -->
   @if (!loading && menus.length === 0) {
     <div class="empty-state">
       <h3>No hay menús registrados</h3>
@@ -99,7 +91,6 @@
     </div>
   }
 
-  <!-- Estado vacío: Sin resultados de búsqueda -->
   @if (!loading && menus.length > 0 && menusFiltrados.length === 0) {
     <div class="empty-state">
       <h3>No se encontraron menús</h3>

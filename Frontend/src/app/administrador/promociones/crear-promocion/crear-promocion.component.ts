@@ -18,12 +18,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 import { FormsModule } from '@angular/forms';
 import { Tamano } from '../../../models/tamano.model';
-import { Observable, forkJoin } from 'rxjs';
-import { tap } from 'rxjs/operators';
-
-interface ProductoConTamano extends Producto {
-  tamanoSeleccionado?: Tamano | null;
-}
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-crear-promocion',
@@ -48,13 +43,28 @@ export class CrearPromocionComponent implements OnInit {
   promocionId: number | null = null;
   productos: Producto[] = [];
   menus: Menu[] = [];
+  tamanos: Tamano[] = [];
+  productosConTamanos: Producto[] = [];
   menusSeleccionados: Menu[] = [];
-  productosSeleccionados: ProductoConTamano [] = [];
+  productosSeleccionados: {
+    producto: number,
+    tamano?: number
+  }[] = [];
   categorias: Categoria[] = [];
   search: string = '';
   loading = false;
   estados: any[] = [];
-  tamanos: Tamano[] = []; // ✅ AGREGAR estas propiedades
+
+  busqueda: string = '';
+  productosFiltrados: Producto[] = [];
+  menusFiltrados: Menu[] = [];
+
+  private productosCargados = false;
+  private menusCargados = false;
+  private tamanosCargados = false;
+
+  private intentoDeCargaRealizada = false;
+
   constructor(
     private fb: FormBuilder,
     private catalogoService: CatalogoService,
@@ -87,61 +97,32 @@ export class CrearPromocionComponent implements OnInit {
       estado: ['', Validators.required],
       imagen: [null, Validators.required],
       productosSeleccionados: [''],
-      menusSeleccionados: ['']
+      menusSeleccionados: [''],
+      busqueda: ['']
     });
   }
 
   ngOnInit(): void {
-    // ✅ AGREGAR estas líneas AL INICIO para detectar el modo edición
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.promocionId = parseInt(id, 10);
-      this.isEditMode = true;
-    }
+    this.promocionId = Number(this.route.snapshot.paramMap.get('id'));
+    this.isEditMode = !!this.promocionId && !isNaN(this.promocionId);
 
-    this.cargarEstados();
-    this.cargarTamanos();
-    
-    // ✅ CAMBIAR: Cargar productos PRIMERO y LUEGO la promoción
-    this.cargarProductos().subscribe(() => {
-      console.log('✅ Productos cargados, ahora verificando modo edición...');
-      if (this.isEditMode) {
-        console.log('🔄 MODO EDICIÓN - promocionId:', this.promocionId);
-        this.cargarPromocionParaEditar();
-      }
-    });
-    
-    // ✅ CAMBIAR: Cargar menús PRIMERO 
-    this.cargarMenus().subscribe(() => {
-      console.log('✅ Menús cargados');
-    });
-  }
-
-  cargarEstados(): void {
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
     });
-  }
-
-  cargarTamanos(): void {
-    this.publicidadService.getTamanos().subscribe((data: Tamano[]) => {
+    this.catalogoService.getTamanos().subscribe(data => {
       this.tamanos = data;
+      this.tamanosCargados = true;
+      this.intentarCargarPromocionParaEditar();
     });
+    this.catalogoService.getProductos().subscribe(data => {
+      this.productos = data;
+      this.loadProductImages();
+      this.productosCargados = true;
+      this.filtrarProductosYMenus();
+      this.intentarCargarPromocionParaEditar();
+    });
+    this.cargarMenus();
   }
-
-  // En el método cargarProductos, AGREGAR la carga de imágenes:
-  private cargarProductos(): Observable<any> {
-    return this.catalogoService.obtenerProductos().pipe(
-      tap(productos => {
-        this.productos = productos.filter((producto: Producto) => producto.estado === 4);
-        console.log('📦 Productos cargados:', this.productos);
-        // ✅ AGREGAR esta línea
-        this.loadProductImages();
-      })
-    );
-  }
-
-
   loadProductImages(): void {
     this.productos.forEach(producto => {
       if (producto.id) {
@@ -160,33 +141,47 @@ export class CrearPromocionComponent implements OnInit {
       }
     });
   }
-
-  // ✅ CORREGIR este método (línea 162-172)
-  private cargarMenus(): Observable<any> {
-    return this.catalogoService.obtenerMenus().pipe(
-      tap(menus => {
-        // ✅ CAMBIAR: menu.estado?.id === 4 por menu.estado === 4
-        this.menus = menus.filter((menu: Menu) => menu.estado === 4);
-        console.log('🍽️ Menús cargados:', this.menus);
-        
-        // Cargar imágenes después
-        this.loadMenuImages();
-      })
-    );
-  }
-
+  cargarMenus(): void {
+  this.loading = true;
+  this.catalogoService.getMenus().subscribe({
+    next: (menus) => {
+      this.menus = menus.map(menu => {
+        this.catalogoService.getMenuImagen(menu.id).subscribe(response => {
+          menu.imagenUrl = response.imagen_url;
+        });
+        menu.menuLista = this.getProductosLista(menu);
+        return menu;
+      });
+      this.loading = false;
+      this.menusCargados = true;
+      this.filtrarProductosYMenus();
+      this.intentarCargarPromocionParaEditar();
+    },
+    error: (error) => {
+      this.loading = false;
+      alert('❌ Error al cargar los menus. Por favor, intenta de nuevo.');
+    }
+  });
+}
   getProductosLista(menu: any): string[] {
   if (!menu.productos_detalle || !Array.isArray(menu.productos_detalle)) return [];
   return menu.productos_detalle.map((p: any) => {
     const cantidad = p.cantidad || 1;
     const nombre = p.nombre || p.producto_nombre || p.producto?.nombre || '';
-    return cantidad > 1 ? `- ${nombre} (${cantidad})` : `- ${nombre}`;
+    let tamano = '';
+    if (p.tamano_codigo) {
+      tamano = ` (${p.tamano_codigo})`;
+    } else if (p.tamano_nombre) {
+      tamano = ` (${p.tamano_nombre.charAt(0).toUpperCase()})`;
+    }
+    return cantidad > 1
+      ? `- ${nombre}${tamano} (${cantidad})`
+      : `- ${nombre}${tamano}`;
   });
 }
   onFileSelected(event: any): void {
     this.selectedFile = event.target.files[0] as File;
     if (this.selectedFile) {
-      // ← VALIDAR TIPO DE ARCHIVO
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(this.selectedFile.type)) {
         alert('⚠ Solo se permiten archivos de imagen (JPG, PNG, GIF)');
@@ -194,8 +189,7 @@ export class CrearPromocionComponent implements OnInit {
         return;
       }
 
-      // ← VALIDAR TAMAÑO (máximo 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       if (this.selectedFile.size > maxSize) {
         alert('⚠ La imagen no puede ser mayor a 5MB');
         this.eliminarImagen();
@@ -208,7 +202,6 @@ export class CrearPromocionComponent implements OnInit {
       }
       reader.readAsDataURL(this.selectedFile);
 
-      // ← ACTUALIZAR EL CONTROL DEL FORMULARIO
       this.promocionForm.get('imagen')?.setValue(this.selectedFile);
       this.promocionForm.get('imagen')?.markAsTouched();
     }
@@ -219,9 +212,8 @@ export class CrearPromocionComponent implements OnInit {
   eliminarImagen(): void {
     this.imagePreview = null;
     this.selectedFile = null;
-    this.currentImageUrl = null; // Limpiar imagen actual también
+    this.currentImageUrl = null;
 
-    //Solo marcar como error si estamos en modo creación
     this.promocionForm.get('imagen')?.setValue(null);
     if (!this.isEditMode) {
       this.promocionForm.get('imagen')?.markAsTouched();
@@ -282,11 +274,7 @@ export class CrearPromocionComponent implements OnInit {
     return '';
   }
   onSubmit(): void {
-  // Validar productos y menús seleccionados
-  const productosIds = this.productosSeleccionados.map(p => p.id);
-  const menusIds = this.menusSeleccionados.map(m => m.id);
-
-  if (!productosIds.length && !menusIds.length) {
+  if (!this.productosSeleccionados.length && !this.menusSeleccionados.length) {
     alert('⚠️ Debes seleccionar al menos un producto o menú para la promoción.');
     return;
   }
@@ -296,72 +284,82 @@ export class CrearPromocionComponent implements OnInit {
     : this.promocionForm.valid;
 
   if (formValid) {
-    this.saving = true;
-    const formValue = this.promocionForm.value;
-
-    // Convertir fechas a formato ISO
-    const fechaInicio = formValue.fecha_inicio_promo
-      ? new Date(formValue.fecha_inicio_promo).toISOString()
-      : '';
-    const fechaFin = formValue.fecha_fin_promo
-      ? new Date(formValue.fecha_fin_promo).toISOString()
-      : '';
-
-    const formData = new FormData();
-    formData.append('nombre', formValue.nombre);
-    formData.append('descripcion', formValue.descripcion);
-    formData.append('valor_descuento', formValue.valor_descuento.toString());
-    formData.append('fecha_inicio_promo', fechaInicio);
-    formData.append('fecha_fin_promo', fechaFin);
-    formData.append('tipo_promocion', formValue.tipo_promocion);
-    formData.append('codigo_promocional', formValue.codigo_promocional);
-    formData.append('limite_uso_total', formValue.limite_uso_total.toString());
-    formData.append('limite_uso_usuario', formValue.limite_uso_usuario.toString());
-    formData.append('estado', formValue.estado);
-
-    // Siempre envía el campo, aunque esté vacío
-    if (productosIds.length > 0) {
-      this.productosSeleccionados.forEach((producto, index) => {
-        formData.append(`productos[${index}][producto]`, producto.id.toString());
-        if (producto.tamanoSeleccionado) {
-          formData.append(`productos[${index}][tamano]`, producto.tamanoSeleccionado.id.toString());
-        }
-      });
-    } else {
-      formData.append('productos', '__empty__');
-    }
-
-    if (menusIds.length > 0) {
-      menusIds.forEach(id => formData.append('menus', id.toString()));
-    } else {
-      formData.append('menus', '__empty__');
-    }
-
-    if (this.selectedFile) {
-      formData.append('imagen', this.selectedFile, this.selectedFile.name);
-    }
-
-    if (this.isEditMode && this.promocionId) {
-      this.actualizarPromocion(formData);
-    } else {
-      this.publicidadService.crearPromocion(formData).subscribe({
-        next: (resp) => {
-          this.mostrarDialogExito(
-            'CREADO',
-            '¡La Promocion ha sido creada exitosamente!',
-            'Continuar'
-          );
-          this.router.navigate(['/administrador/gestion-promociones']);
-        },
-        error: (err) => {
-          alert('Error al crear la promoción');
-          this.saving = false;
-        }
-      });
-    }
+    this.mostrarDialogConfirmacion();
   } else {
     alert('Por favor completa todos los campos requeridos');
     this.promocionForm.markAllAsTouched();
+  }
+}
+
+private mostrarDialogConfirmacion(): void {
+  const dialogData: ConfirmationDialogData = {
+    itemType: 'promoción',
+    action: this.isEditMode ? 'update' : 'create'
+  };
+
+  const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+    disableClose: true,
+    data: dialogData
+  });
+
+  dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+    if (confirmed) {
+      this.procesarFormularioPromocion();
+    }
+  });
+}
+
+private procesarFormularioPromocion(): void {
+  this.saving = true;
+  const formValue = this.promocionForm.value;
+
+  const fechaInicio = formValue.fecha_inicio_promo
+    ? new Date(formValue.fecha_inicio_promo).toISOString()
+    : '';
+  const fechaFin = formValue.fecha_fin_promo
+    ? new Date(formValue.fecha_fin_promo).toISOString()
+    : '';
+
+  const formData = new FormData();
+  formData.append('nombre', formValue.nombre);
+  formData.append('descripcion', formValue.descripcion);
+  formData.append('valor_descuento', formValue.valor_descuento.toString());
+  formData.append('fecha_inicio_promo', fechaInicio);
+  formData.append('fecha_fin_promo', fechaFin);
+  formData.append('tipo_promocion', formValue.tipo_promocion);
+  formData.append('codigo_promocional', formValue.codigo_promocional);
+  formData.append('limite_uso_total', formValue.limite_uso_total.toString());
+  formData.append('limite_uso_usuario', formValue.limite_uso_usuario.toString());
+  formData.append('estado', formValue.estado);
+
+  formData.append('productos_detalle', JSON.stringify(this.productosSeleccionados));
+  if (this.menusSeleccionados.length > 0) {
+    this.menusSeleccionados.forEach(menu => formData.append('menus', menu.id.toString()));
+  } else {
+    formData.append('menus', '__empty__');
+  }
+
+  if (this.selectedFile) {
+    formData.append('imagen', this.selectedFile, this.selectedFile.name);
+  }
+
+  if (this.isEditMode && this.promocionId) {
+    this.actualizarPromocion(formData);
+  } else {
+    this.publicidadService.crearPromocion(formData).subscribe({
+      next: (resp) => {
+        this.mostrarDialogExito(
+          'CREADO',
+          '¡La Promoción ha sido creada exitosamente!',
+          'Continuar'
+        );
+        this.router.navigate(['/administrador/gestion-promociones']);
+      },
+      error: (err) => {
+        alert('Error al crear la promoción');
+        this.saving = false;
+      }
+    });
   }
 }
 
@@ -387,264 +385,233 @@ private validarFormularioParaEdicion(): boolean {
   return camposCompletos && descuentoValido && limiteTotalValido && limiteUsuarioValido;
 }
 
-  actualizarPromocion(formData: FormData): void {
-    if (!this.promocionId) return;
+actualizarPromocion(formData: FormData): void {
+  if (!this.promocionId) return;
 
-    this.publicidadService.actualizarPromocion(this.promocionId, formData).subscribe({
-      next: (response) => {
-        this.mostrarDialogExito(
-          'CREADO',
-          '¡La Promocion ha sido actualizada exitosamente!',
-          'Continuar'
-        );
-        this.saving = false;
-        this.router.navigate(['/administrador/gestion-promociones']);
-      },
-      error: (error) => {
-        console.error('❌ Error al actualizar la promoción', error);
-        alert('❌ Error al actualizar la promoción. Revisa los datos e intenta nuevamente.');
-        this.saving = false;
-      }
-    });
-  }
-    agregarProducto(producto: Producto, tamanoId?: number): void {
-    // Verificar si el producto requiere tamaño
+  this.publicidadService.actualizarPromocion(this.promocionId, formData).subscribe({
+    next: (response) => {
+      this.mostrarDialogExito(
+        'ACTUALIZADO',
+        '¡La Promoción ha sido actualizada exitosamente!',
+        'Continuar'
+      );
+      this.saving = false;
+      this.router.navigate(['/administrador/gestion-promociones']);
+    },
+    error: (error) => {
+      console.error('❌ Error al actualizar la promoción', error);
+      alert('❌ Error al actualizar la promoción. Revisa los datos e intenta nuevamente.');
+      this.saving = false;
+    }
+  });
+}
+  agregarProducto(producto: Producto, tamanoId?: number): void {
+    if (!producto || !producto.id) return;
+
     if (producto.aplica_tamanos && !tamanoId) {
       alert('⚠️ Este producto requiere seleccionar un tamaño');
       return;
     }
-    
-    // Verificar duplicados con el mismo tamaño
-    const yaExiste = this.productosSeleccionados.some(p => 
-      p.id === producto.id && 
-      (p.tamanoSeleccionado?.id || null) === (tamanoId || null)
+
+    const yaAgregado = this.productosSeleccionados.some(p =>
+      p.producto === producto.id &&
+      (p.tamano || null) === (tamanoId || null)
     );
-    
-    if (yaExiste) {
-      const tamanoTexto = tamanoId ? ' con este tamaño' : '';
-      alert(`El producto${tamanoTexto} ya fue ingresado`);
+
+    if (yaAgregado) {
+      alert('El producto ya fue ingresado');
       return;
     }
-    
-    // ✅ USAR la interfaz Tamano correcta
-    const productoConTamano: ProductoConTamano = { 
-      ...producto,
-      tamanoSeleccionado: tamanoId ? this.tamanos.find(t => t.id === tamanoId) || null : null
+
+    const nuevoProducto: any = {
+      producto: producto.id
     };
-    
-    this.productosSeleccionados.push(productoConTamano);
-    this.actualizarVisualizacionProductos();
+    if (tamanoId) {
+      nuevoProducto.tamano = tamanoId;
+    }
+    this.productosSeleccionados.push(nuevoProducto);
+
+    this.promocionForm.get('productosSeleccionados')?.setValue(this.productosSeleccionadosTexto);
   }
 
-  // ✅ AGREGAR método para actualizar visualización
-  private actualizarVisualizacionProductos(): void {
-    const productosTexto = this.productosSeleccionados.map(p => {
-      const tamanoStr = p.tamanoSeleccionado ? ` (${p.tamanoSeleccionado.nombre})` : '';
-      return `${p.nombre}${tamanoStr}`;
-    }).join(', ');
-    
-    this.promocionForm.get('productosSeleccionados')?.setValue(productosTexto);
+agregarMenu(menu: Menu): void {
+  if (this.menusSeleccionados.some(m => m.id === menu.id)) {
+    alert('El menú ya fue ingresado');
+    return;
   }
+  this.menusSeleccionados.push(menu);
+  this.promocionForm.get('menusSeleccionados')?.setValue(
+    this.menusSeleccionados.map(m => m.nombre).join(', ')
+  );
+}
 
-  eliminarProducto(producto: Producto): void {
-    this.productosSeleccionados = this.productosSeleccionados.filter(p => p.id !== producto.id);
-    this.actualizarVisualizacionProductos();
-  }
+eliminarProductos(): void {
+  this.productosSeleccionados = [];
+  this.promocionForm.get('productosSeleccionados')?.setValue('');
+}
 
-  eliminarProductos(): void {
-    this.productosSeleccionados = [];
-    this.promocionForm.get('productosSeleccionados')?.setValue('');
-  }
+eliminarMenus(): void {
+  this.menusSeleccionados = [];
+  this.promocionForm.get('menusSeleccionados')?.setValue('');
+}
 
-  eliminarMenus(): void {
-    this.menusSeleccionados = [];
-    this.promocionForm.get('menusSeleccionados')?.setValue('');
-  }
+tieneProductoOMenuSeleccionado(): boolean {
+  return this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0;
+}
+private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+  const dialogData: SuccessDialogData = {
+    title,
+    message,
+    buttonText
+  };
 
-  tieneProductoOMenuSeleccionado(): boolean {
-    return this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0;
-  }
-  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
-    const dialogData: SuccessDialogData = {
-      title,
-      message,
-      buttonText
-    };
+  const dialogRef = this.dialog.open(SuccessDialogComponent, {
+    disableClose: true,
+    data: dialogData
+  });
 
-    const dialogRef = this.dialog.open(SuccessDialogComponent, {
-      disableClose: true,
-      data: dialogData
-    });
+  dialogRef.afterClosed().subscribe(() => {
+    if (this.isEditMode) {
+      this.navegarAListaMenus();
+    } else {
+      this.router.navigate(['/administrador/gestion-promociones']);
+    }
+  });
+}
+private navegarAListaMenus(): void {
+  this.router.navigate(['/administrador/gestion-promociones/editar-eliminar']);
+}
+private cargarPromocionParaEditar(): void {
+  if (!this.promocionId) return;
 
-    dialogRef.afterClosed().subscribe(() => {
-      if (this.isEditMode) {
-        this.navegarAListaMenus();
+  this.publicidadService.obtenerPromocionPorId(this.promocionId).subscribe({
+    next: (promocion) => {
+      this.promocionForm.patchValue({
+        nombre: promocion.nombre,
+        descripcion: promocion.descripcion,
+        tipo_promocion: promocion.tipo_promocion,
+        valor_descuento: promocion.valor_descuento,
+        codigo_promocional: promocion.codigo_promocional,
+        limite_uso_total: promocion.limite_uso_total,
+        limite_uso_usuario: promocion.limite_uso_usuario,
+        fecha_inicio_promo: promocion.fecha_inicio_promo,
+        fecha_fin_promo: promocion.fecha_fin_promo,
+        estado: promocion.estado,
+        imagen: null
+      });
+
+      if (promocion.imagen_url) {
+        this.currentImageUrl = this.publicidadService.getFullImageUrl(promocion.imagen_url);
+        this.imagePreview = this.currentImageUrl;
+        this.promocionForm.get('imagen')?.clearValidators();
+        this.promocionForm.get('imagen')?.updateValueAndValidity();
+      }
+
+      if (promocion.productos_detalle && Array.isArray(promocion.productos_detalle)) {
+        this.productosSeleccionados = promocion.productos_detalle
+          .map((p: any) => {
+            const productoId = p.producto?.id ?? p.producto;
+            const producto = this.productos.find(prod => prod.id === productoId);
+            if (!producto) return null;
+
+            let tamanoId: number | undefined;
+            if (p.tamano?.id) {
+              tamanoId = p.tamano.id;
+            } else if (typeof p.tamano === 'number') {
+              tamanoId = p.tamano;
+            } else if (p.tamano_codigo) {
+              const t = this.tamanos.find(tam => tam.codigo === p.tamano_codigo);
+              if (t) tamanoId = t.id;
+            } else if (p.tamano_nombre) {
+              const t = this.tamanos.find(tam => tam.nombre === p.tamano_nombre);
+              if (t) tamanoId = t.id;
+            }
+
+            return {
+              producto: producto.id,
+              ...(tamanoId && { tamano: tamanoId })
+            };
+          })
+          .filter((p: any) => !!p);
+        this.promocionForm.get('productosSeleccionados')?.setValue(this.productosSeleccionadosTexto);
       } else {
-        this.router.navigate(['/administrador/gestion-promociones']);
+        this.productosSeleccionados = [];
+        this.promocionForm.get('productosSeleccionados')?.setValue('');
       }
-    });
-  }
-  private navegarAListaMenus(): void {
-    this.router.navigate(['/administrador/gestion-promociones/crear']);
-  }
-  private cargarPromocionParaEditar(): void {
-    if (!this.promocionId) return;
+      if (promocion.menus_detalle && Array.isArray(promocion.menus_detalle)) {
+        this.menusSeleccionados = promocion.menus_detalle
+          .map((m: any) => {
+            let menuId: number | undefined;
+            if (m.menu && typeof m.menu === 'object' && m.menu.id) {
+              menuId = Number(m.menu.id);
+            } else if (typeof m.menu === 'number' || typeof m.menu === 'string') {
+              menuId = Number(m.menu);
+            } else if (typeof m === 'object' && m.id) {
+              menuId = Number(m.id);
+            } else if (typeof m === 'number' || typeof m === 'string') {
+              menuId = Number(m);
+            }
+            return this.menus.find(menu => Number(menu.id) === menuId);
+          })
+          .filter((m: Menu | undefined): m is Menu => !!m);
 
-    this.publicidadService.obtenerPromocionPorId(this.promocionId).subscribe({
-      next: (promocion) => {
-        console.log('🔍 DEBUG 1 - Promoción completa del backend:', promocion);
-        console.log('📦 DEBUG 2 - productos_detalle:', promocion.productos_detalle);
-        console.log('🍽️ DEBUG 3 - menus_detalle:', promocion.menus_detalle);
-
-        // Llenar formulario con datos de la promoción
-        this.promocionForm.patchValue({
-          nombre: promocion.nombre,
-          descripcion: promocion.descripcion,
-          tipo_promocion: promocion.tipo_promocion,
-          valor_descuento: promocion.valor_descuento,
-          codigo_promocional: promocion.codigo_promocional,
-          limite_uso_total: promocion.limite_uso_total,
-          limite_uso_usuario: promocion.limite_uso_usuario,
-          fecha_inicio_promo: promocion.fecha_inicio_promo,
-          fecha_fin_promo: promocion.fecha_fin_promo,
-          estado: promocion.estado,
-          imagen: null
-        });
-
-        // Manejar imagen actual
-        if (promocion.imagen_url) {
-          this.currentImageUrl = this.publicidadService.getFullImageUrl(promocion.imagen_url);
-          this.imagePreview = this.currentImageUrl;
-          this.promocionForm.get('imagen')?.clearValidators();
-          this.promocionForm.get('imagen')?.updateValueAndValidity();
-        }
-
-        console.log('🛍️ DEBUG 4 - Productos disponibles:', this.productos);
-        console.log('📏 DEBUG 5 - Tamaños disponibles:', this.tamanos);
-
-        // ✅ VERIFICAR si entra al bloque de productos
-        console.log('🔍 DEBUG 6 - Verificando productos_detalle...');
-        console.log('   - productos_detalle existe?', !!promocion.productos_detalle);
-        console.log('   - es array?', Array.isArray(promocion.productos_detalle));
-        console.log('   - longitud:', promocion.productos_detalle?.length);
-
-        if (promocion.productos_detalle && Array.isArray(promocion.productos_detalle)) {
-          console.log('✅ DEBUG 7 - ENTRANDO al bloque de productos');
-          
-          // ✅ CAMBIAR: Procesar cada producto con su tamaño específico
-          this.productosSeleccionados = promocion.productos_detalle
-            .map((pd: any) => {
-              const producto = this.productos.find(prod => prod.id === (pd.producto?.id ?? pd.producto));
-              if (!producto) {
-                console.log(`❌ Producto no encontrado para ID: ${pd.producto?.id ?? pd.producto}`);
-                return null;
-              }
-              
-              // ✅ BUSCAR el tamaño por nombre (como viene del backend)
-              let tamanoSeleccionado = null;
-              if (pd.tamano_nombre) {
-                tamanoSeleccionado = this.tamanos.find(t => t.nombre === pd.tamano_nombre);
-                console.log(`🔍 Buscando tamaño "${pd.tamano_nombre}":`, tamanoSeleccionado);
-              }
-              
-              const productoConTamano: ProductoConTamano = {
-                ...producto,
-                tamanoSeleccionado: tamanoSeleccionado
-              };
-              
-              console.log(`✨ Producto procesado:`, productoConTamano);
-              return productoConTamano;
-            })
-            .filter((p: any): p is ProductoConTamano => !!p);
-          
-          console.log('🎉 DEBUG 11 - productosSeleccionados final:', this.productosSeleccionados);
-          
-          // ✅ ACTUALIZAR la visualización
-          this.actualizarVisualizacionProductos();
-        } else {
-          console.log('❌ DEBUG 7 - NO ENTRANDO al bloque de productos');
-          console.log('   - Motivo: productos_detalle no existe o no es array');
-        }
-
-        // ✅ DEBUG similar para menús
-        console.log('🔍 DEBUG 12 - Verificando menus_detalle...');
-        if (promocion.menus_detalle && Array.isArray(promocion.menus_detalle)) {
-          console.log('✅ DEBUG 13 - ENTRANDO al bloque de menús');
-          
-          this.menusSeleccionados = promocion.menus_detalle
-            .map((md: any) => {
-              const menuId = md.menu?.id ?? md.menu;
-              const menu = this.menus.find(m => m.id === menuId);
-              console.log(`🔍 Buscando menu ID ${menuId}:`, menu);
-              return menu;
-            })
-            .filter((m: any): m is Menu => !!m);
-          
-          console.log('🎉 Menús seleccionados final:', this.menusSeleccionados);
-          
-          // ✅ ACTUALIZAR la visualización
-          this.actualizarVisualizacionMenus();
-        } else {
-          console.log('❌ DEBUG 13 - NO ENTRANDO al bloque de menús');
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error al cargar la promoción:', error);
-        alert('❌ Error al cargar la promoción. Redirigiendo...');
-        this.router.navigate(['/administrador/gestion-promociones']);
+        this.promocionForm.get('menusSeleccionados')?.setValue(
+          this.menusSeleccionados.map(m => m.nombre).join(', ')
+        );
+      } else {
+        this.menusSeleccionados = [];
+        this.promocionForm.get('menusSeleccionados')?.setValue('');
       }
-    });
-  }
-
-  agregarMenu(menu: Menu): void {
-    // Verificar si el menú ya está seleccionado
-    const yaExiste = this.menusSeleccionados.some(m => m.id === menu.id);
-    
-    if (yaExiste) {
-      alert('El menú ya fue agregado');
-      return;
+    },
+    error: (error) => {
+      console.error('❌ Error al cargar la promoción:', error);
+      alert('❌ Error al cargar la promoción. Redirigiendo...');
+      this.router.navigate(['/administrador/gestion-promociones']);
     }
-    
-    this.menusSeleccionados.push(menu);
-    this.actualizarVisualizacionMenus();
-  }
+  });
+}
 
-  // ✅ AGREGAR método para actualizar visualización de menús
-  private actualizarVisualizacionMenus(): void {
-    const menusTexto = this.menusSeleccionados.map(m => m.nombre).join(', ');
-    this.promocionForm.get('menusSeleccionados')?.setValue(menusTexto);
-  }
-
-  // ✅ AGREGAR estos getters
-  get productosSeleccionadosTexto(): string {
-    console.log('🔍 DEBUG getter productosSeleccionadosTexto ejecutado');
-    console.log('📦 productosSeleccionados actuales:', this.productosSeleccionados);
-    
-    if (!this.productosSeleccionados || this.productosSeleccionados.length === 0) {
-      console.log('❌ No hay productos seleccionados');
-      return '';
-    }
-    
-    return this.productosSeleccionados.map(prod => {
-      let texto = prod.nombre;
-      // ✅ AGREGAR tamaño si existe
-      if (prod.tamanoSeleccionado) {
-        texto += ` (${prod.tamanoSeleccionado.nombre})`;
+get productosSeleccionadosTexto(): string {
+  return this.productosSeleccionados
+    .filter(p => p.producto)
+    .map(p => {
+      const prod = this.productos.find(x => x.id === p.producto);
+      if (!prod) return '';
+      let tamanoStr = '';
+      if (p.tamano) {
+        const tam = this.tamanos.find(t => t.id === p.tamano);
+        if (tam && tam.codigo) {
+          tamanoStr = ` (${tam.codigo})`;
+        }
       }
-      console.log(`✨ Producto texto: ${texto}`);
-      return texto;
-    }).join(', ');
-  }
+      return `${prod.nombre}${tamanoStr}`;
+    })
+    .filter(Boolean)
+    .join(', ');
+}
 
-  get menusSeleccionadosTexto(): string {
-    console.log('🔍 DEBUG getter menusSeleccionadosTexto ejecutado');
-    console.log('🍽️ menusSeleccionados actuales:', this.menusSeleccionados);
-    
-    if (!this.menusSeleccionados || this.menusSeleccionados.length === 0) {
-      console.log('❌ No hay menús seleccionados');
-      return '';
-    }
-    
-    return this.menusSeleccionados.map(menu => menu.nombre).join(', ');
+filtrarProductosYMenus(): void {
+  const texto = this.promocionForm.get('busqueda')?.value.trim().toLowerCase() || '';
+
+  this.productosFiltrados = this.productos.filter(p =>
+    p.nombre.toLowerCase().includes(texto)
+  );
+
+  this.menusFiltrados = this.menus.filter(m =>
+    m.nombre.toLowerCase().includes(texto)
+  );
+}
+private intentarCargarPromocionParaEditar(): void {
+  if (
+    this.isEditMode &&
+    this.promocionId &&
+    this.productosCargados &&
+    this.menusCargados &&
+    this.tamanosCargados &&
+    !this.intentoDeCargaRealizada
+  ) {
+    this.cargarPromocionParaEditar();
+    this.intentoDeCargaRealizada = true;
   }
+}
 }

@@ -24,7 +24,7 @@
 
 .search-container {
   margin-bottom: 32px;
-  
+
   label {
     font-size: 16px;
     font-weight: 600;
@@ -32,7 +32,7 @@
     margin-bottom: 8px;
     display: block;
   }
-  
+
   .search-input {
     padding: 12px 16px;
     font-size: 16px;
@@ -66,11 +66,19 @@
   background-color: #fff;
   border-radius: 8px;
   margin-top: 20px;
-  
+
   p {
     font-size: 16px;
     color: #666;
   }
+}
+
+.menus-section {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 18px 18px 10px 18px;
+  margin-bottom: 24px;
 }
 
 .menus-grid {
@@ -78,6 +86,24 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 32px;
   margin-top: 20px;
+}
+
+.menus-scroll-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .menu-card {
@@ -198,22 +224,13 @@
       height: 16px;
     }
 
-    &.edit-button {
-      background-color: #dc3545;
-      color: white;
-
-      &:hover {
-        background-color: #c82333;
-        transform: translateY(-1px);
-      }
-    }
-
+    &.edit-button,
     &.delete-button {
-      background-color: #dc3545;
+      background-color: #e74c3c; // Mismo tono que crear-promocion
       color: white;
 
       &:hover:not(:disabled) {
-        background-color: #c82333;
+        background-color: #c0392b;
         transform: translateY(-1px);
       }
 

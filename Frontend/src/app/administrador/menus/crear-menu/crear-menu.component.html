@@ -2,7 +2,9 @@
 
 <div class="form-container">
   <p class="breadcrumb-title">GESTIÓN DE MENÚS</p>
-  <h1 class="form-main-title">Creación de nuevo Menú</h1>
+  <h1 class="form-main-title">
+    {{ isEditMode ? 'Editar Menú' : 'Creación de nuevo Menú' }}
+  </h1>
 
   <form [formGroup]="menuForm" (ngSubmit)="onSubmit()" class="product-form">
     <div class="form-grid">
@@ -132,60 +134,67 @@
         </button>
 
         <div class="buscador">
-          <label>Buscar producto</label>
           <div class="buscador-input">
-            <input type="text" placeholder="Buscar" [(ngModel)]="search" />
-            <i class="fas fa-search"></i>
-          </div>
-        </div>
-
-        <div class="productos-grid">
-          @for (producto of productos; track producto.id) {
-          <div class="producto-card">
-            <div class="producto-nombre">{{ producto.nombre }}</div>
-            <img
-              [src]="getFullImageUrl(producto.imagenUrl)"
-              [alt]="producto.nombre"
+            <input
+              type="text"
+              formControlName="busqueda"
+              (input)="filtrarProductos()"
+              placeholder="Buscar productos..."
             />
-            <div class="producto-actions">
-              <!-- ✅ AGREGAR selector de tamaños si aplica -->
-              <div *ngIf="producto.aplica_tamanos" class="tamanos-selector">
-                <p>Selecciona tamaño:</p>
-                <button
-                  *ngFor="let tamano of tamanos"
-                  (click)="agregarProducto(producto, tamano.id)"
-                  class="btn-tamano"
-                  type="button"
-                >
-                  {{ tamano.nombre }}
-                </button>
-              </div>
-
-              <!-- ✅ BOTÓN normal si no aplica tamaños -->
-              <div *ngIf="!producto.aplica_tamanos">
-                <button
-                  (click)="agregarProducto(producto)"
-                  class="btn-agregar"
-                  type="button"
-                >
-                  Agregar
-                </button>
-              </div>
-            </div>
+            <i class="fa fa-search"></i>
           </div>
-          }
+        </div>
+
+        <div class="productos-section">
+          <h3 class="section-title">Productos</h3>
+          <div class="productos-scroll-grid">
+            @for (producto of productosFiltrados; track producto.id) {
+              <div class="producto-card">
+                <div class="producto-image-container">
+                  <img
+                    [src]="getFullImageUrl(producto.imagenUrl)"
+                    [alt]="producto.nombre"
+                  />
+                </div>
+                <div class="producto-info">
+                  <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+                </div>
+                <div class="producto-actions">
+                  <div *ngIf="producto.aplica_tamanos" class="tamanos-selector">
+                    <p>Selecciona tamaño:</p>
+                    <button
+                      *ngFor="let tamano of tamanos"
+                      (click)="agregarProducto(producto, tamano.id)"
+                      class="btn-tamano"
+                      type="button"
+                    >
+                      {{ tamano.nombre }}
+                    </button>
+                  </div>
+                  <div *ngIf="!producto.aplica_tamanos">
+                    <button
+                      class="btn"
+                      (click)="agregarProducto(producto)"
+                      type="button"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
         </div>
       </div>
-
-      <div class="form-actions">
-        <button
-          type="submit"
-          class="primary__button"
-          [disabled]="!menuForm.valid"
-        >
-          {{ isEditMode ? 'Actualizar Menú' : 'Crear' }}
-        </button>
-      </div>
+    </div>
+    <div class="form-actions">
+      <button
+        type="submit"
+        class="primary__button"
+        [disabled]="!menuForm.valid"
+      >
+        {{ isEditMode ? 'Actualizar Menú' : 'Crear' }}
+      </button>
     </div>
   </form>
 </div>

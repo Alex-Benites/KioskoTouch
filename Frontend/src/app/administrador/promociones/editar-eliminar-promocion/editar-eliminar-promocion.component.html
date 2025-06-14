@@ -52,34 +52,36 @@
       </div>
     </div>
     <div class="filtros-col promociones-col">
-      <div class="promociones-grid">
-        <ng-container *ngFor="let promo of promocionesFiltradas">
-          <div class="promo-card">
-            <div class="promo-nombre">{{ promo.nombre }}</div>
-            <img
-              [src]="getFullImageUrl(promo.imagenUrl)"
-              [alt]="promo.nombre"
-              style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
-            />
-            <div class="promo-descripcion">{{ promo.descripcion }}</div>
-            <div class="promo-productos-lista">
-              <strong>Productos:</strong>
-              <ul>
-                <li *ngFor="let prod of promo.productosLista">{{ prod }}</li>
-              </ul>
+      <div class="promociones-section">
+        <div class="promociones-scroll-grid">
+          <ng-container *ngFor="let promo of promocionesFiltradas">
+            <div class="promo-card">
+              <div class="promo-nombre">{{ promo.nombre }}</div>
+              <img
+                [src]="getFullImageUrl(promo.imagenUrl)"
+                [alt]="promo.nombre"
+                class="promo-image"
+              />
+              <div class="promo-descripcion">{{ promo.descripcion }}</div>
+              <div class="promo-productos-lista">
+                <strong>Productos:</strong>
+                <ul>
+                  <li *ngFor="let prod of promo.productosLista">{{ prod }}</li>
+                </ul>
+              </div>
+              <div class="promo-menus-lista">
+                <strong>Menús:</strong>
+                <ul>
+                  <li *ngFor="let men of promo.menusLista">{{ men }}</li>
+                </ul>
+              </div>
+              <div class="promo-actions">
+                <button class="btn" (click)="editarPromocion(promo)">Editar</button>
+                <button class="btn" (click)="abrirDialogoEliminar(promo)">Eliminar</button>
+              </div>
             </div>
-            <div class="promo-menus-lista">
-              <strong>Menús:</strong>
-              <ul>
-                <li *ngFor="let men of promo.menusLista">{{ men }}</li>
-              </ul>
-            </div>
-            <div class="promo-actions">
-              <button class="btn" (click)="editarPromocion(promo)">Editar</button>
-              <button class="btn" (click)="abrirDialogoEliminar(promo)">Eliminar</button>
-            </div>
-          </div>
-        </ng-container>
+          </ng-container>
+        </div>
       </div>
     </div>
   </div>

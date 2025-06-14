@@ -2,7 +2,9 @@
 
 <div class="form-container">
   <p class="breadcrumb-title">GESTIÓN DE PROMOCIONES</p>
-  <h1 class="form-main-title">creación de nueva Promoción</h1>
+  <h1 class="form-main-title">
+    {{ isEditMode ? 'Editar Promoción' : 'Creación de nueva Promoción' }}
+  </h1>
 
   <form [formGroup]="promocionForm" (ngSubmit)="onSubmit()" class="promo-form">
     <div class="form-grid">
@@ -104,12 +106,48 @@
           }
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Fecha inicial de la promoción</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerInicio"
+            formControlName="fecha_inicio_promo"
+            placeholder="Selecciona una fecha"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerInicio"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #pickerInicio></mat-datepicker>
+          @if (promocionForm.get('fecha_inicio_promo')?.hasError('required')) {
+          <mat-error>La fecha de inicio es requerida.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Fecha final de la promoción</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerFin"
+            formControlName="fecha_fin_promo"
+            placeholder="Selecciona una fecha"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerFin"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #pickerFin></mat-datepicker>
+          @if (promocionForm.get('fecha_fin_promo')?.hasError('required')) {
+          <mat-error>La fecha de Fin es requerida.</mat-error>
+          }
+        </mat-form-field>
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Productos Seleccionados</mat-label>
           <input
             matInput
             placeholder="Seleccione un Producto"
-            [value]="productosSeleccionadosTexto"
+            formControlName="productosSeleccionados"
             [readonly]="true"
             style="pointer-events: none"
           />
@@ -128,7 +166,7 @@
           <input
             matInput
             placeholder="Seleccione un Menú"
-            [value]="menusSeleccionadosTexto"
+            formControlName="menusSeleccionados"
             [readonly]="true"
             style="pointer-events: none"
           />
@@ -180,109 +218,90 @@
         </button>
         }
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Fecha inicial de la promoción</mat-label>
-          <input
-            matInput
-            [matDatepicker]="pickerInicio"
-            formControlName="fecha_inicio_promo"
-            placeholder="Selecciona una fecha"
-          />
-          <mat-datepicker-toggle
-            matSuffix
-            [for]="pickerInicio"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #pickerInicio></mat-datepicker>
-          @if (promocionForm.get('fecha_inicio_promo')?.hasError('required')) {
-          <mat-error>La fecha de inicio es requerida.</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Fecha final de la promoción</mat-label>
-          <input
-            matInput
-            [matDatepicker]="pickerFin"
-            formControlName="fecha_fin_promo"
-            placeholder="Selecciona una fecha"
-          />
-          <mat-datepicker-toggle
-            matSuffix
-            [for]="pickerFin"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #pickerFin></mat-datepicker>
-          @if (promocionForm.get('fecha_fin_promo')?.hasError('required')) {
-          <mat-error>La fecha de Fin es requerida.</mat-error>
-          }
-        </mat-form-field>
-
         <div class="buscador">
-          <label>Buscar producto</label>
           <div class="buscador-input">
-            <input type="text" placeholder="Buscar" [(ngModel)]="search" />
-            <i class="fas fa-search"></i>
+            <input
+              type="text"
+              formControlName="busqueda"
+              (input)="filtrarProductosYMenus()"
+              placeholder="Buscar productos o menús..."
+            />
+            <i class="fa fa-search"></i>
           </div>
         </div>
 
-        <div class="productos-grid">
-          @for (producto of productos; track producto.id) {
-          <div class="producto-card">
-            <div class="producto-nombre">{{ producto.nombre }}</div>
-            <img
-              [src]="getFullImageUrl(producto.imagenUrl)"
-              [alt]="producto.nombre"
-            />
-            <div class="producto-actions">
-              <!-- ✅ REEMPLAZAR el botón simple con selector de tamaños -->
-              <div *ngIf="producto.aplica_tamanos" class="tamanos-selector">
-                <p>Selecciona tamaño:</p>
-                <button
-                  *ngFor="let tamano of tamanos"
-                  (click)="agregarProducto(producto, tamano.id)"
-                  class="btn-tamano"
-                  type="button">
-                  {{ tamano.nombre }}
-                </button>
+        <!-- Productos -->
+        <div class="productos-section">
+          <h3 class="section-title">Productos</h3>
+          <div class="productos-scroll-grid">
+            @for (producto of productosFiltrados; track producto.id) {
+            <div class="producto-card">
+              <div class="producto-image-container">
+                <img
+                  [src]="getFullImageUrl(producto.imagenUrl)"
+                  [alt]="producto.nombre"
+                />
               </div>
-              
-              <!-- ✅ BOTÓN normal si no aplica tamaños -->
-              <div *ngIf="!producto.aplica_tamanos">
+              <div class="producto-info">
+                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+              </div>
+              <div class="producto-actions">
+                <div *ngIf="producto.aplica_tamanos" class="tamanos-selector">
+                  <p>Selecciona tamaño:</p>
+                  <button
+                    *ngFor="let tamano of tamanos"
+                    (click)="agregarProducto(producto, tamano.id)"
+                    class="btn-tamano"
+                    type="button"
+                  >
+                    {{ tamano.nombre }}
+                  </button>
+                </div>
+                <div *ngIf="!producto.aplica_tamanos">
+                  <button
+                    (click)="agregarProducto(producto)"
+                    type="button"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Menús -->
+        <div class="menus-section">
+          <h3 class="section-title">Menús</h3>
+          <div class="menus-scroll-grid">
+            @for (menu of menusFiltrados; track menu.id) {
+            <div class="menu-card">
+              <div class="menu-image-container">
+                <img
+                  [src]="getFullImageUrl(menu.imagenUrl)"
+                  [alt]="menu.nombre"
+                />
+              </div>
+              <div class="menu-info">
+                <h3 class="menu-nombre">{{ menu.nombre }}</h3>
+                <div class="menu-productos-lista">
+                  <ul>
+                    <li *ngFor="let men of menu.menuLista">{{ men }}</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="menu-actions">
                 <button
-                  class="btn"
                   type="button"
-                  (click)="agregarProducto(producto)">
+                  (click)="agregarMenu(menu)"
+                >
                   Agregar
                 </button>
               </div>
             </div>
+            }
           </div>
-          }
-        </div>
-        <div class="menus-grid">
-          @for (menu of menus; track menu.id) {
-          <div class="menu-card">
-            <div class="menu-nombre">{{ menu.nombre }}</div>
-            <img
-              [src]="getFullImageUrl(menu.imagenUrl)"
-              [alt]="menu.nombre"
-              style="width: 100%; max-width: 180px; height: auto; object-fit: cover;"
-            />
-            <div class="menu-productos-lista">
-              <ul>
-                <li *ngFor="let men of menu.menuLista">{{ men }}</li>
-              </ul>
-            </div>
-            <div class="menu-actions">
-              <button
-              class="btn"
-              type="button"
-              (click)="agregarMenu(menu)"
-              >
-              Agregar
-            </button>
-            </div>
-          </div>
-          }
         </div>
       </div>
     </div>

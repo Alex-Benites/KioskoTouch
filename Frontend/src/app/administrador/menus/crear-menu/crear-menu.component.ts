@@ -15,7 +15,8 @@ import {  Producto, Estado } from '../../../models/catalogo.model';
 import {  Tamano } from '../../../models/tamano.model';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
-import { environment } from '../../../../environments/environment'; 
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-crear-menu',
@@ -49,11 +50,14 @@ export class CrearMenuComponent implements OnInit {
   tamanos: Tamano[] = [];
   productosConTamanos: Producto[] = [];
   search: string = '';
-  productosSeleccionados: { 
-    producto: number, 
+  productosSeleccionados: {
+    producto: number,
     cantidad: number,
-    tamano?: number  // ✅ NUEVO campo opcional
+    tamano?: number
   }[] = [];
+
+  busqueda: string = '';
+  productosFiltrados: Producto[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -66,49 +70,43 @@ export class CrearMenuComponent implements OnInit {
       descripcion: ['', Validators.required],
       precio: ['', [
         Validators.required,
-        Validators.pattern(/^\d+(\.\d{1,2})?$/),
+        Validators.pattern(/^(?!0+(\.0{1,2})?$)\d+(\.\d{1,2})?$/),
         Validators.min(0.01)
       ]],
-      tipo_menu: ['', Validators.required], // <--- CAMBIO
-      estado: ['', Validators.required],    // <--- CAMBIO
-      productos: [[], Validators.required], // <--- CAMBIO: array de productos
+      tipo_menu: ['', Validators.required],
+      estado: ['', Validators.required],
+      productos: [[], Validators.required],
       imagen: [null, Validators.required],
+      busqueda: [''],
     });
   }
 
   onFileSelected(event: any): void {
     this.selectedFile = event.target.files[0] as File;
     if (this.selectedFile) {
-      // ← VALIDAR TIPO DE ARCHIVO
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(this.selectedFile.type)) {
         alert('⚠️ Solo se permiten archivos de imagen (JPG, PNG, GIF)');
         this.eliminarImagen();
         return;
       }
-
-      // ← VALIDAR TAMAÑO (máximo 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       if (this.selectedFile.size > maxSize) {
         alert('⚠️ La imagen no puede ser mayor a 5MB');
         this.eliminarImagen();
         return;
       }
-
       const reader = new FileReader();
       reader.onload = () => {
         this.imagePreview = reader.result as string;
       }
       reader.readAsDataURL(this.selectedFile);
-
-      // ← ACTUALIZAR EL CONTROL DEL FORMULARIO
       this.menuForm.get('imagen')?.setValue(this.selectedFile);
       this.menuForm.get('imagen')?.markAsTouched();
     }
   }
 
   ngOnInit(): void {
-    // Verificar si estamos en modo edición
     this.menuId = Number(this.route.snapshot.paramMap.get('id'));
     this.isEditMode = !!this.menuId && !isNaN(this.menuId);
 
@@ -117,17 +115,18 @@ export class CrearMenuComponent implements OnInit {
     });
     this.catalogoService.getProductos().subscribe(data => {
       this.productos = data;
-      this.loadProductImages(); // Solo para productos
+      this.loadProductImages();
+      this.filtrarProductos();
     });
-    // ✅ AGREGAR carga de tamaños
     this.catalogoService.getTamanos().subscribe(data => {
       this.tamanos = data;
     });
 
-    // Si estamos en modo edición, cargar el menu
     if (this.isEditMode) {
       this.cargarmenuParaEditar();
     }
+
+    this.filtrarProductos();
   }
 
   loadProductImages(): void {
@@ -145,15 +144,11 @@ export class CrearMenuComponent implements OnInit {
     return `${environment.baseUrl}${imagenUrl}`;
   }
 
-  // Método para cargar menu en modo edición
   private cargarmenuParaEditar(): void {
     if (!this.menuId) return;
 
     this.catalogoService.obtenerMenuPorId(this.menuId).subscribe({
       next: (menu) => {
-        console.log('✅ menu cargado completo:', menu);
-
-        // Llenar formulario con datos del menú
         this.menuForm.patchValue({
           nombre: menu.nombre,
           descripcion: menu.descripcion,
@@ -164,7 +159,6 @@ export class CrearMenuComponent implements OnInit {
           imagen: null
         });
 
-        // Manejar imagen actual
         if (menu.imagen_url) {
           this.currentImageUrl = this.catalogoService.getFullImageUrl(menu.imagen_url);
           this.imagePreview = this.currentImageUrl;
@@ -172,37 +166,26 @@ export class CrearMenuComponent implements OnInit {
           this.menuForm.get('imagen')?.updateValueAndValidity();
         }
 
-        // Cargar productos seleccionados (usando productos_detalle del backend)
         if (menu.productos_detalle && Array.isArray(menu.productos_detalle)) {
           this.productosSeleccionados = menu.productos_detalle.map((p: any) => {
             const productoData: any = {
               producto: typeof p.producto === 'object' ? p.producto.id : p.producto,
               cantidad: p.cantidad
             };
-            
-            // ✅ AGREGAR tamaño si existe
             if (p.tamano_nombre) {
               const tamano = this.tamanos.find(t => t.nombre === p.tamano_nombre);
               if (tamano) {
                 productoData.tamano = tamano.id;
-                console.log(`✅ Producto ${p.nombre} cargado con tamaño ${p.tamano_nombre}`);
               }
-            } else {
-              console.log(`✅ Producto ${p.nombre} cargado sin tamaño`);
             }
-            
             return productoData;
           });
-          
+
           this.menuForm.get('productos')?.setValue(this.productosSeleccionados);
-          console.log('📋 Productos cargados:', this.productosSeleccionados);
         } else {
           this.productosSeleccionados = [];
           this.menuForm.get('productos')?.setValue([]);
         }
-
-        console.log('📝 Formulario rellenado con:', this.menuForm.value);
-        console.log('🛒 Productos seleccionados:', this.productosSeleccionados);
       },
       error: (error) => {
         console.error('❌ Error al cargar el menú:', error);
@@ -210,65 +193,52 @@ export class CrearMenuComponent implements OnInit {
     });
   }
 
-
-
-  // ✅ ACTUALIZAR este getter para incluir tamaños
   get productosSeleccionadosTexto(): string {
     if (!this.productosSeleccionados || this.productosSeleccionados.length === 0) {
       return '';
     }
-    
     return this.productosSeleccionados.map(prodSel => {
       const producto = this.productos.find(p => p.id === prodSel.producto);
       if (!producto) return 'Producto no encontrado';
-      
       let texto = `${producto.nombre}`;
-      
-      // ✅ AGREGAR tamaño si existe
+      if (prodSel.cantidad > 1) {
+        texto += ` (x${prodSel.cantidad})`;
+      }
       if (prodSel.tamano) {
         const tamano = this.tamanos.find(t => t.id === prodSel.tamano);
-        if (tamano) {
-          texto += ` (${tamano.nombre})`;
+        if (tamano && tamano.codigo) {
+          texto += ` (${tamano.codigo})`;
         }
       }
-      
-      // ✅ AGREGAR cantidad
-      texto += ` - Cant: ${prodSel.cantidad}`;
-      
       return texto;
     }).join(', ');
   }
 
   agregarProducto(producto: Producto, tamanoId?: number): void {
     if (!producto || !producto.id) return;
-    
-    // Si el producto aplica tamaños pero no se especificó uno, mostrar error
     if (producto.aplica_tamanos && !tamanoId) {
       alert('⚠️ Este producto requiere seleccionar un tamaño');
       return;
     }
-    
-    const key = `${producto.id}-${tamanoId || 'sin-tamano'}`;
-    const idx = this.productosSeleccionados.findIndex(p => 
-      p.producto === producto.id && 
+    const idx = this.productosSeleccionados.findIndex(p =>
+      p.producto === producto.id &&
       (p.tamano || null) === (tamanoId || null)
     );
-    
     if (idx > -1) {
       this.productosSeleccionados[idx].cantidad += 1;
     } else {
-      const nuevoProducto: any = { 
-        producto: producto.id, 
-        cantidad: 1 
+      const nuevoProducto: any = {
+        producto: producto.id,
+        cantidad: 1
       };
       if (tamanoId) {
         nuevoProducto.tamano = tamanoId;
       }
       this.productosSeleccionados.push(nuevoProducto);
     }
-    
     this.menuForm.get('productos')?.setValue(this.productosSeleccionados);
   }
+
   eliminarProductos(): void {
     this.productosSeleccionados = [];
     this.menuForm.get('productos')?.setValue([]);
@@ -277,16 +247,13 @@ export class CrearMenuComponent implements OnInit {
   eliminarImagen(): void {
     this.imagePreview = null;
     this.selectedFile = null;
-    this.currentImageUrl = null; // Limpiar imagen actual también
-
-    //Solo marcar como error si estamos en modo creación
+    this.currentImageUrl = null;
     this.menuForm.get('imagen')?.setValue(null);
     if (!this.isEditMode) {
       this.menuForm.get('imagen')?.markAsTouched();
     }
   }
 
-  // ← AGREGAR MÉTODOS PARA MOSTRAR ERRORES
   get nombreError(): string {
     const control = this.menuForm.get('nombre');
     if (control?.hasError('required') && control?.touched) {
@@ -302,7 +269,6 @@ export class CrearMenuComponent implements OnInit {
     }
     return '';
   }
-
 
   get precioError(): string {
     const control = this.menuForm.get('precio');
@@ -338,45 +304,63 @@ export class CrearMenuComponent implements OnInit {
     const productos = (this.menuForm.get('productos')?.value || []).filter(
       (prod: any) => prod.producto && !isNaN(Number(prod.producto)) && prod.cantidad > 0
     );
-
     if (!productos.length) {
       alert('⚠️ Debes seleccionar al menos un producto para el menú.');
       return;
     }
-
     const formValid = this.isEditMode
       ? this.validarFormularioParaEdicion()
       : this.menuForm.valid;
-
     if (formValid) {
-      this.saving = true;
-      const formData = new FormData();
-      formData.append('nombre', this.menuForm.get('nombre')?.value);
-      formData.append('descripcion', this.menuForm.get('descripcion')?.value);
-      formData.append('precio', this.menuForm.get('precio')?.value);
-      formData.append('tipo_menu', this.menuForm.get('tipo_menu')?.value);
-      formData.append('estado', this.menuForm.get('estado')?.value);
-
-      productos.forEach((prod: any, i: number) => {
-        formData.append(`productos[${i}][producto]`, prod.producto);
-        formData.append(`productos[${i}][cantidad]`, prod.cantidad);
-        // ✅ AGREGAR tamaño si existe
-        if (prod.tamano) {
-          formData.append(`productos[${i}][tamano]`, prod.tamano);
-        }
-      });
-
-      if (this.selectedFile) {
-        formData.append('imagen', this.selectedFile, this.selectedFile.name);
-      }
-
-      if (this.isEditMode) {
-        this.actualizarMenu(formData);
-      } else {
-        this.crearMenu(formData);
-      }
+      this.mostrarDialogConfirmacion();
     } else {
       alert('⚠️ Por favor completa todos los campos requeridos');
+    }
+  }
+
+  private mostrarDialogConfirmacion(): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'menú',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.procesarFormularioMenu();
+      }
+    });
+  }
+
+  private procesarFormularioMenu(): void {
+    this.saving = true;
+    const productos = (this.menuForm.get('productos')?.value || []).filter(
+      (prod: any) => prod.producto && !isNaN(Number(prod.producto)) && prod.cantidad > 0
+    );
+    const formData = new FormData();
+    formData.append('nombre', this.menuForm.get('nombre')?.value);
+    formData.append('descripcion', this.menuForm.get('descripcion')?.value);
+    formData.append('precio', this.menuForm.get('precio')?.value);
+    formData.append('tipo_menu', this.menuForm.get('tipo_menu')?.value);
+    formData.append('estado', this.menuForm.get('estado')?.value);
+    productos.forEach((prod: any, i: number) => {
+      formData.append(`productos[${i}][producto]`, prod.producto);
+      formData.append(`productos[${i}][cantidad]`, prod.cantidad);
+      if (prod.tamano) {
+        formData.append(`productos[${i}][tamano]`, prod.tamano);
+      }
+    });
+    if (this.selectedFile) {
+      formData.append('imagen', this.selectedFile, this.selectedFile.name);
+    }
+    if (this.isEditMode) {
+      this.actualizarMenu(formData);
+    } else {
+      this.crearMenu(formData);
     }
   }
 
@@ -387,29 +371,14 @@ export class CrearMenuComponent implements OnInit {
     const tipo_menu = this.menuForm.get('tipo_menu')?.value;
     const estado = this.menuForm.get('estado')?.value;
     const productos = this.menuForm.get('productos')?.value;
-
     const camposCompletos = nombre && descripcion && precio && tipo_menu && estado && productos && productos.length > 0;
-    const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
-
-    console.log('🔍 Validación edición:', {
-      nombre: !!nombre,
-      descripcion: !!descripcion,
-      precio: precioValido,
-      tipo_menu: !!tipo_menu,
-      estado: !!estado,
-      productos: !!productos && productos.length > 0,
-      valid: camposCompletos && precioValido
-    });
-
+    const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) >= 0.01;
     return camposCompletos && precioValido;
   }
 
-
-  // 🆕 Método separado para crear menu
   private crearMenu(formData: FormData): void {
     this.catalogoService.crearMenu(formData).subscribe({
       next: (response) => {
-        console.log('✅ menu creado exitosamente', response);
         this.mostrarDialogExito(
           'CREADO',
           '¡El Menu ha sido creado exitosamente!',
@@ -417,21 +386,16 @@ export class CrearMenuComponent implements OnInit {
         );
       },
       error: (error) => {
-        console.error('❌ Error al crear el menu', error);
         alert('❌ Error al crear el menu. Revisa los datos e intenta nuevamente.');
         this.saving = false;
       }
     });
   }
 
-
-  //  Método para actualizar menu
   private actualizarMenu(formData: FormData): void {
     if (!this.menuId) return;
-
     this.catalogoService.actualizarMenu(this.menuId, formData).subscribe({
       next: (response) => {
-        console.log('✅ menu actualizado exitosamente', response);
         this.saving = false;
         this.mostrarDialogExito(
           'ACTUALIZADO',
@@ -441,34 +405,34 @@ export class CrearMenuComponent implements OnInit {
         this.router.navigate(['/administrador/gestion-menus/editar-eliminar']);
       },
       error: (error) => {
-        console.error('❌ Error al actualizar el menu', error);
         alert('❌ Error al actualizar el menu. Revisa los datos e intenta nuevamente.');
         this.saving = false;
       }
     });
   }
+
   private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
     const dialogData: SuccessDialogData = {
       title,
       message,
       buttonText
     };
-
     const dialogRef = this.dialog.open(SuccessDialogComponent, {
       disableClose: true,
       data: dialogData
     });
-
     dialogRef.afterClosed().subscribe(() => {
       if (this.isEditMode) {
         this.navegarAListaMenus();
-      } else {
+      }
+      else {
         this.limpiarFormulario();
       }
     });
   }
+
   private navegarAListaMenus(): void {
-    this.router.navigate(['/administrador/gestion-menus/crear']);
+    this.router.navigate(['/administrador/gestion-menus/editar-eliminar']);
   }
 
   private limpiarFormulario(): void {
@@ -476,15 +440,18 @@ export class CrearMenuComponent implements OnInit {
     this.imagePreview = null;
     this.selectedFile = null;
     this.currentImageUrl = null;
-
-    // Resetear valores por defecto
     this.menuForm.patchValue({
       disponibilidad: '',
       categoria: ''
     });
-
-    // Limpiar productos seleccionados
     this.productosSeleccionados = [];
     this.menuForm.get('productos')?.setValue([]);
+  }
+
+  filtrarProductos(): void {
+    const texto = this.menuForm.get('busqueda')?.value?.trim().toLowerCase() || '';
+    this.productosFiltrados = this.productos.filter(p =>
+      p.nombre.toLowerCase().includes(texto)
+    );
   }
 }

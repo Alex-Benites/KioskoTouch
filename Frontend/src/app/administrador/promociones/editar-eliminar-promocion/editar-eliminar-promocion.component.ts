@@ -11,7 +11,7 @@ import { PublicidadService } from '../../../services/publicidad.service';
 import { AuthService } from '../../../services/auth.service'; // ← NUEVO
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { environment } from '../../../../environments/environment'; 
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-editar-eliminar-promocion',
@@ -36,7 +36,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private publicidadService: PublicidadService,
-    private authService: AuthService, // ← NUEVO
+    private authService: AuthService,
     private router: Router
   ) {}
 
@@ -69,7 +69,6 @@ export class EditarEliminarPromocionComponent implements OnInit {
   aplicarFiltros(): void {
     let filtradas = [...this.promociones];
 
-    // Filtrar por mes
     const mesesActivos = this.mesesSeleccionados
       .map((sel, idx) => sel ? idx : -1)
       .filter(idx => idx !== -1);
@@ -82,7 +81,6 @@ export class EditarEliminarPromocionComponent implements OnInit {
       });
     }
 
-    // Filtrar por producto, menú o nombre específico
     if (this.tipoFiltroGrupo && this.busquedaGrupo.trim()) {
       const busqueda = this.busquedaGrupo.trim().toLowerCase();
       if (this.tipoFiltroGrupo === 'producto') {
@@ -119,7 +117,14 @@ export class EditarEliminarPromocionComponent implements OnInit {
     return promo.productos_detalle.map((p: any) => {
       const cantidad = p.cantidad || 1;
       const nombre = p.nombre || p.producto_nombre || p.producto?.nombre || '';
-      return cantidad > 1 ? `- ${nombre} (${cantidad})` : `- ${nombre}`;
+      let tamano = '';
+      if (p.tamano_codigo) {
+        tamano = `(${p.tamano_codigo})`;
+      } else if (p.tamano_nombre) {
+        tamano = `(${p.tamano_nombre.charAt(0).toUpperCase()})`;
+      }
+      let cantidadStr = cantidad > 1 ? `(x${cantidad})` : '';
+      return `- ${nombre} ${cantidadStr}${tamano}`.trim();
     });
   }
 
@@ -136,34 +141,28 @@ export class EditarEliminarPromocionComponent implements OnInit {
     return imagenUrl.startsWith('http') ? imagenUrl : `${environment.baseUrl}${imagenUrl}`;
   }
 
-  // ✅ MÉTODO MEJORADO - Valida permisos antes de editar
   editarPromocion(promo: Promocion): void {
     console.log('🔧 Intentando editar promoción:', promo.nombre);
-    
-    // 🔒 Validar permisos
+
     if (!this.authService.hasPermission('marketing.change_appkioskopromociones')) {
       console.log('❌ Sin permisos para editar promociones');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    // ✅ Tiene permisos, proceder con la edición
     console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-promociones/crear', promo.id]);
   }
 
-  // ✅ MÉTODO MEJORADO - Valida permisos antes de eliminar
   abrirDialogoEliminar(promocion: Promocion): void {
     console.log('🗑️ Intentando eliminar promoción:', promocion.nombre);
-    
-    // 🔒 Validar permisos
+
     if (!this.authService.hasPermission('marketing.delete_appkioskopromociones')) {
       console.log('❌ Sin permisos para eliminar promociones');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    // ✅ Tiene permisos, mostrar confirmación
     console.log('✅ Permisos validados, mostrando confirmación');
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
@@ -185,7 +184,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
     this.publicidadService.eliminarPromocion(promo.id).subscribe({
       next: () => {
         this.promociones = this.promociones.filter(p => p.id !== promo.id);
-        this.aplicarFiltros(); // Reaplica filtros después de eliminar
+        this.aplicarFiltros();
         this.eliminando = false;
         alert(`✅ Promoción "${promo.nombre}" eliminada exitosamente`);
       },
@@ -205,7 +204,6 @@ export class EditarEliminarPromocionComponent implements OnInit {
     });
   }
 
-  // 🆕 MÉTODO PARA MOSTRAR DIÁLOGO DE PERMISOS
   private mostrarDialogoSinPermisos(): void {
     console.log('🔒 Mostrando diálogo de sin permisos');
     this.dialog.open(PermissionDeniedDialogComponent, {
