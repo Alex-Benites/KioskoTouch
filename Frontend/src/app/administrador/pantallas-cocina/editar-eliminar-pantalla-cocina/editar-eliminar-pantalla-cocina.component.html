@@ -11,8 +11,8 @@
       <mat-form-field appearance="outline" class="filter-field">
         <mat-select [(value)]="filtroEstado" (selectionChange)="aplicarFiltros()">
           <mat-option value="">Todos</mat-option>
-          <mat-option value="Activado">Activado</mat-option>
-          <mat-option value="Desactivado">Desactivado</mat-option>
+          <mat-option value="Activado">Activo</mat-option>
+          <mat-option value="Desactivado">Inactivo</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
@@ -22,7 +22,6 @@
       <mat-form-field appearance="outline" class="filter-field">
         <mat-select [(value)]="filtroKiosco" (selectionChange)="aplicarFiltros()">
           <mat-option value="">Seleccione kiosco</mat-option>
-          <!-- ✅ CAMBIAR: Cargar kioscos dinámicamente -->
           <mat-option *ngFor="let kiosco of kioscos" [value]="kiosco.id">
             {{ kiosco.nombre }}
           </mat-option>
@@ -39,25 +38,25 @@
           <th>Nombre</th>
           <th>Token</th>
           <th>Kiosco</th>
-          <th>Estado de pantalla</th>
+          <th class="estado-header">Estado de pantalla</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <!-- ✅ CAMBIAR: Iterar sobre las filas expandidas -->
-        <tr *ngFor="let fila of filasExpandidas" [class.inactive-row]="fila.pantalla.estado === 'inactivo'">
+        <tr *ngFor="let fila of filasExpandidas" [class.inactive-row]="fila.pantalla.estado === 'Desactivado'">
           <td>{{ fila.pantalla.nombre }}</td>
           <td>{{ fila.pantalla.token }}</td>
           <td>{{ fila.kiosco?.nombre || 'Sin kiosco' }}</td>
-          <td>
-            <span class="estado-badge"
-                  [class.activo]="fila.pantalla.estado === 'activo'"
-                  [class.inactivo]="fila.pantalla.estado === 'inactivo'">
-              {{ fila.pantalla.estado | titlecase }}
+          <td class="estado-cell">
+            <!-- ✅ CORREGIDO: Mostrar "Activo"/"Inactivo" aunque backend envíe "Activado"/"Desactivado" -->
+            <span *ngIf="fila.pantalla.estado === 'Activado'" class="estado-activo">
+              Activo
+            </span>
+            <span *ngIf="fila.pantalla.estado === 'Desactivado'" class="estado-inactivo">
+              Inactivo
             </span>
           </td>
           <td class="actions-cell">
-            <!-- Botón Editar con imagen personalizada -->
             <button mat-icon-button
                     class="action-button edit-button"
                     (click)="editarPantalla(fila.pantalla)"
@@ -65,7 +64,6 @@
               <img src="assets/admin/ADMIN_7.png" alt="Editar" class="custom-icon">
             </button>
 
-            <!-- Botón Eliminar con imagen personalizada -->
             <button mat-icon-button
                     class="action-button delete-button"
                     (click)="abrirDialogoEliminar(fila.pantalla)"
@@ -77,7 +75,6 @@
       </tbody>
     </table>
 
-    <!-- Mensaje cuando no hay datos -->
     <div class="no-data" *ngIf="filasExpandidas.length === 0">
       <p>No se encontraron pantallas con los filtros aplicados.</p>
     </div>

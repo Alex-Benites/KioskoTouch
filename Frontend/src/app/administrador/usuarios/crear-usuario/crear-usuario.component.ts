@@ -46,7 +46,7 @@ import { Establecimiento } from '../../../models/establecimiento.model';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     HeaderAdminComponent,
-    FooterAdminComponent
+    FooterAdminComponent,
   ],
   templateUrl: './crear-usuario.component.html',
   styleUrls: ['./crear-usuario.component.scss']

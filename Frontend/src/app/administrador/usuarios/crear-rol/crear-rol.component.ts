@@ -274,7 +274,7 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * ✅ NUEVO MÉTODO: Controlar si "ver" debe estar habilitado o bloqueado
+   * ✅ NUEVO MÉTODO: Controlar si "ver" debe estar habilitado o bloqueado - MEJORADO
    */
   private controlarEstadoVerControl(gestionGroup: FormGroup): void {
     const verControl = gestionGroup.get('ver');
@@ -291,11 +291,15 @@ export class CrearRolComponent implements OnInit {
       (eliminarControl?.value && !eliminarControl?.disabled);
     
     if (tieneDependenciasActivas) {
-      // ✅ HAY DEPENDENCIAS: marcar "ver" y deshabilitarlo
+      // ✅ HAY DEPENDENCIAS: marcar "ver" pero NO deshabilitarlo
+      // Solo marcarlo como requerido visualmente
       verControl.setValue(true, { emitEvent: false });
-      verControl.disable({ emitEvent: false });
+      // NO deshabilitar: verControl.disable({ emitEvent: false });
+      
+      // ✅ OPCIONAL: Agregar clase CSS para mostrar que es requerido
+      verControl.markAsTouched();
     } else {
-      // ✅ NO HAY DEPENDENCIAS: habilitar "ver" para que el usuario pueda elegir
+      // ✅ NO HAY DEPENDENCIAS: permitir que el usuario elija
       verControl.enable({ emitEvent: false });
     }
   }

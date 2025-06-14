@@ -7,15 +7,22 @@
   <!-- ⏳ Loading indicator -->
   @if (loading) {
     <div class="loading-container">
-      <p>Cargando usuarios...</p>
+      <div class="loading-content">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando usuarios...</p>
+      </div>
     </div>
   }
 
   <!-- ❌ Error message -->
   @if (error && !loading) {
     <div class="error-container">
+      <mat-icon>error_outline</mat-icon>
       <p>{{ error }}</p>
-      <button (click)="recargarLista()">Reintentar</button>
+      <button mat-raised-button color="primary" (click)="recargarLista()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
     </div>
   }
 
@@ -58,37 +65,42 @@
         <ng-container matColumnDef="estado">
           <th mat-header-cell *matHeaderCellDef>Estado</th>
           <td mat-cell *matCellDef="let usuario">
-            @if (usuario.is_active) {
-              <span>Activo</span>
-            } @else {
-              <span>Inactivo</span>
-            }
+            <span [class]="getEstadoClass(usuario.is_active)">
+              {{ getEstadoTexto(usuario.is_active) }}
+            </span>
           </td>
         </ng-container>
 
-        <!-- Acciones -->
+        <!-- ✅ Acciones - SIEMPRE VISIBLES, permisos validados en los métodos -->
         <ng-container matColumnDef="acciones">
           <th mat-header-cell *matHeaderCellDef>Acciones</th>
           <td mat-cell *matCellDef="let usuario">
-            <!-- Icono de editar -->
+            
+            <!-- ✅ Icono de editar - SIEMPRE VISIBLE -->
             <img
               src="assets/admin/ADMIN_7.png"
-              alt="Editar"
-              class="action-icon"
+              alt="Editar usuario"
+              class="action-icon editar-icon"
               (click)="editarUsuario(usuario)"
+              title="Editar usuario"
+              [attr.aria-label]="'Editar usuario ' + usuario.username"
             />
-            <!-- Icono de eliminar -->
+            
+            <!-- ✅ Icono de eliminar - SIEMPRE VISIBLE -->
             <img
               src="assets/admin/ADMIN_7_1.png"
-              alt="Eliminar"
-              class="action-icon"
+              alt="Eliminar usuario"
+              class="action-icon eliminar-icon"
               (click)="abrirDialogoEliminar(usuario)"
+              title="Eliminar usuario"
+              [attr.aria-label]="'Eliminar usuario ' + usuario.username"
             />
+
           </td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="usuario-row"></tr>
       </table>
     </div>
   }
@@ -96,9 +108,12 @@
   <!-- 📭 Empty state -->
   @if (!loading && !error && usuarios.length === 0) {
     <div class="empty-state">
-      <p>No hay usuarios registrados</p>
+      <mat-icon>people_outline</mat-icon>
+      <h3>No hay usuarios registrados</h3>
+      <p>No se encontraron usuarios en el sistema.</p>
     </div>
   }
+
 </div>
 
 <app-footer-admin [backRoute]="'/administrador/gestion-usuarios'"></app-footer-admin>
