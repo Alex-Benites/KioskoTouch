@@ -12,9 +12,12 @@ import { RouterModule, Router } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component'; // ✅ AGREGADO
 import { KioskoTouchService } from '../../../services/kiosko-touch.service';
-import { EstablecimientosService } from '../../../services/establecimientos.service'; // ✅ AGREGAR
+import { EstablecimientosService } from '../../../services/establecimientos.service';
+import { AuthService } from '../../../services/auth.service'; // ✅ AGREGADO
 import { KioscoTouch } from '../../../models/kiosco-touch-editar.model';
+
 @Component({
   selector: 'app-editar-eliminar-kiosko-touch',
   templateUrl: './editar-eliminar-kiosko-touch.component.html',
@@ -46,6 +49,7 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
     private dialog: MatDialog,
     private kioscoTouchService: KioskoTouchService,
     private establecimientosService: EstablecimientosService,
+    private authService: AuthService, // ✅ AGREGADO
     private router: Router
   ) {}
 
@@ -70,7 +74,6 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
 
   cargarKioscos(): void {
     this.loading = true;
-    // ✅ CORREGIR: Usar el método correcto del servicio
     this.kioscoTouchService.obtenerKioscosTouch().subscribe({
       next: (data: any[]) => {
         this.kioscos = data;
@@ -92,15 +95,11 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
     });
 
     this.kioscosFiltrados = this.kioscos.filter(kiosco => {
-      // Filtro por estado
       const estadoKiosco = this.getEstadoNombre(kiosco);
       const cumpleEstado = !this.filtroEstado ||
                           estadoKiosco.toLowerCase() === this.filtroEstado.toLowerCase();
 
-      // ✅ CORREGIR: Filtro por establecimiento
       const establecimientoId = kiosco.establecimiento?.id;
-
-      // Convertir ambos a string y hacer comparación estricta
       const cumpleEstablecimiento = !this.filtroEstablecimiento ||
                                    String(establecimientoId) === String(this.filtroEstablecimiento);
 
@@ -118,11 +117,30 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
   }
 
   editarKiosco(kiosco: KioscoTouch): void {
-    console.log('🚀 Navegando a editar kiosco:', kiosco.id);
+    console.log('🔧 Intentando editar kiosco:', kiosco.nombre);
+    
+    // ✅ AGREGADO: Validación de permisos para editar
+    if (!this.authService.hasPermission('establecimientos.change_appkioskokioskostouch')) {
+      console.log('❌ Sin permisos para editar kioscos touch');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-kiosko-touch/crear', kiosco.id]);
   }
 
   abrirDialogoEliminar(kiosco: KioscoTouch): void {
+    console.log('🗑️ Intentando eliminar kiosco:', kiosco.nombre);
+    
+    // ✅ AGREGADO: Validación de permisos para eliminar
+    if (!this.authService.hasPermission('establecimientos.delete_appkioskokioskostouch')) {
+      console.log('❌ Sin permisos para eliminar kioscos touch');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogData: ConfirmationDialogData = {
       itemType: 'kiosco',
     };
@@ -134,13 +152,15 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        console.log('✅ Confirmado eliminar kiosco:', kiosco.nombre);
         this.eliminarKiosco(kiosco);
+      } else {
+        console.log('❌ Eliminación cancelada');
       }
     });
   }
 
   eliminarKiosco(kiosco: KioscoTouch): void {
-    // ✅ CORREGIR: Nombre correcto del servicio
     this.kioscoTouchService.eliminarKioscoTouch(kiosco.id).subscribe({
       next: () => {
         this.kioscos = this.kioscos.filter(k => k.id !== kiosco.id);
@@ -151,6 +171,16 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
         console.error('❌ Error al eliminar kiosco:', error);
         alert('Error al eliminar el kiosco.');
       }
+    });
+  }
+
+  // ✅ AGREGADO: Método para mostrar diálogo sin permisos
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
     });
   }
 

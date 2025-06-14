@@ -44,11 +44,6 @@
 
     .filter-field {
       width: 200px;
-
-      ::ng-deep .mat-mdc-form-field-flex {
-        background-color: #fff;
-        border-radius: 4px;
-      }
     }
   }
 }
@@ -137,12 +132,11 @@
   width: 32px;
   height: 32px;
   padding: 4px;
-  border: none; // Quitar borde
-  background-color: transparent; // Fondo transparente
+  border: none;
+  background-color: transparent;
   transition: all 0.2s ease;
   border-radius: 4px;
 
-  // Estilos para imágenes personalizadas
   .custom-icon {
     width: 20px;
     height: 20px;
@@ -152,7 +146,7 @@
 
   &.edit-button {
     &:hover {
-      background-color: rgba(25, 118, 210, 0.1); // Fondo muy sutil al hover
+      background-color: rgba(25, 118, 210, 0.1);
 
       .custom-icon {
         transform: scale(1.1);
@@ -162,7 +156,7 @@
 
   &.delete-button {
     &:hover {
-      background-color: rgba(211, 47, 47, 0.1); // Fondo muy sutil al hover
+      background-color: rgba(211, 47, 47, 0.1);
 
       .custom-icon {
         transform: scale(1.1);
@@ -170,7 +164,6 @@
     }
   }
 
-  // Si alguna vez necesitas mat-icon
   mat-icon {
     font-size: 20px;
     width: 20px;
@@ -178,7 +171,6 @@
   }
 }
 
-// Estilos para el toggle switch
 ::ng-deep .mat-mdc-slide-toggle {
   .mdc-switch {
     width: 48px;
@@ -221,7 +213,6 @@
   }
 }
 
-// Responsive
 @media (max-width: 768px) {
   .kioscos-container {
     padding: 15px 20px;

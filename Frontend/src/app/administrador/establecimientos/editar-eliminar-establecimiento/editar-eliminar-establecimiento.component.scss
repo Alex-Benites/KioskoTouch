@@ -46,12 +46,7 @@
       width: 200px;
 
       &.search-field {
-        width: 280px; // Hacer más ancho el campo de búsqueda
-      }
-
-      ::ng-deep .mat-mdc-form-field-flex {
-        background-color: #fff;
-        border-radius: 4px;
+        width: 280px;
       }
     }
   }
@@ -80,17 +75,16 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
 
-      // Ajustar anchos específicos para las columnas
-      &:nth-child(1) { width: 18%; } // Establecimiento
-      &:nth-child(2) { width: 25%; } // Dirección
-      &:nth-child(3) { width: 12%; } // Ciudad
-      &:nth-child(4) { width: 12%; } // Provincia
-      &:nth-child(5) { width: 12%; } // Teléfono
-      &:nth-child(6) { width: 10%; } // Estado
+      &:nth-child(1) { width: 18%; }
+      &:nth-child(2) { width: 25%; }
+      &:nth-child(3) { width: 12%; }
+      &:nth-child(4) { width: 12%; }
+      &:nth-child(5) { width: 12%; }
+      &:nth-child(6) { width: 10%; }
       &:nth-child(7) {
         width: 11%;
         text-align: center;
-      } // Acciones
+      }
     }
   }
 
@@ -114,8 +108,7 @@
         color: #333;
         vertical-align: middle;
 
-        // Ajustar contenido de celdas específicas
-        &:nth-child(2) { // Dirección
+        &:nth-child(2) {
           font-size: 13px;
           line-height: 1.3;
           max-width: 0;
@@ -124,7 +117,7 @@
           white-space: nowrap;
         }
 
-        &:nth-child(3), &:nth-child(4) { // Ciudad y Provincia
+        &:nth-child(3), &:nth-child(4) {
           font-weight: 500;
         }
 
@@ -167,7 +160,6 @@
   transition: all 0.2s ease;
   border-radius: 4px;
 
-  // Estilos para imágenes personalizadas
   .custom-icon {
     width: 20px;
     height: 20px;
@@ -195,7 +187,6 @@
     }
   }
 
-  // Si alguna vez necesitas mat-icon
   mat-icon {
     font-size: 20px;
     width: 20px;
@@ -214,7 +205,6 @@
   }
 }
 
-// Responsive
 @media (max-width: 768px) {
   .establecimientos-container {
     padding: 15px 20px;
@@ -236,22 +226,21 @@
       padding: 10px 8px;
       font-size: 11px;
 
-      // Ajustar anchos para móvil
-      &:nth-child(1) { width: 20%; } // Establecimiento
-      &:nth-child(2) { width: 30%; } // Dirección
-      &:nth-child(3) { width: 15%; } // Ciudad
-      &:nth-child(4) { width: 15%; } // Provincia
-      &:nth-child(5) { display: none; } // Ocultar Teléfono en móvil
-      &:nth-child(6) { width: 10%; } // Estado
-      &:nth-child(7) { width: 10%; } // Acciones
+      &:nth-child(1) { width: 20%; }
+      &:nth-child(2) { width: 30%; }
+      &:nth-child(3) { width: 15%; }
+      &:nth-child(4) { width: 15%; }
+      &:nth-child(5) { display: none; }
+      &:nth-child(6) { width: 10%; }
+      &:nth-child(7) { width: 10%; }
     }
 
     tbody td {
       padding: 10px 8px;
 
-      &:nth-child(5) { display: none; } // Ocultar Teléfono en móvil
+      &:nth-child(5) { display: none; }
 
-      &:nth-child(2) { // Dirección en móvil
+      &:nth-child(2) {
         font-size: 11px;
         max-width: 0;
         overflow: hidden;

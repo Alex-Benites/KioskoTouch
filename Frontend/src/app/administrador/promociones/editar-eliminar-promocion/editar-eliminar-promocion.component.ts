@@ -141,7 +141,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
     console.log('🔧 Intentando editar promoción:', promo.nombre);
     
     // 🔒 Validar permisos
-    if (!this.authService.hasPermission('marketing.change_appkioskopromocion')) {
+    if (!this.authService.hasPermission('marketing.change_appkioskopromociones')) {
       console.log('❌ Sin permisos para editar promociones');
       this.mostrarDialogoSinPermisos();
       return;
@@ -157,7 +157,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
     console.log('🗑️ Intentando eliminar promoción:', promocion.nombre);
     
     // 🔒 Validar permisos
-    if (!this.authService.hasPermission('marketing.delete_appkioskopromocion')) {
+    if (!this.authService.hasPermission('marketing.delete_appkioskopromociones')) {
       console.log('❌ Sin permisos para eliminar promociones');
       this.mostrarDialogoSinPermisos();
       return;

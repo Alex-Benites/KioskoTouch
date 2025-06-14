@@ -17,9 +17,11 @@ import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component'; // ✅ AGREGADO
 
 // Services and Models
 import { PublicidadService } from '../../../services/publicidad.service';
+import { AuthService } from '../../../services/auth.service'; // ✅ AGREGADO
 import { Publicidad, ApiError } from '../../../models/marketing.model';
 
 import { environment } from '../../../../environments/environment';
@@ -53,6 +55,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private publicidadService = inject(PublicidadService);
+  private authService = inject(AuthService); // ✅ AGREGADO
 
   ngOnInit(): void {
     this.initializeForm();
@@ -175,11 +178,30 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   }
 
   editarPublicidad(id: number): void {
-    console.log('✏️ Editando publicidad ID:', id);
+    console.log('✏️ Intentando editar publicidad ID:', id);
+    
+    // ✅ AGREGADO: Validación de permisos para editar
+    if (!this.authService.hasPermission('marketing.change_appkioskopublicidades')) {
+      console.log('❌ Sin permisos para editar publicidad');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-publicidad/crear', id]);
   }
 
   confirmarEliminacion(id: number, nombre: string): void {
+    console.log('🗑️ Intentando eliminar publicidad:', nombre);
+    
+    // ✅ AGREGADO: Validación de permisos para eliminar
+    if (!this.authService.hasPermission('marketing.delete_appkioskopublicidades')) {
+      console.log('❌ Sin permisos para eliminar publicidad');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
         itemType: 'publicidad',
@@ -196,39 +218,49 @@ export class EditarEliminarPublicidadComponent implements OnInit {
     });
   }
 
-eliminarPublicidad(id: number, nombre: string): void {
-  console.log('🗑️ Eliminando publicidad ID:', id);
-  this.isLoading = true;
-  
-  this.publicidadService.deletePublicidad(id).subscribe({
-    next: () => {
-      console.log('✅ Publicidad eliminada correctamente');
-      
-      // Remover de la lista local
-      this.todasLasPublicidades = this.todasLasPublicidades.filter(p => p.id !== id);
-      this.publicidadesFiltradas = this.publicidadesFiltradas.filter(p => p.id !== id);
-      this.isLoading = false;
+  eliminarPublicidad(id: number, nombre: string): void {
+    console.log('🗑️ Eliminando publicidad ID:', id);
+    this.isLoading = true;
+    
+    this.publicidadService.deletePublicidad(id).subscribe({
+      next: () => {
+        console.log('✅ Publicidad eliminada correctamente');
+        
+        // Remover de la lista local
+        this.todasLasPublicidades = this.todasLasPublicidades.filter(p => p.id !== id);
+        this.publicidadesFiltradas = this.publicidadesFiltradas.filter(p => p.id !== id);
+        this.isLoading = false;
 
-      // Sin dialog de éxito - eliminación silenciosa
-    },
-    error: (error: ApiError) => {
-      console.error('❌ Error al eliminar publicidad:', error);
-      this.isLoading = false;
+        // Sin dialog de éxito - eliminación silenciosa
+      },
+      error: (error: ApiError) => {
+        console.error('❌ Error al eliminar publicidad:', error);
+        this.isLoading = false;
 
-      let mensajeError = '❌ Error al eliminar la publicidad.';
-      if (error.status === 404) {
-        mensajeError = '❌ La publicidad no existe o ya fue eliminada.';
-      } else if (error.status === 403) {
-        mensajeError = '❌ No tienes permisos para eliminar esta publicidad.';
-      } else if (error.message) {
-        mensajeError = `❌ ${error.message}`;
+        let mensajeError = '❌ Error al eliminar la publicidad.';
+        if (error.status === 404) {
+          mensajeError = '❌ La publicidad no existe o ya fue eliminada.';
+        } else if (error.status === 403) {
+          mensajeError = '❌ No tienes permisos para eliminar esta publicidad.';
+        } else if (error.message) {
+          mensajeError = `❌ ${error.message}`;
+        }
+
+        alert(mensajeError);
+        this.cargarPublicidades();
       }
+    });
+  }
 
-      alert(mensajeError);
-      this.cargarPublicidades();
-    }
-  });
-}
+  // ✅ AGREGADO: Método para mostrar diálogo sin permisos
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
+    });
+  }
 
   private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
     const dialogData: SuccessDialogData = {

@@ -1,18 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // ✅ Agregar esta línea
+import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatInputModule } from '@angular/material/input'; // ✅ Agregar para el input
+import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component';
 import { EstablecimientosService } from '../../../services/establecimientos.service';
+import { AuthService } from '../../../services/auth.service';
 import { Establecimiento } from '../../../models/establecimiento.model';
 import { Router } from '@angular/router';
 
@@ -23,13 +25,13 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule, // ✅ Agregar FormsModule
+    FormsModule,
     MatFormFieldModule,
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatInputModule, // ✅ Agregar MatInputModule
+    MatInputModule,
     RouterModule,
     FooterAdminComponent,
     HeaderAdminComponent
@@ -46,6 +48,7 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private establecimientosService: EstablecimientosService,
+    private authService: AuthService, // ✅ AGREGADO
     private router: Router
   ) {}
 
@@ -53,8 +56,17 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
     this.cargarEstablecimientos();
   }
 
-
   editarEstablecimiento(establecimiento: Establecimiento): void {
+    console.log('🔧 Intentando editar establecimiento:', establecimiento.nombre);
+    
+    // ✅ AGREGADO: Validación de permisos
+    if (!this.authService.hasPermission('establecimientos.change_appkioskoestablecimientos')) {
+      console.log('❌ Sin permisos para editar establecimientos');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-establecimientos/crear', establecimiento.id]);
   }
 
@@ -77,23 +89,17 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
     console.log('🔍 Filtro Estado:', this.filtroEstado);
 
     this.establecimientosFiltrados = this.establecimientos.filter(establecimiento => {
-      // Usar acceso dinámico para evitar errores de TypeScript
       const establecimientoAny = establecimiento as any;
-
-      // El estado viene como número desde el backend
       const estadoActual = establecimientoAny.estado;
 
       console.log(`🔍 Comparando: estadoActual="${estadoActual}" vs filtro="${this.filtroEstado}"`);
 
-      // Filtro por estado - comparar como números
       const cumpleEstado = !this.filtroEstado ||
                            estadoActual.toString() === this.filtroEstado;
 
-      // Filtro por provincia
       const cumpleProvincia = !this.filtroProvincia ||
                              establecimiento.provincia === this.filtroProvincia;
 
-      // Filtro por texto
       const cumpleTexto = !this.textoBusqueda ||
                          establecimiento.nombre.toLowerCase().includes(this.textoBusqueda.toLowerCase()) ||
                          establecimiento.ciudad.toLowerCase().includes(this.textoBusqueda.toLowerCase());
@@ -108,6 +114,16 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
   }
 
   abrirDialogoEliminar(establecimiento: Establecimiento): void {
+    console.log('🗑️ Intentando eliminar establecimiento:', establecimiento.nombre);
+    
+    // ✅ AGREGADO: Validación de permisos
+    if (!this.authService.hasPermission('establecimientos.delete_appkioskoestablecimientos')) {
+      console.log('❌ Sin permisos para eliminar establecimientos');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogData: ConfirmationDialogData = {
       itemType: 'establecimiento',
     };
@@ -119,7 +135,10 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        console.log('✅ Confirmado eliminar establecimiento:', establecimiento.nombre);
         this.eliminarEstablecimiento(establecimiento);
+      } else {
+        console.log('❌ Eliminación cancelada');
       }
     });
   }
@@ -129,11 +148,20 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
       next: () => {
         this.establecimientos = this.establecimientos.filter(e => e.id !== establecimiento.id);
         this.aplicarFiltros();
-
       },
       error: () => {
         alert('Error al eliminar el establecimiento.');
       }
+    });
+  }
+
+  // ✅ AGREGADO: Método para mostrar diálogo sin permisos
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
     });
   }
 
