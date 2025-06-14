@@ -15,7 +15,7 @@ import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Tamano, ProductoTamano } from '../../../models/tamano.model';  // Agregar ProductoTamano aquí
 
-@Component({ 
+@Component({
   selector: 'app-crear-producto',
   standalone: true,
   imports: [
@@ -33,7 +33,7 @@ import { Tamano, ProductoTamano } from '../../../models/tamano.model';  // Agreg
   styleUrls: ['./crear.component.scss']
 })
 export class CrearComponent implements OnInit {
-  
+
   private fb = inject(FormBuilder);
   private catalogoService = inject(CatalogoService);
   private router = inject(Router);
@@ -52,7 +52,7 @@ export class CrearComponent implements OnInit {
   productoId: number | null = null;
   currentImageUrl: string | null = null;
   saving = false;
-  
+
   // Nuevas propiedades para tamaños
   tamanos: Tamano[] = [];
 
@@ -87,7 +87,7 @@ export class CrearComponent implements OnInit {
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
     });
-    
+
     // Cargar tamaños disponibles
     this.cargarTamanos();
 
@@ -99,7 +99,7 @@ export class CrearComponent implements OnInit {
     // Agregar escucha para cambios en aplicaTamanos
     this.productoForm.get('aplicaTamanos')?.valueChanges.subscribe(tieneTamanos => {
       const precioControl = this.productoForm.get('precio');
-      
+
       if (tieneTamanos) {
         // Si tiene tamaños, deshabilitar el campo precio y quitar validaciones
         precioControl?.disable();
@@ -125,7 +125,7 @@ export class CrearComponent implements OnInit {
       next: (tamanos) => {
         this.tamanos = tamanos;
         console.log('✅ Tamaños cargados:', tamanos.length);
-        
+
         // Agregar campos dinámicos para cada tamaño
         this.tamanos.forEach(tamano => {
           const controlName = 'precio_' + tamano.codigo.toLowerCase();
@@ -168,7 +168,7 @@ export class CrearComponent implements OnInit {
         // Si el producto tiene tamaños, configurar los precios
         if (producto.aplica_tamanos && producto.tamanos_detalle?.length) {
           console.log('📏 Configurando precios por tamaño:', producto.tamanos_detalle);
-          
+
           // Esperar a que los campos se creen
           setTimeout(() => {
             producto.tamanos_detalle.forEach((tamano: ProductoTamano) => {  // Añadir tipo explícito aquí
@@ -188,7 +188,7 @@ export class CrearComponent implements OnInit {
         if (producto.imagen_url) {
           this.currentImageUrl = this.catalogoService.getFullImageUrl(producto.imagen_url);
           this.imagePreview = this.currentImageUrl;
-          
+
           // Quitar validación obligatoria de imagen para edición
           this.productoForm.get('imagen')?.clearValidators();
           this.productoForm.get('imagen')?.updateValueAndValidity();
@@ -435,7 +435,7 @@ export class CrearComponent implements OnInit {
 
       // Manejar precio según aplica_tamanos
       const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value || false;
-      
+
       if (aplicaTamanos) {
         // Si tiene tamaños, enviar un precio base de 0
         formData.append('precio', '0');
@@ -455,21 +455,21 @@ export class CrearComponent implements OnInit {
 
       // Manejar tamaños y precios
       formData.append('aplica_tamanos', aplicaTamanos ? 'true' : 'false');
-      
+
       if (aplicaTamanos) {
         const preciosTamanos: { [key: string]: number } = {};
-        
+
         this.tamanos.forEach(tamano => {
           const controlName = 'precio_' + tamano.codigo.toLowerCase();
           const precio = this.productoForm.get(controlName)?.value;
-          
+
           if (precio) {
             preciosTamanos[tamano.nombre.toLowerCase()] = parseFloat(precio);
           }
         });
-        
+
         formData.append('precios_tamanos', JSON.stringify(preciosTamanos));
-        
+
         console.log('📏 Enviando precios por tamaño:', preciosTamanos);
       }
 
@@ -506,25 +506,25 @@ export class CrearComponent implements OnInit {
 
   private validarFormulario(): boolean {
     const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
-    
+
     if (aplicaTamanos) {
       // Si tiene tamaños, validar que al menos un tamaño tenga precio
       let tienePreciosTamano = false;
-      
+
       this.tamanos.forEach(tamano => {
         const controlName = 'precio_' + tamano.codigo.toLowerCase();
         const precioTamano = this.productoForm.get(controlName)?.value;
-        
+
         if (precioTamano && parseFloat(precioTamano) > 0) {
           tienePreciosTamano = true;
         }
       });
-      
+
       if (!tienePreciosTamano) {
         alert('⚠️ Debe definir al menos un precio por tamaño');
         return false;
       }
-      
+
       // Ignorar validación del precio base
       return this.validarCamposObligatorios(['nombre', 'descripcion', 'categoria', 'disponibilidad']);
     } else {
@@ -597,7 +597,8 @@ export class CrearComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(() => {
       if (this.isEditMode) {
-        this.navegarAListaProductos();
+        // ✅ CAMBIO: Regresar a la vista de edición en lugar de productos
+        this.router.navigate(['/administrador/gestion-productos/editar']);
       } else {
         this.limpiarFormulario();
       }
@@ -625,10 +626,10 @@ export class CrearComponent implements OnInit {
   // Añadir este método para manejar la selección de archivos
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    
+
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
-      
+
       // Validar que sea una imagen
       if (!this.selectedFile.type.startsWith('image/')) {
         alert('Por favor selecciona un archivo de imagen válido');
@@ -640,12 +641,12 @@ export class CrearComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = () => {
         this.imagePreview = reader.result as string;
-        
+
         // Actualizar el valor del control del formulario
         this.productoForm.patchValue({ imagen: this.selectedFile });
       };
       reader.readAsDataURL(this.selectedFile);
-      
+
       console.log('🖼️ Imagen seleccionada:', this.selectedFile.name);
     }
   }
