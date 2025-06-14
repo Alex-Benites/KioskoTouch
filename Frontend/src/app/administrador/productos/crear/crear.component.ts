@@ -533,42 +533,122 @@ export class CrearComponent implements OnInit {
   private validarFormularioParaEdicion(): boolean {
     const nombre = this.productoForm.get('nombre')?.value;
     const descripcion = this.productoForm.get('descripcion')?.value;
-    const precio = this.productoForm.get('precio')?.value;
     const disponibilidad = this.productoForm.get('disponibilidad')?.value;
     const categoria = this.productoForm.get('categoria')?.value;
+    const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
 
-    const camposCompletos = nombre && descripcion && precio && disponibilidad && categoria;
-    const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
+    console.log('🔍 [VALIDACIÓN EDICIÓN] Validando formulario...');
+    console.log('📊 [VALIDACIÓN EDICIÓN] Datos:', {
+      nombre: !!nombre,
+      descripcion: !!descripcion,
+      disponibilidad: !!disponibilidad,
+      categoria: !!categoria,
+      aplicaTamanos: aplicaTamanos
+    });
 
-    return camposCompletos && precioValido;
+    // Validar campos básicos
+    const camposBasicosCompletos = nombre && descripcion && disponibilidad && categoria;
+    
+    if (!camposBasicosCompletos) {
+      console.error('❌ [VALIDACIÓN EDICIÓN] Faltan campos básicos');
+      return false;
+    }
+
+    // Si tiene tamaños, validar precios por tamaño
+    if (aplicaTamanos) {
+      console.log('📏 [VALIDACIÓN EDICIÓN] Producto con tamaños - validando precios...');
+      
+      let tienePreciosTamano = false;
+      const preciosDetalle: any = {};
+
+      this.tamanos.forEach(tamano => {
+        const controlName = 'precio_' + tamano.codigo.toLowerCase();
+        const precioTamano = this.productoForm.get(controlName)?.value;
+        preciosDetalle[tamano.nombre] = precioTamano;
+        
+        if (precioTamano && parseFloat(precioTamano) > 0) {
+          tienePreciosTamano = true;
+        }
+      });
+
+      console.log('💰 [VALIDACIÓN EDICIÓN] Precios por tamaño:', preciosDetalle);
+
+      if (!tienePreciosTamano) {
+        console.error('❌ [VALIDACIÓN EDICIÓN] Faltan precios por tamaño');
+        alert('⚠️ Debe definir al menos un precio por tamaño');
+        return false;
+      }
+
+      console.log('✅ [VALIDACIÓN EDICIÓN] Producto con tamaños válido');
+      return true;
+    } 
+    // Si NO tiene tamaños, validar precio base
+    else {
+      const precio = this.productoForm.get('precio')?.value;
+      const precioValido = precio && /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
+      
+      console.log('💰 [VALIDACIÓN EDICIÓN] Validando precio base:', { precio, precioValido });
+
+      if (!precioValido) {
+        console.error('❌ [VALIDACIÓN EDICIÓN] Precio base inválido');
+        return false;
+      }
+
+      console.log('✅ [VALIDACIÓN EDICIÓN] Producto sin tamaños válido');
+      return true;
+    }
   }
 
   private validarFormulario(): boolean {
     const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
 
+    console.log('🔍 [VALIDACIÓN CREACIÓN] Validando formulario...');
+    console.log('📏 [VALIDACIÓN CREACIÓN] Aplica tamaños:', aplicaTamanos);
+
     if (aplicaTamanos) {
       // Si tiene tamaños, validar que al menos un tamaño tenga precio
       let tienePreciosTamano = false;
+      const preciosDetalle: any = {};
 
       this.tamanos.forEach(tamano => {
         const controlName = 'precio_' + tamano.codigo.toLowerCase();
         const precioTamano = this.productoForm.get(controlName)?.value;
+        preciosDetalle[tamano.nombre] = precioTamano;
 
         if (precioTamano && parseFloat(precioTamano) > 0) {
           tienePreciosTamano = true;
         }
       });
 
+      console.log('💰 [VALIDACIÓN CREACIÓN] Precios por tamaño:', preciosDetalle);
+
       if (!tienePreciosTamano) {
+        console.error('❌ [VALIDACIÓN CREACIÓN] Faltan precios por tamaño');
         alert('⚠️ Debe definir al menos un precio por tamaño');
         return false;
       }
 
-      // Ignorar validación del precio base
-      return this.validarCamposObligatorios(['nombre', 'descripcion', 'categoria', 'disponibilidad']);
+      // Para productos con tamaños, validar solo campos obligatorios (sin precio base)
+      const camposValidos = this.validarCamposObligatorios(['nombre', 'descripcion', 'categoria', 'disponibilidad']);
+      console.log('✅ [VALIDACIÓN CREACIÓN] Producto con tamaños válido');
+      return camposValidos;
     } else {
-      // Validación normal con precio base incluido
-      return this.productoForm.valid;
+      // Para productos sin tamaños, validación completa incluyendo precio base
+      const formValid = this.productoForm.valid;
+      console.log('💰 [VALIDACIÓN CREACIÓN] Validación completa (sin tamaños):', formValid);
+      
+      if (!formValid) {
+        console.error('❌ [VALIDACIÓN CREACIÓN] Formulario inválido');
+        // Mostrar errores específicos
+        Object.keys(this.productoForm.controls).forEach(key => {
+          const control = this.productoForm.get(key);
+          if (control && control.invalid) {
+            console.error(`   - ${key}:`, control.errors);
+          }
+        });
+      }
+      
+      return formValid;
     }
   }
 
@@ -576,7 +656,13 @@ export class CrearComponent implements OnInit {
   private validarCamposObligatorios(campos: string[]): boolean {
     return campos.every(campo => {
       const control = this.productoForm.get(campo);
-      return control && !control.invalid;
+      const isValid = control && !control.invalid;
+      
+      if (!isValid) {
+        console.error(`❌ [VALIDACIÓN] Campo inválido: ${campo}`, control?.errors);
+      }
+      
+      return isValid;
     });
   }
 

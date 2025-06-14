@@ -68,11 +68,22 @@ export class EliminarComponent implements OnInit {
 
     this.catalogoService.getProductos().subscribe({
       next: (productos) => {
+        console.log('📦 Productos recibidos:', productos);
+        
+        // ✅ DEBUG: Mostrar estructura de productos
+        if (productos.length > 0) {
+          console.log('🔍 Ejemplo de producto completo:', productos[0]);
+          console.log('🔍 Campos disponibles:', Object.keys(productos[0]));
+        }
+        
         this.productos = productos;
         this.productosFiltrados = productos;
         this.loading = false;
+        
+        // ✅ DEBUG: Analizar todos los productos
+        this.debugProductos();
+        
         console.log('✅ Productos cargados:', productos.length);
-        console.log('📦 Productos:', productos);
       },
       error: (error) => {
         console.error('❌ Error al cargar productos:', error);
@@ -194,5 +205,115 @@ export class EliminarComponent implements OnInit {
       // Opcional: recargar la lista después de cerrar dialog
       // this.cargarProductos();
     });
+  }
+
+  // En eliminar.component.ts
+
+  // ✅ VERSIÓN COMPLETA QUE MANEJA AMBOS CASOS
+  getPrecioFormateado(producto: any): string {
+    console.log('🔍 Formateando precio para producto:', producto.nombre);
+    console.log('📊 Datos del producto:', {
+      precio: producto.precio,
+      tamanos_detalle: producto.tamanos_detalle,
+      aplica_tamanos: producto.aplica_tamanos
+    });
+
+    // Caso 1: Producto CON tamaños
+    if (producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
+      console.log('✅ Producto CON tamaños');
+      const precios = producto.tamanos_detalle.map((t: any) => parseFloat(t.precio));
+      const minPrecio = Math.min(...precios);
+      const maxPrecio = Math.max(...precios);
+      
+      if (minPrecio !== maxPrecio) {
+        return `$${minPrecio.toFixed(2)} - $${maxPrecio.toFixed(2)}`;
+      } else {
+        return `$${minPrecio.toFixed(2)}`;
+      }
+    }
+    
+    // Caso 2: Producto SIN tamaños (precio único)
+    else {
+      console.log('✅ Producto SIN tamaños, usando precio base');
+      const precioBase = parseFloat(producto.precio || 0);
+      return `$${precioBase.toFixed(2)}`;
+    }
+  }
+
+  // ✅ VERSIÓN COMPLETA PARA ESTADOS
+  getEstadoInfo(producto: any): { texto: string, clase: string } {
+    console.log('🔍 Obteniendo estado para producto:', producto.nombre);
+    console.log('📊 Datos de estado:', {
+      activo: producto.activo,
+      estado_nombre: producto.estado_nombre,
+      estado: producto.estado
+    });
+
+    // Prioridad 1: Usar estado_nombre del backend si existe
+    if (producto.estado_nombre) {
+      const isActivo = producto.activo === true || producto.activo === 1;
+      return {
+        texto: producto.estado_nombre,
+        clase: isActivo ? 'estado-activo' : 'estado-inactivo'
+      };
+    }
+    
+    // Prioridad 2: Usar campo 'activo' del backend
+    else if (producto.activo !== undefined) {
+      const isActivo = producto.activo === true || producto.activo === 1;
+      return {
+        texto: isActivo ? 'Activo' : 'Inactivo',
+        clase: isActivo ? 'estado-activo' : 'estado-inactivo'
+      };
+    }
+    
+    // Prioridad 3: Fallback para compatibilidad (estado como número)
+    else {
+      const isActivo = producto.estado === 1 || producto.estado === 4; // Asumiendo que 1 o 4 son activos
+      return {
+        texto: isActivo ? 'Activo' : 'Inactivo',
+        clase: isActivo ? 'estado-activo' : 'estado-inactivo'
+      };
+    }
+  }
+
+  // ✅ MÉTODO PARA DEBUG - Ver qué productos tienen qué estructura
+  debugProductos(): void {
+    console.log('🔍 DEBUG: Analizando estructura de productos');
+    
+    this.productos.forEach((producto: any, index: number) => {
+      console.log(`📦 Producto ${index + 1}: ${producto.nombre}`);
+      console.log('   - Precio base:', producto.precio);
+      console.log('   - Aplica tamaños:', producto.aplica_tamanos);
+      console.log('   - Tamaños detalle:', producto.tamanos_detalle?.length || 0);
+      console.log('   - Estado activo:', producto.activo);
+      console.log('   - Estado nombre:', producto.estado_nombre);
+      console.log('   - Estado ID:', producto.estado);
+      console.log('   ---');
+    });
+  }
+
+  // ✅ MÉTODO PARA OBTENER INFORMACIÓN DETALLADA
+  getDetalleProducto(producto: any): string {
+    let detalle = producto.nombre;
+    
+    // Si tiene tamaños, agregarlos al detalle
+    if (producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
+      detalle += ' (Tamaños: ';
+      const tamanos = producto.tamanos_detalle.map((t: any) =>
+        `${t.nombre_tamano}: $${parseFloat(t.precio).toFixed(2)}`
+      ).join(', ');
+      detalle += tamanos + ')';
+    } else {
+      // Producto sin tamaños
+      detalle += ` (Precio único: $${parseFloat(producto.precio || 0).toFixed(2)})`;
+    }
+    
+    return detalle;
+  }
+
+  // ✅ MÉTODO PARA VERIFICAR SI UN PRODUCTO TIENE TAMAÑOS
+  tieneTamanos(producto: any): boolean {
+    return producto.tamanos_detalle && producto.tamanos_detalle.length > 0;
   }
 }
