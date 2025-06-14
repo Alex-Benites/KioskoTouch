@@ -1,21 +1,23 @@
-import { Component,OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component'; // ✅ AGREGADO
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { CatalogoService } from '../../../services/catalogo.service';
+import { AuthService } from '../../../services/auth.service'; // ✅ AGREGADO
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-editar',
   standalone: true,
-  imports: [CommonModule,FormsModule,HeaderAdminComponent,FooterAdminComponent],
+  imports: [CommonModule, FormsModule, HeaderAdminComponent, FooterAdminComponent],
   templateUrl: './editar.component.html',
   styleUrl: './editar.component.scss'
 })
-
 export class EditarComponent implements OnInit {
   productos: any[] = [];
   productosFiltrados: any[] = [];
@@ -24,15 +26,17 @@ export class EditarComponent implements OnInit {
   categoriaSeleccionada: number | null = null;
   loading: boolean = false;
 
-  // ✅ MODIFICAR propiedades del carrusel
+  // Propiedades del carrusel
   indiceActual: number = 0;
-  itemsVisibles: number = 5; // ✅ CAMBIAR a 5 items visibles
-  itemWidth: number = 180; // ✅ AJUSTAR ancho (sin gap extra)
+  itemsVisibles: number = 5;
+  itemWidth: number = 180;
   desplazamiento: number = 0;
   totalItems: number = 0;
 
   constructor(
     private catalogoService: CatalogoService,
+    private authService: AuthService, // ✅ AGREGADO
+    private dialog: MatDialog, // ✅ AGREGADO
     private router: Router
   ) {}
 
@@ -41,12 +45,10 @@ export class EditarComponent implements OnInit {
     this.cargarProductos();
   }
 
-  // ✅ MODIFICAR métodos del carrusel para que sea infinito
   anteriorCategoria(): void {
     if (this.indiceActual > 0) {
       this.indiceActual--;
     } else {
-      // ✅ NUEVO: Si está en el inicio, ir al final
       this.indiceActual = Math.max(0, this.totalItems - this.itemsVisibles);
     }
     this.actualizarDesplazamiento();
@@ -56,7 +58,6 @@ export class EditarComponent implements OnInit {
     if (this.indiceActual < this.totalItems - this.itemsVisibles) {
       this.indiceActual++;
     } else {
-      // ✅ NUEVO: Si está en el final, volver al inicio
       this.indiceActual = 0;
     }
     this.actualizarDesplazamiento();
@@ -66,7 +67,6 @@ export class EditarComponent implements OnInit {
     this.desplazamiento = -this.indiceActual * this.itemWidth;
   }
 
-  // ✅ MANTENER este método
   filtrarPorCategoria(categoriaId: number | null): void {
     this.categoriaSeleccionada = categoriaId;
 
@@ -82,7 +82,6 @@ export class EditarComponent implements OnInit {
     this.filtrarProductos();
   }
 
-  // ✅ MANTENER SOLO ESTE método filtrarProductos (eliminar el duplicado)
   filtrarProductos(): void {
     let resultado = [...this.productos];
 
@@ -145,7 +144,6 @@ export class EditarComponent implements OnInit {
           categoria: p.categoria
         })));
 
-        // ✅ Cargar imágenes después de cargar productos
         this.loadProductImages();
       },
       error: (error) => {
@@ -164,10 +162,8 @@ export class EditarComponent implements OnInit {
       if (producto.id) {
         this.catalogoService.getProductoImagen(producto.id).subscribe({
           next: (response) => {
-            // Actualizar tanto en productos como en productosFiltrados
             this.productos[index].imagenUrl = response.imagen_url;
 
-            // Actualizar también en productosFiltrados si el producto está ahí
             const filtradoIndex = this.productosFiltrados.findIndex(p => p.id === producto.id);
             if (filtradoIndex !== -1) {
               this.productosFiltrados[filtradoIndex].imagenUrl = response.imagen_url;
@@ -189,14 +185,14 @@ export class EditarComponent implements OnInit {
     this.catalogoService.getCategorias().subscribe({
       next: (data) => {
         this.categorias = data;
-        this.totalItems = this.categorias.length + 1; // +1 por el botón "Todas"
+        this.totalItems = this.categorias.length + 1;
         console.log('✅ Categorías cargadas:', this.categorias);
         console.log('📊 IDs de categorías:', this.categorias.map(c => ({ id: c.id, nombre: c.nombre })));
       },
       error: (error) => {
         console.error('❌ Error cargando categorías:', error);
         this.categorias = [];
-        this.totalItems = 1; // Solo "Todas"
+        this.totalItems = 1;
       }
     });
   }
@@ -209,8 +205,32 @@ export class EditarComponent implements OnInit {
   }
 
   editarProducto(producto: any): void {
-    console.log('🔧 Editando producto:', producto);
+    console.log('🔧 Intentando editar producto:', producto.nombre);
+    
+    // ✅ AGREGADO: Validación de permisos para editar
+    if (!this.authService.hasPermission('catalogo.change_appkioskoproductos')) {
+      console.log('❌ Sin permisos para editar productos');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-productos/crear', producto.id]);
+  }
+
+  // ✅ AGREGADO: Método para mostrar diálogo sin permisos
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
+    });
+  }
+
+  // ✅ AGREGADO: Método para verificar permisos desde template
+  tienePermisoEditar(): boolean {
+    return this.authService.hasPermission('catalogo.change_appkioskoproductos');
   }
 
   getFullImageUrl(imagenUrl: string | undefined): string {

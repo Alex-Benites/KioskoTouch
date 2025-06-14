@@ -10,7 +10,9 @@ import { CommonModule } from '@angular/common';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component'; // ✅ AGREGADO
 import { CatalogoService } from '../../../services/catalogo.service';
+import { AuthService } from '../../../services/auth.service'; // ✅ AGREGADO
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { FormsModule } from '@angular/forms';
 
@@ -33,15 +35,16 @@ import { FormsModule } from '@angular/forms';
 export class EliminarComponent implements OnInit {
   private dialog = inject(MatDialog);
   private catalogoService = inject(CatalogoService);
+  private authService = inject(AuthService); // ✅ AGREGADO
   private router = inject(Router);
 
   displayedColumns: string[] = ['nombre', 'categoria', 'precio', 'estado', 'acciones'];
   productos: Producto[] = [];
-  productosFiltrados: Producto[] = []; // Nueva propiedad
+  productosFiltrados: Producto[] = [];
   loading = false;
   eliminando = false;
-  filtroCategoria: string = ''; // Nueva propiedad
-  categorias: Categoria[] = []; // Agregar esta propiedad
+  filtroCategoria: string = '';
+  categorias: Categoria[] = [];
 
   ngOnInit(): void {
     this.cargarCategorias();
@@ -66,7 +69,7 @@ export class EliminarComponent implements OnInit {
     this.catalogoService.getProductos().subscribe({
       next: (productos) => {
         this.productos = productos;
-        this.productosFiltrados = productos; // Inicializar filtrados
+        this.productosFiltrados = productos;
         this.loading = false;
         console.log('✅ Productos cargados:', productos.length);
         console.log('📦 Productos:', productos);
@@ -79,13 +82,11 @@ export class EliminarComponent implements OnInit {
     });
   }
 
-  // Método para obtener el nombre de la categoría por ID
   getNombreCategoria(categoriaId: number): string {
     const categoria = this.categorias.find(c => c.id === categoriaId);
     return categoria ? categoria.nombre : 'Sin categoría';
   }
 
-  // Filtrar por nombre de categoría
   filtrarPorCategoria(): void {
     if (!this.filtroCategoria.trim()) {
       this.productosFiltrados = this.productos;
@@ -98,6 +99,16 @@ export class EliminarComponent implements OnInit {
   }
 
   abrirDialogoEliminar(producto: any): void {
+    console.log('🗑️ Intentando eliminar producto:', producto.nombre);
+    
+    // ✅ AGREGADO: Validación de permisos para eliminar
+    if (!this.authService.hasPermission('catalogo.delete_appkioskoproductos')) {
+      console.log('❌ Sin permisos para eliminar productos');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
         itemType: 'producto',
@@ -124,6 +135,7 @@ export class EliminarComponent implements OnInit {
 
         // Remover el producto de la lista local
         this.productos = this.productos.filter(p => p.id !== producto.id);
+        this.filtrarPorCategoria(); // Actualizar filtrados
         this.eliminando = false;
 
         this.mostrarDialogExito(
@@ -136,7 +148,6 @@ export class EliminarComponent implements OnInit {
         console.error('❌ Error al eliminar producto:', error);
         this.eliminando = false;
 
-        // Mostrar mensaje de error más específico
         let mensajeError = '❌ Error al eliminar el producto.';
         if (error.status === 404) {
           mensajeError = '❌ El producto no existe o ya fue eliminado.';
@@ -147,11 +158,24 @@ export class EliminarComponent implements OnInit {
         }
 
         alert(mensajeError);
-
-        // Recargar productos por si hubo cambios
         this.cargarProductos();
       }
     });
+  }
+
+  // ✅ AGREGADO: Método para mostrar diálogo sin permisos
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
+    });
+  }
+
+  // ✅ AGREGADO: Método para verificar permisos desde template
+  tienePermisoEliminar(): boolean {
+    return this.authService.hasPermission('catalogo.delete_appkioskoproductos');
   }
 
   private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
