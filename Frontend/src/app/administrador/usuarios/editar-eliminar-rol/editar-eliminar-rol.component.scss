@@ -155,6 +155,44 @@ $border-color-medium: #ced4da;
     font-size: 18px;
     font-weight: 700;
     border-bottom: 3px solid #DD453A;
+
+    // ✅ NUEVO: Estilos para el header con contador
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .roles-counter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 6px 12px;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+
+      .counter-label {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+      }
+
+      .counter-number {
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 2px 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        min-width: 25px;
+        text-align: center;
+      }
+    }
   }
 
   .roles-list {
@@ -280,11 +318,11 @@ $border-color-medium: #ced4da;
     margin-bottom: 25px;
     line-height: 1.5;
     strong { font-weight: 700; color: $text-color-dark; }
-    .warning-text { 
+    .warning-text {
       font-size: 14px;
-      color: $danger-color; 
-      font-weight: 500; 
-      margin-top: 8px; 
+      color: $danger-color;
+      font-weight: 500;
+      margin-top: 8px;
     }
   }
 
@@ -332,18 +370,18 @@ $border-color-medium: #ced4da;
   justify-content: center;
   position: relative;
   box-sizing: border-box;
-  padding: 12px 24px; 
+  padding: 12px 24px;
   font-size: 16px;
   font-family: 'Lato', sans-serif;
-  font-weight: 600; 
+  font-weight: 600;
   line-height: 1.75;
   color: #666;
   background-color: #E4E4E4;
   border: 2px solid #ccc;
   border-radius: 100px;
   cursor: pointer;
-  min-width: 150px;   
-  max-height: 40px;  
+  min-width: 150px;
+  max-height: 40px;
   text-decoration: none;
   outline: none;
   transition: all 0.3s ease;
@@ -384,7 +422,7 @@ $border-color-medium: #ced4da;
   .error-snackbar {
     background-color: #f44336 !important;
     color: white !important;
-    
+
     .mat-simple-snackbar-action {
       color: white !important;
     }
@@ -393,7 +431,7 @@ $border-color-medium: #ced4da;
   .success-snackbar {
     background-color: #4caf50 !important;
     color: white !important;
-    
+
     .mat-simple-snackbar-action {
       color: white !important;
     }
@@ -437,7 +475,7 @@ $border-color-medium: #ced4da;
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
-    
+
     .search-container {
       width: 100%;
       .search-input-wrapper {
@@ -472,16 +510,29 @@ $border-color-medium: #ced4da;
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-    
+
     .rol-actions {
       align-self: flex-end;
     }
   }
 
-  .dialog-content { 
-    padding: 20px; 
+  .dialog-content {
+    padding: 20px;
     margin: 10px;
   }
   .dialog-header h3 { font-size: 20px; }
   .dialog-body { font-size: 14px; }
+}
+
+// ✅ NUEVO: Responsive para el contador de roles
+@media (max-width: 600px) {
+  .roles-list-card .roles-list-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+
+    .roles-counter {
+      align-self: center;
+    }
+  }
 }

@@ -15,6 +15,7 @@ import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Tamano, ProductoTamano } from '../../../models/tamano.model';  // Agregar ProductoTamano aquí
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-crear-producto',
@@ -450,242 +451,158 @@ export class CrearComponent implements OnInit {
   }
 
   onSubmit(): void {
+    console.log('🔄 Iniciando onSubmit, modo edición:', this.isEditMode);
+
     // Obtener valor de categoría incluso si está deshabilitado
     let categoriaValue;
     if (this.isEditMode) {
+      // En modo edición, obtener el valor original guardado
       categoriaValue = this.productoForm.get('categoria')?.value;
+      console.log('📝 Categoría en edición:', categoriaValue);
     } else {
       categoriaValue = this.productoForm.get('categoria')?.value;
     }
+
+    // Debug del estado del formulario
+    console.log('📋 Estado del formulario:', {
+      valid: this.productoForm.valid,
+      invalid: this.productoForm.invalid,
+      errors: this.productoForm.errors,
+      values: this.productoForm.value,
+      categoria: categoriaValue
+    });
 
     // Validación personalizada para modo edición o creación
     const formValid = this.isEditMode ?
       this.validarFormularioParaEdicion() :
       this.validarFormulario();
 
+    console.log('✅ Resultado de validación:', formValid);
+
     if (formValid) {
-      this.saving = true;
-
-      const formData = new FormData();
-      formData.append('nombre', this.productoForm.get('nombre')?.value);
-      formData.append('descripcion', this.productoForm.get('descripcion')?.value);
-      formData.append('categoria', categoriaValue);
-      formData.append('estado', this.productoForm.get('disponibilidad')?.value);
-
-      // Manejar precio según aplica_tamanos
-      const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value || false;
-
-      if (aplicaTamanos) {
-        // Si tiene tamaños, enviar un precio base de 0
-        formData.append('precio', '0');
-      } else {
-        // Si no tiene tamaños, enviar el precio normal
-        formData.append('precio', this.productoForm.get('precio')?.value);
-      }
-
-      // Solo agregar imagen si hay una nueva seleccionada
-      if (this.selectedFile) {
-        formData.append('imagen', this.selectedFile, this.selectedFile.name);
-      }
-
-      // Siempre enviar ingredientes (incluso si está vacío)
-      const ingredientesIds = this.ingredientesSeleccionados.map(ing => ing.id);
-      formData.append('ingredientes', JSON.stringify(ingredientesIds));
-
-      // Manejar tamaños y precios
-      formData.append('aplica_tamanos', aplicaTamanos ? 'true' : 'false');
-
-      if (aplicaTamanos) {
-        const preciosTamanos: { [key: string]: number } = {};
-
-        this.tamanos.forEach(tamano => {
-          const controlName = 'precio_' + tamano.codigo.toLowerCase();
-          const precio = this.productoForm.get(controlName)?.value;
-
-          if (precio) {
-            preciosTamanos[tamano.nombre.toLowerCase()] = parseFloat(precio);
-          }
-        });
-
-        formData.append('precios_tamanos', JSON.stringify(preciosTamanos));
-
-        console.log('📏 Enviando precios por tamaño:', preciosTamanos);
-      }
-
-      console.log('📤 Enviando datos:', {
-        categoria: categoriaValue,
-        ingredientes: this.ingredientesSeleccionados,
-        ingredientesIds: ingredientesIds,
-        total: ingredientesIds.length,
-        aplicaTamanos: aplicaTamanos
-      });
-
-      if (this.isEditMode) {
-        this.actualizarProducto(formData);
-      } else {
-        this.crearProducto(formData);
-      }
+      this.mostrarDialogConfirmacion(categoriaValue);
     } else {
+      console.log('❌ Formulario no válido, mostrando alerta');
       alert('⚠️ Por favor completa todos los campos requeridos');
     }
   }
 
-  private validarFormularioParaEdicion(): boolean {
-    const nombre = this.productoForm.get('nombre')?.value;
-    const descripcion = this.productoForm.get('descripcion')?.value;
-    const disponibilidad = this.productoForm.get('disponibilidad')?.value;
-    const categoria = this.productoForm.get('categoria')?.value;
-    const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
+  // ✅ NUEVO: Método para mostrar diálogo de confirmación
+  private mostrarDialogConfirmacion(categoriaValue: any): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'producto',
+      action: this.isEditMode ? 'update' : 'create'
+    };
 
-    console.log('🔍 [VALIDACIÓN EDICIÓN] Validando formulario...');
-    console.log('📊 [VALIDACIÓN EDICIÓN] Datos:', {
-      nombre: !!nombre,
-      descripcion: !!descripcion,
-      disponibilidad: !!disponibilidad,
-      categoria: !!categoria,
-      aplicaTamanos: aplicaTamanos
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
     });
 
-    // Validar campos básicos
-    const camposBasicosCompletos = nombre && descripcion && disponibilidad && categoria;
-    
-    if (!camposBasicosCompletos) {
-      console.error('❌ [VALIDACIÓN EDICIÓN] Faltan campos básicos');
-      return false;
-    }
-
-    // Si tiene tamaños, validar precios por tamaño
-    if (aplicaTamanos) {
-      console.log('📏 [VALIDACIÓN EDICIÓN] Producto con tamaños - validando precios...');
-      
-      let tienePreciosTamano = false;
-      const preciosDetalle: any = {};
-
-      this.tamanos.forEach(tamano => {
-        const controlName = 'precio_' + tamano.codigo.toLowerCase();
-        const precioTamano = this.productoForm.get(controlName)?.value;
-        preciosDetalle[tamano.nombre] = precioTamano;
-        
-        if (precioTamano && parseFloat(precioTamano) > 0) {
-          tienePreciosTamano = true;
-        }
-      });
-
-      console.log('💰 [VALIDACIÓN EDICIÓN] Precios por tamaño:', preciosDetalle);
-
-      if (!tienePreciosTamano) {
-        console.error('❌ [VALIDACIÓN EDICIÓN] Faltan precios por tamaño');
-        alert('⚠️ Debe definir al menos un precio por tamaño');
-        return false;
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario(categoriaValue);
       }
-
-      console.log('✅ [VALIDACIÓN EDICIÓN] Producto con tamaños válido');
-      return true;
-    } 
-    // Si NO tiene tamaños, validar precio base
-    else {
-      const precio = this.productoForm.get('precio')?.value;
-      const precioValido = precio && /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) > 0;
-      
-      console.log('💰 [VALIDACIÓN EDICIÓN] Validando precio base:', { precio, precioValido });
-
-      if (!precioValido) {
-        console.error('❌ [VALIDACIÓN EDICIÓN] Precio base inválido');
-        return false;
-      }
-
-      console.log('✅ [VALIDACIÓN EDICIÓN] Producto sin tamaños válido');
-      return true;
-    }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
   }
 
-  private validarFormulario(): boolean {
-    const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
+  // ✅ NUEVO: Método para procesar el formulario después de la confirmación
+  private procesarFormulario(categoriaValue: any): void {
+    console.log('🚀 Procesando formulario...');
+    console.log('- Modo edición:', this.isEditMode);
+    console.log('- Producto ID:', this.productoId);
+    console.log('- Categoría:', categoriaValue);
 
-    console.log('🔍 [VALIDACIÓN CREACIÓN] Validando formulario...');
-    console.log('📏 [VALIDACIÓN CREACIÓN] Aplica tamaños:', aplicaTamanos);
+    this.saving = true;
+
+    const formData = new FormData();
+    formData.append('nombre', this.productoForm.get('nombre')?.value);
+    formData.append('descripcion', this.productoForm.get('descripcion')?.value);
+    formData.append('categoria', categoriaValue);
+    formData.append('estado', this.productoForm.get('disponibilidad')?.value);
+
+    // Manejar precio según aplica_tamanos
+    const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value || false;
 
     if (aplicaTamanos) {
-      // Si tiene tamaños, validar que al menos un tamaño tenga precio
-      let tienePreciosTamano = false;
-      const preciosDetalle: any = {};
-
-      this.tamanos.forEach(tamano => {
-        const controlName = 'precio_' + tamano.codigo.toLowerCase();
-        const precioTamano = this.productoForm.get(controlName)?.value;
-        preciosDetalle[tamano.nombre] = precioTamano;
-
-        if (precioTamano && parseFloat(precioTamano) > 0) {
-          tienePreciosTamano = true;
-        }
-      });
-
-      console.log('💰 [VALIDACIÓN CREACIÓN] Precios por tamaño:', preciosDetalle);
-
-      if (!tienePreciosTamano) {
-        console.error('❌ [VALIDACIÓN CREACIÓN] Faltan precios por tamaño');
-        alert('⚠️ Debe definir al menos un precio por tamaño');
-        return false;
-      }
-
-      // Para productos con tamaños, validar solo campos obligatorios (sin precio base)
-      const camposValidos = this.validarCamposObligatorios(['nombre', 'descripcion', 'categoria', 'disponibilidad']);
-      console.log('✅ [VALIDACIÓN CREACIÓN] Producto con tamaños válido');
-      return camposValidos;
+      formData.append('precio', '0');
     } else {
-      // Para productos sin tamaños, validación completa incluyendo precio base
-      const formValid = this.productoForm.valid;
-      console.log('💰 [VALIDACIÓN CREACIÓN] Validación completa (sin tamaños):', formValid);
-      
-      if (!formValid) {
-        console.error('❌ [VALIDACIÓN CREACIÓN] Formulario inválido');
-        // Mostrar errores específicos
-        Object.keys(this.productoForm.controls).forEach(key => {
-          const control = this.productoForm.get(key);
-          if (control && control.invalid) {
-            console.error(`   - ${key}:`, control.errors);
-          }
-        });
-      }
-      
-      return formValid;
+      formData.append('precio', this.productoForm.get('precio')?.value);
+    }
+
+    // Solo agregar imagen si hay una nueva seleccionada
+    if (this.selectedFile) {
+      formData.append('imagen', this.selectedFile, this.selectedFile.name);
+      console.log('🖼️ Nueva imagen seleccionada');
+    } else {
+      console.log('🖼️ Sin nueva imagen');
+    }
+
+    // Ingredientes
+    const ingredientesIds = this.ingredientesSeleccionados.map(ing => ing.id);
+    formData.append('ingredientes', JSON.stringify(ingredientesIds));
+
+    // Tamaños
+    formData.append('aplica_tamanos', aplicaTamanos ? 'true' : 'false');
+
+    if (aplicaTamanos) {
+      const preciosTamanos: { [key: string]: number } = {};
+      this.tamanos.forEach(tamano => {
+        const controlName = 'precio_' + tamano.codigo.toLowerCase();
+        const precio = this.productoForm.get(controlName)?.value;
+        if (precio) {
+          preciosTamanos[tamano.nombre.toLowerCase()] = parseFloat(precio);
+        }
+      });
+      formData.append('precios_tamanos', JSON.stringify(preciosTamanos));
+    }
+
+    console.log('📤 FormData preparado, enviando...');
+
+    if (this.isEditMode) {
+      this.actualizarProducto(formData);
+    } else {
+      this.crearProducto(formData);
     }
   }
 
-  // Método auxiliar para validar campos específicos
-  private validarCamposObligatorios(campos: string[]): boolean {
-    return campos.every(campo => {
-      const control = this.productoForm.get(campo);
-      const isValid = control && !control.invalid;
-      
-      if (!isValid) {
-        console.error(`❌ [VALIDACIÓN] Campo inválido: ${campo}`, control?.errors);
-      }
-      
-      return isValid;
-    });
-  }
-
+  // ✅ MODIFICAR: Método crearProducto para usar success-dialog
   private crearProducto(formData: FormData): void {
     this.catalogoService.crearProducto(formData).subscribe({
       next: (response) => {
         console.log('✅ Producto creado exitosamente', response);
         this.saving = false;
 
+        // ✅ NUEVO: Obtener nombre del producto para el mensaje
+        const nombreProducto = this.productoForm.get('nombre')?.value;
+
         this.mostrarDialogExito(
-          'CREADO',
-          '¡El producto ha sido creado exitosamente!',
+          'Producto Creado',
+          `El producto "${nombreProducto}" ha sido creado exitosamente.`,
           'Continuar'
         );
       },
       error: (error) => {
         console.error('❌ Error al crear el producto', error);
-        alert('❌ Error al crear el producto. Revisa los datos e intenta nuevamente.');
         this.saving = false;
+
+        let mensajeError = 'Error al crear el producto. ';
+        if (error.error?.detail) {
+          mensajeError += error.error.detail;
+        } else if (error.error?.message) {
+          mensajeError += error.error.message;
+        } else {
+          mensajeError += 'Revisa los datos e intenta nuevamente.';
+        }
+
+        alert('❌ ' + mensajeError);
       }
     });
   }
 
+  // ✅ MODIFICAR: Método actualizarProducto para usar success-dialog
   private actualizarProducto(formData: FormData): void {
     if (!this.productoId) return;
 
@@ -694,20 +611,34 @@ export class CrearComponent implements OnInit {
         console.log('✅ Producto actualizado exitosamente', response);
         this.saving = false;
 
+        // ✅ NUEVO: Obtener nombre del producto para el mensaje
+        const nombreProducto = this.productoForm.get('nombre')?.value;
+
         this.mostrarDialogExito(
-          'ACTUALIZADO',
-          '¡El producto ha sido actualizado exitosamente!',
+          'Producto Actualizado',
+          `El producto "${nombreProducto}" ha sido actualizado exitosamente.`,
           'Continuar'
         );
       },
       error: (error) => {
         console.error('❌ Error al actualizar el producto', error);
-        alert('❌ Error al actualizar el producto. Revisa los datos e intenta nuevamente.');
         this.saving = false;
+
+        let mensajeError = 'Error al actualizar el producto. ';
+        if (error.error?.detail) {
+          mensajeError += error.error.detail;
+        } else if (error.error?.message) {
+          mensajeError += error.error.message;
+        } else {
+          mensajeError += 'Revisa los datos e intenta nuevamente.';
+        }
+
+        alert('❌ ' + mensajeError);
       }
     });
   }
 
+  // ✅ EL MÉTODO mostrarDialogExito YA EXISTE - Solo asegurar que esté correcto
   private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
     const dialogData: SuccessDialogData = {
       title,
@@ -725,6 +656,7 @@ export class CrearComponent implements OnInit {
         // ✅ CAMBIO: Regresar a la vista de edición en lugar de productos
         this.router.navigate(['/administrador/gestion-productos/editar']);
       } else {
+        // ✅ CAMBIO: En creación, limpiar formulario y quedarse en la misma vista
         this.limpiarFormulario();
       }
     });
@@ -774,5 +706,142 @@ export class CrearComponent implements OnInit {
 
       console.log('🖼️ Imagen seleccionada:', this.selectedFile.name);
     }
+  }
+
+  // ✅ AGREGAR: Método para validar formulario en modo creación
+  private validarFormulario(): boolean {
+    // Marcar todos los campos como tocados para mostrar errores
+    Object.keys(this.productoForm.controls).forEach(key => {
+      this.productoForm.get(key)?.markAsTouched();
+    });
+
+    // Validaciones básicas del formulario
+    if (this.productoForm.invalid) {
+      console.log('❌ Formulario inválido');
+      return false;
+    }
+
+    // Validar que tenga imagen en modo creación
+    if (!this.selectedFile) {
+      console.log('❌ Imagen requerida en modo creación');
+      return false;
+    }
+
+    // Validar ingredientes (opcional dependiendo de la categoría)
+    const categoria = this.categorias.find(cat => cat.id === this.productoForm.get('categoria')?.value);
+    if (categoria && ['Hamburguesa', 'Pizzas', 'Ensalada'].includes(categoria.nombre)) {
+      if (this.ingredientesSeleccionados.length === 0) {
+        console.log('❌ Ingredientes requeridos para esta categoría');
+        alert('⚠️ Debes seleccionar al menos un ingrediente para esta categoría');
+        return false;
+      }
+    }
+
+    // Validar precios por tamaño si aplica
+    const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
+    if (aplicaTamanos) {
+      let tieneAlMenosUnPrecio = false;
+
+      this.tamanos.forEach(tamano => {
+        const controlName = 'precio_' + tamano.codigo.toLowerCase();
+        const precio = this.productoForm.get(controlName)?.value;
+
+        if (precio && parseFloat(precio) > 0) {
+          tieneAlMenosUnPrecio = true;
+        }
+      });
+
+      if (!tieneAlMenosUnPrecio) {
+        console.log('❌ Debe especificar al menos un precio por tamaño');
+        alert('⚠️ Debes especificar al menos un precio para los tamaños disponibles');
+        return false;
+      }
+    }
+
+    console.log('✅ Formulario válido para creación');
+    return true;
+  }
+
+  // ✅ CORREGIR: Método para validar formulario en modo edición
+  private validarFormularioParaEdicion(): boolean {
+    console.log('🔍 Validando formulario para edición...');
+
+    // Validar campos básicos requeridos
+    const camposRequeridos = ['nombre', 'descripcion', 'disponibilidad'];
+
+    for (const campo of camposRequeridos) {
+      const control = this.productoForm.get(campo);
+      const valor = control?.value;
+
+      if (!valor || (typeof valor === 'string' && valor.trim() === '')) {
+        control?.markAsTouched();
+        console.log(`❌ Campo requerido faltante: ${campo}`, valor);
+        alert(`⚠️ El campo ${campo} es requerido`);
+        return false;
+      }
+    }
+
+    // Validar categoría (aunque esté disabled, debe tener valor)
+    const categoriaValue = this.productoForm.get('categoria')?.value;
+    if (!categoriaValue) {
+      console.log('❌ Categoría requerida');
+      alert('⚠️ La categoría es requerida');
+      return false;
+    }
+
+    const aplicaTamanos = this.productoForm.get('aplicaTamanos')?.value;
+    console.log('📏 Aplica tamaños:', aplicaTamanos);
+
+    // Validar precios según si aplica tamaños o no
+    if (aplicaTamanos) {
+      // Si aplica tamaños, validar que tenga al menos un precio por tamaño
+      let tieneAlMenosUnPrecio = false;
+
+      this.tamanos.forEach(tamano => {
+        const controlName = 'precio_' + tamano.codigo.toLowerCase();
+        const precio = this.productoForm.get(controlName)?.value;
+        console.log(`💰 Precio ${tamano.nombre}:`, precio);
+
+        if (precio && parseFloat(precio) > 0) {
+          tieneAlMenosUnPrecio = true;
+        }
+      });
+
+      if (!tieneAlMenosUnPrecio) {
+        console.log('❌ Debe especificar al menos un precio por tamaño');
+        alert('⚠️ Debes especificar al menos un precio para los tamaños disponibles');
+        return false;
+      }
+    } else {
+      // Si NO aplica tamaños, validar precio base
+      const precioControl = this.productoForm.get('precio');
+      const precioValue = precioControl?.value;
+
+      if (!precioValue || parseFloat(precioValue) <= 0) {
+        precioControl?.markAsTouched();
+        console.log('❌ Precio base requerido:', precioValue);
+        alert('⚠️ El precio es requerido y debe ser mayor a 0');
+        return false;
+      }
+    }
+
+    // ✅ OPCIONAL: Validar ingredientes solo para categorías específicas
+    const categoria = this.categorias.find(cat => cat.id === categoriaValue);
+    if (categoria) {
+      const categoriasConIngredientes = ['Hamburguesa', 'Pizzas', 'Ensalada'];
+      if (categoriasConIngredientes.includes(categoria.nombre)) {
+        if (this.ingredientesSeleccionados.length === 0) {
+          console.log('⚠️ Categoría requiere ingredientes pero no es bloqueante en edición');
+          // En edición, solo advertir pero no bloquear
+          const confirmar = confirm('⚠️ Esta categoría generalmente requiere ingredientes. ¿Deseas continuar sin ingredientes?');
+          if (!confirmar) {
+            return false;
+          }
+        }
+      }
+    }
+
+    console.log('✅ Formulario válido para edición');
+    return true;
   }
 }

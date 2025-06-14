@@ -58,7 +58,7 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
 
   editarEstablecimiento(establecimiento: Establecimiento): void {
     console.log('🔧 Intentando editar establecimiento:', establecimiento.nombre);
-    
+
     // ✅ AGREGADO: Validación de permisos
     if (!this.authService.hasPermission('establecimientos.change_appkioskoestablecimientos')) {
       console.log('❌ Sin permisos para editar establecimientos');
@@ -115,7 +115,7 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
 
   abrirDialogoEliminar(establecimiento: Establecimiento): void {
     console.log('🗑️ Intentando eliminar establecimiento:', establecimiento.nombre);
-    
+
     // ✅ AGREGADO: Validación de permisos
     if (!this.authService.hasPermission('establecimientos.delete_appkioskoestablecimientos')) {
       console.log('❌ Sin permisos para eliminar establecimientos');
@@ -176,5 +176,15 @@ export class EditarEliminarEstablecimientoComponent implements OnInit {
 
   estaInactivo(establecimiento: any): boolean {
     return establecimiento.estado === 2;
+  }
+
+  // ✅ NUEVO: Getter para establecimientos activos
+  get establecimientosActivos(): number {
+    return this.establecimientosFiltrados.filter(establecimiento => this.estaActivo(establecimiento)).length;
+  }
+
+  // ✅ NUEVO: Getter para establecimientos inactivos
+  get establecimientosInactivos(): number {
+    return this.establecimientosFiltrados.filter(establecimiento => this.estaInactivo(establecimiento)).length;
   }
 }

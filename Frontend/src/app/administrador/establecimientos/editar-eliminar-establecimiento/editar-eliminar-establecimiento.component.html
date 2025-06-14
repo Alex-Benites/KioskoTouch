@@ -48,6 +48,26 @@
 
   <!-- Tabla actualizada con columnas separadas -->
   <div class="table-container">
+
+    <!-- ✅ NUEVO: Header con contador de establecimientos -->
+    <div class="table-header">
+      <h2 class="table-title">Lista de Establecimientos</h2>
+      <div class="establecimientos-stats">
+        <div class="stat-item total">
+          <span class="stat-label">Total:</span>
+          <span class="stat-number">{{ establecimientosFiltrados.length }}</span>
+        </div>
+        <div class="stat-item activos">
+          <span class="stat-label">Activos:</span>
+          <span class="stat-number">{{ establecimientosActivos }}</span>
+        </div>
+        <div class="stat-item inactivos">
+          <span class="stat-label">Inactivos:</span>
+          <span class="stat-number">{{ establecimientosInactivos }}</span>
+        </div>
+      </div>
+    </div>
+
     <table class="establecimientos-table">
       <thead>
         <tr>

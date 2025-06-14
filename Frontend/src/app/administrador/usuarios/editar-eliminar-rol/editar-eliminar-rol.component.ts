@@ -241,4 +241,19 @@ export class EditarEliminarRolComponent implements OnInit {
   get puedeEliminar(): boolean {
     return this.authService.hasPermission('auth.delete_group');
   }
+
+  // ✅ NUEVO: Getters para información adicional de roles (opcional)
+  get rolesConPermisos(): number {
+    return this.roles.filter(rol => rol.permisos_count && rol.permisos_count > 0).length;
+  }
+
+  get rolesSinPermisos(): number {
+    return this.roles.filter(rol => !rol.permisos_count || rol.permisos_count === 0).length;
+  }
+
+  get promedioPermisosPorRol(): number {
+    if (this.roles.length === 0) return 0;
+    const totalPermisos = this.roles.reduce((sum, rol) => sum + (rol.permisos_count || 0), 0);
+    return Math.round((totalPermisos / this.roles.length) * 10) / 10; // Redondear a 1 decimal
+  }
 }

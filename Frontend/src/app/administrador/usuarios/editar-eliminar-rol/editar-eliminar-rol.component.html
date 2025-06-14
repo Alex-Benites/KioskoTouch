@@ -31,23 +31,30 @@
   <!-- Roles List Card -->
   @if (!loading && filteredRoles.length > 0) {
     <div class="roles-list-card">
+
+      <!-- ✅ NUEVO: Header con contador de roles -->
       <div class="roles-list-header">
-        Roles
+        <span class="header-title">Roles</span>
+        <div class="roles-counter">
+          <span class="counter-label">Total de roles:</span>
+          <span class="counter-number">{{ roles.length }}</span>
+        </div>
       </div>
+
       <ul class="roles-list">
         <li *ngFor="let rol of filteredRoles" class="rol-item">
           <span class="rol-name">{{ rol.name }}</span>
           <div class="rol-actions">
-            
+
             <!-- ✅ Botón EDITAR - SIEMPRE VISIBLE, permisos validados en el método -->
-            <button 
-              mat-icon-button 
-              (click)="editarRol(rol)" 
+            <button
+              mat-icon-button
+              (click)="editarRol(rol)"
               matTooltip="Editar Rol"
               [attr.aria-label]="'Editar rol ' + rol.name">
               <mat-icon>edit</mat-icon>
             </button>
-            
+
             <!-- ✅ Botón ELIMINAR - SIEMPRE VISIBLE, permisos validados en el método -->
             <button
               mat-icon-button
@@ -59,12 +66,11 @@
               [attr.aria-label]="'Eliminar rol ' + rol.name">
               <mat-icon>delete</mat-icon>
             </button>
-            
+
           </div>
         </li>
       </ul>
     </div>
-
   }
 
   <!-- Empty State: No roles at all -->

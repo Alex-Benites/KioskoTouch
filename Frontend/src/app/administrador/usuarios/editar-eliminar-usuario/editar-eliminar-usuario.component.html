@@ -29,8 +29,28 @@
   <!-- 📊 Tabla de usuarios -->
   @if (!loading && !error) {
     <div class="usuarios-table-container">
+
+      <!-- ✅ VERSIÓN EXTENDIDA: Header con contador detallado -->
+      <div class="table-header">
+        <h2 class="table-title">Lista de Usuarios</h2>
+        <div class="usuarios-stats">
+          <div class="stat-item total">
+            <span class="stat-label">Total:</span>
+            <span class="stat-number">{{ usuarios.length }}</span>
+          </div>
+          <div class="stat-item activos">
+            <span class="stat-label">Activos:</span>
+            <span class="stat-number">{{ usuariosActivos }}</span>
+          </div>
+          <div class="stat-item inactivos">
+            <span class="stat-label">Inactivos:</span>
+            <span class="stat-number">{{ usuariosInactivos }}</span>
+          </div>
+        </div>
+      </div>
+
       <table mat-table [dataSource]="usuarios" class="usuarios-table">
-        
+
         <!-- Nombres -->
         <ng-container matColumnDef="nombres">
           <th mat-header-cell *matHeaderCellDef>Nombres</th>
@@ -75,7 +95,7 @@
         <ng-container matColumnDef="acciones">
           <th mat-header-cell *matHeaderCellDef>Acciones</th>
           <td mat-cell *matCellDef="let usuario">
-            
+
             <!-- ✅ Icono de editar - SIEMPRE VISIBLE -->
             <img
               src="assets/admin/ADMIN_7.png"
@@ -85,7 +105,7 @@
               title="Editar usuario"
               [attr.aria-label]="'Editar usuario ' + usuario.username"
             />
-            
+
             <!-- ✅ Icono de eliminar - SIEMPRE VISIBLE -->
             <img
               src="assets/admin/ADMIN_7_1.png"

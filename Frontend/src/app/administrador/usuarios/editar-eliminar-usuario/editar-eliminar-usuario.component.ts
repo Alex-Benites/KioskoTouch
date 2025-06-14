@@ -44,7 +44,7 @@ interface EmpleadoDisplay {
   styleUrls: ['./editar-eliminar-usuario.component.scss']
 })
 export class EditarEliminarUsuarioComponent implements OnInit {
-  
+
   private usuariosService = inject(UsuariosService);
   private authService = inject(AuthService); // ← NUEVO
   private router = inject(Router);
@@ -67,7 +67,7 @@ export class EditarEliminarUsuarioComponent implements OnInit {
     this.usuariosService.obtenerEmpleados().subscribe({
       next: (response) => {
         console.log('✅ Empleados obtenidos:', response);
-        
+
         // Mapear la respuesta del backend a formato para la tabla
         this.usuarios = response.empleados.map((empleado: any) => ({
           id: empleado.user_id || empleado.id,
@@ -95,7 +95,7 @@ export class EditarEliminarUsuarioComponent implements OnInit {
   // ✅ MÉTODO MEJORADO - Valida permisos antes de editar
   editarUsuario(usuario: EmpleadoDisplay): void {
     console.log('🔧 Intentando editar usuario:', usuario);
-    
+
     // 🔒 Validar permisos
     if (!this.authService.hasPermission('auth.change_user')) {
       console.log('❌ Sin permisos para editar usuarios');
@@ -111,7 +111,7 @@ export class EditarEliminarUsuarioComponent implements OnInit {
   // ✅ MÉTODO MEJORADO - Valida permisos antes de eliminar
   abrirDialogoEliminar(usuario: EmpleadoDisplay): void {
     console.log('🗑️ Intentando eliminar usuario:', usuario);
-    
+
     // 🔒 Validar permisos
     if (!this.authService.hasPermission('auth.delete_user')) {
       console.log('❌ Sin permisos para eliminar usuarios');
@@ -138,9 +138,9 @@ export class EditarEliminarUsuarioComponent implements OnInit {
 
   private eliminarUsuario(usuario: EmpleadoDisplay): void {
     console.log('🗑️ Eliminando usuario:', usuario);
-    
+
     this.loading = true;
-    
+
     this.usuariosService.eliminarEmpleado(usuario.id).subscribe({
       next: (response) => {
         console.log('✅ Usuario eliminado exitosamente');
@@ -188,6 +188,16 @@ export class EditarEliminarUsuarioComponent implements OnInit {
 
   get puedeEliminar(): boolean {
     return this.authService.hasPermission('auth.delete_user');
+  }
+
+  // ✅ NUEVO: Getter para usuarios activos
+  get usuariosActivos(): number {
+    return this.usuarios.filter(usuario => usuario.is_active).length;
+  }
+
+  // ✅ NUEVO: Getter para usuarios inactivos
+  get usuariosInactivos(): number {
+    return this.usuarios.filter(usuario => !usuario.is_active).length;
   }
 
   private mostrarError(mensaje: string): void {

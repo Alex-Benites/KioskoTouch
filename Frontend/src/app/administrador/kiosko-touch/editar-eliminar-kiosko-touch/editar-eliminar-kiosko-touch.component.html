@@ -35,6 +35,26 @@
 
   <!-- Tabla de kioscos -->
   <div class="table-container">
+
+    <!-- ✅ NUEVO: Header con contador de kioscos -->
+    <div class="table-header">
+      <h2 class="table-title">Lista de Kioscos Touch</h2>
+      <div class="kioscos-stats">
+        <div class="stat-item total">
+          <span class="stat-label">Total:</span>
+          <span class="stat-number">{{ kioscosFiltrados.length }}</span>
+        </div>
+        <div class="stat-item activos">
+          <span class="stat-label">Activos:</span>
+          <span class="stat-number">{{ kioscosActivos }}</span>
+        </div>
+        <div class="stat-item inactivos">
+          <span class="stat-label">Inactivos:</span>
+          <span class="stat-number">{{ kioscosInactivos }}</span>
+        </div>
+      </div>
+    </div>
+
     <table class="kioscos-table">
       <thead>
         <tr>
@@ -46,14 +66,14 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let kiosco of kioscosFiltrados" [class.inactive-row]="getEstadoNombre(kiosco) === 'inactivo'">
+        <tr *ngFor="let kiosco of kioscosFiltrados" [class.inactive-row]="getEstadoNombre(kiosco) === 'desactivado'">
           <td>{{ kiosco.nombre }}</td>
           <td>{{ kiosco.token }}</td>
           <td>{{ kiosco.establecimiento?.nombre || '-' }}</td>
           <td>
             <span class="estado-badge"
-                  [class.activo]="getEstadoNombre(kiosco) === 'activo'"
-                  [class.inactivo]="getEstadoNombre(kiosco) === 'inactivo'">
+                  [class.activo]="getEstadoNombre(kiosco) === 'activado'"
+                  [class.inactivo]="getEstadoNombre(kiosco) === 'desactivado'">
               {{ getEstadoNombre(kiosco) | titlecase }}
             </span>
           </td>
@@ -80,7 +100,7 @@
     </table>
 
     <!-- Mensaje cuando no hay datos -->
-    <div class="no-data" *ngIf="kioscosFiltrados.length === 0">
+    <div class="no-data" *ngIf="kioscosFiltrados.length === 0 && !loading">
       <p>No se encontraron kioscos con los filtros aplicados.</p>
     </div>
   </div>

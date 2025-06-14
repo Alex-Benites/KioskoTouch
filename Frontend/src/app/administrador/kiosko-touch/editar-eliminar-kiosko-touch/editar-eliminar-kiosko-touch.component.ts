@@ -118,7 +118,7 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
 
   editarKiosco(kiosco: KioscoTouch): void {
     console.log('🔧 Intentando editar kiosco:', kiosco.nombre);
-    
+
     // ✅ AGREGADO: Validación de permisos para editar
     if (!this.authService.hasPermission('establecimientos.change_appkioskokioskostouch')) {
       console.log('❌ Sin permisos para editar kioscos touch');
@@ -132,7 +132,7 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
 
   abrirDialogoEliminar(kiosco: KioscoTouch): void {
     console.log('🗑️ Intentando eliminar kiosco:', kiosco.nombre);
-    
+
     // ✅ AGREGADO: Validación de permisos para eliminar
     if (!this.authService.hasPermission('establecimientos.delete_appkioskokioskostouch')) {
       console.log('❌ Sin permisos para eliminar kioscos touch');
@@ -160,15 +160,41 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
     });
   }
 
+  // ✅ SOLUCIÓN DEFINITIVA: Usar el estado original directamente
+  get kioscosActivos(): number {
+    return this.kioscosFiltrados.filter(kiosco => {
+      // ✅ Usar directamente el estado del objeto kiosco
+      const estado = kiosco.estado;
+      const esActivo = estado === "Activado";
+
+      console.log(`${kiosco.nombre}: estado="${estado}", esActivo=${esActivo}`);
+      return esActivo;
+    }).length;
+  }
+
+  get kioscosInactivos(): number {
+    return this.kioscosFiltrados.filter(kiosco => {
+      // ✅ Usar directamente el estado del objeto kiosco
+      const estado = kiosco.estado;
+      const esInactivo = estado === "Desactivado";
+
+      console.log(`${kiosco.nombre}: estado="${estado}", esInactivo=${esInactivo}`);
+      return esInactivo;
+    }).length;
+  }
+
   eliminarKiosco(kiosco: KioscoTouch): void {
+    this.loading = true; // ✅ MEJORAR: Agregar loading state
     this.kioscoTouchService.eliminarKioscoTouch(kiosco.id).subscribe({
       next: () => {
         this.kioscos = this.kioscos.filter(k => k.id !== kiosco.id);
-        this.aplicarFiltros();
+        this.aplicarFiltros(); // ✅ Esto actualizará automáticamente los contadores
+        this.loading = false;
         console.log('✅ Kiosco eliminado correctamente');
       },
       error: (error: any) => {
         console.error('❌ Error al eliminar kiosco:', error);
+        this.loading = false;
         alert('Error al eliminar el kiosco.');
       }
     });
@@ -183,6 +209,7 @@ export class EditarEliminarKioskoTouchComponent implements OnInit {
       panelClass: 'permission-denied-dialog-panel'
     });
   }
+
 
   getEstadoNombre(kiosco: any): string {
     return typeof kiosco.estado === 'string' ? kiosco.estado : kiosco.estado?.nombre || '';

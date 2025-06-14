@@ -196,7 +196,7 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
 
   editarPantalla(pantalla: PantallaCocina): void {
     console.log('🔧 Intentando editar pantalla:', pantalla.nombre);
-    
+
     if (!this.authService.hasPermission('establecimientos.change_appkioskopantallascocina')) {
       console.log('❌ Sin permisos para editar pantallas de cocina');
       this.mostrarDialogoSinPermisos();
@@ -209,7 +209,7 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
 
   abrirDialogoEliminar(pantalla: PantallaCocina): void {
     console.log('🗑️ Intentando eliminar pantalla:', pantalla.nombre);
-    
+
     if (!this.authService.hasPermission('establecimientos.delete_appkioskopantallascocina')) {
       console.log('❌ Sin permisos para eliminar pantallas de cocina');
       this.mostrarDialogoSinPermisos();
