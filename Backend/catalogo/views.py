@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated 
 from .models import (
     AppkioskoProductos, 
     AppkioskoCategorias, 
@@ -10,14 +11,16 @@ from .models import (
     AppkioskoMenuproductos,
     # Nuevos modelos
     AppkioskoTamanos,
-    AppkioskoProductoTamanos
+    AppkioskoProductoTamanos,
+    
 )
 from .serializers import (
     ProductoSerializer, 
     CategoriaSerializer, 
     MenuSerializer,
     # Nuevo serializer
-    TamanoSerializer
+    TamanoSerializer,
+    IngredienteSerializer
 )
 from comun.models import AppkioskoEstados, AppkioskoImagen
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -487,3 +490,205 @@ def get_tamanos(request):
         return Response(serializer.data)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
+# ✅ AGREGAR ESTAS NUEVAS VISTAS AL FINAL DEL ARCHIVO views.py
+
+class IngredienteListCreateAPIView(generics.ListCreateAPIView):
+    """Vista para listar y crear ingredientes"""
+    queryset = AppkioskoIngredientes.objects.all()
+    serializer_class = IngredienteSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        """Filtrar por categoría si se especifica"""
+        queryset = super().get_queryset()
+        categoria = self.request.query_params.get('categoria', None)
+        if categoria:
+            queryset = queryset.filter(categoria_producto=categoria)
+        return queryset.order_by('nombre')
+
+    def create(self, request, *args, **kwargs):
+        """Crear ingrediente con imagen"""
+        print(f"\n🚀 CREANDO INGREDIENTE:")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
+        
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid():
+            ingrediente = serializer.save()
+            
+            print(f"🎉 INGREDIENTE CREADO EXITOSAMENTE:")
+            print(f"   ID: {ingrediente.id}")
+            print(f"   Nombre: {ingrediente.nombre}")
+            print(f"   Categoría: {ingrediente.categoria_producto}")
+            print("─" * 50)
+            
+            return Response({
+                'mensaje': '🎉 Ingrediente creado exitosamente',
+                'ingrediente': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            print("─" * 50)
+            
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+class IngredienteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Vista para obtener, actualizar y eliminar un ingrediente específico"""
+    queryset = AppkioskoIngredientes.objects.all()
+    serializer_class = IngredienteSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]
+    
+    def update(self, request, *args, **kwargs):
+        """Actualizar ingrediente"""
+        print(f"\n🔄 ACTUALIZANDO INGREDIENTE ID: {kwargs.get('pk')}")
+        print(f"   Datos recibidos: {list(request.data.keys())}")
+        
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            ingrediente = serializer.save()
+            
+            print(f"✅ INGREDIENTE ACTUALIZADO:")
+            print(f"   ID: {ingrediente.id}")
+            print(f"   Nombre: {ingrediente.nombre}")
+            print("─" * 50)
+            
+            return Response({
+                'mensaje': '✅ Ingrediente actualizado exitosamente',
+                'ingrediente': serializer.data
+            })
+        else:
+            print(f"❌ ERRORES DE VALIDACIÓN:")
+            for field, errors in serializer.errors.items():
+                print(f"   {field}: {errors}")
+            print("─" * 50)
+            
+            return Response({
+                'error': 'Datos inválidos',
+                'detalles': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Eliminación física del ingrediente"""
+        try:
+            ingrediente_id = kwargs.get('pk')
+            print(f"\n🗑️ ELIMINACIÓN FÍSICA INGREDIENTE ID: {ingrediente_id}")
+            
+            ingrediente = self.get_object()
+            ingrediente_nombre = ingrediente.nombre
+            print(f"   Ingrediente a eliminar: {ingrediente_nombre}")
+            
+            # Verificar si está siendo usado en productos
+            productos_usando = AppkioskoProductosIngredientes.objects.filter(
+                ingrediente=ingrediente
+            ).count()
+            
+            if productos_usando > 0:
+                print(f"   ⚠️ El ingrediente está siendo usado en {productos_usando} productos")
+                return Response({
+                    'success': False,
+                    'error': f'No se puede eliminar el ingrediente "{ingrediente_nombre}" porque está siendo usado en {productos_usando} productos.',
+                    'productos_afectados': productos_usando
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Eliminar imagen física si existe
+            try:
+                imagen = AppkioskoImagen.objects.get(
+                    categoria_imagen='ingredientes',
+                    entidad_relacionada_id=ingrediente_id
+                )
+                
+                if imagen.ruta:
+                    ruta_completa = os.path.join(settings.MEDIA_ROOT, imagen.ruta.lstrip('/media/'))
+                    if os.path.exists(ruta_completa):
+                        os.remove(ruta_completa)
+                        print(f"   🖼️ Archivo de imagen eliminado: {ruta_completa}")
+                
+                imagen.delete()
+                print(f"   🗑️ Registro de imagen eliminado de la DB")
+                
+            except AppkioskoImagen.DoesNotExist:
+                print(f"   ℹ️ No se encontró imagen asociada al ingrediente")
+            except Exception as e:
+                print(f"   ⚠️ Error eliminando imagen: {str(e)}")
+            
+            # Eliminar el ingrediente
+            ingrediente.delete()
+            
+            print(f"✅ INGREDIENTE ELIMINADO COMPLETAMENTE:")
+            print(f"   Nombre: {ingrediente_nombre}")
+            print(f"   ID: {ingrediente_id}")
+            print("─" * 50)
+            
+            return Response({
+                'success': True,
+                'mensaje': f'Ingrediente "{ingrediente_nombre}" eliminado completamente',
+                'id': int(ingrediente_id),
+                'tipo_eliminacion': 'fisica'
+            }, status=status.HTTP_200_OK)
+            
+        except AppkioskoIngredientes.DoesNotExist:
+            print(f"❌ Ingrediente ID {ingrediente_id} no encontrado")
+            return Response({
+                'success': False,
+                'error': 'Ingrediente no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+            
+        except Exception as e:
+            print(f"❌ Error eliminando ingrediente: {str(e)}")
+            return Response({
+                'success': False,
+                'error': f'Error al eliminar ingrediente: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ✅ AGREGAR ESTA VISTA FALTANTE
+class IngredientesPorCategoriaView(generics.ListAPIView):
+    """Vista para obtener ingredientes filtrados por categoría"""
+    serializer_class = IngredienteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        categoria = self.kwargs.get('categoria')
+        print(f'🔍 [VIEW] Buscando ingredientes para categoría: {categoria}')
+        
+        # Filtrar ingredientes por categoría
+        queryset = AppkioskoIngredientes.objects.filter(
+            categoria_producto=categoria
+        ).order_by('-created_at')
+        
+        print(f'✅ [VIEW] Ingredientes encontrados: {queryset.count()}')
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        try:
+            categoria = self.kwargs.get('categoria')
+            print(f'📋 [VIEW] Solicitando ingredientes para: {categoria}')
+            
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            
+            response_data = {
+                'ingredientes': serializer.data,
+                'total': len(serializer.data),
+                'categoria': categoria
+            }
+            
+            print(f'📤 [VIEW] Enviando {len(serializer.data)} ingredientes')
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f'❌ [VIEW] Error al obtener ingredientes por categoría: {str(e)}')
+            return Response(
+                {'error': f'Error al obtener ingredientes: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

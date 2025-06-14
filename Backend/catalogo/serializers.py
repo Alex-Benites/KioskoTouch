@@ -58,7 +58,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             'aplica_tamanos', 'precios_tamanos', 'tamanos_detalle',  # Nuevos campos
             'created_at', 'updated_at'
         ]
-        
+
     # ✅ AGREGAR ESTE MÉTODO
     def get_precio_base(self, obj):
         """
@@ -630,17 +630,37 @@ class IngredienteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = AppkioskoIngredientes
-        fields = ['id', 'nombre', 'descripcion', 'categoria_producto', 'imagen_url']
-    
+        fields = [
+            'id', 'nombre', 'descripcion', 'categoria_producto', 
+            'precio_adicional', 'stock', 'stock_minimo', 
+            'unidad_medida', 'estado', 'imagen', 'imagen_url',
+            'created_at', 'updated_at'
+        ]
+        
     def get_imagen_url(self, obj):
-        try:
-            imagen = AppkioskoImagen.objects.get(
-                categoria_imagen='ingredientes',
-                entidad_relacionada_id=obj.id
-            )
-            return imagen.ruta
-        except AppkioskoImagen.DoesNotExist:
-            return None
+        if obj.imagen:
+            return obj.imagen.url
+        return None
+        
+    def create(self, validated_data):
+        print("🔍 [SERIALIZER CREATE] Datos recibidos:", list(validated_data.keys()))
+        if 'imagen' in validated_data:
+            print("✅ [SERIALIZER CREATE] Imagen encontrada en validated_data")
+            print("📸 [SERIALIZER CREATE] Tipo de imagen:", type(validated_data['imagen']))
+        else:
+            print("❌ [SERIALIZER CREATE] NO se encontró imagen en validated_data")
+            
+        return super().create(validated_data)
+        
+    def update(self, instance, validated_data):
+        print("🔍 [SERIALIZER UPDATE] Datos recibidos:", list(validated_data.keys()))
+        if 'imagen' in validated_data:
+            print("✅ [SERIALIZER UPDATE] Imagen encontrada en validated_data")
+            print("📸 [SERIALIZER UPDATE] Tipo de imagen:", type(validated_data['imagen']))
+        else:
+            print("❌ [SERIALIZER UPDATE] NO se encontró imagen en validated_data")
+            
+        return super().update(instance, validated_data)
 
 class MenuProductoDetalleSerializer(serializers.ModelSerializer):
     """Detalle de productos dentro de un menú"""

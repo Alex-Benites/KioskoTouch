@@ -46,3 +46,33 @@ export interface Menu {
   productosLista?: string[];
   menuLista?: string[];
 }
+
+export interface Ingrediente {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  categoria_producto: string;
+  precio_adicional: string;
+  // ✅ CAMPOS DE STOCK AGREGADOS
+  stock: number;
+  stock_minimo: number;
+  unidad_medida: string;
+  esta_agotado: boolean;
+  necesita_reposicion: boolean;
+  estado_stock: string;
+  estado: number;
+  imagen_url?: string;
+  created_at: string;
+  // ✅ CAMPOS ADICIONALES PARA COMPATIBILIDAD
+  es_base?: boolean;
+  permite_extra?: boolean;
+}
+
+export interface CrearIngredienteRequest {
+  nombre: string;
+  descripcion: string;
+  categoria_producto: string;
+  precio_adicional: number;
+  estado: number;
+  imagen?: File;
+}

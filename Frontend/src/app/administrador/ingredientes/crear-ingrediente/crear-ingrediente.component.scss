@@ -1,0 +1,351 @@
+.container {
+  min-height: calc(100vh - 140px);
+  padding: 20px;
+  background: #f5f5f5;
+}
+
+.breadcrumb-section {
+  margin-bottom: 30px;
+  
+  .breadcrumb {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+    color: #333;
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+.form-container {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ingrediente-form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  
+  &.half-width {
+    flex: 1;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+// Estilos para campos de Material
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    border-radius: 8px;
+  }
+  
+  .mat-mdc-form-field-focus-overlay {
+    border-radius: 8px;
+  }
+}
+
+// Sección de imagen
+.image-section {
+  .image-label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    
+    .required {
+      color: #f44336;
+      margin-left: 4px;
+    }
+  }
+}
+
+.image-upload-container {
+  .upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    
+    &:hover {
+      border-color: #4CAF50;
+      background: #f8fff8;
+    }
+    
+    &.has-image {
+      padding: 0;
+      border: none;
+      background: transparent;
+      min-height: auto;
+    }
+  }
+  
+  .upload-placeholder {
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    
+    .upload-text {
+      margin: 0 0 6px 0;
+      font-size: 1.1rem;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    .upload-hint {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+  }
+  
+  .image-preview {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    
+    .preview-img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      display: block;
+    }
+    
+    .image-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    &:hover .image-overlay {
+      opacity: 1;
+    }
+    
+    .change-image-btn,
+    .remove-image-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .change-image-btn {
+      background: #4CAF50;
+      color: white;
+      
+      &:hover {
+        background: #45a049;
+      }
+    }
+    
+    .remove-image-btn {
+      background: #f44336;
+      color: white;
+      
+      &:hover {
+        background: #da190b;
+      }
+    }
+  }
+}
+
+.error-message {
+  color: #f44336;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+// Botones de acción
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  
+  button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+  
+  .btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #ddd;
+    
+    &:hover:not(:disabled) {
+      background: #eeeeee;
+      border-color: #ccc;
+    }
+  }
+  
+  .btn-primary {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    
+    &:hover:not(:disabled) {
+      background: #45a049;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+  }
+  
+  .loading-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    
+    &::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// ✅ AGREGAR ESTILOS PARA LA SECCIÓN DE STOCK
+.stock-section {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  margin: 20px 0;
+  
+  .section-title {
+    font-size: 1.2rem;
+    color: #495057;
+    margin: 0 0 20px 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .stock-info {
+    margin-top: 15px;
+    
+    .info-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin: 0;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #17a2b8;
+      }
+    }
+  }
+}
+
+.third-width {
+  flex: 1;
+  min-width: 200px;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .form-container {
+    padding: 25px 20px;
+  }
+  
+  .breadcrumb-section .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+  
+  .stock-section {
+    padding: 20px 15px;
+    
+    .form-row {
+      flex-direction: column;
+      gap: 15px;
+    }
+  }
+}

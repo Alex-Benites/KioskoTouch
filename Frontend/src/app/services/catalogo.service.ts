@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Producto, Categoria, Estado, Menu } from '../models/catalogo.model';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs'; // ✅ AGREGAR throwError
+import { map, catchError } from 'rxjs/operators'; // ✅ AGREGAR map y catchError
+import { Producto, Categoria, Estado, Menu, Ingrediente } from '../models/catalogo.model';
 import { environment } from '../../environments/environment';
 import { Tamano } from '../models/tamano.model';
 
@@ -38,8 +39,37 @@ export class CatalogoService {
     return this.http.get<any>(`${this.apiUrl}/catalogo/productos/${productoId}/imagen/`);
   }
 
-  getIngredientesPorCategoria(categoria: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/catalogo/ingredientes/${categoria}/`);
+  getIngredientesPorCategoria(categoria: string, headers?: HttpHeaders): Observable<any[]> {
+    console.log('🔍 [SERVICE] Solicitando ingredientes para categoría:', categoria);
+    
+    // Crear headers por defecto si no se proporcionan
+    if (!headers) {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+    }
+
+    const options = { headers };
+
+    // ✅ CORREGIR LA URL - usar this.apiUrl en lugar de this.baseUrl
+    return this.http.get<any>(`${this.apiUrl}/catalogo/ingredientes/categoria/${categoria}/`, options)
+      .pipe(
+        map((response: any) => { // ✅ TIPAR el parámetro
+          console.log('✅ [SERVICE] Respuesta recibida:', response);
+          return response.ingredientes || response || [];
+        }),
+        catchError((error: any) => { // ✅ TIPAR el parámetro
+          console.error('❌ [SERVICE] Error al obtener ingredientes:', error);
+          
+          if (error.status === 401) {
+            console.error('🚫 [SERVICE] Error de autenticación');
+          }
+          
+          return throwError(() => error);
+        })
+      );
   }
 
   getFullImageUrl(imagenUrl: string | undefined): string {
@@ -138,5 +168,53 @@ export class CatalogoService {
     );
     
     return tamanoEncontrado ? tamanoEncontrado.precio : producto.precio;
+  }
+
+  // === MÉTODOS PARA INGREDIENTES ===
+  
+  // Obtener todos los ingredientes
+  getIngredientes(): Observable<Ingrediente[]> {
+    const url = `${this.apiUrl}/catalogo/ingredientes/`;
+    return this.http.get<Ingrediente[]>(url);
+  }
+
+  // Obtener ingredientes por categoría
+  getIngredientesPorCategoriaFiltro(categoria: string): Observable<Ingrediente[]> {
+    const url = `${this.apiUrl}/catalogo/ingredientes/?categoria=${categoria}`;
+    return this.http.get<Ingrediente[]>(url);
+  }
+
+  // Obtener un ingrediente por ID
+  obtenerIngredientePorId(id: number): Observable<Ingrediente> {
+    const url = `${this.apiUrl}/catalogo/ingredientes/${id}/`;
+    return this.http.get<Ingrediente>(url);
+  }
+
+  // Crear ingrediente
+  crearIngrediente(ingredienteData: FormData): Observable<Ingrediente> {
+    const url = `${this.apiUrl}/catalogo/ingredientes/`;
+    return this.http.post<Ingrediente>(url, ingredienteData);
+  }
+
+  // Actualizar ingrediente
+  actualizarIngrediente(id: number, ingredienteData: FormData): Observable<Ingrediente> {
+    const url = `${this.apiUrl}/catalogo/ingredientes/${id}/`;
+    return this.http.put<Ingrediente>(url, ingredienteData);
+  }
+
+  // Eliminar ingrediente
+  eliminarIngrediente(id: number): Observable<any> {
+    const url = `${this.apiUrl}/catalogo/ingredientes/${id}/`;
+    return this.http.delete<any>(url);
+  }
+
+  // Verificar si ingrediente existe
+  verificarIngredienteExiste(id: number): Observable<boolean> {
+    return new Observable(observer => {
+      this.obtenerIngredientePorId(id).subscribe({
+        next: () => observer.next(true),
+        error: () => observer.next(false)
+      });
+    });
   }
 }

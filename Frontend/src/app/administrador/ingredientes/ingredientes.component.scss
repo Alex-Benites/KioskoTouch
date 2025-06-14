@@ -1,0 +1,432 @@
+.container {
+  min-height: calc(100vh - 140px);
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+// === HEADER SECTION ===
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  background: white;
+  padding: 25px 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+}
+
+.breadcrumb-section {
+  .breadcrumb {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  
+  .page-title {
+    font-size: 2.2rem;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+    color: #7f8c8d;
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
+.header-actions {
+  .create-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+    
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+// === TABS CONTAINER ===
+.tabs-container {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.ingredients-tabs {
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-header {
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .mat-mdc-tab {
+      font-weight: 600;
+      font-size: 1rem;
+      
+      &.mdc-tab--active {
+        .mdc-tab__text-label {
+          color: #4CAF50;
+        }
+      }
+    }
+    
+    .mat-mdc-tab-body-wrapper {
+      .mat-mdc-tab-body {
+        .mat-mdc-tab-body-content {
+          overflow: visible;
+        }
+      }
+    }
+  }
+}
+
+// === TAB CONTENT ===
+.tab-content {
+  padding: 30px;
+  min-height: 500px;
+}
+
+// === LOADING STATE ===
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #666;
+  
+  mat-spinner {
+    margin-bottom: 20px;
+  }
+  
+  p {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin: 0;
+  }
+}
+
+// === EMPTY STATE ===
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  text-align: center;
+  color: #7f8c8d;
+  
+  .empty-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    opacity: 0.6;
+    color: #bdc3c7;
+  }
+  
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.4rem;
+    color: #34495e;
+    font-weight: 600;
+  }
+  
+  p {
+    margin: 0 0 25px 0;
+    font-size: 1rem;
+    opacity: 0.8;
+  }
+  
+  button {
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+    }
+  }
+}
+
+// === INGREDIENTS GRID ===
+.ingredients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+// === INGREDIENT CARD ===
+.ingredient-card {
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: white;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+  
+  .card-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    
+    .ingredient-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover .ingredient-image {
+      transform: scale(1.05);
+    }
+    
+    .price-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+  }
+  
+  .mat-mdc-card-header {
+    padding: 20px 20px 12px 20px;
+    
+    .mat-mdc-card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    
+    .mat-mdc-card-subtitle {
+      font-size: 0.95rem;
+      color: #7f8c8d;
+      line-height: 1.4;
+      margin-bottom: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+  
+  .mat-mdc-card-content {
+    padding: 0 20px 12px 20px;
+    
+    .ingredient-info {
+      .creation-date {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: #95a5a6;
+        font-weight: 500;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+  
+  .card-actions {
+    padding: 12px 20px 20px 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      
+      mat-icon {
+        margin-right: 6px;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+      
+      &[color="primary"] {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        border: none;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+      }
+      
+      &[color="warn"] {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+      }
+    }
+  }
+}
+
+// === ANIMATIONS ===
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ingredient-card {
+  animation: fadeIn 0.6s ease-out;
+}
+
+// === RESPONSIVE ===
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .header-section {
+    .breadcrumb-section .page-title {
+      font-size: 1.8rem;
+    }
+  }
+  
+  .tab-content {
+    padding: 20px 15px;
+  }
+  
+  .ingredients-grid {
+    .ingredient-card {
+      .card-actions {
+        flex-direction: column;
+        
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .header-section {
+    .breadcrumb-section .page-title {
+      font-size: 1.6rem;
+    }
+  }
+  
+  .ingredients-grid {
+    .ingredient-card {
+      .card-image {
+        height: 180px;
+      }
+    }
+  }
+}
+
+// === MATERIAL DESIGN OVERRIDES ===
+.mat-mdc-snack-bar-container {
+  .mdc-snackbar__surface {
+    border-radius: 8px;
+  }
+}
+
+.mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    .mat-mdc-tab-label-container {
+      .mat-mdc-tab-list {
+        .mat-mdc-tab {
+          .mdc-tab__content {
+            .mdc-tab__text-label {
+              font-size: 1rem;
+              font-weight: 600;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// === SCROLLBAR STYLING ===
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}

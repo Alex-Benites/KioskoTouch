@@ -14,6 +14,7 @@ import { CatalogoService } from '../../../services/catalogo.service';
 import { Producto, Categoria, Estado } from '../../../models/catalogo.model';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Tamano, ProductoTamano } from '../../../models/tamano.model';  // Agregar ProductoTamano aquí
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Component({ 
   selector: 'app-crear-producto',
@@ -231,7 +232,10 @@ export class CrearComponent implements OnInit {
           const estaSeleccionado = ingredientesSeleccionados.some(sel => sel.id === ingrediente.id);
           return {
             ...ingrediente,
-            seleccionado: estaSeleccionado
+            seleccionado: estaSeleccionado,
+            // ✅ AGREGAR CAMPOS DE COMPATIBILIDAD
+            es_base: ingrediente.es_base || false,
+            permite_extra: ingrediente.permite_extra || false
           };
         });
 
@@ -242,8 +246,15 @@ export class CrearComponent implements OnInit {
           descripcion: ing.descripcion,
           imagen_url: ing.imagen_url,
           seleccionado: true,
-          es_base: ing.es_base,
-          permite_extra: ing.permite_extra
+          es_base: ing.es_base || false,
+          permite_extra: ing.permite_extra || false,
+          // ✅ AGREGAR CAMPOS DE STOCK (OPCIONALES)
+          stock: ing.stock || 0,
+          stock_minimo: ing.stock_minimo || 5,
+          unidad_medida: ing.unidad_medida || 'unidades',
+          esta_agotado: ing.esta_agotado || false,
+          necesita_reposicion: ing.necesita_reposicion || false,
+          estado_stock: ing.estado_stock || 'DISPONIBLE'
         }));
       },
       error: (error) => {
@@ -268,7 +279,16 @@ export class CrearComponent implements OnInit {
         nombre: ingrediente.nombre,
         descripcion: ingrediente.descripcion,
         imagen_url: ingrediente.imagen_url,
-        seleccionado: true
+        seleccionado: true,
+        // ✅ AGREGAR CAMPOS DE COMPATIBILIDAD
+        es_base: ingrediente.es_base || false,
+        permite_extra: ingrediente.permite_extra || false,
+        stock: ingrediente.stock || 0,
+        stock_minimo: ingrediente.stock_minimo || 5,
+        unidad_medida: ingrediente.unidad_medida || 'unidades',
+        esta_agotado: ingrediente.esta_agotado || false,
+        necesita_reposicion: ingrediente.necesita_reposicion || false,
+        estado_stock: ingrediente.estado_stock || 'DISPONIBLE'
       });
       ingrediente.seleccionado = true;
       console.log('✅ Ingrediente seleccionado:', ingrediente.nombre);
@@ -323,15 +343,34 @@ export class CrearComponent implements OnInit {
       this.ingredientesSeleccionados = [];
     }
 
-    this.catalogoService.getIngredientesPorCategoria(categoriaNombre).subscribe({
+    // ✅ AGREGAR HEADERS DE AUTENTICACIÓN
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    console.log('🔐 Enviando petición con token de autenticación');
+
+    this.catalogoService.getIngredientesPorCategoria(categoriaNombre, headers).subscribe({
       next: (ingredientes) => {
+        console.log('✅ Ingredientes cargados exitosamente:', ingredientes);
         this.ingredientesDisponibles = ingredientes.map(ing => ({
           ...ing,
-          seleccionado: false
+          seleccionado: false,
+          // ✅ AGREGAR CAMPOS DE COMPATIBILIDAD
+          es_base: ing.es_base || false,
+          permite_extra: ing.permite_extra || false
         }));
       },
       error: (error) => {
         console.error('❌ Error al cargar ingredientes:', error);
+        if (error.status === 401) {
+          console.error('🚫 Token de autenticación inválido o expirado');
+          alert('⚠️ Sesión expirada. Redirigiendo al login...');
+          // Aquí podrías redirigir al login
+          // this.router.navigate(['/login']);
+        }
         this.ingredientesDisponibles = [];
       }
     });

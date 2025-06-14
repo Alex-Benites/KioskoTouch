@@ -34,6 +34,28 @@ class AppkioskoIngredientes(models.Model):
         default='general'
     )
     precio_adicional = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    # ✅ AGREGAR CAMPO DE STOCK
+    stock = models.IntegerField(
+        default=0,
+        help_text="Cantidad disponible en inventario"
+    )
+    # ✅ AGREGAR CAMPOS ADICIONALES DE STOCK (OPCIONALES)
+    stock_minimo = models.IntegerField(
+        default=5,
+        help_text="Cantidad mínima de alerta de stock"
+    )
+    unidad_medida = models.CharField(
+        max_length=20,
+        default='unidades',
+        help_text="Ej: unidades, gramos, litros, etc."
+    )
+
+    imagen = models.ImageField(
+        upload_to='ingredientes/', 
+        null=True, 
+        blank=True,
+        help_text="Imagen del ingrediente"
+    )
     estado = models.ForeignKey(AppkioskoEstados, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
@@ -47,6 +69,26 @@ class AppkioskoIngredientes(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.get_categoria_producto_display()})"
 
+    # ✅ AGREGAR MÉTODOS ÚTILES PARA STOCK
+    @property
+    def esta_agotado(self):
+        """Retorna True si el ingrediente está agotado"""
+        return self.stock <= 0
+
+    @property
+    def necesita_reposicion(self):
+        """Retorna True si el stock está por debajo del mínimo"""
+        return self.stock <= self.stock_minimo
+
+    @property
+    def estado_stock(self):
+        """Retorna el estado del stock como string"""
+        if self.esta_agotado:
+            return "AGOTADO"
+        elif self.necesita_reposicion:
+            return "BAJO STOCK"
+        else:
+            return "DISPONIBLE"
 
 class AppkioskoTamanos(models.Model):
     nombre = models.CharField(max_length=50)  # 'Pequeño', 'Mediano', 'Grande'
