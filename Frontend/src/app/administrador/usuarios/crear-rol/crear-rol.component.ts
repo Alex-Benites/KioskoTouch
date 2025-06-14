@@ -5,6 +5,9 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
 // 🎨 Angular Material Imports
 import { MatCardModule } from '@angular/material/card';
@@ -74,7 +77,8 @@ export class CrearRolComponent implements OnInit {
     private rolesService: RolesService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog // ✅ NUEVO: Inyectar MatDialog
   ) {
     this.inicializarFormulario();
   }
@@ -409,7 +413,7 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * 💾 Guardar rol (crear o actualizar)
+   * 💾 Guardar rol (crear o actualizar) - MODIFICADO
    */
   guardarRol(): void {
     if (this.rolForm.invalid) {
@@ -424,6 +428,33 @@ export class CrearRolComponent implements OnInit {
       return;
     }
 
+    // ✅ NUEVO: Mostrar diálogo de confirmación antes de procesar
+    this.mostrarDialogConfirmacion(permisosSeleccionados);
+  }
+
+  // ✅ NUEVO: Método para mostrar diálogo de confirmación
+  private mostrarDialogConfirmacion(permisosSeleccionados: number[]): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'rol',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario(permisosSeleccionados);
+      }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
+  }
+
+  // ✅ NUEVO: Método para procesar el formulario después de la confirmación
+  private procesarFormulario(permisosSeleccionados: number[]): void {
     this.saving = true;
     
     if (this.isEditMode) {
@@ -434,7 +465,7 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * 🆕 Crear nuevo rol
+   * 🆕 Crear nuevo rol - MODIFICADO
    */
   private crearRol(permisosSeleccionados: number[]): void {
     const data: CrearRolRequest = {
@@ -444,8 +475,15 @@ export class CrearRolComponent implements OnInit {
 
     this.rolesService.crearRol(data).subscribe({
       next: (response) => {
-        this.mostrarExito('Rol creado exitosamente');
-        this.navegarARoles();
+        console.log('✅ Rol creado exitosamente:', response);
+        this.saving = false;
+        
+        // ✅ NUEVO: Mostrar diálogo de éxito en lugar de snackbar
+        this.mostrarDialogExito(
+          'Rol Creado',
+          `El rol "${data.nombre}" ha sido creado exitosamente.`,
+          'Continuar'
+        );
       },
       error: (error) => {
         console.error('Error creando rol:', error);
@@ -457,7 +495,7 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * ✏️ Actualizar rol existente
+   * ✏️ Actualizar rol existente - MODIFICADO
    */
   private actualizarRol(permisosSeleccionados: number[]): void {
     const data: EditarRolRequest = {
@@ -467,8 +505,15 @@ export class CrearRolComponent implements OnInit {
 
     this.rolesService.editarRol(this.rolId!, data).subscribe({
       next: (response) => {
-        this.mostrarExito('Rol actualizado exitosamente');
-        this.navegarARoles();
+        console.log('✅ Rol actualizado exitosamente:', response);
+        this.saving = false;
+        
+        // ✅ NUEVO: Mostrar diálogo de éxito en lugar de snackbar
+        this.mostrarDialogExito(
+          'Rol Actualizado',
+          `El rol "${data.nombre}" ha sido actualizado exitosamente.`,
+          'Continuar'
+        );
       },
       error: (error) => {
         console.error('Error actualizando rol:', error);
@@ -477,6 +522,54 @@ export class CrearRolComponent implements OnInit {
         this.saving = false;
       }
     });
+  }
+
+  // ✅ NUEVO: Método para mostrar diálogo de éxito
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      if (this.isEditMode) {
+        // ✅ CAMBIO: Al actualizar, ir a la lista de roles para editar/eliminar
+        this.router.navigate(['/administrador/gestion-usuarios/editar-eliminar-rol']);
+      } else {
+        // ✅ CAMBIO: Al crear, limpiar formulario y quedarse en el mismo componente
+        this.limpiarFormularioParaNuevoRol();
+      }
+    });
+  }
+
+  // ✅ NUEVO: Método para limpiar formulario después de crear un rol
+  private limpiarFormularioParaNuevoRol(): void {
+    // Limpiar el formulario
+    this.rolForm.reset();
+    
+    // Reinicializar valores por defecto
+    this.rolForm.get('nombre')?.setValue('');
+    
+    // Desmarcar todos los permisos
+    const permisosGroup = this.rolForm.get('permisos') as FormGroup;
+    Object.keys(permisosGroup.controls).forEach(gestionKey => {
+      const gestionGroup = permisosGroup.get(gestionKey) as FormGroup;
+      gestionGroup.patchValue({
+        ver: false,
+        crear: false,
+        modificar: false,
+        eliminar: false,
+        todos: false
+      });
+    });
+
+    console.log('✅ Formulario limpiado para crear nuevo rol');
   }
 
   /**
@@ -515,12 +608,13 @@ export class CrearRolComponent implements OnInit {
   }
 
   /**
-   * 🔄 Navegar a la lista de roles
+   * 🔄 Navegar a roles - MODIFICADO
    */
   private navegarARoles(): void {
     if(this.isEditMode){
       this.router.navigate(['/administrador/gestion-usuarios/editar-eliminar-rol']); 
     } else{
+      // ✅ CAMBIO: No navegar automáticamente al crear, se queda en el mismo componente
       this.router.navigate(['/administrador/gestion-usuarios']);
     }
   }

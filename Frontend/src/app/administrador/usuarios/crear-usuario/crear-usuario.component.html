@@ -8,14 +8,14 @@
     <div class="form-layout">
       <!-- Parte izquierda: Campos del formulario -->
       <div class="form-fields">
-        
+
         <!-- 🆕 Sección: Información Personal -->
         <div class="form-section">
           <h3 class="section-subtitle">
             <mat-icon>person</mat-icon>
             Información Personal
           </h3>
-          
+
           <div class="form-grid">
             <!-- Cédula -->
             <mat-form-field appearance="outline" class="form-field">
@@ -53,9 +53,26 @@
             <!-- Fecha de Nacimiento -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Fecha de Nacimiento</mat-label>
-              <input matInput [matDatepicker]="nacimientoPicker" formControlName="fechaNacimiento" placeholder="mm/dd/aaaa">
+              <input
+                matInput
+                [matDatepicker]="nacimientoPicker"
+                formControlName="fechaNacimiento"
+                placeholder="mm/dd/aaaa"
+                [max]="fechaMaxima">
               <mat-datepicker-toggle matSuffix [for]="nacimientoPicker"></mat-datepicker-toggle>
               <mat-datepicker #nacimientoPicker></mat-datepicker>
+
+              <!-- ✅ NUEVOS mensajes de error -->
+              @if (usuarioForm.get('fechaNacimiento')?.hasError('edadMinima')) {
+                <mat-error>
+                  {{ usuarioForm.get('fechaNacimiento')?.getError('edadMinima')?.mensaje }}
+                </mat-error>
+              }
+              @if (usuarioForm.get('fechaNacimiento')?.hasError('fechaFutura')) {
+                <mat-error>
+                  {{ usuarioForm.get('fechaNacimiento')?.getError('fechaFutura')?.mensaje }}
+                </mat-error>
+              }
             </mat-form-field>
 
             <!-- Teléfono -->
@@ -86,14 +103,14 @@
             <mat-icon>security</mat-icon>
             Credenciales de Acceso
           </h3>
-          
+
           <div class="form-grid">
             <!-- Username -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Nombre de Usuario</mat-label>
-              <input 
-                matInput 
-                formControlName="username" 
+              <input
+                matInput
+                formControlName="username"
                 placeholder="Ej: jperez"
                 [readonly]="isEditMode">
               @if (isEditMode) {
@@ -159,7 +176,7 @@
             <mat-icon>work</mat-icon>
             Información Laboral
           </h3>
-          
+
           <div class="form-grid">
             <!-- Establecimiento -->
             <mat-form-field appearance="outline" class="form-field">
@@ -219,7 +236,7 @@
           <button type="button" class="cancel__button" (click)="cancelar()">
             Cancelar
           </button>
-          
+
           <button type="submit" class="primary__button" [disabled]="usuarioForm.invalid || saving">
             @if (!saving) {
               <span>{{ isEditMode ? 'Actualizar Usuario' : 'Crear Usuario' }}</span>

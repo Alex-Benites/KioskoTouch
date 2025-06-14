@@ -13,8 +13,8 @@ export const permissionGuard = (requiredPermissions: string[]): CanActivateFn =>
       return false;
     }
 
-    if (authService.hasAnyPermission(requiredPermissions)) {
-      console.log('✅ Usuario tiene permisos:', requiredPermissions);
+    if (authService.hasAllPermissions(requiredPermissions)) { 
+      console.log('✅ Usuario tiene TODOS los permisos:', requiredPermissions);
       return true;
     } else {
       console.warn('❌ Usuario sin permisos suficientes:', requiredPermissions);

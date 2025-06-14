@@ -9,12 +9,17 @@ import { RouterModule } from '@angular/router';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component';
-import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTableModule } from '@angular/material/table';
 
 import { RolesService } from '../../../services/roles.service';
 import { AuthService } from '../../../services/auth.service'; // ← NUEVO
@@ -35,13 +40,17 @@ import { GruposResponse, Grupo } from '../../../models/roles.model';
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    RouterLink
+    RouterLink,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatTableModule
   ],
   templateUrl: './editar-eliminar-rol.component.html',
   styleUrls: ['./editar-eliminar-rol.component.scss']
 })
 export class EditarEliminarRolComponent implements OnInit {
-  
+
   private rolesService = inject(RolesService);
   private authService = inject(AuthService); // ← NUEVO
   private router = inject(Router);
@@ -98,7 +107,7 @@ export class EditarEliminarRolComponent implements OnInit {
   // ✅ MÉTODO MEJORADO - Valida permisos antes de editar
   editarRol(rol: Grupo): void {
     console.log('🔧 Intentando editar rol:', rol.name);
-    
+
     // 🔒 Validar permisos
     if (!this.authService.hasPermission('auth.change_group')) {
       console.log('❌ Sin permisos para editar roles');
@@ -114,7 +123,7 @@ export class EditarEliminarRolComponent implements OnInit {
   // ✅ MÉTODO MEJORADO - Valida permisos antes de eliminar
   confirmarEliminarRol(rol: Grupo): void {
     console.log('🗑️ Intentando eliminar rol:', rol.name);
-    
+
     // 🔒 Validar permisos
     if (!this.authService.hasPermission('auth.delete_group')) {
       console.log('❌ Sin permisos para eliminar roles');
@@ -124,44 +133,93 @@ export class EditarEliminarRolComponent implements OnInit {
 
     // ✅ Tiene permisos, mostrar confirmación
     console.log('✅ Permisos validados, mostrando confirmación');
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'rol',
+      action: 'delete'
+    };
+
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       disableClose: true,
-      data: { itemType: 'rol' }
+      data: dialogData
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
         console.log('✅ Confirmado eliminar rol:', rol.name);
-        this.eliminarRol(rol);
+        // ✅ CAMBIO: Llamar directamente a procesarEliminacion
+        this.procesarEliminacion(rol);
       } else {
         console.log('❌ Eliminación cancelada');
       }
     });
   }
 
-  private eliminarRol(rol: Grupo): void {
-    console.log('🗑️ Eliminando rol:', rol.name);
-    
+  // ✅ MANTENER ESTE MÉTODO - Es el que hace el trabajo real
+  private procesarEliminacion(rol: Grupo): void {
     this.loading = true;
-    
+
     this.rolesService.eliminarRol(rol.id).subscribe({
-      next: () => {
-        console.log('✅ Rol eliminado exitosamente');
-        this.snackBar.open(`Rol "${rol.name}" eliminado exitosamente.`, 'Cerrar', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-        this.cargarRoles(); // Recargar lista
+      next: (response) => {
+        console.log('✅ Rol eliminado exitosamente:', response);
+        this.loading = false;
+
+        // ✅ MOSTRAR SUCCESS-DIALOG
+        this.mostrarDialogExito(
+          'Rol Eliminado',
+          `El rol "${rol.name}" ha sido eliminado exitosamente.`,
+          'Continuar'
+        );
+
+        // Recargar la lista de roles
+        this.cargarRoles();
       },
       error: (error) => {
-        console.error('❌ Error al eliminar rol:', error);
-        const errorMessage = error.error?.error || 'No se pudo eliminar el rol.';
-        this.snackBar.open(errorMessage, 'Cerrar', {
-          duration: 7000,
-          panelClass: ['error-snackbar']
-        });
+        console.error('❌ Error eliminando rol:', error);
         this.loading = false;
+
+        let mensajeError = 'Error al eliminar el rol. ';
+        if (error.error?.detail) {
+          mensajeError += error.error.detail;
+        } else if (error.error?.message) {
+          mensajeError += error.error.message;
+        } else if (error.error?.error) {
+          mensajeError += error.error.error;
+        } else {
+          mensajeError += 'Por favor, intente nuevamente.';
+        }
+
+        this.mostrarError(mensajeError);
       }
+    });
+  }
+
+  // ✅ NUEVO: Método para mostrar diálogo de éxito
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // El usuario cierra el diálogo, no necesita navegar a ningún lado
+      // Se queda en la misma vista para seguir editando/eliminando roles
+      console.log('✅ Diálogo de éxito cerrado');
+    });
+  }
+
+  // ✅ MODIFICAR: Método mostrarError para usar snackbar (para errores sí está bien)
+  private mostrarError(mensaje: string): void {
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 5000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: ['error-snackbar']
     });
   }
 

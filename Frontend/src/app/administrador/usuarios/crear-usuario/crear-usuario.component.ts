@@ -19,6 +19,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 // Services
 import { UsuariosService } from '../../../services/usuarios.service';
@@ -52,7 +53,7 @@ import { Establecimiento } from '../../../models/establecimiento.model';
   styleUrls: ['./crear-usuario.component.scss']
 })
 export class CrearUsuarioComponent implements OnInit {
-  
+
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -70,9 +71,11 @@ export class CrearUsuarioComponent implements OnInit {
   hidePassword = true;
   hideConfirmPassword = true;
 
+  // ✅ NUEVA propiedad para limitar fecha máxima
+  fechaMaxima = new Date(); // Fecha actual como máximo
+
   // Datos para los selects
   establecimientos: Establecimiento[] = [];
-
   rolesDisponibles: Grupo[] = [];
 
   constructor() {
@@ -99,7 +102,7 @@ export class CrearUsuarioComponent implements OnInit {
       cedula: ['', [Validators.required, Validators.pattern(/^\d{10}$/), this.cedulaEcuatorianaValidator()]],
       nombres: ['', [Validators.required, Validators.maxLength(100)]],
       apellidos: ['', [Validators.required, Validators.maxLength(100)]],
-      fechaNacimiento: [''],
+      fechaNacimiento: ['', [this.edadMinimaValidator(18)]], // ✅ AGREGAR validación de edad
       telefono: ['', [Validators.pattern(/^\d{10}$/)]],
       sexo: [''],
 
@@ -112,7 +115,7 @@ export class CrearUsuarioComponent implements OnInit {
       // Información laboral
       establecimiento: [null],
       turnoTrabajo: [''],
-      grupos: [null, [Validators.required]], 
+      grupos: [null, [Validators.required]],
       isActive: [true]
     }, {
       validators: this.isEditMode ? [] : [this.passwordMatchValidator()]
@@ -127,7 +130,7 @@ export class CrearUsuarioComponent implements OnInit {
       next: (response) => {
         console.log('✅ Datos recibidos del backend:', response);
         const empleado = response.empleado;
-        
+
         // ✅ DETERMINAR EL ESTABLECIMIENTO A MOSTRAR
         let establecimientoSeleccionado = null;
         let mensajeEstablecimiento = '';
@@ -229,7 +232,7 @@ export class CrearUsuarioComponent implements OnInit {
       }
 
       const verifierDigit = sum % 10 === 0 ? 0 : 10 - (sum % 10);
-      
+
       return verifierDigit === digits[9] ? null : { cedulaInvalida: true };
     };
   }
@@ -261,13 +264,86 @@ export class CrearUsuarioComponent implements OnInit {
     };
   }
 
+  // ✅ NUEVO: Validador de edad mínima
+  private edadMinimaValidator(edadMinima: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) {
+        return null; // Si no hay valor, no validamos (campo opcional)
+      }
+
+      const fechaNacimiento = new Date(control.value);
+      const hoy = new Date();
+
+      // Calcular la edad
+      let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+      const diferenciaMes = hoy.getMonth() - fechaNacimiento.getMonth();
+
+      // Ajustar si aún no ha cumplido años este año
+      if (diferenciaMes < 0 || (diferenciaMes === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
+        edad--;
+      }
+
+      // Validar edad mínima
+      if (edad < edadMinima) {
+        return {
+          edadMinima: {
+            edadActual: edad,
+            edadRequerida: edadMinima,
+            mensaje: `Debe ser mayor de ${edadMinima} años`
+          }
+        };
+      }
+
+      // ✅ VALIDAR que no sea una fecha futura
+      if (fechaNacimiento > hoy) {
+        return {
+          fechaFutura: {
+            mensaje: 'La fecha de nacimiento no puede ser futura.'
+          }
+        };
+      }
+
+      return null;
+    };
+  }
+
   onSubmit(): void {
     if (this.usuarioForm.invalid) {
-      this.mostrarError('Por favor completa todos los campos requeridos correctamente');
-      this.usuarioForm.markAllAsTouched();
+      // Marcar todos los campos como tocados para mostrar errores
+      Object.keys(this.usuarioForm.controls).forEach(key => {
+        this.usuarioForm.get(key)?.markAsTouched();
+      });
+      this.mostrarError('Por favor, complete todos los campos requeridos correctamente.');
       return;
     }
 
+    // ✅ NUEVO: Mostrar diálogo de confirmación antes de procesar
+    this.mostrarDialogConfirmacion();
+  }
+
+  // ✅ NUEVO: Método para mostrar diálogo de confirmación
+  private mostrarDialogConfirmacion(): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'usuario',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario();
+      }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
+  }
+
+  // ✅ NUEVO: Método para procesar el formulario después de la confirmación
+  private procesarFormulario(): void {
     this.saving = true;
 
     if (this.isEditMode) {
@@ -277,57 +353,67 @@ export class CrearUsuarioComponent implements OnInit {
     }
   }
 
+  // ✅ MODIFICAR: Los métodos crearUsuario y actualizarUsuario ya no necesitan el saving = true
   private crearUsuario(): void {
     const formData = { ...this.usuarioForm.value };
-    
+
     if (formData.fechaNacimiento) {
-      formData.fechaNacimiento = this.formatDateForBackend(new Date(formData.fechaNacimiento));
+      formData.fechaNacimiento = this.formatDateForBackend(formData.fechaNacimiento);
     }
-    
+
     if (formData.grupos) {
       formData.grupos = [formData.grupos];
     }
-    
+
     delete formData.confirmPassword;
 
     console.log('🎯 Datos a enviar para crear usuario:', formData);
 
     this.usuariosService.crearUsuario(formData).subscribe({
       next: (response) => {
-        console.log('✅ Usuario creado:', response);
+        console.log('✅ Usuario creado exitosamente:', response);
         this.saving = false;
-        
+
         this.mostrarDialogExito(
-          'REGISTRO',
-          '¡El usuario se ha creado exitosamente!',
+          'Usuario Creado',
+          `El usuario ${formData.nombres} ${formData.apellidos} ha sido creado exitosamente.`,
           'Continuar'
         );
       },
       error: (error) => {
         console.error('❌ Error al crear usuario:', error);
-        const mensaje = error.error?.error || 'Error al crear el usuario';
-        this.mostrarError(mensaje);
         this.saving = false;
+
+        let mensajeError = 'Error al crear el usuario. ';
+        if (error.error?.detail) {
+          mensajeError += error.error.detail;
+        } else if (error.error?.message) {
+          mensajeError += error.error.message;
+        } else {
+          mensajeError += 'Por favor, intente nuevamente.';
+        }
+
+        this.mostrarError(mensajeError);
       }
     });
   }
 
   private actualizarUsuario(): void {
     const formData = { ...this.usuarioForm.value };
-    
+
     // ✅ INCLUIR USERNAME AUNQUE ESTÉ DISABLED
     if (this.usuarioForm.get('username')?.disabled) {
       formData.username = this.usuarioForm.get('username')?.value;
     }
-    
+
     if (formData.fechaNacimiento) {
-      formData.fechaNacimiento = this.formatDateForBackend(new Date(formData.fechaNacimiento));
+      formData.fechaNacimiento = this.formatDateForBackend(formData.fechaNacimiento);
     }
-    
+
     if (formData.grupos) {
       formData.grupos = [formData.grupos];
     }
-    
+
     delete formData.confirmPassword;
     if (!formData.password) {
       delete formData.password;
@@ -337,20 +423,29 @@ export class CrearUsuarioComponent implements OnInit {
 
     this.usuariosService.actualizarEmpleado(this.userId!, formData).subscribe({
       next: (response) => {
-        console.log('✅ Usuario actualizado:', response);
+        console.log('✅ Usuario actualizado exitosamente:', response);
         this.saving = false;
-        
+
         this.mostrarDialogExito(
-          'ACTUALIZACIÓN',
-          '¡El usuario se ha actualizado exitosamente!',
+          'Usuario Actualizado',
+          `El usuario ${formData.nombres} ${formData.apellidos} ha sido actualizado exitosamente.`,
           'Continuar'
         );
       },
       error: (error) => {
         console.error('❌ Error al actualizar usuario:', error);
-        const mensaje = error.error?.error || 'Error al actualizar el usuario';
-        this.mostrarError(mensaje);
         this.saving = false;
+
+        let mensajeError = 'Error al actualizar el usuario. ';
+        if (error.error?.detail) {
+          mensajeError += error.error.detail;
+        } else if (error.error?.message) {
+          mensajeError += error.error.message;
+        } else {
+          mensajeError += 'Por favor, intente nuevamente.';
+        }
+
+        this.mostrarError(mensajeError);
       }
     });
   }
@@ -396,9 +491,9 @@ export class CrearUsuarioComponent implements OnInit {
 
   private formatDateForBackend(date: Date): string {
     const year = date.getFullYear();
-    const month = String(date.getMonth()+1).padStart(2, '0'); 
+    const month = String(date.getMonth()+1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`; 
+    return `${year}-${month}-${day}`;
   }
 
   private parseBackendDate(dateString: string): Date{
