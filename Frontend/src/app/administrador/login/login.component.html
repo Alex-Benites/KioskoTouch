@@ -21,33 +21,40 @@
       <div class="input-container">
         <label for="usuario">Usuario o Email</label>
         <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="usuario" 
-            name="usuario" 
-            placeholder="Ingrese usuario o email" 
-            [(ngModel)]="usuario" 
+          <input
+            type="text"
+            id="usuario"
+            name="usuario"
+            placeholder="Ingrese usuario o email"
+            [(ngModel)]="usuario"
             (input)="onInputChange()"
             [disabled]="isLoading"
-            required 
+            required
           />
         </div>
       </div>
 
-      <!-- Campo de Contraseña -->
+      <!-- ✅ MODIFICADO: Campo de Contraseña con ícono del ojo -->
       <div class="input-container">
         <label for="password">Contraseña</label>
-        <div class="input-wrapper">
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            placeholder="Ingrese contraseña" 
+        <div class="input-wrapper password-wrapper">
+          <input
+            [type]="mostrarPassword ? 'text' : 'password'"
+            id="password"
+            name="password"
+            placeholder="Ingrese contraseña"
             [(ngModel)]="password"
             (input)="onInputChange()"
             [disabled]="isLoading"
-            required 
+            required
           />
+          <!-- ✅ NUEVO: Ícono del ojo -->
+          <span
+            class="eye-icon"
+            (click)="togglePasswordVisibility()"
+            [class.eye-visible]="mostrarPassword"
+            [class.eye-hidden]="!mostrarPassword"
+          ></span>
         </div>
       </div>
 
@@ -57,11 +64,11 @@
           Recuperar contraseña
         </button>
       </div>
- 
+
       <!-- Botón ingresar con loading -->
-      <button 
-        type="submit" 
-        class="primary__button ingresar-btn" 
+      <button
+        type="submit"
+        class="primary__button ingresar-btn"
         [disabled]="isLoading || !usuario || !password"
         [class.loading]="isLoading"
       >
@@ -77,39 +84,39 @@
 </div>
 
 <!-- POP-UP de recuperación - Solo solicitar email -->
-  <div *ngIf="mostrarPopupRecuperar" class="popup-overlay">
-    <div class="popup">
-      <button (click)="cerrarPopupRecuperar()" class="popup-close">X</button>
-      <h2>Recuperar contraseña</h2>
-      <p>Ingrese su correo electrónico para recibir instrucciones.</p>
-      
-      <!-- Mostrar errores -->
-      <div *ngIf="errorRecuperacion" class="error-message" style="margin-bottom: 10px; color: #e74c3c;">
-        {{ errorRecuperacion }}
-      </div>
-      
-      <!-- Mostrar mensaje de éxito -->
-      <div *ngIf="mensajeRecuperacion" class="success-message" style="margin-bottom: 10px; color: #27ae60;">
-        {{ mensajeRecuperacion }}
-      </div>
-      
-      <input 
-        type="email" 
-        placeholder="example@domain.com" 
-        class="popup-input"
-        [(ngModel)]="emailRecuperacion"
-        (input)="onRecuperacionInputChange()"
-        [disabled]="loadingRecuperacion"
-      />
-      
-      <button 
-        type="button" 
-        class="primary__button popup-btn" 
-        (click)="solicitarRecuperacion()"
-        [disabled]="!emailRecuperacion || loadingRecuperacion"
-      >
-        <span *ngIf="loadingRecuperacion">Enviando...</span>
-        <span *ngIf="!loadingRecuperacion">Continuar</span>
-      </button>
+<div *ngIf="mostrarPopupRecuperar" class="popup-overlay">
+  <div class="popup">
+    <button (click)="cerrarPopupRecuperar()" class="popup-close">X</button>
+    <h2>Recuperar contraseña</h2>
+    <p>Ingrese su correo electrónico para recibir instrucciones.</p>
+
+    <!-- Mostrar errores -->
+    <div *ngIf="errorRecuperacion" class="error-message" style="margin-bottom: 10px; color: #e74c3c;">
+      {{ errorRecuperacion }}
     </div>
+
+    <!-- Mostrar mensaje de éxito -->
+    <div *ngIf="mensajeRecuperacion" class="success-message" style="margin-bottom: 10px; color: #27ae60;">
+      {{ mensajeRecuperacion }}
+    </div>
+
+    <input
+      type="email"
+      placeholder="example@domain.com"
+      class="popup-input"
+      [(ngModel)]="emailRecuperacion"
+      (input)="onRecuperacionInputChange()"
+      [disabled]="loadingRecuperacion"
+    />
+
+    <button
+      type="button"
+      class="primary__button popup-btn"
+      (click)="solicitarRecuperacion()"
+      [disabled]="!emailRecuperacion || loadingRecuperacion"
+    >
+      <span *ngIf="loadingRecuperacion">Enviando...</span>
+      <span *ngIf="!loadingRecuperacion">Continuar</span>
+    </button>
   </div>
+</div>

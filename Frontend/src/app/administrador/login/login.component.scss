@@ -44,23 +44,23 @@ $success-color: #4CAF50;
 
 .input-container {
   margin-bottom: 20px;
-  
+
   label {
     padding-left: 12px;
     font-size: 24px;
     font-weight: 700;
   }
-  
+
   input {
     width: 100%;
     font-size: 16px;
     border: none;
     background: $input-color;
-    
+
     &:focus {
       outline: none;
     }
-    
+
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -78,29 +78,65 @@ $success-color: #4CAF50;
   background: $input-color;
   display: flex;
   justify-content: space-between;
+  align-items: center; // ✅ AGREGADO: Para centrar el ícono
   transition: all 0.2s ease;
-  
+
   &:focus-within {
     background-color: #d9d9d9;
     box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
   }
-  
-  span {
-    display: block;
-    width: 22px;
-    height: 22px;
-    background-image: url(../../../../public/img/administrador/ADMIN_1_1.png);
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    cursor: pointer;
+
+  // ✅ MODIFICADO: Estilos para el input dentro del wrapper
+  input {
+    flex: 1; // ✅ NUEVO: Para que el input ocupe el espacio disponible
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 16px;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ✅ NUEVO: Estilos específicos para el wrapper de contraseña
+.password-wrapper {
+  position: relative;
+}
+
+// ✅ NUEVO: Estilos para el ícono del ojo
+.eye-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: opacity 0.2s ease;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  // ✅ Ícono de ojo cerrado (contraseña oculta)
+  &.eye-hidden {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>');
+  }
+
+  // ✅ Ícono de ojo abierto (contraseña visible)
+  &.eye-visible {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>');
   }
 }
 
 .forgot-password {
   text-align: right;
   margin-bottom: 20px;
-  
+
   button {
     font-size: 16px;
     font-weight: 700;
@@ -108,7 +144,7 @@ $success-color: #4CAF50;
     border: none;
     color: $normal-text-color;
     cursor: pointer;
-    
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -121,13 +157,13 @@ $success-color: #4CAF50;
   align-self: center;
   position: relative;
   transition: all 0.3s ease;
-  
+
   &:disabled {
     background-color: #cccccc !important;
     cursor: not-allowed;
     opacity: 0.7;
   }
-  
+
   &.loading {
     padding-left: 40px;
   }
@@ -138,7 +174,7 @@ $success-color: #4CAF50;
   height: 100%;
   display: flex;
   align-items: center;
-  
+
   .hamburguesa-img {
     width: 100%;
     height: 100%;
@@ -207,13 +243,13 @@ $success-color: #4CAF50;
   width: 50%;
   max-width: 90%;
   text-align: left;
-  
+
   h2 {
     font-size: 32px;
     color: $normal-text-color;
     margin-bottom: 8px;
   }
-  
+
   p {
     font-size: 18px;
     margin-bottom: 16px;
@@ -240,7 +276,7 @@ $success-color: #4CAF50;
   background-color: $input-color;
   border: none;
   border-radius: 8px;
-  
+
   &:focus {
     outline: none;
   }
@@ -256,22 +292,22 @@ $success-color: #4CAF50;
     height: auto;
     margin: 8px;
   }
-  
+
   .image-container {
     width: 100%;
     height: 200px;
     order: 2;
   }
-  
+
   .login-form-container {
     width: 100%;
     order: 1;
   }
-  
+
   .app-title {
     font-size: 60px;
   }
-  
+
   .popup {
     width: 90%;
     padding: 20px;

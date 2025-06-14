@@ -28,10 +28,13 @@ export class LoginComponent {
   isLoading: boolean = false;
   errorMessage: string = '';
 
+  // ✅ NUEVO: Estado para mostrar/ocultar contraseña
+  mostrarPassword: boolean = false;
+
   // 🚪 Método de login (agrega este si no lo tienes)
   ingresar() {
     this.errorMessage = '';
-    
+
     if (!this.usuario || !this.password) {
       this.errorMessage = 'Por favor, complete todos los campos';
       return;
@@ -71,7 +74,7 @@ export class LoginComponent {
 
     // ← AGREGAR VALIDACIÓN DE DOMINIO .COM
     const emailLimpio = this.emailRecuperacion.toLowerCase().trim();
-    
+
     // Validar formato básico de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailLimpio)) {
@@ -94,7 +97,7 @@ export class LoginComponent {
         console.log('✅ Solicitud de recuperación enviada:', response);
         this.mensajeRecuperacion = response.message;
         this.loadingRecuperacion = false;
-        
+
         // Redirigir al componente de restablecer contraseña después de 2 segundos
         setTimeout(() => {
           this.redirigirRecuperacion();
@@ -102,7 +105,7 @@ export class LoginComponent {
       },
       error: (error: any) => {
         console.error('❌ Error en recuperación:', error);
-        
+
         // ← MANEJAR ERRORES ESPECÍFICOS
         if (error.status === 404) {
           this.errorRecuperacion = 'El email no está registrado en nuestro sistema';
@@ -111,7 +114,7 @@ export class LoginComponent {
         } else {
           this.errorRecuperacion = 'Error al enviar el email. Intente nuevamente';
         }
-        
+
         this.loadingRecuperacion = false;
       }
     });
@@ -144,5 +147,10 @@ export class LoginComponent {
   redirigirRecuperacion() {
     this.cerrarPopupRecuperar();
     this.router.navigate(['/administrador/restablecer-contrasena']);
+  }
+
+  // ✅ NUEVO: Método para alternar visibilidad de contraseña
+  togglePasswordVisibility(): void {
+    this.mostrarPassword = !this.mostrarPassword;
   }
 }
