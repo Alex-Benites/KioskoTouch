@@ -132,6 +132,7 @@ class ProductoSerializer(serializers.ModelSerializer):
                     'categoria_producto': pi.ingrediente.categoria_producto,
                     'es_base': pi.es_base,
                     'permite_extra': pi.permite_extra,
+                    'cantidad': pi.cantidad,
                     'imagen_url': img_url
                 })
             
@@ -154,17 +155,27 @@ class ProductoSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Crear producto con ingredientes, imagen y tamaños"""
         # Extraer datos especiales
-        ingredientes_ids = validated_data.pop('ingredientes', [])
+        # ✅ CAMBIO: Cambiar nombre de variable para ser más claro
+        ingredientes_data = validated_data.pop('ingredientes', [])
         imagen = validated_data.pop('imagen', None)
         precios_tamanos = validated_data.pop('precios_tamanos', None)
+        
+        # ✅ CAMBIO: Procesar ingredientes_data si viene como string JSON
+        if isinstance(ingredientes_data, str):
+            try:
+                ingredientes_data = json.loads(ingredientes_data)
+                print(f"🔍 Ingredientes parseados desde JSON: {ingredientes_data}")
+            except json.JSONDecodeError:
+                print(f"❌ Error parseando JSON de ingredientes: {ingredientes_data}")
+                ingredientes_data = []
         
         # Crear el producto
         producto = AppkioskoProductos.objects.create(**validated_data)
         print(f"✅ Producto creado: {producto.nombre} (ID: {producto.id})")
         
-        # Procesar ingredientes (código existente)
-        if ingredientes_ids:
-            count_ingredientes = self._crear_ingredientes_producto(producto, ingredientes_ids)
+        # ✅ CAMBIO: Usar ingredientes_data en lugar de ingredientes_ids
+        if ingredientes_data:
+            count_ingredientes = self._crear_ingredientes_producto(producto, ingredientes_data)
             print(f"🥗 {count_ingredientes} ingredientes asociados")
         
         # Procesar imagen (código existente)
@@ -188,11 +199,21 @@ class ProductoSerializer(serializers.ModelSerializer):
         categoria_original = instance.categoria.nombre if instance.categoria else None
         
         # Extraer datos especiales ANTES de actualizar el producto
-        ingredientes_ids = validated_data.pop('ingredientes', None)
+        # ✅ CAMBIO: Cambiar nombre de variable para ser más claro
+        ingredientes_data = validated_data.pop('ingredientes', None)
         imagen = validated_data.pop('imagen', None)
         precios_tamanos = validated_data.pop('precios_tamanos', None)
         
-        print(f"🥗 Ingredientes recibidos para actualizar: {ingredientes_ids}")
+        # ✅ CAMBIO: Procesar ingredientes_data si viene como string JSON
+        if isinstance(ingredientes_data, str):
+            try:
+                ingredientes_data = json.loads(ingredientes_data)
+                print(f"🔍 Ingredientes parseados desde JSON: {ingredientes_data}")
+            except json.JSONDecodeError:
+                print(f"❌ Error parseando JSON de ingredientes: {ingredientes_data}")
+                ingredientes_data = None
+        
+        print(f"🥗 Ingredientes recibidos para actualizar: {ingredientes_data}")
         
         # Actualizar campos básicos del producto
         for attr, value in validated_data.items():
@@ -212,9 +233,10 @@ class ProductoSerializer(serializers.ModelSerializer):
             print(f"🔄 CAMBIO DE CATEGORÍA DETECTADO: {categoria_original} → {categoria_nueva}")
         
         # 🆕 ACTUALIZACIÓN INTELIGENTE DE INGREDIENTES
-        if ingredientes_ids is not None:
+        # ✅ CAMBIO: Usar ingredientes_data en lugar de ingredientes_ids
+        if ingredientes_data is not None:
             print(f"🥗 Actualizando ingredientes de forma inteligente...")
-            self._actualizar_ingredientes_inteligente(instance, ingredientes_ids, cambio_categoria)
+            self._actualizar_ingredientes_inteligente(instance, ingredientes_data, cambio_categoria)
         else:
             print(f"🥗 No se enviaron ingredientes para actualizar")
         
@@ -318,10 +340,22 @@ class ProductoSerializer(serializers.ModelSerializer):
             return None
 
 
-    def _actualizar_ingredientes_inteligente(self, producto, nuevos_ingredientes_ids, forzar_cambio_categoria=False):
+    def _actualizar_ingredientes_inteligente(self, producto, nuevos_ingredientes_data, forzar_cambio_categoria=False):
         """Actualiza ingredientes reutilizando IDs de relaciones eliminadas"""
         print(f"🧠 Actualizacion inteligente de ingredientes para {producto.nombre}")
-        print(f"   Nuevos ingredientes solicitados: {nuevos_ingredientes_ids}")
+        print(f"   Nuevos ingredientes solicitados: {nuevos_ingredientes_data}")
+        
+        # ✅ CAMBIO 1: Procesar datos de ingredientes con cantidades
+        if nuevos_ingredientes_data and isinstance(nuevos_ingredientes_data[0], dict):
+            # Formato nuevo: [{'id': 1, 'cantidad': 2}, {'id': 2, 'cantidad': 1}]
+            nuevos_ingredientes_ids = [item['id'] for item in nuevos_ingredientes_data]
+            cantidad_por_ingrediente = {item['id']: item.get('cantidad', 1) for item in nuevos_ingredientes_data}
+        else:
+            # Formato antiguo: [1, 2, 3]
+            nuevos_ingredientes_ids = nuevos_ingredientes_data
+            cantidad_por_ingrediente = {id: 1 for id in nuevos_ingredientes_ids}
+        
+        print(f"   Cantidades por ingrediente: {cantidad_por_ingrediente}")
         
         # 🔧 ORDENAR relaciones por ID para reutilizar desde el más bajo
         relaciones_actuales = list(AppkioskoProductosIngredientes.objects.filter(producto=producto).order_by('id'))
@@ -367,6 +401,15 @@ class ProductoSerializer(serializers.ModelSerializer):
         print(f"   🗑️ Eliminar: {ingredientes_eliminar}")  
         print(f"   ➕ Agregar: {ingredientes_agregar}")
         
+        # ✅ CAMBIO 2: Actualizar cantidades de ingredientes que se mantienen
+        for ingrediente_id in ingredientes_mantener:
+            nueva_cantidad = cantidad_por_ingrediente.get(ingrediente_id, 1)
+            relacion = next((rel for rel in relaciones_actuales if rel.ingrediente_id == ingrediente_id), None)
+            if relacion and relacion.cantidad != nueva_cantidad:
+                relacion.cantidad = nueva_cantidad
+                relacion.save()
+                print(f"   🔄 Actualizada cantidad de {relacion.ingrediente.nombre}: {relacion.cantidad} → {nueva_cantidad}")
+        
         # 🔄 REUTILIZAR RELACIONES EXISTENTES (solo si NO cambió la categoría)
         if not forzar_cambio_categoria and ingredientes_eliminar and ingredientes_agregar:
             relaciones_eliminables = [rel for rel in relaciones_actuales if rel.ingrediente_id in ingredientes_eliminar]
@@ -376,7 +419,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             
             print(f"   🔍 Relaciones a reutilizar (ordenadas): {[f'ID:{rel.id}' for rel in relaciones_eliminables]}")
             
-            # Reutilizar tantas relaciones como sea possível
+            # Reutilizar tantas relaciones como sea posible
             reutilizaciones = min(len(relaciones_eliminables), len(ingredientes_a_agregar_list))
             
             for i in range(reutilizaciones):
@@ -389,10 +432,13 @@ class ProductoSerializer(serializers.ModelSerializer):
                     ingrediente_id_original = relacion_antigua.ingrediente_id
                     nombre_original = relacion_antigua.ingrediente.nombre
                     
+                    # ✅ CAMBIO 3: Usar la cantidad correcta al reutilizar
+                    nueva_cantidad = cantidad_por_ingrediente.get(nuevo_ingrediente_id, 1)
                     relacion_antigua.ingrediente = nuevo_ingrediente
+                    relacion_antigua.cantidad = nueva_cantidad
                     relacion_antigua.save()
-                    
-                    print(f"   🔄 Reutilizado ID {relacion_antigua.id}: {nombre_original} → {nuevo_ingrediente.nombre}")
+
+                    print(f"   🔄 Reutilizado ID {relacion_antigua.id}: {nombre_original} → {nuevo_ingrediente.nombre} (cantidad: {nueva_cantidad})")
                     
                     ingredientes_eliminar.remove(ingrediente_id_original)
                     ingredientes_agregar.remove(nuevo_ingrediente_id)
@@ -427,6 +473,8 @@ class ProductoSerializer(serializers.ModelSerializer):
         for ingrediente_id in ingredientes_a_crear:
             try:
                 ingrediente = AppkioskoIngredientes.objects.get(id=ingrediente_id)
+                # ✅ CAMBIO 4: Usar la cantidad correcta al crear
+                cantidad = cantidad_por_ingrediente.get(ingrediente_id, 1)
                 
                 # Si hay IDs faltantes y NO cambió categoría, usar el primero disponible
                 if not forzar_cambio_categoria and ids_faltantes_globales:
@@ -436,11 +484,11 @@ class ProductoSerializer(serializers.ModelSerializer):
                     with connection.cursor() as cursor:
                         cursor.execute(f"""
                             INSERT INTO {table_name} 
-                            (id, producto_id, ingrediente_id, es_base, permite_extra) 
-                            VALUES (%s, %s, %s, %s, %s)
-                        """, [id_a_usar, producto.id, ingrediente.id, True, False])
+                            (id, producto_id, ingrediente_id, es_base, permite_extra, cantidad) 
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, [id_a_usar, producto.id, ingrediente.id, True, True, cantidad])  # ✅ USAR CANTIDAD CORRECTA
                     
-                    print(f"   🔧 Rellenó hueco ID {id_a_usar}: {ingrediente.nombre}")
+                    print(f"   🔧 Rellenó hueco ID {id_a_usar}: {ingrediente.nombre} (cantidad: {cantidad})")
                     count_agregados += 1
                 else:
                     # Crear normalmente
@@ -448,9 +496,10 @@ class ProductoSerializer(serializers.ModelSerializer):
                         producto=producto,
                         ingrediente=ingrediente,
                         es_base=True,
-                        permite_extra=False
+                        permite_extra=True,
+                        cantidad=cantidad  # ✅ USAR CANTIDAD CORRECTA
                     )
-                    print(f"   ➕ Nueva relación: {ingrediente.nombre} (ID relación: {relacion.id})")
+                    print(f"   ➕ Nueva relación: {ingrediente.nombre} (ID relación: {relacion.id}, cantidad: {cantidad})")
                     count_agregados += 1
                     
             except AppkioskoIngredientes.DoesNotExist:
@@ -465,6 +514,7 @@ class ProductoSerializer(serializers.ModelSerializer):
         print(f"   ➕ Nuevos: {count_agregados} ingredientes")
         print(f"   🎯 Total final: {len(nuevos_ingredientes_ids)} ingredientes")
 
+        
 
     def _detectar_cambio_categoria(self, producto, ingredientes_actuales_ids, nuevos_ingredientes_ids_set):
         """Detecta si hubo un cambio de categoría basándose en los ingredientes"""
@@ -519,24 +569,37 @@ class ProductoSerializer(serializers.ModelSerializer):
         if imagen_url:
             print(f"   📸 Nueva imagen guardada: {imagen_url}")
 
-    def _crear_ingredientes_producto(self, producto, ingredientes_ids):
-        """Crea las relaciones producto-ingrediente"""
+    def _crear_ingredientes_producto(self, producto, ingredientes_data):
+        """Crea las relaciones producto-ingrediente con cantidades"""
         print(f"🔧 Creando relaciones para producto {producto.nombre}")
-        print(f"   IDs de ingredientes a procesar: {ingredientes_ids}")
+        print(f"   Datos de ingredientes a procesar: {ingredientes_data}")
         
         count = 0
-        for ingrediente_id in ingredientes_ids:
+        for ingrediente_data in ingredientes_data:
             try:
+                # ✅ CAMBIAR: Manejar tanto formato nuevo como antiguo
+                if isinstance(ingrediente_data, dict):
+                    # Formato nuevo: {'id': 1, 'cantidad': 2}
+                    ingrediente_id = ingrediente_data['id']
+                    cantidad = ingrediente_data.get('cantidad', 1)
+                else:
+                    # Formato antiguo: solo ID
+                    ingrediente_id = ingrediente_data
+                    cantidad = 1
+                
+                print(f"   Procesando ingrediente ID {ingrediente_id} con cantidad {cantidad}")
+                
                 ingrediente = AppkioskoIngredientes.objects.get(id=ingrediente_id)
                 
-                # Crear la relación (no verificar duplicados porque ya eliminamos todas)
+                # ✅ CAMBIAR: Usar la cantidad recibida
                 relacion = AppkioskoProductosIngredientes.objects.create(
                     producto=producto,
                     ingrediente=ingrediente,
                     es_base=True,
-                    permite_extra=False
+                    permite_extra=False,
+                    cantidad=cantidad  # ✅ USAR LA CANTIDAD RECIBIDA
                 )
-                print(f"   ✅ {ingrediente.nombre} (ID: {ingrediente.id}) - Relación creada: {relacion.id}")
+                print(f"   ✅ {ingrediente.nombre} (ID: {ingrediente.id}) - Cantidad: {cantidad} - Relación creada: {relacion.id}")
                 count += 1
                         
             except AppkioskoIngredientes.DoesNotExist:

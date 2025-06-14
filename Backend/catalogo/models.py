@@ -191,6 +191,11 @@ class AppkioskoProductosIngredientes(models.Model):
     ingrediente = models.ForeignKey(AppkioskoIngredientes, on_delete=models.CASCADE, blank=True, null=True)
     es_base = models.BooleanField(default=True)
     permite_extra = models.BooleanField(default=False)
+    # ✅ AGREGAR NUEVA COLUMNA DE CANTIDAD
+    cantidad = models.IntegerField(
+        default=1,
+        help_text="Cantidad de este ingrediente en el producto (ej: doble carne = 2)"
+    )
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -203,7 +208,8 @@ class AppkioskoProductosIngredientes(models.Model):
 
     def __str__(self):
         tipo = "Base" if self.es_base else "Adicional"
-        return f"{self.producto.nombre} - {self.ingrediente.nombre} ({tipo})"
+        cantidad_str = f"{self.cantidad}x " if self.cantidad > 1 else ""
+        return f"{self.producto.nombre} - {cantidad_str}{self.ingrediente.nombre} ({tipo})"
 
 # Nuevo modelo para relacionar productos con tamaños y precios
 class AppkioskoProductoTamanos(models.Model):

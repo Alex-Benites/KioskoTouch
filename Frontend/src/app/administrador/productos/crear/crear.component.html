@@ -120,26 +120,40 @@
       <div class="ingredientes-grid">
         @for (ingrediente of ingredientesDisponibles; track ingrediente.id) {
         <div class="ingrediente-card"
-          [class.selected]="ingrediente.seleccionado"
-
-        >
-          <mat-checkbox [checked]="ingrediente.seleccionado"
-                    class="ingrediente-checkbox"
-                    (change)="toggleIngrediente(ingrediente)">
-            <div class="ingrediente-content">
-              <div class="ingrediente-image">
-                <img [src]="getFullImageUrl(ingrediente.imagen_url)"
-                     [alt]="ingrediente.nombre"
-                     onerror="this.src='assets/images/no-ingredient.png'">
-              </div>
-              <div class="ingrediente-info">
-                <span class="ingrediente-nombre">{{ ingrediente.nombre }}</span>
-                @if (ingrediente.precio_adicional > 0) {
-                <span class="ingrediente-precio">+${{ ingrediente.precio_adicional }}</span>
-                }
-              </div>
+             [class.selected]="ingrediente.cantidad > 0">
+          
+          <!-- ✅ QUITAR CHECKBOX Y AGREGAR INFORMACIÓN DEL INGREDIENTE -->
+          <div class="ingrediente-content">
+            <div class="ingrediente-image">
+              <img [src]="getFullImageUrl(ingrediente.imagen_url)"
+                   [alt]="ingrediente.nombre"
+                   onerror="this.src='assets/images/no-ingredient.png'">
             </div>
-          </mat-checkbox>
+            <div class="ingrediente-info">
+              <span class="ingrediente-nombre">{{ ingrediente.nombre }}</span>
+              @if (ingrediente.precio_adicional > 0) {
+              <span class="ingrediente-precio">+${{ ingrediente.precio_adicional }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- ✅ NUEVO: Contador de cantidad -->
+          <div class="cantidad-controls">
+            <button type="button" 
+                    class="cantidad-btn cantidad-btn-minus"
+                    [disabled]="ingrediente.cantidad <= 0"
+                    (click)="disminuirCantidad(ingrediente)">
+              -
+            </button>
+            
+            <span class="cantidad-display">{{ ingrediente.cantidad || 0 }}</span>
+            
+            <button type="button" 
+                    class="cantidad-btn cantidad-btn-plus"
+                    (click)="aumentarCantidad(ingrediente)">
+              +
+            </button>
+          </div>
         </div>
         }
       </div>

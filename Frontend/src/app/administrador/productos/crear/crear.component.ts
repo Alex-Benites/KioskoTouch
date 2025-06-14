@@ -223,65 +223,54 @@ export class CrearComponent implements OnInit {
     });
   }
 
-  private cargarIngredientesYMarcarSeleccionados(categoria: string, ingredientesSeleccionados: any[]): void {
-    console.log('🥗 [EDICIÓN] Cargando ingredientes para categoría:', categoria);
 
-    this.catalogoService.getIngredientesPorCategoria(categoria).subscribe({
-      next: (ingredientesDisponibles) => {
-        // Mapear ingredientes disponibles y marcar los seleccionados
-        this.ingredientesDisponibles = ingredientesDisponibles.map(ingrediente => {
-          const estaSeleccionado = ingredientesSeleccionados.some(sel => sel.id === ingrediente.id);
-          return {
-            ...ingrediente,
-            seleccionado: estaSeleccionado,
-            // ✅ AGREGAR CAMPOS DE COMPATIBILIDAD
-            es_base: ingrediente.es_base || false,
-            permite_extra: ingrediente.permite_extra || false
-          };
-        });
-
-        // Actualizar ingredientes seleccionados
-        this.ingredientesSeleccionados = ingredientesSeleccionados.map(ing => ({
-          id: ing.id,
-          nombre: ing.nombre,
-          descripcion: ing.descripcion,
-          imagen_url: ing.imagen_url,
-          seleccionado: true,
-          es_base: ing.es_base || false,
-          permite_extra: ing.permite_extra || false,
-          // ✅ AGREGAR CAMPOS DE STOCK (OPCIONALES)
-          stock: ing.stock || 0,
-          stock_minimo: ing.stock_minimo || 5,
-          unidad_medida: ing.unidad_medida || 'unidades',
-          esta_agotado: ing.esta_agotado || false,
-          necesita_reposicion: ing.necesita_reposicion || false,
-          estado_stock: ing.estado_stock || 'DISPONIBLE'
-        }));
-      },
-      error: (error) => {
-        console.error('❌ [EDICIÓN] Error al cargar ingredientes:', error);
-        this.ingredientesDisponibles = [];
-      }
-    });
+    // ✅ NUEVO: Método para aumentar cantidad
+  aumentarCantidad(ingrediente: any): void {
+    console.log('➕ Aumentando cantidad para:', ingrediente.nombre);
+    
+    // Inicializar cantidad si no existe
+    if (!ingrediente.cantidad) {
+      ingrediente.cantidad = 0;
+    }
+    
+    ingrediente.cantidad++;
+    console.log('📊 Nueva cantidad:', ingrediente.cantidad);
+    
+    // Actualizar lista de ingredientes seleccionados
+    this.actualizarIngredientesSeleccionados();
   }
 
-  toggleIngrediente(ingrediente: any): void {
-    console.log('🔄 Toggle ingrediente:', ingrediente.nombre);
+  // ✅ NUEVO: Método para disminuir cantidad
+  disminuirCantidad(ingrediente: any): void {
+    console.log('➖ Disminuyendo cantidad para:', ingrediente.nombre);
+    
+    // Inicializar cantidad si no existe
+    if (!ingrediente.cantidad) {
+      ingrediente.cantidad = 0;
+    }
+    
+    // No permitir valores negativos
+    if (ingrediente.cantidad > 0) {
+      ingrediente.cantidad--;
+      console.log('📊 Nueva cantidad:', ingrediente.cantidad);
+      
+      // Actualizar lista de ingredientes seleccionados
+      this.actualizarIngredientesSeleccionados();
+    }
+  }
 
-    const index = this.ingredientesSeleccionados.findIndex(item => item.id === ingrediente.id);
-
-    if (index > -1) {
-      this.ingredientesSeleccionados.splice(index, 1);
-      ingrediente.seleccionado = false;
-      console.log('❌ Ingrediente deseleccionado:', ingrediente.nombre);
-    } else {
-      this.ingredientesSeleccionados.push({
+  // ✅ NUEVO: Método para actualizar la lista de ingredientes seleccionados
+  private actualizarIngredientesSeleccionados(): void {
+    // Filtrar ingredientes que tienen cantidad > 0
+    this.ingredientesSeleccionados = this.ingredientesDisponibles
+      .filter(ingrediente => ingrediente.cantidad > 0)
+      .map(ingrediente => ({
         id: ingrediente.id,
         nombre: ingrediente.nombre,
         descripcion: ingrediente.descripcion,
         imagen_url: ingrediente.imagen_url,
+        cantidad: ingrediente.cantidad, // ✅ AGREGAR CANTIDAD
         seleccionado: true,
-        // ✅ AGREGAR CAMPOS DE COMPATIBILIDAD
         es_base: ingrediente.es_base || false,
         permite_extra: ingrediente.permite_extra || false,
         stock: ingrediente.stock || 0,
@@ -290,13 +279,84 @@ export class CrearComponent implements OnInit {
         esta_agotado: ingrediente.esta_agotado || false,
         necesita_reposicion: ingrediente.necesita_reposicion || false,
         estado_stock: ingrediente.estado_stock || 'DISPONIBLE'
-      });
-      ingrediente.seleccionado = true;
-      console.log('✅ Ingrediente seleccionado:', ingrediente.nombre);
+      }));
+
+    console.log('📋 Ingredientes seleccionados actualizados:', 
+      this.ingredientesSeleccionados.map(ing => `${ing.nombre}: ${ing.cantidad}`));
+  }
+
+
+  // ✅ MODIFICAR: Método cargarIngredientesPorCategoria para inicializar cantidad
+  cargarIngredientesPorCategoria(categoriaNombre: string): void {
+    console.log('🥗 Cargando ingredientes para:', categoriaNombre);
+
+    // Limpiar selección anterior cuando se cambia de categoría (solo en modo creación)
+    if (!this.isEditMode) {
+      this.ingredientesSeleccionados = [];
     }
 
-    console.log('📋 Ingredientes seleccionados actuales:', this.ingredientesSeleccionados.length, 'ingredientes');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    console.log('🔐 Enviando petición con token de autenticación');
+
+    this.catalogoService.getIngredientesPorCategoria(categoriaNombre, headers).subscribe({
+      next: (ingredientes) => {
+        console.log('✅ Ingredientes cargados exitosamente:', ingredientes);
+        this.ingredientesDisponibles = ingredientes.map(ing => ({
+          ...ing,
+          cantidad: 0, // ✅ INICIALIZAR CANTIDAD EN 0
+          seleccionado: false,
+          es_base: ing.es_base || false,
+          permite_extra: ing.permite_extra || false
+        }));
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar ingredientes:', error);
+        if (error.status === 401) {
+          console.error('🚫 Token de autenticación inválido o expirado');
+          alert('⚠️ Sesión expirada. Redirigiendo al login...');
+        }
+        this.ingredientesDisponibles = [];
+      }
+    });
   }
+
+
+  // ✅ MODIFICAR: Método cargarIngredientesYMarcarSeleccionados para edición
+  private cargarIngredientesYMarcarSeleccionados(categoria: string, ingredientesSeleccionados: any[]): void {
+    console.log('🥗 [EDICIÓN] Cargando ingredientes para categoría:', categoria);
+
+    this.catalogoService.getIngredientesPorCategoria(categoria).subscribe({
+      next: (ingredientesDisponibles) => {
+        // Mapear ingredientes disponibles y establecer cantidades
+        this.ingredientesDisponibles = ingredientesDisponibles.map(ingrediente => {
+          const ingredienteSeleccionado = ingredientesSeleccionados.find(sel => sel.id === ingrediente.id);
+          const cantidad = ingredienteSeleccionado ? (ingredienteSeleccionado.cantidad || 1) : 0;
+          
+          return {
+            ...ingrediente,
+            cantidad: cantidad, // ✅ USAR CANTIDAD DEL BACKEND O 0
+            seleccionado: cantidad > 0,
+            es_base: ingrediente.es_base || false,
+            permite_extra: ingrediente.permite_extra || false
+          };
+        });
+
+        // Actualizar ingredientes seleccionados con cantidades
+        this.actualizarIngredientesSeleccionados();
+      },
+      error: (error) => {
+        console.error('❌ [EDICIÓN] Error al cargar ingredientes:', error);
+        this.ingredientesDisponibles = [];
+      }
+    });
+  }
+
+
 
   onCategoriaSeleccionada(event: MatSelectChange): void {
     if (this.isEditMode) {
@@ -336,46 +396,7 @@ export class CrearComponent implements OnInit {
     }
   }
 
-  cargarIngredientesPorCategoria(categoriaNombre: string): void {
-    console.log('🥗 Cargando ingredientes para:', categoriaNombre);
 
-    // Limpiar selección anterior cuando se cambia de categoría (solo en modo creación)
-    if (!this.isEditMode) {
-      this.ingredientesSeleccionados = [];
-    }
-
-    // ✅ AGREGAR HEADERS DE AUTENTICACIÓN
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-
-    console.log('🔐 Enviando petición con token de autenticación');
-
-    this.catalogoService.getIngredientesPorCategoria(categoriaNombre, headers).subscribe({
-      next: (ingredientes) => {
-        console.log('✅ Ingredientes cargados exitosamente:', ingredientes);
-        this.ingredientesDisponibles = ingredientes.map(ing => ({
-          ...ing,
-          seleccionado: false,
-          // ✅ AGREGAR CAMPOS DE COMPATIBILIDAD
-          es_base: ing.es_base || false,
-          permite_extra: ing.permite_extra || false
-        }));
-      },
-      error: (error) => {
-        console.error('❌ Error al cargar ingredientes:', error);
-        if (error.status === 401) {
-          console.error('🚫 Token de autenticación inválido o expirado');
-          alert('⚠️ Sesión expirada. Redirigiendo al login...');
-          // Aquí podrías redirigir al login
-          // this.router.navigate(['/login']);
-        }
-        this.ingredientesDisponibles = [];
-      }
-    });
-  }
 
   getFullImageUrl(imagenUrl: string | undefined): string {
     return this.catalogoService.getFullImageUrl(imagenUrl);
@@ -540,9 +561,18 @@ export class CrearComponent implements OnInit {
       console.log('🖼️ Sin nueva imagen');
     }
 
-    // Ingredientes
-    const ingredientesIds = this.ingredientesSeleccionados.map(ing => ing.id);
-    formData.append('ingredientes', JSON.stringify(ingredientesIds));
+    // ✅ CAMBIAR ESTA SECCIÓN DE INGREDIENTES:
+    // ❌ ANTES: const ingredientesIds = this.ingredientesSeleccionados.map(ing => ing.id);
+    // ❌ ANTES: formData.append('ingredientes', JSON.stringify(ingredientesIds));
+    
+    // ✅ NUEVO: Enviar ingredientes con cantidades
+    const ingredientesConCantidad = this.ingredientesSeleccionados.map(ing => ({
+      id: ing.id,
+      cantidad: ing.cantidad || 1
+    }));
+    
+    console.log('🥗 Ingredientes con cantidad a enviar:', ingredientesConCantidad);
+    formData.append('ingredientes', JSON.stringify(ingredientesConCantidad));
 
     // Tamaños
     formData.append('aplica_tamanos', aplicaTamanos ? 'true' : 'false');
