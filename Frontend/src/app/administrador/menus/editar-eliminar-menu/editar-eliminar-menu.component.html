@@ -70,7 +70,6 @@
               (click)="editarMenu(menu)"
               [attr.aria-label]="'Editar menú ' + menu.nombre"
             >
-              <img src="assets/admin/ADMIN_7.png" alt="Editar" />
               Editar
             </button>
 
@@ -80,7 +79,6 @@
               [disabled]="eliminando"
               [attr.aria-label]="'Eliminar menú ' + menu.nombre"
             >
-              <img src="assets/admin/ADMIN_7_1.png" alt="Eliminar" />
               @if (eliminando) {
                 <span>Eliminando...</span>
               } @else {

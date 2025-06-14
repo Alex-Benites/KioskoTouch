@@ -13,9 +13,11 @@ import { RouterModule, Router } from '@angular/router';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component';
 import { PantallaCocinaService } from '../../../services/pantalla-cocina.service';
 import { PantallaCocina } from '../../../models/pantalla-cocina-editar.model';
-import { KioskoTouchService } from '../../../services/kiosko-touch.service'; // ✅ AGREGAR este import
+import { KioskoTouchService } from '../../../services/kiosko-touch.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-editar-eliminar-pantalla-cocina',
@@ -41,29 +43,28 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
   pantallas: any[] = [];
   pantallasFiltradas: any[] = [];
   filasExpandidas: any[] = [];
-  kioscos: any[] = []; // ✅ AGREGAR esta propiedad
+  kioscos: any[] = [];
 
   filtroEstado: string = '';
   filtroKiosco: string = '';
-  loading: boolean = false; // ✅ AGREGAR esta propiedad
-  textoBusqueda: string = ''; // ✅ AGREGAR esta propiedad
+  loading: boolean = false;
+  textoBusqueda: string = '';
 
-  // ✅ AGREGAR nueva propiedad
-  todasLasFilasExpandidas: any[] = []; // Nueva propiedad para almacenar todas las filas
+  todasLasFilasExpandidas: any[] = [];
 
   constructor(
     private pantallaCocinaService: PantallaCocinaService,
-    private kioskoTouchService: KioskoTouchService, // ✅ AGREGAR este servicio
+    private kioskoTouchService: KioskoTouchService,
+    private authService: AuthService,
     private dialog: MatDialog,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.cargarKioscos(); // ✅ AGREGAR esta llamada
+    this.cargarKioscos();
     this.cargarPantallas();
   }
 
-  // ✅ AGREGAR este método
   cargarKioscos(): void {
     this.loading = true;
     this.kioskoTouchService.obtenerKioscosTouch().subscribe({
@@ -80,22 +81,17 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     });
   }
 
-  // ✅ MODIFICAR completamente el método aplicarFiltros
   aplicarFiltros(): void {
-    // Primero expandir TODAS las pantallas (sin filtrar)
     this.expandirTodasLasPantallas();
 
-    // Luego filtrar las filas expandidas
     let filasResultado = [...this.todasLasFilasExpandidas];
 
-    // Filtrar por estado si está seleccionado
     if (this.filtroEstado && this.filtroEstado !== '') {
       filasResultado = filasResultado.filter(fila =>
-        fila.pantalla.estado?.toLowerCase() === this.filtroEstado.toLowerCase()
+        fila.pantalla.estado === this.filtroEstado  // ✅ CAMBIO: Sin toLowerCase() porque es exacto
       );
     }
 
-    // Filtrar por kiosco si está seleccionado
     if (this.filtroKiosco && this.filtroKiosco !== '') {
       filasResultado = filasResultado.filter(fila =>
         fila.kiosco && fila.kiosco.id === parseInt(this.filtroKiosco)
@@ -111,7 +107,6 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     });
   }
 
-  // ✅ CREAR nuevo método para expandir todas las pantallas
   expandirTodasLasPantallas(): void {
     this.todasLasFilasExpandidas = [];
 
@@ -132,14 +127,13 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     });
   }
 
-  // ✅ MODIFICAR el método cargarPantallas
   cargarPantallas(): void {
     this.loading = true;
     this.pantallaCocinaService.obtenerPantallasCocina().subscribe({
       next: (data: any) => {
         this.pantallas = data;
-        this.expandirTodasLasPantallas(); // Expandir todas primero
-        this.filasExpandidas = [...this.todasLasFilasExpandidas]; // Mostrar todas inicialmente
+        this.expandirTodasLasPantallas();
+        this.filasExpandidas = [...this.todasLasFilasExpandidas];
         this.loading = false;
         console.log('✅ Pantallas cargadas:', this.pantallas);
       },
@@ -151,7 +145,6 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     });
   }
 
-  // ✅ SIMPLIFICAR expandirPantallasConKioscos (ya no se usa en filtros)
   expandirPantallasConKioscos(): void {
     this.filasExpandidas = [];
 
@@ -176,12 +169,10 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     const nuevoEstado = event.checked ? 'activo' : 'inactivo';
     const estadoAnterior = pantalla.estado;
 
-    // Actualizar localmente primero
     pantalla.estado = nuevoEstado;
 
     console.log(`Estado de ${pantalla.nombre} cambiado a: ${nuevoEstado}`);
 
-    // ✅ ACTUALIZAR EN EL BACKEND:
     const datosActualizacion = {
       nombre: pantalla.nombre,
       token: pantalla.token,
@@ -196,7 +187,6 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ Error actualizando estado:', error);
-        // Revertir el cambio local si falla
         pantalla.estado = estadoAnterior;
         event.source.checked = estadoAnterior === 'activo';
         alert('Error al actualizar el estado de la pantalla');
@@ -205,11 +195,28 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
   }
 
   editarPantalla(pantalla: PantallaCocina): void {
-    console.log('🚀 Navegando a editar pantalla:', pantalla.id);
+    console.log('🔧 Intentando editar pantalla:', pantalla.nombre);
+    
+    if (!this.authService.hasPermission('cocina.change_appkioscopantallacocina')) {
+      console.log('❌ Sin permisos para editar pantallas de cocina');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-pantallas-cocina/crear', pantalla.id]);
   }
 
   abrirDialogoEliminar(pantalla: PantallaCocina): void {
+    console.log('🗑️ Intentando eliminar pantalla:', pantalla.nombre);
+    
+    if (!this.authService.hasPermission('cocina.delete_appkioscopantallacocina')) {
+      console.log('❌ Sin permisos para eliminar pantallas de cocina');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogData: ConfirmationDialogData = {
       itemType: 'pantalla',
     };
@@ -221,7 +228,10 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        console.log('✅ Confirmado eliminar pantalla:', pantalla.nombre);
         this.eliminarPantalla(pantalla);
+      } else {
+        console.log('❌ Eliminación cancelada');
       }
     });
   }
@@ -240,15 +250,23 @@ export class EditarEliminarPantallaCocinaComponent implements OnInit {
     });
   }
 
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
+    });
+  }
+
   limpiarFiltros(): void {
     this.filtroEstado = '';
     this.filtroKiosco = '';
     this.textoBusqueda = '';
-    this.filasExpandidas = [...this.todasLasFilasExpandidas]; // Mostrar todas las filas
+    this.filasExpandidas = [...this.todasLasFilasExpandidas];
     console.log('🧹 Filtros limpiados');
   }
 
-  // ✅ Si tienes un método de limpiar búsqueda, actualízalo
   limpiarBusqueda(): void {
     this.textoBusqueda = '';
     this.filtroEstado = '';

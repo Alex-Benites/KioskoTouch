@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component'; // ← NUEVO
+
 import { Promocion } from '../../../models/marketing.model';
 import { PublicidadService } from '../../../services/publicidad.service';
+import { AuthService } from '../../../services/auth.service'; // ← NUEVO
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { environment } from '../../../../environments/environment'; 
 
 @Component({
@@ -25,7 +28,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ];
   mesesSeleccionados: boolean[] = Array(12).fill(false);
-  tipoFiltroGrupo: 'producto' | 'menu' | '' = '';
+  tipoFiltroGrupo: 'producto' | 'menu' | 'nombre' | '' = '';
   busquedaGrupo: string = '';
   loading = false;
   eliminando = false;
@@ -33,6 +36,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private publicidadService: PublicidadService,
+    private authService: AuthService, // ← NUEVO
     private router: Router
   ) {}
 
@@ -78,7 +82,7 @@ export class EditarEliminarPromocionComponent implements OnInit {
       });
     }
 
-    // Filtrar por producto o menú específico
+    // Filtrar por producto, menú o nombre específico
     if (this.tipoFiltroGrupo && this.busquedaGrupo.trim()) {
       const busqueda = this.busquedaGrupo.trim().toLowerCase();
       if (this.tipoFiltroGrupo === 'producto') {
@@ -129,21 +133,41 @@ export class EditarEliminarPromocionComponent implements OnInit {
 
   getFullImageUrl(imagenUrl: string | undefined): string {
     if (!imagenUrl) return '';
-    // Ajusta la URL base según tu backend
     return imagenUrl.startsWith('http') ? imagenUrl : `${environment.baseUrl}${imagenUrl}`;
   }
 
+  // ✅ MÉTODO MEJORADO - Valida permisos antes de editar
   editarPromocion(promo: Promocion): void {
+    console.log('🔧 Intentando editar promoción:', promo.nombre);
+    
+    // 🔒 Validar permisos
+    if (!this.authService.hasPermission('marketing.change_appkioskopromocion')) {
+      console.log('❌ Sin permisos para editar promociones');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    // ✅ Tiene permisos, proceder con la edición
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-promociones/crear', promo.id]);
   }
+
+  // ✅ MÉTODO MEJORADO - Valida permisos antes de eliminar
   abrirDialogoEliminar(promocion: Promocion): void {
+    console.log('🗑️ Intentando eliminar promoción:', promocion.nombre);
+    
+    // 🔒 Validar permisos
+    if (!this.authService.hasPermission('marketing.delete_appkioskopromocion')) {
+      console.log('❌ Sin permisos para eliminar promociones');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    // ✅ Tiene permisos, mostrar confirmación
+    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
-      data: {
-        itemType: 'promoción',
-        itemName: promocion.nombre,
-        message: `¿Estás seguro de que deseas eliminar la promoción "${promocion.nombre}"?`
-      } as ConfirmationDialogData
+      data: { itemType: 'promoción' }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -155,14 +179,13 @@ export class EditarEliminarPromocionComponent implements OnInit {
       }
     });
   }
+
   eliminarPromocion(promo: Promocion): void {
-    if (!confirm(`¿Estás seguro de que deseas eliminar la promoción "${promo.nombre}"?`)) {
-      return;
-    }
     this.eliminando = true;
     this.publicidadService.eliminarPromocion(promo.id).subscribe({
       next: () => {
         this.promociones = this.promociones.filter(p => p.id !== promo.id);
+        this.aplicarFiltros(); // Reaplica filtros después de eliminar
         this.eliminando = false;
         alert(`✅ Promoción "${promo.nombre}" eliminada exitosamente`);
       },
@@ -179,6 +202,16 @@ export class EditarEliminarPromocionComponent implements OnInit {
         alert(mensajeError);
         this.cargarPromociones();
       }
+    });
+  }
+
+  // 🆕 MÉTODO PARA MOSTRAR DIÁLOGO DE PERMISOS
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
     });
   }
 }
