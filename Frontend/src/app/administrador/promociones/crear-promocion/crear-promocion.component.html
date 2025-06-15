@@ -37,9 +37,10 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Tipo de promoción</mat-label>
           <mat-select formControlName="tipo_promocion" required>
-            <mat-option value="navidad">Navidad</mat-option>
+            <mat-option value="navidad">Tiempo limitado</mat-option>
             <mat-option value="cumpleanos">Cumpleaños</mat-option>
-            <mat-option value="black">Black Friday</mat-option>
+            <mat-option value="agotado">Hasta Agotar Stock</mat-option>
+            <mat-option value="cupon">Cupón</mat-option>
             <mat-option value="otro">Otro</mat-option>
           </mat-select>
           <mat-error *ngIf="promocionForm.get('tipo_promocion')?.hasError('required')">
@@ -48,12 +49,17 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Descuento de la promocion</mat-label>
+          <mat-label>Descuento de la promoción (%) *</mat-label>
           <input
             matInput
             type="number"
             formControlName="valor_descuento"
             placeholder="Ej: 10"
+            min="1"
+            max="100"
+            step="1"
+            maxlength="3"
+            (input)="onDescuentoInput($event)"
           />
           <mat-error *ngIf="DescuentoError">{{ DescuentoError }}</mat-error>
         </mat-form-field>
@@ -64,9 +70,10 @@
             matInput
             formControlName="codigo_promocional"
             placeholder="Ej: GUAYACO25"
+            [disabled]="codigoPromocionalDeshabilitado"
           />
           @if (promocionForm.get('codigo_promocional')?.hasError('required')) {
-          <mat-error>El codigo promocional es requerido.</mat-error>
+            <mat-error>El codigo promocional es requerido.</mat-error>
           }
         </mat-form-field>
 
@@ -77,6 +84,7 @@
             type="number"
             formControlName="limite_uso_total"
             placeholder="Ej: 200"
+            [disabled]="!!promocionForm.get('limite_uso_total')?.disabled"
           />
           <mat-error *ngIf="limiteTotalError">{{ limiteTotalError }}</mat-error>
         </mat-form-field>
@@ -88,6 +96,7 @@
             type="number"
             formControlName="limite_uso_usuario"
             placeholder="Ej: 2"
+            [disabled]="!!promocionForm.get('limite_uso_usuario')?.disabled"
           />
           <mat-error *ngIf="limiteUsuarioError">{{ limiteUsuarioError }}</mat-error>
         </mat-form-field>
@@ -113,6 +122,7 @@
             [matDatepicker]="pickerInicio"
             formControlName="fecha_inicio_promo"
             placeholder="Selecciona una fecha"
+            [disabled]="!!promocionForm.get('fecha_inicio_promo')?.disabled"
           />
           <mat-datepicker-toggle
             matSuffix
@@ -131,6 +141,7 @@
             [matDatepicker]="pickerFin"
             formControlName="fecha_fin_promo"
             placeholder="Selecciona una fecha"
+            [disabled]="!!promocionForm.get('fecha_fin_promo')?.disabled"
           />
           <mat-datepicker-toggle
             matSuffix
@@ -309,7 +320,11 @@
       <button
         type="submit"
         class="primary__button"
-        [disabled]="!promocionForm.valid || !tieneProductoOMenuSeleccionado()"
+        [ngClass]="{
+          'disabled-btn': !validarFormularioParaEdicion(),
+          'enabled-btn': validarFormularioParaEdicion()
+        }"
+        [disabled]="!validarFormularioParaEdicion()"
       >
         {{ isEditMode ? 'Actualizar Promoción' : 'Crear' }}
       </button>

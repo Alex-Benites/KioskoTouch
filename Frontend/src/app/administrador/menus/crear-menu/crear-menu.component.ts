@@ -364,14 +364,16 @@ export class CrearMenuComponent implements OnInit {
     }
   }
 
-  private validarFormularioParaEdicion(): boolean {
+  public validarFormularioParaEdicion(): boolean {
     const nombre = this.menuForm.get('nombre')?.value;
     const descripcion = this.menuForm.get('descripcion')?.value;
     const precio = this.menuForm.get('precio')?.value;
     const tipo_menu = this.menuForm.get('tipo_menu')?.value;
     const estado = this.menuForm.get('estado')?.value;
     const productos = this.menuForm.get('productos')?.value;
-    const camposCompletos = nombre && descripcion && precio && tipo_menu && estado && productos && productos.length > 0;
+    const imagenValida = this.isEditMode ? true : !!(this.selectedFile || this.imagePreview);
+
+    const camposCompletos = nombre && descripcion && precio && tipo_menu && estado && productos && productos.length > 0 && imagenValida;
     const precioValido = /^\d+(\.\d{1,2})?$/.test(precio) && parseFloat(precio) >= 0.01;
     return camposCompletos && precioValido;
   }

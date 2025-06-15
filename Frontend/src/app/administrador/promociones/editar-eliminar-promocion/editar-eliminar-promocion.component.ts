@@ -186,7 +186,6 @@ export class EditarEliminarPromocionComponent implements OnInit {
         this.promociones = this.promociones.filter(p => p.id !== promo.id);
         this.aplicarFiltros();
         this.eliminando = false;
-        alert(`✅ Promoción "${promo.nombre}" eliminada exitosamente`);
       },
       error: (error) => {
         this.eliminando = false;

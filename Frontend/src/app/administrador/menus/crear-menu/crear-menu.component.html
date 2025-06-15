@@ -191,7 +191,11 @@
       <button
         type="submit"
         class="primary__button"
-        [disabled]="!menuForm.valid"
+        [ngClass]="{
+          'disabled-btn': !validarFormularioParaEdicion(),
+          'enabled-btn': validarFormularioParaEdicion()
+        }"
+        [disabled]="!validarFormularioParaEdicion()"
       >
         {{ isEditMode ? 'Actualizar Menú' : 'Crear' }}
       </button>

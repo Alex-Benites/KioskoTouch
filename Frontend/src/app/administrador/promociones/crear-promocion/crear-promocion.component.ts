@@ -19,6 +19,7 @@ import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/succe
 import { FormsModule } from '@angular/forms';
 import { Tamano } from '../../../models/tamano.model';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { WarningDialogComponent, WarningDialogData } from '../../../shared/warning-dialog/warning-dialog.component';
 
 @Component({
   selector: 'app-crear-promocion',
@@ -78,12 +79,12 @@ export class CrearPromocionComponent implements OnInit {
       tipo_promocion: ['', Validators.required],
       valor_descuento: ['', [
         Validators.required,
-        Validators.pattern(/^\d+$/),
-        Validators.min(0.01)
+        Validators.pattern(/^(100|[1-9][0-9]?)$/),
+        Validators.min(1),
+        Validators.max(100)
       ]],
-      codigo_promocional: ['', Validators.required],
+      codigo_promocional: [''],
       limite_uso_total: ['', [
-        Validators.required,
         Validators.pattern(/^\d+$/),
         Validators.min(1)
       ]],
@@ -122,6 +123,14 @@ export class CrearPromocionComponent implements OnInit {
       this.intentarCargarPromocionParaEditar();
     });
     this.cargarMenus();
+
+    this.promocionForm.get('tipo_promocion')?.valueChanges.subscribe(tipo => {
+      this.actualizarValidacionesPorTipo(tipo);
+    });
+    const tipoActual = this.promocionForm.get('tipo_promocion')?.value;
+    if (tipoActual) {
+      this.actualizarValidacionesPorTipo(tipoActual);
+    }
   }
   loadProductImages(): void {
     this.productos.forEach(producto => {
@@ -225,10 +234,13 @@ export class CrearPromocionComponent implements OnInit {
       return 'El descuento es obligatorio';
     }
     if (control?.hasError('pattern') && control?.touched) {
-      return 'El descuento debe ser un número válido';
+      return 'El descuento debe ser un número entero entre 1 y 100';
     }
     if (control?.hasError('min') && control?.touched) {
       return 'El descuento debe ser mayor a 0';
+    }
+    if (control?.hasError('max') && control?.touched) {
+      return 'El descuento no puede ser mayor a 100';
     }
     return '';
   }
@@ -273,6 +285,10 @@ export class CrearPromocionComponent implements OnInit {
     }
     return '';
   }
+  get codigoPromocionalDeshabilitado(): boolean {
+    const tipo = this.promocionForm.get('tipo_promocion')?.value;
+    return tipo === 'navidad' || tipo === 'agotado';
+  }
   onSubmit(): void {
   if (!this.productosSeleccionados.length && !this.menusSeleccionados.length) {
     alert('⚠️ Debes seleccionar al menos un producto o menú para la promoción.');
@@ -285,9 +301,6 @@ export class CrearPromocionComponent implements OnInit {
 
   if (formValid) {
     this.mostrarDialogConfirmacion();
-  } else {
-    alert('Por favor completa todos los campos requeridos');
-    this.promocionForm.markAllAsTouched();
   }
 }
 
@@ -311,25 +324,29 @@ private mostrarDialogConfirmacion(): void {
 
 private procesarFormularioPromocion(): void {
   this.saving = true;
-  const formValue = this.promocionForm.value;
+  const formValue = this.promocionForm.getRawValue();
 
-  const fechaInicio = formValue.fecha_inicio_promo
-    ? new Date(formValue.fecha_inicio_promo).toISOString()
-    : '';
-  const fechaFin = formValue.fecha_fin_promo
-    ? new Date(formValue.fecha_fin_promo).toISOString()
-    : '';
+  const fechaInicio = this.formatDateForBackend(formValue.fecha_inicio_promo);
+  const fechaFin = this.formatDateForBackend(formValue.fecha_fin_promo);
 
   const formData = new FormData();
   formData.append('nombre', formValue.nombre);
   formData.append('descripcion', formValue.descripcion);
-  formData.append('valor_descuento', formValue.valor_descuento.toString());
+  formData.append('valor_descuento', Number(formValue.valor_descuento).toString());
   formData.append('fecha_inicio_promo', fechaInicio);
   formData.append('fecha_fin_promo', fechaFin);
   formData.append('tipo_promocion', formValue.tipo_promocion);
-  formData.append('codigo_promocional', formValue.codigo_promocional);
-  formData.append('limite_uso_total', formValue.limite_uso_total.toString());
-  formData.append('limite_uso_usuario', formValue.limite_uso_usuario.toString());
+
+  if (this.promocionForm.get('codigo_promocional')?.enabled && formValue.codigo_promocional) {
+    formData.append('codigo_promocional', formValue.codigo_promocional);
+  }
+  if (this.promocionForm.get('limite_uso_total')?.enabled && formValue.limite_uso_total) {
+    formData.append('limite_uso_total', Number(formValue.limite_uso_total).toString());
+  }
+  if (this.promocionForm.get('limite_uso_usuario')?.enabled && formValue.limite_uso_usuario) {
+    formData.append('limite_uso_usuario', Number(formValue.limite_uso_usuario).toString());
+  }
+
   formData.append('estado', formValue.estado);
 
   formData.append('productos_detalle', JSON.stringify(this.productosSeleccionados));
@@ -356,33 +373,61 @@ private procesarFormularioPromocion(): void {
         this.router.navigate(['/administrador/gestion-promociones']);
       },
       error: (err) => {
-        alert('Error al crear la promoción');
+        if (err.error) {
+          if (err.error.detalles) {
+            for (const campo in err.error.detalles) {
+              if (Object.prototype.hasOwnProperty.call(err.error.detalles, campo)) {
+                // No log
+              }
+            }
+            alert('Error al crear la promoción:\n' + JSON.stringify(err.error.detalles, null, 2));
+          }
+        }
         this.saving = false;
       }
     });
   }
 }
 
-private validarFormularioParaEdicion(): boolean {
-  const formValue = this.promocionForm.value;
+public validarFormularioParaEdicion(): boolean {
+  const formValue = this.promocionForm.getRawValue();
+  const tipo = formValue.tipo_promocion;
+
   const camposCompletos =
     formValue.nombre &&
     formValue.descripcion &&
     formValue.tipo_promocion &&
     formValue.valor_descuento &&
-    formValue.codigo_promocional &&
-    formValue.limite_uso_total &&
-    formValue.limite_uso_usuario &&
-    formValue.fecha_inicio_promo &&
-    formValue.fecha_fin_promo &&
     formValue.estado &&
-    (this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0);
+    (this.productosSeleccionados.length > 0 || this.menusSeleccionados.length > 0) &&
+    (
+      (!this.promocionForm.get('codigo_promocional')?.enabled || formValue.codigo_promocional || tipo === 'otro')
+    ) &&
+    (
+      !this.promocionForm.get('limite_uso_total')?.enabled || formValue.limite_uso_total
+    ) &&
+    (
+      !this.promocionForm.get('limite_uso_usuario')?.enabled || formValue.limite_uso_usuario
+    ) &&
+    (
+      !this.promocionForm.get('fecha_inicio_promo')?.enabled || formValue.fecha_inicio_promo
+    ) &&
+    (
+      !this.promocionForm.get('fecha_fin_promo')?.enabled || formValue.fecha_fin_promo
+    );
 
   const descuentoValido = /^\d+(\.\d{1,2})?$/.test(formValue.valor_descuento) && parseFloat(formValue.valor_descuento) > 0;
-  const limiteTotalValido = /^\d+$/.test(formValue.limite_uso_total) && parseInt(formValue.limite_uso_total) > 0;
-  const limiteUsuarioValido = /^\d+$/.test(formValue.limite_uso_usuario) && parseInt(formValue.limite_uso_usuario) > 0;
+  const limiteTotalValido = !this.promocionForm.get('limite_uso_total')?.enabled ||
+    (/^\d+$/.test(formValue.limite_uso_total) && parseInt(formValue.limite_uso_total) > 0);
+  const limiteUsuarioValido = !this.promocionForm.get('limite_uso_usuario')?.enabled ||
+    (/^\d+$/.test(formValue.limite_uso_usuario) && parseInt(formValue.limite_uso_usuario) > 0);
 
-  return camposCompletos && descuentoValido && limiteTotalValido && limiteUsuarioValido;
+  const codigoPromocionalValido =
+    !this.promocionForm.get('codigo_promocional')?.enabled ||
+    tipo === 'otro' ||
+    (formValue.codigo_promocional && formValue.codigo_promocional.trim().length > 0);
+
+  return camposCompletos && descuentoValido && limiteTotalValido && limiteUsuarioValido && codigoPromocionalValido;
 }
 
 actualizarPromocion(formData: FormData): void {
@@ -419,7 +464,13 @@ actualizarPromocion(formData: FormData): void {
     );
 
     if (yaAgregado) {
-      alert('El producto ya fue ingresado');
+      const dialogData: WarningDialogData = {
+        message: 'El producto ya fue agregado, seleccione otro.'
+      };
+      this.dialog.open(WarningDialogComponent, {
+        data: dialogData,
+        disableClose: true
+      });
       return;
     }
 
@@ -436,8 +487,14 @@ actualizarPromocion(formData: FormData): void {
 
 agregarMenu(menu: Menu): void {
   if (this.menusSeleccionados.some(m => m.id === menu.id)) {
-    alert('El menú ya fue ingresado');
-    return;
+    const dialogData: WarningDialogData = {
+        message: 'El menú ya fue agregado, seleccione otro.'
+      };
+      this.dialog.open(WarningDialogComponent, {
+        data: dialogData,
+        disableClose: true
+      });
+      return;
   }
   this.menusSeleccionados.push(menu);
   this.promocionForm.get('menusSeleccionados')?.setValue(
@@ -613,5 +670,82 @@ private intentarCargarPromocionParaEditar(): void {
     this.cargarPromocionParaEditar();
     this.intentoDeCargaRealizada = true;
   }
+}
+
+private actualizarValidacionesPorTipo(tipo: string): void {
+  const codigoCtrl = this.promocionForm.get('codigo_promocional');
+  const limiteTotalCtrl = this.promocionForm.get('limite_uso_total');
+  const limiteUsuarioCtrl = this.promocionForm.get('limite_uso_usuario');
+  const fechaInicioCtrl = this.promocionForm.get('fecha_inicio_promo');
+  const fechaFinCtrl = this.promocionForm.get('fecha_fin_promo');
+
+  if (tipo === 'cupon' || tipo === 'cumpleanos') {
+    codigoCtrl?.setValidators([Validators.required]);
+    codigoCtrl?.enable();
+  } else if (tipo === 'otro') {
+    codigoCtrl?.clearValidators();
+    codigoCtrl?.enable();
+  } else {
+    codigoCtrl?.clearValidators();
+    codigoCtrl?.setValue('');
+    codigoCtrl?.disable();
+  }
+  codigoCtrl?.updateValueAndValidity();
+
+  if (tipo === 'cumpleanos') {
+    limiteTotalCtrl?.setValue('');
+    limiteTotalCtrl?.clearValidators();
+    limiteTotalCtrl?.disable();
+    const year = new Date().getFullYear();
+    fechaInicioCtrl?.setValue(new Date(year, 0, 1));
+    fechaFinCtrl?.setValue(new Date(year, 11, 31));
+    fechaInicioCtrl?.disable();
+    fechaFinCtrl?.disable();
+    limiteUsuarioCtrl?.setValidators([
+      Validators.required,
+      Validators.pattern(/^\d+$/),
+      Validators.min(1)
+    ]);
+    limiteUsuarioCtrl?.enable();
+  } else {
+    limiteTotalCtrl?.enable();
+    limiteTotalCtrl?.setValidators([
+      Validators.required,
+      Validators.pattern(/^\d+$/),
+      Validators.min(1)
+    ]);
+    fechaInicioCtrl?.enable();
+    fechaFinCtrl?.enable();
+    limiteUsuarioCtrl?.setValidators([
+      Validators.required,
+      Validators.pattern(/^\d+$/),
+      Validators.min(1)
+    ]);
+    limiteUsuarioCtrl?.enable();
+  }
+  limiteTotalCtrl?.updateValueAndValidity();
+  limiteUsuarioCtrl?.updateValueAndValidity();
+  fechaInicioCtrl?.updateValueAndValidity();
+  fechaFinCtrl?.updateValueAndValidity();
+}
+
+onDescuentoInput(event: any): void {
+  let value = event.target.value;
+  if (value && value.includes('.')) {
+    value = value.split('.')[0];
+  }
+  if (parseInt(value, 10) > 100) {
+    value = '100';
+  }
+  if (parseInt(value, 10) < 1 && value !== '') {
+    value = '1';
+  }
+  event.target.value = value;
+  this.promocionForm.get('valor_descuento')?.setValue(value);
+}
+
+private formatDateForBackend(date: any): string {
+  if (!date) return '';
+  return new Date(date).toISOString();
 }
 }

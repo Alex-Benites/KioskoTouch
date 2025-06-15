@@ -315,4 +315,20 @@
   }
 }
 
+// Si ya tienes estas clases, solo verifica los colores
+.primary__button.disabled-btn {
+  background: #bdbdbd !important;
+  color: #fff !important;
+  cursor: not-allowed !important;
+  border: none;
+  opacity: 0.7;
+}
+
+.primary__button.enabled-btn {
+  background: #e53935 !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  opacity: 1;
+}
+
 
