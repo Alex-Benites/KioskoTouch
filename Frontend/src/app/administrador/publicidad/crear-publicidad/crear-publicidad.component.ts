@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
-// Angular Material Modules
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -13,12 +12,10 @@ import { MatNativeDateModule, provideNativeDateAdapter } from '@angular/material
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-// Shared Components
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
-// Services and Models
 import { PublicidadService } from '../../../services/publicidad.service';
 import { ApiError, TipoPublicidad, UnidadTiempo } from '../../../models/marketing.model';
 import { Estado } from '../../../models/catalogo.model';
@@ -47,7 +44,6 @@ import { environment } from '../../../../environments/environment';
 })
 export class CrearPublicidadComponent implements OnInit {
 
-  // ========== PROPIEDADES ==========
   publicidadForm!: FormGroup;
   mediaPreview: string | ArrayBuffer | null = null;
   selectedFile: File | null = null;
@@ -61,18 +57,15 @@ export class CrearPublicidadComponent implements OnInit {
   pageTitle: string = 'Creación de Publicidad';
   existingMediaUrl: string | null = null;
   
-  // Estados disponibles (filtrados)
   estados: Estado[] = [];
   loadingEstados: boolean = false;
 
-  // Inyección de dependencias
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly dialog = inject(MatDialog);
   private readonly publicidadService = inject(PublicidadService);
 
-  // ========== CONSTANTES ==========
   readonly tiposPublicidad: { value: TipoPublicidad; label: string; dimensions: string }[] = [
     { 
       value: 'banner', 
@@ -92,15 +85,12 @@ export class CrearPublicidadComponent implements OnInit {
     { value: 'horas', label: 'Horas' }
   ];
 
-  readonly maxFileSize = 50 * 1024 * 1024; // 50MB
+  readonly maxFileSize = 50 * 1024 * 1024;
   readonly allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
   readonly allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/avi'];
 
-  constructor() {
-    // Vacío como patrón moderno
-  }
+  constructor() {}
 
-  // ========== LIFECYCLE ==========
   ngOnInit(): void {
     this.publicidadId = Number(this.route.snapshot.paramMap.get('id'));
     this.isEditMode = !!this.publicidadId && !isNaN(this.publicidadId);
@@ -114,7 +104,6 @@ export class CrearPublicidadComponent implements OnInit {
     this.loadEstados();
   }
 
-  // ========== INICIALIZACIÓN ==========
   private initializeForm(): void {
     this.publicidadForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.maxLength(100)]],
@@ -158,16 +147,16 @@ export class CrearPublicidadComponent implements OnInit {
     if (!this.publicidadId) return;
     
     this.isLoading = true;
-    console.log('📥 Cargando datos de publicidad ID:', this.publicidadId);
+    console.log('Cargando datos de publicidad ID:', this.publicidadId);
     
     this.publicidadService.getPublicidadById(this.publicidadId).subscribe({
       next: (publicidad) => {
-        console.log('✅ Datos de publicidad cargados:', publicidad);
+        console.log('Datos de publicidad cargados:', publicidad);
         this.populateForm(publicidad);
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('❌ Error al cargar publicidad:', error);
+        console.error('Error al cargar publicidad:', error);
         alert('No se pudo cargar la información de la publicidad');
         this.isLoading = false;
         this.router.navigate(['/administrador/gestion-publicidad/editar-eliminar']);
@@ -199,19 +188,65 @@ export class CrearPublicidadComponent implements OnInit {
       });
     }
 
-    if (publicidad.media_url) {
-      this.selectedMediaType = publicidad.media_type;
-      this.existingMediaUrl = publicidad.media_url;
-      this.mediaPreview = this.getMediaUrlForEdit(publicidad.media_url);
-      this.selectedFileName = this.extractFileNameFromUrl(publicidad.media_url);
+    let mediaUrl = null;
+    
+    if (publicidad.media_type === 'video' && publicidad.videos && publicidad.videos.length > 0) {
+      mediaUrl = publicidad.videos[0].ruta;
+      console.log('Video encontrado:', publicidad.videos[0]);
+    } else if (publicidad.media_type === 'image' && publicidad.imagenes && publicidad.imagenes.length > 0) {
+      mediaUrl = publicidad.imagenes[0].ruta;
+      console.log('Imagen encontrada:', publicidad.imagenes[0]);
+    } else if (publicidad.media_url) {
+      mediaUrl = publicidad.media_url;
+      console.log('Media URL fallback:', publicidad.media_url);
+    }
+
+    if (mediaUrl) {
+      console.log('Cargando preview de archivo existente:', mediaUrl);
       
-      if (publicidad.media_type === 'video' && publicidad.tiempo_visualizacion) {
-        this.videoDuration = publicidad.tiempo_visualizacion;
-        this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
+      this.selectedMediaType = publicidad.media_type;
+      this.existingMediaUrl = mediaUrl;
+      this.selectedFileName = this.extractFileNameFromUrl(mediaUrl);
+      
+      if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
+        this.mediaPreview = mediaUrl;
+      } else if (mediaUrl.startsWith('/media/')) {
+        this.mediaPreview = `${environment.baseUrl}${mediaUrl}`;
+      } else {
+        this.mediaPreview = `${environment.baseUrl}/media/${mediaUrl}`;
       }
+      
+      console.log('Preview configurado:', {
+        selectedMediaType: this.selectedMediaType,
+        mediaPreview: this.mediaPreview,
+        selectedFileName: this.selectedFileName,
+        originalUrl: mediaUrl
+      });
+      
+      if (publicidad.media_type === 'video') {
+        if (publicidad.tiempo_visualizacion) {
+          this.videoDuration = publicidad.tiempo_visualizacion;
+          this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
+          console.log('Duración de video configurada desde tiempo_visualizacion:', this.videoDuration);
+        } else if (publicidad.videos && publicidad.videos.length > 0 && publicidad.videos[0].duracion) {
+          this.videoDuration = publicidad.videos[0].duracion;
+          this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
+          console.log('Duración de video configurada desde videos[0].duracion:', this.videoDuration);
+        }
+      }
+    } else {
+      console.warn('No se encontró archivo de media para cargar preview');
     }
 
     this.updateIntervalValidations();
+    
+    console.log('Formulario poblado:', {
+      formValues: this.publicidadForm.value,
+      mediaPreview: !!this.mediaPreview,
+      selectedMediaType: this.selectedMediaType,
+      videoDuration: this.videoDuration,
+      existingMediaUrl: this.existingMediaUrl
+    });
   }
 
   private convertSecondsToDisplay(segundos: number): { valor: number; unidad: string } {
@@ -225,18 +260,42 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   private getMediaUrlForEdit(mediaUrl: string): string {
-    if (mediaUrl.startsWith('/media/')) {
-      return `${environment.baseUrl}${mediaUrl}`;
+    console.log('Procesando URL de media:', mediaUrl);
+    
+    if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
+      console.log('URL completa detectada:', mediaUrl);
+      return mediaUrl;
     }
-    return mediaUrl;
+    
+    if (mediaUrl.startsWith('/media/')) {
+      const fullUrl = `${environment.baseUrl}${mediaUrl}`;
+      console.log('URL relativa /media/ convertida:', fullUrl);
+      return fullUrl;
+    }
+    
+    const fullUrl = `${environment.baseUrl}/media/${mediaUrl}`;
+    console.log('URL sin prefijo convertida:', fullUrl);
+    return fullUrl;
   }
 
   private extractFileNameFromUrl(url: string): string {
-    const fileName = url.split('/').pop() || 'archivo_existente';
-    return fileName.split('?')[0];
+    try {
+      const cleanUrl = url.split('?')[0];
+      const fileName = cleanUrl.split('/').pop() || 'archivo_existente';
+      const decodedFileName = decodeURIComponent(fileName);
+      
+      const match = decodedFileName.match(/publicidad_\d+_(.+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+      
+      return decodedFileName;
+    } catch (error) {
+      console.warn('Error extrayendo nombre de archivo:', error);
+      return 'archivo_existente';
+    }
   }
 
-  // ========== VALIDACIONES ==========
   private validateFile(file: File): { valid: boolean; error?: string } {
     if (file.size > this.maxFileSize) {
       return { valid: false, error: 'El archivo no puede ser mayor a 50MB' };
@@ -301,7 +360,6 @@ export class CrearPublicidadComponent implements OnInit {
     unidadControl?.updateValueAndValidity({ emitEvent: false });
   }
 
-  // ========== MANEJO DE ARCHIVOS ==========
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -371,6 +429,29 @@ export class CrearPublicidadComponent implements OnInit {
     }
   }
 
+  onImageLoaded(event: Event): void {
+    console.log('Imagen cargada correctamente en preview');
+  }
+
+  onImageError(event: Event): void {
+    console.error('Error cargando imagen en preview');
+  }
+
+  onVideoLoaded(event: Event): void {
+    const video = event.target as HTMLVideoElement;
+    console.log('Video cargado correctamente en preview');
+    
+    if (!this.selectedFile && this.existingMediaUrl && !this.videoDuration) {
+      this.videoDuration = Math.round(video.duration);
+      this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
+      console.log('Duración extraída del video existente:', this.videoDuration);
+    }
+  }
+
+  onVideoError(event: Event): void {
+    console.error('Error cargando video en preview');
+  }
+
   onTipoPublicidadChange(): void {
     const tipoSeleccionado = this.publicidadForm.get('tipoPublicidad')?.value;
     console.log('Tipo de publicidad cambiado a:', tipoSeleccionado);
@@ -406,7 +487,6 @@ export class CrearPublicidadComponent implements OnInit {
     this.updateIntervalValidations();
   }
 
-  // ========== ENVÍO DEL FORMULARIO ==========
   private buildFormData(): FormData {
     const formData = new FormData();
     const formValues = this.publicidadForm.value;
@@ -474,7 +554,7 @@ export class CrearPublicidadComponent implements OnInit {
       this.publicidadService.updatePublicidad(this.publicidadId!, formData).subscribe({
         next: (response) => {
           this.isLoading = false;
-          console.log('✅ Publicidad actualizada exitosamente', response);
+          console.log('Publicidad actualizada exitosamente', response);
 
           this.mostrarDialogExito(
             'ACTUALIZACIÓN',
@@ -491,7 +571,7 @@ export class CrearPublicidadComponent implements OnInit {
       this.publicidadService.createPublicidad(formData).subscribe({
         next: (response) => {
           this.isLoading = false;
-          console.log('✅ Publicidad creada exitosamente', response);
+          console.log('Publicidad creada exitosamente', response);
 
           this.mostrarDialogExito(
             'REGISTRO',
@@ -533,7 +613,7 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   private handleSubmitError(error: ApiError): void {
-    console.error('=== ERROR COMPLETO ===', error);
+    console.error('ERROR COMPLETO', error);
     
     if (error.errors && error.errors.length > 0) {
       const errorMessages = error.errors.map(e => `${e.field}: ${e.message}`).join('\n');
@@ -566,7 +646,6 @@ export class CrearPublicidadComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ========== GETTERS PARA EL TEMPLATE ==========
   get isFileInputDisabled(): boolean {
     const tipoPublicidad = this.publicidadForm.get('tipoPublicidad')?.value;
     return !tipoPublicidad || tipoPublicidad === '';
@@ -627,7 +706,6 @@ export class CrearPublicidadComponent implements OnInit {
     return !!(this.selectedFile || this.existingMediaUrl);
   }
 
-  // ========== UTILIDADES ==========
   calculateTotalSeconds(): number {
     const valor = this.publicidadForm.get('tiempoIntervaloValor')?.value || 5;
     const unidad = this.publicidadForm.get('tiempoIntervaloUnidad')?.value || 'segundos';
@@ -657,7 +735,6 @@ export class CrearPublicidadComponent implements OnInit {
     }
   }
 
-  // ========== GETTERS PARA VALIDACIONES ==========
   get nombre() { return this.publicidadForm.get('nombre'); }
   get descripcion() { return this.publicidadForm.get('descripcion'); }
   get tipoPublicidad() { return this.publicidadForm.get('tipoPublicidad'); }

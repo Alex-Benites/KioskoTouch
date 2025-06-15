@@ -1,17 +1,13 @@
-<!-- ✅ crear-publicidad.component.html COMPLETO -->
 <app-header-admin></app-header-admin>
 
 <div class="form-container">
   <p class="breadcrumb-title">GESTIÓN DE PUBLICIDAD</p>
-  <!-- ✅ TÍTULO DINÁMICO -->
   <h1 class="form-main-title">{{ pageTitle }}</h1>
 
   <form [formGroup]="publicidadForm" (ngSubmit)="onSubmit()" class="publicidad-form">
     <div class="form-grid">
-      <!-- Columna Izquierda: Campos del Formulario -->
       <div class="form-fields-column">
         
-        <!-- Nombre de la publicidad -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Nombre de la publicidad</mat-label>
           <input matInput formControlName="nombre" placeholder="Ej: Publicidad Hamburguesa" maxlength="100">
@@ -24,7 +20,6 @@
           <mat-hint>{{ nombre?.value?.length || 0 }}/100 caracteres</mat-hint>
         </mat-form-field>
 
-        <!-- Descripción -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Descripción</mat-label>
           <textarea 
@@ -40,7 +35,6 @@
           <mat-hint>{{ descripcion?.value?.length || 0 }}/500 caracteres</mat-hint>
         </mat-form-field>
 
-        <!-- Tipo de publicidad con dimensiones -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Tipo de publicidad</mat-label>
           <mat-select formControlName="tipoPublicidad" (selectionChange)="onTipoPublicidadChange()">
@@ -59,7 +53,6 @@
           <mat-hint>Primero selecciona el tipo de publicidad</mat-hint>
         </mat-form-field>
 
-        <!-- Fecha inicial -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Fecha inicial</mat-label>
           <input 
@@ -75,7 +68,6 @@
           }
         </mat-form-field>
 
-        <!-- Fecha final -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Fecha final</mat-label>
           <input 
@@ -91,7 +83,6 @@
           }
         </mat-form-field>
 
-        <!-- Estado -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Estado</mat-label>
           <mat-select formControlName="estado">
@@ -115,14 +106,11 @@
 
       </div>
 
-      <!-- Columna Derecha: Carga de Media y Configuración Adicional -->
       <div class="media-config-column">
         
-        <!-- Carga de archivo con dimensiones mejoradas -->
         <div class="file-upload-section">
           <div class="file-upload-header">
             <label class="file-upload-label">
-              <!-- ✅ ETIQUETA DINÁMICA SEGÚN MODO -->
               <span class="main-label">
                 Archivo de Media {{ isEditMode ? '(opcional)' : '*' }}
               </span>
@@ -154,13 +142,11 @@
             {{ isFileInputDisabled ? 'Selecciona tipo primero' : (isEditMode ? 'Cambiar archivo' : 'Seleccionar archivo') }}
           </button>
           
-          <!-- ✅ PREVIEW DEL ARCHIVO (NUEVO O EXISTENTE) -->
           @if (mediaPreview) {
             <div class="media-preview">
               <div class="preview-header">
                 <span class="file-name">
                   {{ selectedFileName || 'Archivo existente' }}
-                  <!-- ✅ INDICADOR SI ES ARCHIVO EXISTENTE -->
                   @if (!selectedFile && existingMediaUrl) {
                     <span class="existing-file-badge">(archivo actual)</span>
                   }
@@ -171,16 +157,31 @@
               </div>
               
               @if (selectedMediaType === 'image') {
-                <img [src]="mediaPreview" [alt]="'Vista previa de ' + selectedFileName" class="image-preview">
+                <img 
+                  [src]="mediaPreview" 
+                  [alt]="'Vista previa de ' + selectedFileName" 
+                  class="image-preview"
+                  (load)="onImageLoaded($event)"
+                  (error)="onImageError($event)">
               } @else if (selectedMediaType === 'video') {
-                <video [src]="mediaPreview" controls class="video-preview" preload="metadata">
+                <video 
+                  [src]="mediaPreview" 
+                  controls 
+                  class="video-preview" 
+                  preload="metadata"
+                  (loadedmetadata)="onVideoLoaded($event)"
+                  (error)="onVideoError($event)">
                   Tu navegador no soporta el elemento video.
                 </video>
                 @if (shouldShowVideoDuration) {
                   <div class="video-info">
                     <mat-icon>schedule</mat-icon>
                     <span>Duración: {{ formatDuration(videoDuration!) }}</span>
-                    <span class="duration-note">(se usará como tiempo de visualización)</span>
+                    @if (!selectedFile && existingMediaUrl) {
+                      <span class="duration-note">(duración del archivo actual)</span>
+                    } @else {
+                      <span class="duration-note">(se usará como tiempo de visualización)</span>
+                    }
                   </div>
                 }
               }
@@ -188,7 +189,6 @@
           }
         </div>
 
-        <!-- Campos de Intervalo (solo para banner) mejorados -->
         @if (shouldShowIntervalFields) {
           <div class="interval-section">
             <h3>Configuración de Visualización</h3>
@@ -232,7 +232,6 @@
               </mat-form-field>
             </div>
             
-            <!-- Mostrar tiempo calculado en segundos -->
             <div class="time-preview">
               <mat-icon>access_time</mat-icon>
               <span>
@@ -246,7 +245,6 @@
       </div>
     </div>
 
-    <!-- ✅ ACCIONES DEL FORMULARIO - COMO CREAR-USUARIO -->
     <div class="form-actions">
       <button 
         type="button" 
