@@ -502,6 +502,10 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
         print(f"📁 Media files count: {len(media_files) if media_files else 0}")
         print(f"📁 Keep image IDs: {keep_image_ids}")
         
+        # Limpia el código promocional si llega vacío
+        if 'codigo_promocional' in validated_data and not validated_data['codigo_promocional']:
+            validated_data['codigo_promocional'] = None
+
         # Procesar estado si viene como ID
         estado_id = validated_data.get('estado')
         if estado_id:

@@ -48,38 +48,61 @@
           <h2 class="menu-category-name">{{ categoriaActual?.nombre || 'Seleccione Categoría' }}</h2>
         </div>
 
-        <!-- Modificar la sección de productos para agregar clases condicionales -->
-        <section class="products-grid">
-          @if (categoriaActual?.nombre?.toLowerCase() === 'combos') {
-            @if (productosActuales.length > 0) {
+        <!-- SOLO UNO DE LOS GRIDS SEGÚN LA CATEGORÍA -->
+        @if (categoriaActual?.nombre?.toLowerCase() === 'combos') {
+          @if (productosActuales.length > 0) {
+            <div class="menu-grid">
               @for (menu of productosActuales; track $index) {
-                <!-- ✅ NUEVO: Clic en el cuadro completo para seleccionar -->
-                <div class="product-card"
-                     [class.selected]="estaSeleccionado(menu)"
-                     (click)="seleccionarProducto(menu)">
-                  <div class="product-card__image-wrapper">
-                    <img [src]="obtenerImagenProducto(menu)" [alt]="menu.nombre" class="product-card__image">
+                <div class="menu-card">
+                  @if (tienePromoBadge(menu)) {
+                    <span class="promo-badge" [ngClass]="menu.promoBadgeClass || ''">{{ menu.promoBadge }}</span>
+                  }
+                  <div class="menu-image-container">
+                    @if (menu.imagenUrl) {
+                      <img
+                        [src]="obtenerImagenProducto(menu)"
+                        [alt]="menu.nombre"
+                        class="menu-image"
+                      />
+                    } @else {
+                      <div class="no-image-placeholder">
+                        <span>Sin imagen</span>
+                      </div>
+                    }
                   </div>
-                  <div class="product-card__content">
-                    <h3 class="product-card__name">{{ menu.nombre }}</h3>
-                    <div class="product-card__footer">
-                      <span class="product-card__price">${{ menu.precio | number:'1.2-2' }}</span>
-                      <!-- ✅ MODIFICAR: Solo el botón agrega al carrito -->
-                      <button class="product-card__order-button"
-                              (click)="agregarProducto(menu, $event)">
-                        Ordenar
-                      </button>
-                    </div>
+                  <div class="menu-info">
+                    <h3 class="menu-name">{{ menu.nombre }}</h3>
+                    @if (esMenu(menu) && menu.productosLista && menu.productosLista.length > 0) {
+                      <div class="productos-list">
+                        <h4>Productos incluidos:</h4>
+                        <ul>
+                          @for (producto of menu.productosLista; track $index) {
+                            <li>{{ producto }}</li>
+                          }
+                        </ul>
+                      </div>
+                    } @else {
+                      <p class="no-productos">Sin productos asignados</p>
+                    }
+                  </div>
+                  <div class="menu-actions">
+                    <span class="menu-price">{{ obtenerTextoPrecioGenerico(menu) }}</span>
+                    <button
+                      class="product-card__order-button"
+                      (click)="agregarProducto(menu, $event)">
+                      Ordenar
+                    </button>
                   </div>
                 </div>
               }
-            } @else {
-              <p class="no-products-message">No hay menús disponibles en esta categoría.</p>
-            }
+            </div>
           } @else {
-            @if (productosActuales.length > 0) {
+            <p class="no-products-message">No hay menús disponibles en esta categoría.</p>
+          }
+        } @else {
+          @if (productosActuales.length > 0) {
+            <div class="products-grid">
               @for (producto of productosActuales; track $index) {
-                <!-- ✅ NUEVO: Clic en el cuadro completo para seleccionar -->
                 <div class="product-card"
                      [class.selected]="estaSeleccionado(producto)"
                      (click)="seleccionarProducto(producto)">
@@ -93,7 +116,6 @@
                     <h3 class="product-card__name">{{ producto.nombre }}</h3>
                     <div class="product-card__footer">
                       <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
-                      <!-- ✅ MODIFICAR: Solo el botón agrega al carrito -->
                       <button class="product-card__order-button"
                               (click)="agregarProducto(producto, $event)">
                         Ordenar
@@ -102,11 +124,11 @@
                   </div>
                 </div>
               }
-            } @else {
-              <p class="no-products-message">No hay productos disponibles en esta categoría.</p>
-            }
+            </div>
+          } @else {
+            <p class="no-products-message">No hay productos disponibles en esta categoría.</p>
           }
-        </section>
+        }
       </main>
     </div>
   }
@@ -147,3 +169,384 @@
     </div>
   }
 </div>
+
+<style>
+.combos-grid {
+  width: 100%;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-height: 650px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0 10px 0;
+  scrollbar-width: thin;
+}
+
+.menu-grid {
+  width: 100%;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-height: 650px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0 10px 0;
+  scrollbar-width: thin;
+}
+
+.combo-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .promo-badge {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 55px;
+    height: 55px;
+    background-color: $kiosko-red;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.25);
+    z-index: 3;
+  }
+}
+
+.menu-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .promo-badge {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 55px;
+    height: 55px;
+    background-color: $kiosko-red;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.25);
+    z-index: 3;
+  }
+}
+
+.combo-image-container {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+
+  .combo-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+  }
+
+  .no-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: #e9ecef;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.menu-image-container {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+
+  .menu-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+  }
+
+  .no-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: #e9ecef;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.combo-info {
+  flex: 1;
+  margin-bottom: 16px;
+
+  .combo-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 12px 0;
+  }
+
+  .productos-list {
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      margin: 0 0 8px 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 4px;
+        padding-left: 12px;
+        position: relative;
+
+        &:before {
+          content: "•";
+          color: #DD453A;
+          position: absolute;
+          left: 0;
+        }
+      }
+    }
+  }
+
+  .no-productos {
+    font-size: 13px;
+    color: #999;
+    font-style: italic;
+    margin: 0;
+  }
+}
+
+.menu-info {
+  flex: 1;
+  margin-bottom: 16px;
+
+  .menu-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 12px 0;
+  }
+
+  .productos-list {
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      margin: 0 0 8px 0;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 4px;
+        padding-left: 12px;
+        position: relative;
+
+        &:before {
+          content: "•";
+          color: #DD453A;
+          position: absolute;
+          left: 0;
+        }
+      }
+    }
+  }
+
+  .no-productos {
+    font-size: 13px;
+    color: #999;
+    font-style: italic;
+    margin: 0;
+  }
+}
+
+.combo-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e9ecef;
+  padding-top: 16px;
+
+  .combo-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0;
+    margin-right: 8px;
+  }
+
+  .product-card__order-button {
+    background-color: $kiosko-red;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: color.scale($kiosko-red, $lightness: -10%);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+}
+
+.menu-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e9ecef;
+  padding-top: 16px;
+
+  .menu-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0;
+    margin-right: 8px;
+  }
+
+  .product-card__order-button {
+    background-color: $kiosko-red;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: color.scale($kiosko-red, $lightness: -10%);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .combos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .combos-grid {
+    grid-template-columns: 1fr;
+  }
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+  .combo-card {
+    padding: 16px;
+  }
+  .menu-card {
+    padding: 16px;
+  }
+  .combo-actions {
+    flex-direction: column;
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  .menu-actions {
+    flex-direction: column;
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+</style>

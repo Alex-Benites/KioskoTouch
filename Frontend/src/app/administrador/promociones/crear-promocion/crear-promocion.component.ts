@@ -109,20 +109,30 @@ export class CrearPromocionComponent implements OnInit {
 
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
+
+      // Buscar el id del estado "Activado"
+      const estadoActivado = this.estados.find(e => e.nombre === 'Activado');
+      const idEstadoActivado = estadoActivado ? estadoActivado.id : null;
+
+      this.catalogoService.getTamanos().subscribe(data => {
+        this.tamanos = data;
+        this.tamanosCargados = true;
+        this.intentarCargarPromocionParaEditar();
+      });
+
+      this.catalogoService.getProductos().subscribe(data => {
+        // Solo productos con estado 'Activado'
+        this.productos = idEstadoActivado
+          ? data.filter((producto: Producto) => producto.estado === idEstadoActivado)
+          : [];
+        this.loadProductImages();
+        this.productosCargados = true;
+        this.filtrarProductosYMenus();
+        this.intentarCargarPromocionParaEditar();
+      });
+
+      this.cargarMenus(idEstadoActivado);
     });
-    this.catalogoService.getTamanos().subscribe(data => {
-      this.tamanos = data;
-      this.tamanosCargados = true;
-      this.intentarCargarPromocionParaEditar();
-    });
-    this.catalogoService.getProductos().subscribe(data => {
-      this.productos = data;
-      this.loadProductImages();
-      this.productosCargados = true;
-      this.filtrarProductosYMenus();
-      this.intentarCargarPromocionParaEditar();
-    });
-    this.cargarMenus();
 
     this.promocionForm.get('tipo_promocion')?.valueChanges.subscribe(tipo => {
       this.actualizarValidacionesPorTipo(tipo);
@@ -150,11 +160,16 @@ export class CrearPromocionComponent implements OnInit {
       }
     });
   }
-  cargarMenus(): void {
+  cargarMenus(idEstadoActivado?: number): void {
   this.loading = true;
   this.catalogoService.getMenus().subscribe({
     next: (menus) => {
-      this.menus = menus.map(menu => {
+      // Solo menús con estado 'Activado'
+      this.menus = idEstadoActivado
+        ? menus.filter((menu: Menu) => menu.estado === idEstadoActivado)
+        : menus;
+
+      this.menus = this.menus.map(menu => {
         this.catalogoService.getMenuImagen(menu.id).subscribe(response => {
           menu.imagenUrl = response.imagen_url;
         });
@@ -339,6 +354,9 @@ private procesarFormularioPromocion(): void {
 
   if (this.promocionForm.get('codigo_promocional')?.enabled && formValue.codigo_promocional) {
     formData.append('codigo_promocional', formValue.codigo_promocional);
+  } else {
+    // Si está deshabilitado, envía vacío para que el backend lo borre
+    formData.append('codigo_promocional', '');
   }
   if (this.promocionForm.get('limite_uso_total')?.enabled && formValue.limite_uso_total) {
     formData.append('limite_uso_total', Number(formValue.limite_uso_total).toString());

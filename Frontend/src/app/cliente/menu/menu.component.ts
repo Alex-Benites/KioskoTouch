@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PedidoService } from '../../services/pedido.service';
 import { CatalogoService } from '../../services/catalogo.service';
+import { PublicidadService } from '../../services/publicidad.service'; // <-- Agrega esto
 import { Producto, Categoria, Menu } from '../../models/catalogo.model'; // Asegúrate de importar Menu
 import { catchError, forkJoin, of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -11,6 +12,12 @@ import { ProductPopupComponent, ProductPopupData, ProductPopupResult } from '../
 
 // ✅ Interfaz extendida para productos con badges promocionales
 interface ProductoConBadge extends Producto {
+  promoBadge?: string;
+  promoBadgeClass?: string;
+}
+
+// ✅ Interfaz extendida para menús con badges promocionales
+interface ItemConBadge extends Menu {
   promoBadge?: string;
   promoBadgeClass?: string;
 }
@@ -45,6 +52,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   private renderer = inject(Renderer2);
   private pedidoService = inject(PedidoService);
   private catalogoService = inject(CatalogoService);
+  private publicidadService = inject(PublicidadService); // <-- Agrega esto
   private dialog = inject(MatDialog);
 
   // ✅ Computed signals
@@ -143,80 +151,137 @@ export class MenuComponent implements OnInit, OnDestroy {
   private cargarDatos(): void {
     this.errorCarga.set(null);
 
-    forkJoin({
-      categorias: this.catalogoService.getCategorias().pipe(
-        catchError(error => {
-          console.error('❌ Error cargando categorías:', error);
-          return of([]);
-        })
-      ),
-      productos: this.catalogoService.getProductos().pipe(
-        catchError(error => {
-          console.error('❌ Error cargando productos:', error);
-          return of([]);
-        })
-      ),
-      menus: this.catalogoService.getMenus().pipe(
-        catchError(error => {
-          console.error('❌ Error cargando menús:', error);
-          return of([]);
-        })
-      )
-    }).subscribe({
-      next: ({ categorias, productos, menus }) => {
-        console.log('✅ Datos cargados:', { categorias: categorias.length, productos: productos.length });
+    // Primero obtenemos los estados
+    this.catalogoService.getEstados().pipe(
+      catchError(error => of([]))
+    ).subscribe(estados => {
+      const estadoActivado = estados.find((e: any) => e.nombre === 'Activado');
+      const idEstadoActivado = estadoActivado ? estadoActivado.id : null;
 
-        // Actualizar categorías
-        this.categorias.set(categorias);
-        this.cargandoCategorias.set(false);
+      forkJoin({
+        categorias: this.catalogoService.getCategorias().pipe(
+          catchError(error => of([]))
+        ),
+        productos: this.catalogoService.getProductos().pipe(
+          catchError(error => of([]))
+        ),
+        menus: this.catalogoService.getMenus().pipe(
+          catchError(error => of([]))
+        ),
+        promociones: this.publicidadService.getPromociones().pipe(
+          catchError(error => of([]))
+        )
+      }).subscribe({
+        next: ({ categorias, productos, menus, promociones }) => {
+          console.log('✅ Datos cargados:', { categorias: categorias.length, productos: productos.length });
 
-        // Mapea imagen_url a imagenUrl en productos
-        const productosConBadges = this.procesarProductosConBadges(
-          productos.map(p => ({
-            ...p,
-            imagenUrl: (p as any).imagenUrl || (p as any).imagen_url || '',
-            precio: Number((p as any).precio) || 0
-          }))
-        );
-        this.productos.set(productosConBadges);
-        this.cargandoProductos.set(false);
+          // Actualizar categorías
+          this.categorias.set(categorias);
+          this.cargandoCategorias.set(false);
 
-        // Mapea imagen_url a imagenUrl en menús
-        const menusConImagen = menus.map(m => ({
-          ...m,
-          imagenUrl: (m as any).imagenUrl || (m as any).imagen_url || '',
-          precio: Number((m as any).precio) || 0
-        }));
-        this.menus.set(menusConImagen);
-        this.cargandoMenus.set(false);
+          // Filtra solo promociones activas por id
+          const promocionesActivas = (promociones as any[]).filter((p: any) => p.estado === idEstadoActivado);
+          console.log('🔴 Promociones activas:', promocionesActivas);
 
-        // Seleccionar primera categoría si hay categorías disponibles
-        if (categorias.length > 0 && !this.categoriaSeleccionada()) {
-          this.categoriaSeleccionada.set(categorias[0].id);
-          console.log('📂 Primera categoría seleccionada:', categorias[0].nombre);
+          // Procesar productos con badges de promociones activas
+          const productosConBadges = this.procesarProductosConBadges(
+            productos.map(p => ({
+              ...p,
+              imagenUrl: (p as any).imagenUrl || (p as any).imagen_url || '',
+              precio: Number((p as any).precio) || 0
+            })),
+            promocionesActivas
+          );
+          this.productos.set(productosConBadges);
+          this.cargandoProductos.set(false);
+
+          // Mapea imagen_url a imagenUrl en menús y agrega productosLista
+          const menusConImagen = menus.map(m => ({
+            ...m,
+            imagenUrl: (m as any).imagenUrl || (m as any).imagen_url || '',
+            precio: Number((m as any).precio) || 0,
+            productosLista: this.getProductosLista(m)
+          }));
+
+          // Procesar menús con badge si están en promoción activa
+          const menusConBadge: ItemConBadge[] = menusConImagen.map((menu) => {
+            const promosMenu = promocionesActivas.filter((p: any) =>
+              Array.isArray(p.menus_detalle) &&
+              p.menus_detalle.some((m: any) =>
+                (m.menu && m.menu.id === menu.id) ||
+                (m.menu_id === menu.id) ||
+                (m.id === menu.id) // por si viene como id directo
+              )
+            );
+
+            if (promosMenu.length > 0) {
+              const mayorDescuento = Math.max(...promosMenu.map((p: any) => Number(p.valor_descuento) || 0));
+              console.log(`🟢 Menú con promo: ${menu.nombre} (ID: ${menu.id}) - Descuento: ${mayorDescuento}%`);
+              return {
+                ...menu,
+                promoBadge: `-${mayorDescuento}%`,
+                promoBadgeClass: 'discount'
+              };
+            }
+            return menu;
+          });
+
+          this.menus.set(menusConBadge);
+          this.cargandoMenus.set(false);
+
+          // Seleccionar primera categoría si hay categorías disponibles
+          if (categorias.length > 0 && !this.categoriaSeleccionada()) {
+            this.categoriaSeleccionada.set(categorias[0].id);
+            console.log('📂 Primera categoría seleccionada:', categorias[0].nombre);
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error general cargando datos:', error);
+          this.errorCarga.set('Error al cargar los datos del menú');
+          this.cargandoCategorias.set(false);
+          this.cargandoProductos.set(false);
+          this.cargandoMenus.set(false);
         }
-      },
-      error: (error) => {
-        console.error('❌ Error general cargando datos:', error);
-        this.errorCarga.set('Error al cargar los datos del menú');
-        this.cargandoCategorias.set(false);
-        this.cargandoProductos.set(false);
-        this.cargandoMenus.set(false);
+      });
+    });
+  }
+
+  // Copia este método del admin para formatear la lista de productos de un menú
+  getProductosLista(menu: any): string[] {
+    if (!menu.productos_detalle || !Array.isArray(menu.productos_detalle)) return [];
+    return menu.productos_detalle.map((p: any) => {
+      const cantidad = p.cantidad || 1;
+      const nombre = p.nombre || p.producto_nombre || (p.producto?.nombre ?? '');
+      let tamano = '';
+      if (p.tamano_codigo) {
+        tamano = `(${p.tamano_codigo})`;
+      } else if (p.tamano_nombre) {
+        tamano = `(${p.tamano_nombre.charAt(0).toUpperCase()})`;
       }
+      let cantidadStr = cantidad > 1 ? `(x${cantidad})` : '';
+      return `- ${nombre} ${cantidadStr}${tamano}`.trim();
     });
   }
 
   // ✅ Método para procesar productos y agregar badges promocionales
-  private procesarProductosConBadges(productos: Producto[]): ProductoConBadge[] {
+  private procesarProductosConBadges(productos: Producto[], promocionesActivas: any[]): ProductoConBadge[] {
     return productos.map(producto => {
       const productoConBadge: ProductoConBadge = { ...producto };
 
-      // Lógica para agregar badges promocionales basada en ciertos criterios
-      // Puedes personalizar esta lógica según tus necesidades
-      if (this.deberíaTenerDescuento(producto)) {
-        const descuento = this.calcularDescuento(producto);
-        productoConBadge.promoBadge = `${descuento}%`;
+      // Buscar TODAS las promociones activas que incluyan este producto
+      const promosProducto = promocionesActivas.filter((p: any) =>
+        Array.isArray(p.productos_detalle) &&
+        p.productos_detalle.some((prod: any) =>
+          (prod.producto && prod.producto.id === producto.id) ||
+          (prod.producto_id === producto.id) // por si viene como producto_id
+        )
+      );
+
+      if (promosProducto.length > 0) {
+        const mayorDescuento = Math.max(...promosProducto.map((p: any) => Number(p.valor_descuento) || 0));
+        productoConBadge.promoBadge = `-${mayorDescuento}%`;
         productoConBadge.promoBadgeClass = 'discount';
+        console.log(`🟢 Producto con promo: ${producto.nombre} (ID: ${producto.id}) - Descuento: ${mayorDescuento}%`);
       }
 
       return productoConBadge;

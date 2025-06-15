@@ -39,12 +39,6 @@ def crear_estados_iniciales():
             'is_eliminated': False,
             'is_inactive': True,  
         },
-        {
-            'nombre': 'Eliminado',
-            'is_active': False,  
-            'is_eliminated': True,
-            'is_inactive': False,
-        },
     ]
 
     print("Creando estados iniciales...")

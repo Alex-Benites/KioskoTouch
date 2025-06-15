@@ -112,12 +112,21 @@ export class CrearMenuComponent implements OnInit {
 
     this.catalogoService.getEstados().subscribe(data => {
       this.estados = data;
+
+      // Buscar el id del estado "Activado"
+      const estadoActivado = this.estados.find(e => e.nombre === 'Activado');
+      const idEstadoActivado = estadoActivado ? estadoActivado.id : null;
+
+      this.catalogoService.getProductos().subscribe(data => {
+        // Filtrar productos por id de estado "Activado"
+        this.productos = idEstadoActivado
+          ? data.filter((producto: Producto) => producto.estado === idEstadoActivado)
+          : [];
+        this.loadProductImages();
+        this.filtrarProductos();
+      });
     });
-    this.catalogoService.getProductos().subscribe(data => {
-      this.productos = data;
-      this.loadProductImages();
-      this.filtrarProductos();
-    });
+
     this.catalogoService.getTamanos().subscribe(data => {
       this.tamanos = data;
     });
