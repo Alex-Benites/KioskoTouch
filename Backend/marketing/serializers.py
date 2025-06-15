@@ -5,9 +5,11 @@ from comun.models import AppkioskoImagen, AppkioskoEstados
 import os
 from django.conf import settings
 from django.core.files.storage import default_storage
+from urllib.parse import urlparse, unquote
 from .models import AppkioskoPromociones, AppkioskoPromocionproductos, AppkioskoPromocionmenu
 from catalogo.models import AppkioskoProductos, AppkioskoMenus
 from catalogo.serializers import ProductoSerializer, MenuSerializer
+
 
 class EstadoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -315,11 +317,11 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
             print(f"✅ Imagen creada ID {imagen.id}: {imagen.ruta}")
 
 class PublicidadUpdateSerializer(serializers.ModelSerializer):
-    estado_str = serializers.CharField(write_only=True, required=False)
     media_file = serializers.FileField(write_only=True, required=False)
     media_type = serializers.CharField(write_only=True, required=False)
     videoDuration = serializers.IntegerField(write_only=True, required=False)
-    remove_media = serializers.BooleanField(write_only=True, required=False)
+    tiempo_visualizacion = serializers.IntegerField(required=False)
+    estado = serializers.IntegerField(required=False)
     
     class Meta:
         model = AppkioskoPublicidades
@@ -330,12 +332,10 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
             'fecha_inicio_publicidad',
             'fecha_fin_publicidad',
             'estado',
-            'estado_str',
             'tiempo_visualizacion',
             'media_file',
             'media_type',
-            'videoDuration',
-            'remove_media'
+            'videoDuration'
         ]
     
     def validate_media_file(self, value):
@@ -352,103 +352,203 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
         
         return value
     
+    def validate_estado(self, value):
+        if value and not isinstance(value, int):
+            raise serializers.ValidationError("Estado debe ser un número entero")
+        
+        if value and not AppkioskoEstados.objects.filter(id=value).exists():
+            raise serializers.ValidationError(f"Estado con ID {value} no existe")
+        
+        return value
+    
+    def validate(self, attrs):
+        fecha_inicio = attrs.get('fecha_inicio_publicidad')
+        fecha_fin = attrs.get('fecha_fin_publicidad')
+        
+        if fecha_inicio and fecha_fin and fecha_inicio >= fecha_fin:
+            raise serializers.ValidationError("La fecha de inicio debe ser anterior a la fecha de fin")
+        
+        return attrs
+    
     def update(self, instance, validated_data):
-        imagen = validated_data.pop('imagen', None)
-
-        # Procesar productos_detalle
-        productos_detalle = self.initial_data.get('productos_detalle')
-        productos_con_tamanos = []
-        if productos_detalle is not None:
-            import json
+        print(f"🔄 Actualizando publicidad ID {instance.id}")
+        print(f"📥 Datos recibidos: {list(validated_data.keys())}")
+        
+        # Extraer campos específicos de media
+        media_file = validated_data.pop('media_file', None)
+        media_type = validated_data.pop('media_type', None)
+        video_duration = validated_data.pop('videoDuration', None)
+        
+        # Procesar estado si viene como ID
+        estado_id = validated_data.get('estado')
+        if estado_id:
             try:
-                productos_detalle = json.loads(productos_detalle)
-                for prod in productos_detalle:
-                    prod_id = prod.get('producto')
-                    tamano_id = prod.get('tamano')
-                    if prod_id:
-                        producto_data = {'producto': prod_id}
-                        if tamano_id:
-                            producto_data['tamano'] = tamano_id
-                        productos_con_tamanos.append(producto_data)
-            except Exception:
-                pass
-            # Eliminar siempre las relaciones de productos si el campo está presente
-            AppkioskoPromocionproductos.objects.filter(promocion=instance).delete()
-            for prod_data in productos_con_tamanos:
-                producto_id = int(prod_data.get('producto'))
-                tamano_id = prod_data.get('tamano')
-                promocion_producto_data = {
-                    'promocion': instance,
-                    'producto_id': producto_id
-                }
-                if tamano_id and str(tamano_id).isdigit():
-                    promocion_producto_data['tamano_id'] = int(tamano_id)
-                AppkioskoPromocionproductos.objects.create(**promocion_producto_data)
-
-        # Procesar menús
-        menus = self.initial_data.getlist('menus') if 'menus' in self.initial_data else None
-        def limpiar_ids(lista):
-            if not lista or (len(lista) == 1 and lista[0] in ['', '__empty__']):
-                return []
-            return [int(x) for x in lista if str(x).isdigit()]
-        if menus is not None:
-            menus = limpiar_ids(menus)
-            # Eliminar siempre las relaciones de menús si el campo está presente
-            AppkioskoPromocionmenu.objects.filter(promocion=instance).delete()
-            for menu_id in menus:
-                AppkioskoPromocionmenu.objects.create(promocion=instance, menu_id=menu_id)
-
-        # Validar que al menos uno tenga datos (después de filtrar)
-        tiene_productos = AppkioskoPromocionproductos.objects.filter(promocion=instance).exists()
-        tiene_menus = AppkioskoPromocionmenu.objects.filter(promocion=instance).exists()
-        if not tiene_productos and not tiene_menus:
-            raise serializers.ValidationError("Debes seleccionar al menos un producto o menú.")
-
-        # Actualizar campos básicos
+                estado_obj = AppkioskoEstados.objects.get(id=estado_id)
+                validated_data['estado'] = estado_obj
+                print(f"✅ Estado actualizado: {estado_obj.nombre}")
+            except AppkioskoEstados.DoesNotExist:
+                raise serializers.ValidationError(f"Estado con ID {estado_id} no existe")
+        
+        # Actualizar campos básicos de la publicidad
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+            print(f"✅ Campo actualizado: {attr} = {value}")
+        
         instance.save()
-        if imagen:
-            self._actualizar_imagen_promocion(instance, imagen)
+        print(f"✅ Publicidad guardada con tiempo_visualizacion: {instance.tiempo_visualizacion}")
+        
+        # Manejar archivo de media si se proporciona uno nuevo
+        if media_file and media_type:
+            print(f"📁 Procesando nuevo archivo de media: {media_type}")
+            self._remove_existing_media_and_files(instance)
+            self._handle_media_file(instance, media_file, media_type, video_duration)
+        
         return instance
-
-    def _remove_existing_media(self, publicidad):
+    
+    def _remove_existing_media_and_files(self, publicidad):
+        """Eliminar archivos de media existentes tanto de BD como del sistema de archivos"""
         try:
+            print(f"🗑️ Eliminando media existente para publicidad ID {publicidad.id}")
+            
+            # Eliminar videos
             videos = AppkioskoVideo.objects.filter(publicidad=publicidad)
             for video in videos:
-                video.delete()
+                self._delete_physical_file(video.ruta)
+                print(f"🗑️ Video eliminado: {video.ruta}")
+            videos_count = videos.count()
+            videos.delete()
+            if videos_count > 0:
+                print(f"✅ Eliminados {videos_count} videos de la BD")
             
+            # Eliminar imágenes
             imagenes = AppkioskoImagen.objects.filter(
                 categoria_imagen='publicidad',
                 entidad_relacionada_id=publicidad.id
             )
             for imagen in imagenes:
-                imagen.delete()
+                self._delete_physical_file(imagen.ruta)
+                print(f"🗑️ Imagen eliminada: {imagen.ruta}")
+            imagenes_count = imagenes.count()
+            imagenes.delete()
+            if imagenes_count > 0:
+                print(f"✅ Eliminadas {imagenes_count} imágenes de la BD")
+                
         except Exception as e:
-            print(f"Error al eliminar media existente: {e}")
+            print(f"❌ Error al eliminar media existente: {e}")
+    
+    def _delete_physical_file(self, file_path):
+        """Eliminar archivo físico del sistema de archivos"""
+        try:
+            if not file_path:
+                return
+            
+            print(f"🔍 Intentando eliminar archivo: {file_path}")
+            
+            # Convertir URL a path relativo
+            relative_path = None
+            
+            if file_path.startswith(('http://', 'https://')):
+                # Si es URL completa: http://localhost:8000/media/publicidad/archivo.mp4
+                from urllib.parse import urlparse
+                parsed = urlparse(file_path)
+                path_part = parsed.path  # /media/publicidad/archivo.mp4
+                if path_part.startswith('/media/'):
+                    relative_path = path_part[7:]  # publicidad/archivo.mp4
+                else:
+                    relative_path = path_part.lstrip('/')
+                    
+            elif file_path.startswith('/media/'):
+                # Si empieza con /media/: /media/publicidad/archivo.mp4
+                relative_path = file_path[7:]  # publicidad/archivo.mp4
+                
+            elif file_path.startswith('media/'):
+                # Si empieza con media/: media/publicidad/archivo.mp4
+                relative_path = file_path[6:]  # publicidad/archivo.mp4
+                
+            else:
+                # Si ya es un path relativo: publicidad/archivo.mp4
+                relative_path = file_path
+            
+            if not relative_path:
+                print(f"❌ No se pudo determinar path relativo para: {file_path}")
+                return
+            
+            # ✅ DECODIFICAR URL - Esta es la parte que faltaba!
+            from urllib.parse import unquote
+            relative_path = unquote(relative_path)
+            print(f"📁 Path relativo decodificado: {relative_path}")
+            
+            # Construir el path completo físico
+            full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+            print(f"📂 Path completo: {full_path}")
+            
+            # Verificar si el archivo existe y eliminarlo
+            if os.path.exists(full_path):
+                os.remove(full_path)
+                print(f"✅ Archivo físico eliminado: {full_path}")
+            else:
+                print(f"⚠️ Archivo no encontrado: {full_path}")
+                # Debug adicional: listar archivos en el directorio
+                import glob
+                directorio = os.path.dirname(full_path)
+                if os.path.exists(directorio):
+                    archivos_en_directorio = glob.glob(os.path.join(directorio, "*"))
+                    print(f"🔍 Archivos en {directorio}:")
+                    for archivo in archivos_en_directorio[:5]:  # Solo mostrar 5
+                        print(f"   - {os.path.basename(archivo)}")
+            
+            # También intentar con default_storage como respaldo
+            try:
+                # Para default_storage, usar la ruta original codificada
+                original_relative = file_path[7:] if file_path.startswith('/media/') else file_path
+                if default_storage.exists(original_relative):
+                    default_storage.delete(original_relative)
+                    print(f"✅ Archivo eliminado via default_storage: {original_relative}")
+            except Exception as storage_error:
+                print(f"⚠️ Error con default_storage: {storage_error}")
+                
+        except Exception as e:
+            print(f"❌ Error al eliminar archivo físico {file_path}: {e}")
     
     def _handle_media_file(self, publicidad, media_file, media_type, video_duration):
-        media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
-        os.makedirs(media_dir, exist_ok=True)
-        
-        filename = f"publicidad_{publicidad.id}_{media_file.name}"
-        file_path = os.path.join('publicidad', filename)
-        saved_path = default_storage.save(file_path, media_file)
-        full_url = default_storage.url(saved_path)
-        
-        if media_type == 'video':
-            AppkioskoVideo.objects.create(
-                nombre=media_file.name,
-                ruta=full_url,
-                duracion=video_duration or 0,
-                publicidad=publicidad
-            )
-        elif media_type == 'image':
-            AppkioskoImagen.objects.create(
-                ruta=full_url,
-                categoria_imagen='publicidad',
-                entidad_relacionada_id=publicidad.id
-            )
+        """Manejar el guardado del nuevo archivo de media"""
+        try:
+            print(f"💾 Guardando nuevo archivo: {media_file.name} ({media_type})")
+            
+            # Crear directorio si no existe
+            media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
+            os.makedirs(media_dir, exist_ok=True)
+            
+            # Generar nombre único para el archivo
+            filename = f"publicidad_{publicidad.id}_{media_file.name}"
+            file_path = os.path.join('publicidad', filename)
+            saved_path = default_storage.save(file_path, media_file)
+            full_url = default_storage.url(saved_path)
+            
+            print(f"✅ Archivo guardado en: {full_url}")
+            
+            if media_type == 'video':
+                # Crear registro de video
+                video = AppkioskoVideo.objects.create(
+                    nombre=media_file.name,
+                    ruta=full_url,
+                    duracion=video_duration or 0,
+                    publicidad=publicidad
+                )
+                print(f"✅ Video creado ID {video.id}: {video.ruta}")
+                
+            elif media_type == 'image':
+                # Crear registro de imagen
+                imagen = AppkioskoImagen.objects.create(
+                    ruta=full_url,
+                    categoria_imagen='publicidad',
+                    entidad_relacionada_id=publicidad.id
+                )
+                print(f"✅ Imagen creada ID {imagen.id}: {imagen.ruta}")
+                
+        except Exception as e:
+            print(f"❌ Error al manejar archivo de media: {e}")
+            raise serializers.ValidationError(f"Error al procesar el archivo: {str(e)}")
 
 class PromocionProductoDetalleSerializer(serializers.ModelSerializer):
     producto = ProductoSerializer(read_only=True)
@@ -475,7 +575,6 @@ class PromocionSerializer(serializers.ModelSerializer):
     imagen = serializers.ImageField(write_only=True, required=False)
     imagen_url = serializers.SerializerMethodField(read_only=True)
 
-
     class Meta:
         model = AppkioskoPromociones
         fields = [
@@ -497,7 +596,7 @@ class PromocionSerializer(serializers.ModelSerializer):
             return None
 
     def get_productos_detalle(self, obj):
-        rels = AppkioskoPromocionproductos.objects.filter(promocion=obj).select_related('producto', 'tamano')  # ✅ AGREGAR select_related('tamano')
+        rels = AppkioskoPromocionproductos.objects.filter(promocion=obj).select_related('producto', 'tamano')
         return PromocionProductoDetalleSerializer(rels, many=True).data
 
     def to_internal_value(self, data):
@@ -551,7 +650,6 @@ class PromocionSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(f"Error obteniendo menús: {e}")
             return []
-
 
     def validate_productos(self, value):
         if not value:

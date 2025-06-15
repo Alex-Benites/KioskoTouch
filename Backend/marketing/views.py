@@ -5,6 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.conf import settings
 import os
+from urllib.parse import urlparse, unquote
+from django.core.files.storage import default_storage
 
 from .models import AppkioskoPublicidades, AppkioskoVideo, AppkioskoPromociones
 from comun.models import AppkioskoImagen, AppkioskoEstados
@@ -134,29 +136,123 @@ class PublicidadDetailView(generics.RetrieveUpdateDestroyAPIView):
         return PublicidadDetailSerializer
     
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        
-        # Eliminar archivos de media asociados
+        """Eliminar publicidad y sus archivos asociados"""
         try:
+            publicidad = self.get_object()
+            print(f"🗑️ Eliminando publicidad ID {publicidad.id}: {publicidad.nombre}")
+            
+            # Eliminar archivos físicos antes de eliminar de BD
+            self._delete_media_files(publicidad)
+            
+            # Eliminar la publicidad (esto eliminará automáticamente las relaciones)
+            response = super().destroy(request, *args, **kwargs)
+            
+            print(f"✅ Publicidad eliminada completamente")
+            return response
+            
+        except Exception as e:
+            print(f"❌ Error al eliminar publicidad: {e}")
+            return Response(
+                {'error': f'Error al eliminar la publicidad: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _delete_media_files(self, publicidad):
+        """Eliminar archivos físicos de una publicidad"""
+        try:
+            print(f"🗑️ Eliminando archivos de media para publicidad ID {publicidad.id}")
+            
             # Eliminar videos
-            videos = AppkioskoVideo.objects.filter(publicidad=instance)
+            videos = AppkioskoVideo.objects.filter(publicidad=publicidad)
             for video in videos:
-                video.delete()
+                self._delete_physical_file(video.ruta)
+                print(f"🗑️ Video eliminado: {video.ruta}")
             
             # Eliminar imágenes
             imagenes = AppkioskoImagen.objects.filter(
                 categoria_imagen='publicidad',
-                entidad_relacionada_id=instance.id
+                entidad_relacionada_id=publicidad.id
             )
             for imagen in imagenes:
-                imagen.delete()
-            
+                self._delete_physical_file(imagen.ruta)
+                print(f"🗑️ Imagen eliminada: {imagen.ruta}")
+                
         except Exception as e:
-            print(f"Error al eliminar archivos de media: {e}")
-        
-        # Eliminar la publicidad
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            print(f"❌ Error al eliminar archivos de media: {e}")
+
+    def _delete_physical_file(self, file_path):
+        """Eliminar archivo físico del sistema de archivos"""
+        try:
+            if not file_path:
+                return
+            
+            print(f"🔍 Intentando eliminar archivo: {file_path}")
+            
+            # Convertir URL a path relativo
+            relative_path = None
+            
+            if file_path.startswith(('http://', 'https://')):
+                # Si es URL completa: http://localhost:8000/media/publicidad/archivo.mp4
+                from urllib.parse import urlparse
+                parsed = urlparse(file_path)
+                path_part = parsed.path  # /media/publicidad/archivo.mp4
+                if path_part.startswith('/media/'):
+                    relative_path = path_part[7:]  # publicidad/archivo.mp4
+                else:
+                    relative_path = path_part.lstrip('/')
+                    
+            elif file_path.startswith('/media/'):
+                # Si empieza con /media/: /media/publicidad/archivo.mp4
+                relative_path = file_path[7:]  # publicidad/archivo.mp4
+                
+            elif file_path.startswith('media/'):
+                # Si empieza con media/: media/publicidad/archivo.mp4
+                relative_path = file_path[6:]  # publicidad/archivo.mp4
+                
+            else:
+                # Si ya es un path relativo: publicidad/archivo.mp4
+                relative_path = file_path
+            
+            if not relative_path:
+                print(f"❌ No se pudo determinar path relativo para: {file_path}")
+                return
+                
+            # ✅ DECODIFICAR URL - Esta es la parte que faltaba!
+            from urllib.parse import unquote
+            relative_path = unquote(relative_path)
+            print(f"📁 Path relativo decodificado: {relative_path}")
+            
+            # Construir el path completo físico
+            full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+            print(f"📂 Path completo: {full_path}")
+            
+            # Verificar si el archivo existe y eliminarlo
+            if os.path.exists(full_path):
+                os.remove(full_path)
+                print(f"✅ Archivo físico eliminado: {full_path}")
+            else:
+                print(f"⚠️ Archivo no encontrado: {full_path}")
+                # Debug adicional: listar archivos en el directorio
+                import glob
+                directorio = os.path.dirname(full_path)
+                if os.path.exists(directorio):
+                    archivos_en_directorio = glob.glob(os.path.join(directorio, "*"))
+                    print(f"🔍 Archivos en {directorio}:")
+                    for archivo in archivos_en_directorio[:5]:  # Solo mostrar 5
+                        print(f"   - {os.path.basename(archivo)}")
+            
+            # También intentar con default_storage como respaldo
+            try:
+                # Para default_storage, usar la ruta original codificada
+                original_relative = file_path[7:] if file_path.startswith('/media/') else file_path
+                if default_storage.exists(original_relative):
+                    default_storage.delete(original_relative)
+                    print(f"✅ Archivo eliminado via default_storage: {original_relative}")
+            except Exception as storage_error:
+                print(f"⚠️ Error con default_storage: {storage_error}")
+                
+        except Exception as e:
+            print(f"❌ Error al eliminar archivo físico {file_path}: {e}")
     
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
