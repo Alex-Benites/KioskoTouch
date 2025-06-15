@@ -144,15 +144,36 @@ $category-inactive-bg: #FFFFFF;
     align-items: center;
     text-align: center;
     position: relative;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
     overflow: visible;
     height: 280px;
     min-height: 0;
     max-height: 300px;
+    cursor: pointer;
 
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    &.selected {
+      background-color: $kiosko-red;
+      border-color: $kiosko-red;
+
+      .product-card__name,
+      .product-card__price {
+        color: white;
+      }
+
+      .product-card__order-button {
+        background-color: white;
+        color: $kiosko-red;
+        border: 2px solid white;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.9);
+          color: $kiosko-red;
+        }
+      }
+
+      .product-card__content {
+        background-color: $kiosko-red;
+      }
     }
 
     &__image-wrapper {
@@ -183,6 +204,7 @@ $category-inactive-bg: #FFFFFF;
       display: flex;
       flex-direction: column;
       flex-grow: 0;
+      transition: background-color 0.2s ease;
     }
 
     &__name {
@@ -191,6 +213,7 @@ $category-inactive-bg: #FFFFFF;
       color: #333333;
       margin-bottom: 8px;
       min-height: auto;
+      transition: color 0.2s ease;
     }
 
     &__footer {
@@ -205,6 +228,7 @@ $category-inactive-bg: #FFFFFF;
       font-size: clamp(1.2rem, 2.5vw, 1.5rem);
       font-weight: bold;
       color: #333333;
+      transition: color 0.2s ease;
     }
 
     &__order-button {
@@ -216,11 +240,10 @@ $category-inactive-bg: #FFFFFF;
       font-size: clamp(0.9rem, 2vw, 1rem);
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      transition: background-color 0.2s ease, color 0.2s ease, border 0.2s ease;
 
       &:hover {
         background-color: color.scale($kiosko-red, $lightness: -10%);
-        transform: scale(1.03);
       }
 
       &:active {
@@ -230,26 +253,25 @@ $category-inactive-bg: #FFFFFF;
 
     .promo-badge {
       position: absolute;
-      top: -12px; // Ajusta para que sobresalga un poco por arriba
-      right: -12px; // Ajusta para que sobresalga un poco por la derecha
-      width: 55px; // Tamaño del círculo
-      height: 55px; // Tamaño del círculo
+      top: -12px;
+      right: -12px;
+      width: 55px;
+      height: 55px;
       background-color: $kiosko-red;
       color: white;
-      border-radius: 50%; // Esto lo hace circular
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem; // Tamaño del texto dentro del badge (ej. "10%")
+      font-size: 1rem;
       font-weight: bold;
-      line-height: 1; // Ayuda a centrar el texto si es una sola línea
+      line-height: 1;
       text-align: center;
-      box-shadow: 0 3px 7px rgba(0, 0, 0, 0.25); // Sombra para el badge
-      z-index: 3; // Asegura que esté por encima de otros elementos
-      // text-transform: none; // Remueve el uppercase si no lo quieres
+      box-shadow: 0 3px 7px rgba(0, 0, 0, 0.25);
+      z-index: 3;
 
-      &.discount { // Si usas esta clase, hereda los estilos anteriores
-        // Puedes añadir estilos específicos para .discount aquí si es necesario
+      &.discount {
+        // Estilos específicos para descuentos
       }
     }
   }
@@ -360,33 +382,16 @@ $category-inactive-bg: #FFFFFF;
     gap: 15px;
 
     .product-card {
-      &__image-wrapper {
-        margin-bottom: -30px;
-      }
-      &__image {
-        max-width: 120px;
-        max-height: 100px;
-      }
-      &__content {
-        padding: 40px 10px 10px 10px;
-      }
-      &__name {
-        font-size: 1rem;
-        margin-bottom: 10px;
-      }
-      &__price {
-        font-size: 1.1rem;
-      }
-      &__order-button {
-        padding: 8px 15px;
-        font-size: 0.85rem;
-      }
-      .promo-badge { // Ajuste ligero para tablet si es necesario
-        width: 50px;
-        height: 50px;
-        font-size: 0.9rem;
-        top: -10px;
-        right: -10px;
+      &.selected {
+        .product-card__name,
+        .product-card__price {
+          color: white;
+        }
+
+        .product-card__order-button {
+          background-color: white;
+          color: $kiosko-red;
+        }
       }
     }
   }

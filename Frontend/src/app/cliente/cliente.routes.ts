@@ -1,16 +1,28 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './home/home.component';
-import { TipoPedidoComponent } from './tipo-pedido/tipo-pedido.component';
-import { MenuComponent } from './menu/menu.component';
 
 export const clienteRoutes: Routes = [
-
-   { path: '', redirectTo: 'home', pathMatch: 'full' },
-    
-  { path: 'home', component: HomeComponent },
-
-  { path: 'tipo-pedido', component: TipoPedidoComponent },
-
-  { path: 'menu',component: MenuComponent },
-  
+  {
+    path: 'home',
+    loadComponent: () => import('./home/home.component').then(m => m.HomeComponent)
+  },
+  {
+    path: 'tipo-pedido',
+    loadComponent: () => import('./tipo-pedido/tipo-pedido.component').then(m => m.TipoPedidoComponent)
+  },
+  {
+    path: 'menu',
+    loadComponent: () => import('./menu/menu.component').then(m => m.MenuComponent)
+  },
+  {
+    path: 'personalizar-producto/:id',
+    loadComponent: () => import('./personalizar-producto/personalizar-producto.component').then(m => m.PersonalizarProductoComponent)
+  },
+  {
+    path: 'pop-up',
+    loadComponent: () => import('./pop-up/pop-up.component').then(m => m.PopupComponent)  },
+  {
+    path: '',
+    redirectTo: 'home',
+    pathMatch: 'full'
+  }
 ];

@@ -48,11 +48,15 @@
           <h2 class="menu-category-name">{{ categoriaActual?.nombre || 'Seleccione Categoría' }}</h2>
         </div>
 
+        <!-- Modificar la sección de productos para agregar clases condicionales -->
         <section class="products-grid">
           @if (categoriaActual?.nombre?.toLowerCase() === 'combos') {
             @if (productosActuales.length > 0) {
               @for (menu of productosActuales; track $index) {
-                <div class="product-card">
+                <!-- ✅ NUEVO: Clic en el cuadro completo para seleccionar -->
+                <div class="product-card"
+                     [class.selected]="estaSeleccionado(menu)"
+                     (click)="seleccionarProducto(menu)">
                   <div class="product-card__image-wrapper">
                     <img [src]="obtenerImagenProducto(menu)" [alt]="menu.nombre" class="product-card__image">
                   </div>
@@ -60,7 +64,9 @@
                     <h3 class="product-card__name">{{ menu.nombre }}</h3>
                     <div class="product-card__footer">
                       <span class="product-card__price">${{ menu.precio | number:'1.2-2' }}</span>
-                      <button class="product-card__order-button" (click)="agregarProducto(menu)">
+                      <!-- ✅ MODIFICAR: Solo el botón agrega al carrito -->
+                      <button class="product-card__order-button"
+                              (click)="agregarProducto(menu, $event)">
                         Ordenar
                       </button>
                     </div>
@@ -73,7 +79,10 @@
           } @else {
             @if (productosActuales.length > 0) {
               @for (producto of productosActuales; track $index) {
-                <div class="product-card">
+                <!-- ✅ NUEVO: Clic en el cuadro completo para seleccionar -->
+                <div class="product-card"
+                     [class.selected]="estaSeleccionado(producto)"
+                     (click)="seleccionarProducto(producto)">
                   @if (tienePromoBadge(producto)) {
                     <span class="promo-badge" [ngClass]="producto.promoBadgeClass || ''">{{ producto.promoBadge }}</span>
                   }
@@ -84,7 +93,9 @@
                     <h3 class="product-card__name">{{ producto.nombre }}</h3>
                     <div class="product-card__footer">
                       <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
-                      <button class="product-card__order-button" (click)="agregarProducto(producto)">
+                      <!-- ✅ MODIFICAR: Solo el botón agrega al carrito -->
+                      <button class="product-card__order-button"
+                              (click)="agregarProducto(producto, $event)">
                         Ordenar
                       </button>
                     </div>

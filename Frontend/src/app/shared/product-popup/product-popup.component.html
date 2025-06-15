@@ -1,0 +1,55 @@
+<div class="product-popup-container">
+  <!-- Botón cerrar -->
+  <button class="close-button" (click)="cerrarPopup()" mat-icon-button>
+    <span class="close-icon">X</span>
+  </button>
+
+  <!-- Imagen del producto -->
+  <div class="product-image-container">
+    <img [src]="data.imagenUrl" [alt]="data.producto.nombre" class="product-image">
+  </div>
+
+  <!-- Información del producto -->
+  <div class="product-info">
+    <h2 class="product-name">{{ data.producto.nombre }}</h2>
+    <p class="product-price">${{ data.producto.precio.toFixed(2) }}</p>
+  </div>
+
+  <!-- Control de cantidad -->
+  <div class="quantity-section">
+    <h3 class="quantity-label">Cantidad</h3>
+    <div class="quantity-controls">
+      <button
+        class="quantity-button decrease"
+        (click)="disminuirCantidad()"
+        [disabled]="cantidad <= 1">
+        -
+      </button>
+      <span class="quantity-display">{{ cantidad }}</span>
+      <button
+        class="quantity-button increase"
+        (click)="aumentarCantidad()">
+        +
+      </button>
+    </div>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="action-buttons">
+    <!-- Botón personalizar (condicional) -->
+    <button
+      *ngIf="mostrarPersonalizar"
+      class="personalize-button"
+      (click)="personalizarProducto()">
+      Personalizar
+    </button>
+
+    <!-- Botón agregar -->
+    <button
+      class="add-button"
+      (click)="agregarAlCarrito()">
+      Añadir a mi orden
+      <!--Añadir a mi orden ${{ precioTotal.toFixed(2) }}-->
+    </button>
+  </div>
+</div>

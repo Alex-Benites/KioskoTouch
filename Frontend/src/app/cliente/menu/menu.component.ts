@@ -6,6 +6,8 @@ import { PedidoService } from '../../services/pedido.service';
 import { CatalogoService } from '../../services/catalogo.service';
 import { Producto, Categoria, Menu } from '../../models/catalogo.model'; // Asegúrate de importar Menu
 import { catchError, forkJoin, of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { ProductPopupComponent, ProductPopupData, ProductPopupResult } from '../../shared/product-popup/product-popup.component';
 
 // ✅ Interfaz extendida para productos con badges promocionales
 interface ProductoConBadge extends Producto {
@@ -43,6 +45,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   private renderer = inject(Renderer2);
   private pedidoService = inject(PedidoService);
   private catalogoService = inject(CatalogoService);
+  private dialog = inject(MatDialog);
 
   // ✅ Computed signals
   categoriaActualObj = computed(() =>
@@ -52,18 +55,18 @@ export class MenuComponent implements OnInit, OnDestroy {
   productosFiltrados = computed(() => {
   const categoriaId = this.categoriaSeleccionada();
   const todosLosProductos = this.productos();
-  
+
   console.log('🔍 DEBUG FILTRADO:');
   console.log('  - Categoría seleccionada ID:', categoriaId);
   console.log('  - Total productos:', todosLosProductos.length);
-  console.log('  - Productos con campo activo:', todosLosProductos.map(p => ({ 
-    id: p.id, 
-    nombre: p.nombre, 
-    categoria: p.categoria, 
+  console.log('  - Productos con campo activo:', todosLosProductos.map(p => ({
+    id: p.id,
+    nombre: p.nombre,
+    categoria: p.categoria,
     estado: p.estado,
     activo: (p as any).activo  // ✅ Verificar el nuevo campo
   })));
-  
+
   if (!categoriaId) return [];
 
   const categoriaActual = this.categorias().find(cat => cat.id === categoriaId);
@@ -82,7 +85,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     console.log(`  - Producto ${p.nombre}: categoria=${p.categoria}, activo=${(p as any).activo}, coincide=${coincideCategoria}, pasa=${coincideCategoria && estaActivo}`);
     return coincideCategoria && estaActivo;
   });
-  
+
   console.log('  - Productos filtrados finales:', productosFiltrados.length);
   return productosFiltrados;
 });
@@ -119,6 +122,9 @@ export class MenuComponent implements OnInit, OnDestroy {
   resumenPedido = this.pedidoService.resumenPedido;
   totalPedido = this.pedidoService.total;
   cantidadItems = this.pedidoService.cantidadItems;
+
+  // ✅ NUEVO: Propiedad para manejar productos seleccionados
+  productosSeleccionados = signal<Set<number>>(new Set());
 
   ngOnInit() {
     this.renderer.addClass(document.body, 'fondo-home');
@@ -280,20 +286,20 @@ export class MenuComponent implements OnInit, OnDestroy {
     if (this.esMenu(item)) {
       return `$${item.precio.toFixed(2)}`;
     }
-    
+
     // Si es producto, usar lógica de tamaños
     const producto = item as ProductoConBadge;
     if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
       const precioMin = Math.min(...producto.tamanos_detalle.map(t => t.precio));
       const precioMax = Math.max(...producto.tamanos_detalle.map(t => t.precio));
-      
+
       if (precioMin === precioMax) {
         return `$${precioMin.toFixed(2)}`;
       } else {
         return `Desde $${precioMin.toFixed(2)}`;
       }
     }
-    
+
     return `$${this.obtenerPrecioMostrar(producto).toFixed(2)}`;
   }
 
@@ -308,23 +314,6 @@ export class MenuComponent implements OnInit, OnDestroy {
       return this.obtenerTextoPrecioMenu(item);
     } else {
       return this.obtenerTextoPrecio(item);
-    }
-  }
-
-  // ✅ Método mejorado para agregar producto (SIN agregarMenu)
-  agregarProducto(producto: ProductoConBadge | Menu): void {
-    if (this.esMenu(producto)) {
-      // ✅ TRATAR MENÚS COMO PRODUCTOS NORMALES
-      this.pedidoService.agregarProducto(producto.id, producto.precio, 1);
-    } else {
-      // Para productos con tamaños, mostrar selector de tamaño
-      if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 1) {
-        this.mostrarSelectorTamano(producto);
-      } else {
-        // Producto simple o con un solo tamaño
-        const precio = this.calcularPrecioFinal(producto);
-        this.pedidoService.agregarProducto(producto.id, precio, 1);
-      }
     }
   }
 
@@ -381,5 +370,135 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   tienePromoBadge(obj: any): obj is ProductoConBadge {
     return 'promoBadge' in obj && !!obj.promoBadge;
+  }
+
+  // ✅ SEPARAR: Método para solo seleccionar visualmente (sin agregar al carrito)
+  seleccionarProducto(producto: ProductoConBadge | Menu): void {
+    const productosSeleccionadosActuales = new Set(this.productosSeleccionados());
+
+    if (productosSeleccionadosActuales.has(producto.id)) {
+      // Si ya está seleccionado, deseleccionarlo
+      productosSeleccionadosActuales.delete(producto.id);
+    } else {
+      // Si no está seleccionado, seleccionarlo
+      productosSeleccionadosActuales.add(producto.id);
+    }
+
+    this.productosSeleccionados.set(productosSeleccionadosActuales);
+  }
+
+  // ✅ RESTAURAR: El método agregarProducto solo para agregar al carrito
+  agregarProducto(producto: ProductoConBadge | Menu, event?: Event): void {
+    // Prevenir que el clic se propague al contenedor padre
+    if (event) {
+      event.stopPropagation();
+    }
+
+    // ✅ NUEVO: Mostrar popup antes de agregar al carrito
+    this.mostrarPopupProducto(producto);
+  }
+
+  // ✅ NUEVO: Método para mostrar popup de producto
+  private mostrarPopupProducto(producto: ProductoConBadge | Menu): void {
+    const imagenUrl = this.obtenerImagenProducto(producto);
+
+    // Determinar si debe permitir personalización (solo para ciertos productos)
+    const permitirPersonalizacion = this.debePermitirPersonalizacion(producto);
+
+    const dialogData: ProductPopupData = {
+      producto: {
+        id: producto.id,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        imagenUrl: imagenUrl,
+        categoria: (producto as ProductoConBadge).categoria,
+        descripcion: (producto as ProductoConBadge).descripcion
+      },
+      imagenUrl: imagenUrl,
+      permitirPersonalizacion: permitirPersonalizacion
+    };
+
+    const dialogRef = this.dialog.open(ProductPopupComponent, {
+      data: dialogData,
+      disableClose: false,
+      panelClass: 'product-popup-dialog',
+      maxWidth: '450px',
+      width: '90%'
+    });
+
+    dialogRef.afterClosed().subscribe((resultado: ProductPopupResult) => {
+      if (resultado) {
+        this.procesarResultadoPopup(producto, resultado);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Procesar resultado del popup
+  private procesarResultadoPopup(producto: ProductoConBadge | Menu, resultado: ProductPopupResult): void {
+    switch (resultado.accion) {
+      case 'agregar':
+        this.agregarProductoAlCarrito(producto, resultado.cantidad);
+        break;
+
+      case 'personalizar':
+        this.irAPersonalizar(producto, resultado.cantidad);
+        break;
+
+      case 'cancelar':
+        // No hacer nada
+        break;
+    }
+  }
+
+  // ✅ NUEVO: Agregar producto al carrito con cantidad específica
+  private agregarProductoAlCarrito(producto: ProductoConBadge | Menu, cantidad: number): void {
+    if (this.esMenu(producto)) {
+      this.pedidoService.agregarProducto(producto.id, producto.precio, cantidad);
+    } else {
+      if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 1) {
+        // Para productos con múltiples tamaños, usar el primer tamaño por ahora
+        // Podrías expandir esto para permitir seleccionar tamaño en el popup
+        const tamanoDefault = producto.tamanos_detalle[0];
+        this.pedidoService.agregarProducto(producto.id, tamanoDefault.precio, cantidad);
+      } else {
+        const precio = this.calcularPrecioFinal(producto);
+        this.pedidoService.agregarProducto(producto.id, precio, cantidad);
+      }
+    }
+  }
+
+  // ✅ NUEVO: Ir a personalizar producto
+  private irAPersonalizar(producto: ProductoConBadge | Menu, cantidad: number): void {
+    console.log(`🎨 Navegando a personalizar ${producto.nombre} con cantidad ${cantidad}`);
+
+    // Navegar al componente personalizar-producto
+    this.router.navigate(['/cliente/personalizar-producto', producto.id], {
+      queryParams: {
+        cantidad: cantidad,
+        // Datos adicionales útiles para la personalización
+        nombre: producto.nombre,
+        precio: producto.precio,
+        categoria: (producto as ProductoConBadge).categoria || null
+      }
+    });
+  }
+
+  // ✅ NUEVO: Determinar si un producto permite personalización
+  private debePermitirPersonalizacion(producto: ProductoConBadge | Menu): boolean {
+    // Si es menú, no permitir personalización
+    if (this.esMenu(producto)) {
+      return false;
+    }
+
+    // Permitir personalización para ciertas categorías
+    const categoriasPersonalizables = ['Hamburguesa', 'Pizza', 'Ensalada'];
+    const categoriaActual = this.categorias().find(cat => cat.id === (producto as ProductoConBadge).categoria);
+
+    return categoriaActual ? categoriasPersonalizables.includes(categoriaActual.nombre) : false;
+  }
+
+  // ✅ AGREGAR: Método para verificar si está seleccionado
+  estaSeleccionado(producto: ProductoConBadge | Menu): boolean {
+    return this.productosSeleccionados().has(producto.id);
   }
 }

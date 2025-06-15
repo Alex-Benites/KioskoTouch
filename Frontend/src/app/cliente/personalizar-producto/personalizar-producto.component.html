@@ -1,0 +1,30 @@
+<div class="personalizar-container">
+  <!-- Header -->
+  <header class="personalizar-header">
+    <button class="back-button" (click)="volverAlMenu()">
+      ← Volver al Menú
+    </button>
+    <h1>Personalizar Producto</h1>
+  </header>
+
+  <!-- Información del producto -->
+  <section class="producto-info">
+    <h2>{{ nombreProducto }}</h2>
+    <p>Precio base: ${{ precioProducto.toFixed(2) }}</p>
+    <p>Cantidad: {{ cantidad }}</p>
+  </section>
+
+  <!-- Aquí irían las opciones de personalización -->
+  <section class="personalizacion-opciones">
+    <h3>Opciones de Personalización</h3>
+    <!-- Ingredientes, tamaños, extras, etc. -->
+    <p>Aquí irían los ingredientes y opciones de personalización...</p>
+  </section>
+
+  <!-- Footer con botón de agregar -->
+  <footer class="personalizar-footer">
+    <button class="agregar-carrito-btn" (click)="agregarAlCarrito()">
+      Agregar al Carrito - ${{ (precioProducto * cantidad).toFixed(2) }}
+    </button>
+  </footer>
+</div>

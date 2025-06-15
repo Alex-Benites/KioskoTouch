@@ -1,0 +1,199 @@
+.product-popup-container {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #DD453A;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: #c23934;
+  }
+
+  .close-icon {
+    line-height: 1;
+  }
+}
+
+.product-image-container {
+  margin-bottom: 20px;
+
+  .product-image {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+}
+
+.product-info {
+  margin-bottom: 25px;
+
+  .product-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 8px 0;
+  }
+
+  .product-price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #666;
+    margin: 0;
+  }
+}
+
+.quantity-section {
+  margin-bottom: 30px;
+
+  .quantity-label {
+    font-size: 18px;
+    color: #666;
+    margin: 0 0 15px 0;
+    font-weight: 500;
+  }
+
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+
+    .quantity-button {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: #DD453A;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: #c23934;
+        transform: scale(1.05);
+      }
+
+      &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      &.decrease {
+        // Estilos específicos para el botón de disminuir
+      }
+
+      &.increase {
+        // Estilos específicos para el botón de aumentar
+      }
+    }
+
+    .quantity-display {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      min-width: 40px;
+      text-align: center;
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  button {
+    padding: 15px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .personalize-button {
+    background: #f0f0f0;
+    color: #333;
+    border: 2px solid #ddd;
+
+    &:hover {
+      background: #e0e0e0;
+      border-color: #ccc;
+    }
+  }
+
+  .add-button {
+    background: #DD453A;
+    color: white;
+
+    &:hover {
+      background: #c23934;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// ✅ Responsive
+@media (max-width: 480px) {
+  .product-popup-container {
+    max-width: 350px;
+    padding: 15px;
+  }
+
+  .product-image-container .product-image {
+    width: 150px;
+    height: 150px;
+  }
+
+  .product-info .product-name {
+    font-size: 20px;
+  }
+
+  .quantity-controls {
+    gap: 15px;
+
+    .quantity-button {
+      width: 35px;
+      height: 35px;
+      font-size: 18px;
+    }
+
+    .quantity-display {
+      font-size: 20px;
+    }
+  }
+}

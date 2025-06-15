@@ -73,7 +73,7 @@ html, body {
   }
 
 
-  
+
   // ✅ NUEVO: Tamaño pequeño
   &.small {
     padding: 6px 12px;
@@ -81,7 +81,7 @@ html, body {
     min-width: 100px;
     min-height: 32px;
   }
-  
+
   // ✅ NUEVO: Tamaño grande
   &.large {
     padding: 12px 24px;
@@ -89,53 +89,65 @@ html, body {
     min-width: 150px;
     min-height: 48px;
   }
-  
+
   // ✅ NUEVO: Variante secundaria (ROJO MÁS OSCURO en lugar de gris)
   &.secondary {
     background-color:$primary-color; // Rojo más oscuro
-    
+
     &:hover:not(:disabled) {
       background-color: $primary-color
     }
-    
+
     &:disabled {
       background-color:#DD453A; // Disabled oscuro transparente
     }
   }
-  
+
   // ✅ NUEVO: Variante outline (BORDE ROJO, fondo transparente)
   &.outline {
     background-color: transparent;
     color: $primary-color;
     border: 2px solid $primary-color;
-    
+
     &:hover:not(:disabled) {
       background-color: $primary-color;
       color: white;
       transform: scale(1.03);
     }
-    
+
     &:disabled {
       background-color: transparent;
       color: rgba(221, 69, 58, 0.4);
       border-color: rgba(221, 69, 58, 0.4);
     }
   }
-  
+
   // ✅ NUEVO: Variante ghost (SOLO TEXTO ROJO)
   &.ghost {
     background-color: transparent;
     color: $primary-color;
     border: none;
-    
+
     &:hover:not(:disabled) {
       background-color: rgba($primary-color, 0.1);
       transform: scale(1.03);
     }
-    
+
     &:disabled {
       background-color: transparent;
       color: rgba(221, 69, 58, 0.4);
     }
   }
+}
+
+// Estilos para el dialog del popup de productos
+.product-popup-dialog .mat-mdc-dialog-container {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.product-popup-dialog .mat-mdc-dialog-surface {
+  background: transparent !important;
+  box-shadow: none !important;
 }
