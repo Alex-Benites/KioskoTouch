@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar'; // ✅ NUEVO: Solo agregar esto
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -45,8 +46,12 @@ import { environment } from '../../../../environments/environment';
 export class CrearPublicidadComponent implements OnInit {
 
   publicidadForm!: FormGroup;
-  mediaPreview: string | ArrayBuffer | null = null;
-  selectedFile: File | null = null;
+  selectedFiles: File[] = [];
+  selectedFile: File | null = null; // Para video
+  filePreviews: { url: string; name: string }[] = [];
+  videoPreview: string | null = null;
+  existingImages: { id: number; url: string; name: string }[] = [];
+  existingVideoUrl: string | null = null;
   selectedFileName: string | null = null;
   selectedMediaType: 'image' | 'video' | null = null;
   videoDuration: number | null = null;
@@ -55,7 +60,6 @@ export class CrearPublicidadComponent implements OnInit {
   publicidadId: number | null = null;
   isEditMode: boolean = false;
   pageTitle: string = 'Creación de Publicidad';
-  existingMediaUrl: string | null = null;
   
   estados: Estado[] = [];
   loadingEstados: boolean = false;
@@ -65,6 +69,7 @@ export class CrearPublicidadComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly dialog = inject(MatDialog);
   private readonly publicidadService = inject(PublicidadService);
+  private readonly snackBar = inject(MatSnackBar); // ✅ NUEVO: Solo agregar esto
 
   readonly tiposPublicidad: { value: TipoPublicidad; label: string; dimensions: string }[] = [
     { 
@@ -138,7 +143,8 @@ export class CrearPublicidadComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar estados:', error);
         this.loadingEstados = false;
-        alert('Error al cargar los estados disponibles');
+        // ✅ CAMBIO: Reemplazar alert con snackBar
+        this.snackBar.open('Error al cargar los estados disponibles', 'Cerrar', { duration: 5000 });
       }
     });
   }
@@ -157,7 +163,8 @@ export class CrearPublicidadComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar publicidad:', error);
-        alert('No se pudo cargar la información de la publicidad');
+        // ✅ CAMBIO: Reemplazar alert con snackBar
+        this.snackBar.open('No se pudo cargar la información de la publicidad', 'Cerrar', { duration: 5000 });
         this.isLoading = false;
         this.router.navigate(['/administrador/gestion-publicidad/editar-eliminar']);
       }
@@ -180,6 +187,9 @@ export class CrearPublicidadComponent implements OnInit {
       mediaType: publicidad.media_type
     });
 
+    // ✅ NUEVO: Deshabilitar campos en modo edición
+    this.disableFormFieldsInEditMode();
+
     if (publicidad.tiempo_visualizacion) {
       const { valor, unidad } = this.convertSecondsToDisplay(publicidad.tiempo_visualizacion);
       this.publicidadForm.patchValue({
@@ -188,65 +198,42 @@ export class CrearPublicidadComponent implements OnInit {
       });
     }
 
-    let mediaUrl = null;
-    
-    if (publicidad.media_type === 'video' && publicidad.videos && publicidad.videos.length > 0) {
-      mediaUrl = publicidad.videos[0].ruta;
-      console.log('Video encontrado:', publicidad.videos[0]);
-    } else if (publicidad.media_type === 'image' && publicidad.imagenes && publicidad.imagenes.length > 0) {
-      mediaUrl = publicidad.imagenes[0].ruta;
-      console.log('Imagen encontrada:', publicidad.imagenes[0]);
-    } else if (publicidad.media_url) {
-      mediaUrl = publicidad.media_url;
-      console.log('Media URL fallback:', publicidad.media_url);
+    this.selectedMediaType = publicidad.media_type;
+
+    // Cargar imágenes existentes si es tipo banner
+    if (publicidad.media_type === 'image' && publicidad.imagenes && publicidad.imagenes.length > 0) {
+      this.existingImages = publicidad.imagenes.map((img: any, index: number) => ({
+        id: img.id || index,
+        url: this.getMediaUrlForEdit(img.ruta),
+        name: this.extractFileNameFromUrl(img.ruta)
+      }));
+      console.log('Imágenes existentes cargadas:', this.existingImages);
     }
 
-    if (mediaUrl) {
-      console.log('Cargando preview de archivo existente:', mediaUrl);
+    // Cargar video existente si es tipo video
+    if (publicidad.media_type === 'video' && publicidad.videos && publicidad.videos.length > 0) {
+      const video = publicidad.videos[0];
+      this.existingVideoUrl = this.getMediaUrlForEdit(video.ruta);
+      this.videoPreview = this.existingVideoUrl;
+      this.selectedFileName = this.extractFileNameFromUrl(video.ruta);
       
-      this.selectedMediaType = publicidad.media_type;
-      this.existingMediaUrl = mediaUrl;
-      this.selectedFileName = this.extractFileNameFromUrl(mediaUrl);
-      
-      if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
-        this.mediaPreview = mediaUrl;
-      } else if (mediaUrl.startsWith('/media/')) {
-        this.mediaPreview = `${environment.baseUrl}${mediaUrl}`;
-      } else {
-        this.mediaPreview = `${environment.baseUrl}/media/${mediaUrl}`;
+      if (video.duracion) {
+        this.videoDuration = video.duracion;
+        this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
       }
-      
-      console.log('Preview configurado:', {
-        selectedMediaType: this.selectedMediaType,
-        mediaPreview: this.mediaPreview,
-        selectedFileName: this.selectedFileName,
-        originalUrl: mediaUrl
-      });
-      
-      if (publicidad.media_type === 'video') {
-        if (publicidad.tiempo_visualizacion) {
-          this.videoDuration = publicidad.tiempo_visualizacion;
-          this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
-          console.log('Duración de video configurada desde tiempo_visualizacion:', this.videoDuration);
-        } else if (publicidad.videos && publicidad.videos.length > 0 && publicidad.videos[0].duracion) {
-          this.videoDuration = publicidad.videos[0].duracion;
-          this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
-          console.log('Duración de video configurada desde videos[0].duracion:', this.videoDuration);
-        }
-      }
-    } else {
-      console.warn('No se encontró archivo de media para cargar preview');
+      console.log('Video existente cargado:', this.existingVideoUrl);
     }
 
     this.updateIntervalValidations();
-    
-    console.log('Formulario poblado:', {
-      formValues: this.publicidadForm.value,
-      mediaPreview: !!this.mediaPreview,
-      selectedMediaType: this.selectedMediaType,
-      videoDuration: this.videoDuration,
-      existingMediaUrl: this.existingMediaUrl
-    });
+  }
+
+  // Agregar este método después de populateForm():
+  private disableFormFieldsInEditMode(): void {
+    if (this.isEditMode) {
+      // Deshabilitar el campo tipo de publicidad
+      this.publicidadForm.get('tipoPublicidad')?.disable();
+      console.log('Campo tipoPublicidad deshabilitado en modo edición');
+    }
   }
 
   private convertSecondsToDisplay(segundos: number): { valor: number; unidad: string } {
@@ -360,50 +347,144 @@ export class CrearPublicidadComponent implements OnInit {
     unidadControl?.updateValueAndValidity({ emitEvent: false });
   }
 
-  onFileSelected(event: Event): void {
+  onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
 
     const tipoPublicidadSeleccionado = this.publicidadForm.get('tipoPublicidad')?.value;
     if (!tipoPublicidadSeleccionado) {
-      alert('Primero debes seleccionar un tipo de publicidad (Banner o Video)');
+      // ✅ CAMBIO: Reemplazar alert con snackBar
+      this.snackBar.open('Primero debes seleccionar un tipo de publicidad (Banner o Video)', 'Cerrar', { duration: 4000 });
       this.clearFileInput(input);
       return;
     }
 
-    const validation = this.validateFile(file);
-    if (!validation.valid) {
-      alert(validation.error!);
-      this.clearFileInput(input);
-      return;
-    }
-
-    this.selectedMediaType = this.getMediaTypeFromFile(file);
-    if (!this.selectedMediaType) {
-      alert('El archivo seleccionado no coincide con el tipo de publicidad elegido.');
-      this.clearFileInput(input);
-      return;
-    }
-
-    this.selectedFile = file;
-    this.selectedFileName = file.name;
-    this.existingMediaUrl = null;
-    this.publicidadForm.patchValue({ 
-      mediaType: this.selectedMediaType,
-      videoDuration: null 
-    });
-    
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.mediaPreview = reader.result;
-      if (this.selectedMediaType === 'video') {
-        this.getVideoDuration();
+    if (tipoPublicidadSeleccionado === 'video') {
+      // Para video, solo un archivo
+      const file = files[0];
+      const validation = this.validateFile(file);
+      if (!validation.valid) {
+        // ✅ CAMBIO: Reemplazar alert con snackBar
+        this.snackBar.open(validation.error!, 'Cerrar', { duration: 5000 });
+        this.clearFileInput(input);
+        return;
       }
-    };
-    reader.readAsDataURL(file);
+
+      this.selectedMediaType = 'video';
+      this.selectedFile = file;
+      this.selectedFileName = file.name;
+      this.existingVideoUrl = null;
+      this.publicidadForm.patchValue({ 
+        mediaType: this.selectedMediaType,
+        videoDuration: null 
+      });
+      
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.videoPreview = reader.result as string;
+        this.getVideoDuration();
+      };
+      reader.readAsDataURL(file);
+
+    } else if (tipoPublicidadSeleccionado === 'banner') {
+      // Para banner, múltiples imágenes
+      const currentTotal = this.existingImages.length + this.selectedFiles.length;
+      const availableSlots = 5 - currentTotal;
+      
+      if (files.length > availableSlots) {
+        // ✅ CAMBIO: Reemplazar alert con snackBar
+        this.snackBar.open(`Solo puedes agregar ${availableSlots} imagen(es) más. Máximo total: 5 imágenes`, 'Cerrar', { duration: 5000 });
+        this.clearFileInput(input);
+        return;
+      }
+
+      // Validar cada archivo
+      for (const file of files) {
+        const validation = this.validateFile(file);
+        if (!validation.valid) {
+          // ✅ CAMBIO: Reemplazar alert con snackBar
+          this.snackBar.open(`Error en archivo "${file.name}": ${validation.error}`, 'Cerrar', { duration: 5000 });
+          this.clearFileInput(input);
+          return;
+        }
+      }
+
+      this.selectedMediaType = 'image';
+      this.publicidadForm.patchValue({ mediaType: this.selectedMediaType });
+
+      // Agregar archivos a la lista
+      files.forEach(file => {
+        this.selectedFiles.push(file);
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.filePreviews.push({
+            url: reader.result as string,
+            name: file.name
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
 
     this.updateIntervalValidations();
+    this.clearFileInput(input);
+  }
+
+  // ✅ CAMBIO: Validación para no eliminar la última imagen en modo edición
+  removeExistingImage(imageId: number): void {
+    // Validación: No permitir eliminar la última imagen en modo edición
+    if (this.isEditMode) {
+      const totalAfterRemoval = this.getTotalImagesCount() - 1;
+      if (totalAfterRemoval === 0) {
+        this.snackBar.open('No puedes eliminar todas las imágenes. El banner debe tener al menos una imagen.', 'Cerrar', { duration: 5000 });
+        return;
+      }
+    }
+    
+    this.existingImages = this.existingImages.filter(img => img.id !== imageId);
+    console.log('Imagen existente removida:', imageId);
+  }
+
+  // ✅ CAMBIO: Validación para no eliminar si quedaría sin imágenes en modo edición
+  removeNewFile(index: number): void {
+    // Validación: No permitir eliminar si quedaría sin imágenes en modo edición
+    if (this.isEditMode && this.selectedMediaType === 'image') {
+      const totalAfterRemoval = this.getTotalImagesCount() - 1;
+      if (totalAfterRemoval === 0) {
+        this.snackBar.open('No puedes eliminar todas las imágenes. El banner debe tener al menos una imagen.', 'Cerrar', { duration: 5000 });
+        return;
+      }
+    }
+    
+    this.selectedFiles.splice(index, 1);
+    this.filePreviews.splice(index, 1);
+    console.log('Archivo nuevo removido:', index);
+  }
+
+  getTotalImagesCount(): number {
+    return this.existingImages.length + this.selectedFiles.length;
+  }
+
+  getFileButtonText(): string {
+    if (this.isFileInputDisabled) {
+      return 'Selecciona tipo primero';
+    }
+    
+    if (this.selectedMediaType === 'image') {
+      const total = this.getTotalImagesCount();
+      if (total >= 5) {
+        return 'Máximo 5 imágenes alcanzado';
+      }
+      return `Agregar imagen${total > 0 ? 's' : ''} (${total}/5)`;
+    }
+    
+    if (this.selectedMediaType === 'video') {
+      return this.selectedFile || this.existingVideoUrl ? 'Cambiar video' : 'Seleccionar video';
+    }
+    
+    return 'Seleccionar archivo';
   }
 
   private clearFileInput(input: HTMLInputElement): void {
@@ -411,9 +492,9 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   private getVideoDuration(): void {
-    if (this.selectedMediaType === 'video' && this.mediaPreview) {
+    if (this.selectedMediaType === 'video' && this.videoPreview) {
       const video = document.createElement('video');
-      video.src = this.mediaPreview as string;
+      video.src = this.videoPreview as string;
       
       video.onloadedmetadata = () => {
         this.videoDuration = Math.round(video.duration);
@@ -441,7 +522,7 @@ export class CrearPublicidadComponent implements OnInit {
     const video = event.target as HTMLVideoElement;
     console.log('Video cargado correctamente en preview');
     
-    if (!this.selectedFile && this.existingMediaUrl && !this.videoDuration) {
+    if (!this.selectedFile && this.existingVideoUrl && !this.videoDuration) {
       this.videoDuration = Math.round(video.duration);
       this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
       console.log('Duración extraída del video existente:', this.videoDuration);
@@ -456,10 +537,15 @@ export class CrearPublicidadComponent implements OnInit {
     const tipoSeleccionado = this.publicidadForm.get('tipoPublicidad')?.value;
     console.log('Tipo de publicidad cambiado a:', tipoSeleccionado);
     
-    if (this.selectedFile) {
-      const validation = this.validateFile(this.selectedFile);
-      if (!validation.valid) {
-        alert(`Archivo incompatible: ${validation.error}`);
+    if (this.selectedFile || this.selectedFiles.length > 0) {
+      const hasIncompatibleFiles = this.selectedFiles.some(file => {
+        const validation = this.validateFile(file);
+        return !validation.valid;
+      }) || (this.selectedFile && !this.validateFile(this.selectedFile).valid);
+
+      if (hasIncompatibleFiles) {
+        // ✅ CAMBIO: Reemplazar alert con snackBar
+        this.snackBar.open('Los archivos seleccionados no son compatibles con el nuevo tipo de publicidad', 'Cerrar', { duration: 5000 });
         this.eliminarMedia();
       }
     }
@@ -468,12 +554,19 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   eliminarMedia(): void {
-    this.mediaPreview = null;
-    this.selectedFile = null;
-    this.selectedFileName = null;
+    if (this.selectedMediaType === 'video') {
+      this.videoPreview = null;
+      this.selectedFile = null;
+      this.selectedFileName = null;
+      this.videoDuration = null;
+      this.existingVideoUrl = null;
+    } else if (this.selectedMediaType === 'image') {
+      this.selectedFiles = [];
+      this.filePreviews = [];
+      this.existingImages = [];
+    }
+    
     this.selectedMediaType = null;
-    this.videoDuration = null;
-    this.existingMediaUrl = null;
     this.publicidadForm.patchValue({ 
       mediaType: null,
       videoDuration: null 
@@ -489,7 +582,9 @@ export class CrearPublicidadComponent implements OnInit {
 
   private buildFormData(): FormData {
     const formData = new FormData();
-    const formValues = this.publicidadForm.value;
+    
+    // ✅ CORREGIDO: Obtener el valor del campo incluso si está deshabilitado
+    const formValues = this.publicidadForm.getRawValue(); // getRawValue() incluye campos deshabilitados
     
     formData.append('nombre', formValues.nombre || '');
     formData.append('descripcion', formValues.descripcion || '');
@@ -522,14 +617,27 @@ export class CrearPublicidadComponent implements OnInit {
       }
       
       formData.append('tiempo_visualizacion', tiempoEnSegundos.toString());
+      
+      // Agregar múltiples imágenes
+      this.selectedFiles.forEach((file, index) => {
+        formData.append(`media_files`, file, file.name);
+      });
+      
+      // En modo edición, indicar qué imágenes existentes mantener
+      if (this.isEditMode) {
+        const keepImageIds = this.existingImages.map(img => img.id);
+        formData.append('keep_image_ids', JSON.stringify(keepImageIds));
+      }
     }
     
-    if (formValues.mediaType === 'video' && formValues.videoDuration) {
-      formData.append('tiempo_visualizacion', formValues.videoDuration.toString());
-    }
-
-    if (this.selectedFile) {
-      formData.append('media_file', this.selectedFile, this.selectedFile.name);
+    if (formValues.mediaType === 'video') {
+      if (formValues.videoDuration) {
+        formData.append('tiempo_visualizacion', formValues.videoDuration.toString());
+      }
+      
+      if (this.selectedFile) {
+        formData.append('media_file', this.selectedFile, this.selectedFile.name);
+      }
     }
 
     return formData;
@@ -537,14 +645,37 @@ export class CrearPublicidadComponent implements OnInit {
 
   onSubmit(): void {
     if (this.publicidadForm.invalid) {
-      alert('Por favor, completa todos los campos requeridos.');
+      // ✅ CAMBIO: Reemplazar alert con snackBar
+      this.snackBar.open('Por favor, completa todos los campos requeridos.', 'Cerrar', { duration: 5000 });
       this.publicidadForm.markAllAsTouched();
       return;
     }
 
-    if (!this.isEditMode && !this.selectedFile) {
-      alert('Por favor, selecciona una imagen o video para la publicidad.');
-      return;
+    // ✅ NUEVA VALIDACIÓN: Para creación
+    if (!this.isEditMode) {
+      if (this.selectedMediaType === 'image' && this.selectedFiles.length === 0) {
+        this.snackBar.open('Por favor, selecciona al menos una imagen para la publicidad.', 'Cerrar', { duration: 5000 });
+        return;
+      }
+      if (this.selectedMediaType === 'video' && !this.selectedFile) {
+        this.snackBar.open('Por favor, selecciona un video para la publicidad.', 'Cerrar', { duration: 5000 });
+        return;
+      }
+    }
+
+    // ✅ NUEVA VALIDACIÓN: Para edición de banners
+    if (this.isEditMode) {
+      if (this.selectedMediaType === 'image') {
+        const totalImages = this.getTotalImagesCount();
+        if (totalImages === 0) {
+          this.snackBar.open('El banner debe tener al menos una imagen. No puedes eliminar todas las imágenes.', 'Cerrar', { duration: 5000 });
+          return;
+        }
+      }
+      if (this.selectedMediaType === 'video' && !this.selectedFile && !this.existingVideoUrl) {
+        this.snackBar.open('El video debe tener un archivo. No puedes eliminar el video sin reemplazarlo.', 'Cerrar', { duration: 5000 });
+        return;
+      }
     }
 
     this.isLoading = true;
@@ -600,11 +731,7 @@ export class CrearPublicidadComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(() => {
-      if (this.isEditMode) {
         this.navegarAListaPublicidad();
-      } else {
-        this.resetFormulario();
-      }
     });
   }
 
@@ -617,10 +744,12 @@ export class CrearPublicidadComponent implements OnInit {
     
     if (error.errors && error.errors.length > 0) {
       const errorMessages = error.errors.map(e => `${e.field}: ${e.message}`).join('\n');
-      alert(`Errores de validación:\n${errorMessages}`);
+      // ✅ CAMBIO: Reemplazar alert con snackBar
+      this.snackBar.open(`Errores de validación: ${errorMessages}`, 'Cerrar', { duration: 8000 });
     } else {
       const action = this.isEditMode ? 'actualizar' : 'crear';
-      alert(error.message || `Error al ${action} la publicidad.`);
+      // ✅ CAMBIO: Reemplazar alert con snackBar
+      this.snackBar.open(error.message || `Error al ${action} la publicidad.`, 'Cerrar', { duration: 5000 });
     }
   }
 
@@ -646,6 +775,21 @@ export class CrearPublicidadComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // ✅ NUEVO GETTER: Para validar media en edición
+  get hasValidMediaForEdit(): boolean {
+    if (!this.isEditMode) {
+      return this.hasMedia;
+    }
+    
+    if (this.selectedMediaType === 'image') {
+      return this.getTotalImagesCount() > 0;
+    }
+    if (this.selectedMediaType === 'video') {
+      return !!(this.selectedFile || this.existingVideoUrl);
+    }
+    return false;
+  }
+
   get isFileInputDisabled(): boolean {
     const tipoPublicidad = this.publicidadForm.get('tipoPublicidad')?.value;
     return !tipoPublicidad || tipoPublicidad === '';
@@ -660,8 +804,8 @@ export class CrearPublicidadComponent implements OnInit {
     
     if (tipoPublicidad === 'banner') {
       return this.isEditMode ? 
-        'Cambiar imagen (opcional - JPG, PNG, GIF - máx. 50MB)' :
-        'Seleccionar imagen (JPG, PNG, GIF - máx. 50MB)';
+        'Cambiar imágenes (opcional - JPG, PNG, GIF - máx. 50MB cada una)' :
+        'Seleccionar imágenes (JPG, PNG, GIF - máx. 50MB cada una)';
     }
     
     if (tipoPublicidad === 'video') {
@@ -703,7 +847,13 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   get hasMedia(): boolean {
-    return !!(this.selectedFile || this.existingMediaUrl);
+    if (this.selectedMediaType === 'image') {
+      return this.selectedFiles.length > 0 || this.existingImages.length > 0;
+    }
+    if (this.selectedMediaType === 'video') {
+      return !!(this.selectedFile || this.existingVideoUrl);
+    }
+    return false;
   }
 
   calculateTotalSeconds(): number {

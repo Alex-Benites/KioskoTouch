@@ -212,6 +212,14 @@ class PublicidadDetailSerializer(serializers.ModelSerializer):
         return None
 
 class PublicidadCreateSerializer(serializers.ModelSerializer):
+    # ✅ NUEVO: Para múltiples archivos de imagen
+    media_files = serializers.ListField(
+        child=serializers.FileField(),
+        write_only=True,
+        required=False,
+        allow_empty=True
+    )
+    # Mantener para video único
     media_file = serializers.FileField(write_only=True, required=False)
     media_type = serializers.CharField(write_only=True, required=False)
     videoDuration = serializers.IntegerField(write_only=True, required=False)
@@ -228,12 +236,33 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
             'fecha_fin_publicidad',
             'estado',
             'tiempo_visualizacion',
-            'media_file',
+            'media_file',      # Para video único
+            'media_files',     # ✅ NUEVO: Para múltiples imágenes
             'media_type',
             'videoDuration'
         ]
     
+    def validate_media_files(self, value):
+        """Validar múltiples archivos de imagen"""
+        if value:
+            if len(value) > 5:
+                raise serializers.ValidationError("Máximo 5 imágenes permitidas")
+            
+            for file in value:
+                # Validar tamaño
+                max_size = 50 * 1024 * 1024  # 50MB
+                if file.size > max_size:
+                    raise serializers.ValidationError(f"El archivo {file.name} no puede ser mayor a 50MB")
+                
+                # Validar tipo
+                allowed_image_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                if file.content_type not in allowed_image_types:
+                    raise serializers.ValidationError(f"Tipo de archivo no soportado: {file.name}")
+        
+        return value
+    
     def validate_media_file(self, value):
+        """Validar archivo único (video)"""
         if value:
             max_size = 50 * 1024 * 1024
             if value.size > max_size:
@@ -267,11 +296,15 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         media_file = validated_data.pop('media_file', None)
+        media_files = validated_data.pop('media_files', None)  # ✅ NUEVO
         media_type = validated_data.pop('media_type', None)
         video_duration = validated_data.pop('videoDuration', None)
         tiempo_visualizacion = validated_data.get('tiempo_visualizacion', 5)
         
         print(f"✅ Creando publicidad con tiempo_visualizacion: {tiempo_visualizacion}")
+        print(f"📁 Media type: {media_type}")
+        print(f"📁 Media files count: {len(media_files) if media_files else 0}")
+        print(f"📁 Single media file: {media_file.name if media_file else 'None'}")
         
         estado_id = validated_data.get('estado')
         if estado_id:
@@ -282,46 +315,111 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f"Estado con ID {estado_id} no existe")
         
         publicidad = AppkioskoPublicidades.objects.create(**validated_data)
-        print(f"✅ Publicidad creada ID {publicidad.id} con tiempo_visualizacion: {publicidad.tiempo_visualizacion}")
+        print(f"✅ Publicidad creada ID {publicidad.id}")
         
-        if media_file and media_type:
-            self._handle_media_file(publicidad, media_file, media_type, video_duration)
+        # ✅ NUEVO: Manejar múltiples archivos según el tipo
+        if media_type == 'image' and media_files:
+            self._handle_multiple_images(publicidad, media_files)
+        elif media_type == 'video' and media_file:
+            self._handle_single_video(publicidad, media_file, video_duration)
+        elif media_type == 'image' and media_file:
+            # Fallback: si viene como archivo único pero es imagen
+            self._handle_single_image(publicidad, media_file)
         
         return publicidad
     
-    def _handle_media_file(self, publicidad, media_file, media_type, video_duration):
-        media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
-        os.makedirs(media_dir, exist_ok=True)
-        
-        filename = f"publicidad_{publicidad.id}_{media_file.name}"
-        file_path = os.path.join('publicidad', filename)
-        saved_path = default_storage.save(file_path, media_file)
-        full_url = default_storage.url(saved_path)
-        
-        print(f"✅ Archivo guardado en: {full_url}")
-        
-        if media_type == 'video':
-            video = AppkioskoVideo.objects.create(
-                nombre=media_file.name,
-                ruta=full_url,
-                duracion=video_duration or 0,
-                publicidad=publicidad
-            )
-            print(f"✅ Video creado ID {video.id}: {video.ruta}")
-        elif media_type == 'image':
+    def _handle_multiple_images(self, publicidad, image_files):
+        """Manejar múltiples archivos de imagen"""
+        try:
+            print(f"📸 Procesando {len(image_files)} imágenes para publicidad ID {publicidad.id}")
+            
+            media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
+            os.makedirs(media_dir, exist_ok=True)
+            
+            for index, image_file in enumerate(image_files):
+                # Generar nombre único
+                filename = f"publicidad_{publicidad.id}_img_{index+1}_{image_file.name}"
+                file_path = os.path.join('publicidad', filename)
+                saved_path = default_storage.save(file_path, image_file)
+                full_url = default_storage.url(saved_path)
+                
+                # Crear registro en BD
+                imagen = AppkioskoImagen.objects.create(
+                    ruta=full_url,
+                    categoria_imagen='publicidad',
+                    entidad_relacionada_id=publicidad.id
+                )
+                print(f"✅ Imagen {index+1} creada ID {imagen.id}: {imagen.ruta}")
+            
+        except Exception as e:
+            print(f"❌ Error al procesar múltiples imágenes: {e}")
+            raise serializers.ValidationError(f"Error al procesar las imágenes: {str(e)}")
+    
+    def _handle_single_image(self, publicidad, image_file):
+        """Manejar una sola imagen (fallback)"""
+        try:
+            print(f"📸 Procesando imagen única para publicidad ID {publicidad.id}")
+            
+            media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
+            os.makedirs(media_dir, exist_ok=True)
+            
+            filename = f"publicidad_{publicidad.id}_{image_file.name}"
+            file_path = os.path.join('publicidad', filename)
+            saved_path = default_storage.save(file_path, image_file)
+            full_url = default_storage.url(saved_path)
+            
             imagen = AppkioskoImagen.objects.create(
                 ruta=full_url,
                 categoria_imagen='publicidad',
                 entidad_relacionada_id=publicidad.id
             )
             print(f"✅ Imagen creada ID {imagen.id}: {imagen.ruta}")
+            
+        except Exception as e:
+            print(f"❌ Error al procesar imagen única: {e}")
+            raise serializers.ValidationError(f"Error al procesar la imagen: {str(e)}")
+    
+    def _handle_single_video(self, publicidad, video_file, video_duration):
+        """Manejar un solo archivo de video"""
+        try:
+            print(f"🎥 Procesando video para publicidad ID {publicidad.id}")
+            
+            media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
+            os.makedirs(media_dir, exist_ok=True)
+            
+            filename = f"publicidad_{publicidad.id}_{video_file.name}"
+            file_path = os.path.join('publicidad', filename)
+            saved_path = default_storage.save(file_path, video_file)
+            full_url = default_storage.url(saved_path)
+            
+            video = AppkioskoVideo.objects.create(
+                nombre=video_file.name,
+                ruta=full_url,
+                duracion=video_duration or 0,
+                publicidad=publicidad
+            )
+            print(f"✅ Video creado ID {video.id}: {video.ruta}")
+            
+        except Exception as e:
+            print(f"❌ Error al procesar video: {e}")
+            raise serializers.ValidationError(f"Error al procesar el video: {str(e)}")
 
 class PublicidadUpdateSerializer(serializers.ModelSerializer):
+    # ✅ NUEVO: Para múltiples archivos de imagen
+    media_files = serializers.ListField(
+        child=serializers.FileField(),
+        write_only=True,
+        required=False,
+        allow_empty=True
+    )
     media_file = serializers.FileField(write_only=True, required=False)
     media_type = serializers.CharField(write_only=True, required=False)
     videoDuration = serializers.IntegerField(write_only=True, required=False)
     tiempo_visualizacion = serializers.IntegerField(required=False)
     estado = serializers.IntegerField(required=False)
+    
+    # ✅ NUEVO: Para manejar edición de imágenes
+    keep_image_ids = serializers.CharField(write_only=True, required=False)
     
     class Meta:
         model = AppkioskoPublicidades
@@ -334,9 +432,28 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
             'estado',
             'tiempo_visualizacion',
             'media_file',
+            'media_files',      # ✅ NUEVO
             'media_type',
-            'videoDuration'
+            'videoDuration',
+            'keep_image_ids'    # ✅ NUEVO
         ]
+    
+    def validate_media_files(self, value):
+        """Validar múltiples archivos de imagen"""
+        if value:
+            if len(value) > 5:
+                raise serializers.ValidationError("Máximo 5 imágenes permitidas")
+            
+            for file in value:
+                max_size = 50 * 1024 * 1024
+                if file.size > max_size:
+                    raise serializers.ValidationError(f"El archivo {file.name} no puede ser mayor a 50MB")
+                
+                allowed_image_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                if file.content_type not in allowed_image_types:
+                    raise serializers.ValidationError(f"Tipo de archivo no soportado: {file.name}")
+        
+        return value
     
     def validate_media_file(self, value):
         if value:
@@ -376,8 +493,14 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
         
         # Extraer campos específicos de media
         media_file = validated_data.pop('media_file', None)
+        media_files = validated_data.pop('media_files', None)  # ✅ NUEVO
         media_type = validated_data.pop('media_type', None)
         video_duration = validated_data.pop('videoDuration', None)
+        keep_image_ids = validated_data.pop('keep_image_ids', None)  # ✅ NUEVO
+        
+        print(f"📁 Media type: {media_type}")
+        print(f"📁 Media files count: {len(media_files) if media_files else 0}")
+        print(f"📁 Keep image IDs: {keep_image_ids}")
         
         # Procesar estado si viene como ID
         estado_id = validated_data.get('estado')
@@ -395,15 +518,115 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
             print(f"✅ Campo actualizado: {attr} = {value}")
         
         instance.save()
-        print(f"✅ Publicidad guardada con tiempo_visualizacion: {instance.tiempo_visualizacion}")
+        print(f"✅ Publicidad guardada")
         
-        # Manejar archivo de media si se proporciona uno nuevo
-        if media_file and media_type:
-            print(f"📁 Procesando nuevo archivo de media: {media_type}")
+        # ✅ NUEVO: Manejar archivos según el tipo
+        if media_type == 'image':
+            # Para imágenes, manejar múltiples archivos y keep_image_ids
+            self._handle_image_update(instance, media_files, keep_image_ids)
+        elif media_type == 'video' and media_file:
+            # Para video, reemplazar completamente
+            print(f"📁 Procesando nuevo video")
             self._remove_existing_media_and_files(instance)
-            self._handle_media_file(instance, media_file, media_type, video_duration)
+            self._handle_single_video(instance, media_file, video_duration)
         
         return instance
+    
+    def _handle_image_update(self, publicidad, new_image_files, keep_image_ids_str):
+        """Manejar actualización de imágenes"""
+        try:
+            print(f"🖼️ Actualizando imágenes para publicidad ID {publicidad.id}")
+            
+            # Parsear IDs de imágenes a mantener
+            keep_ids = []
+            if keep_image_ids_str:
+                import json
+                try:
+                    keep_ids = json.loads(keep_image_ids_str)
+                    print(f"📋 IDs de imágenes a mantener: {keep_ids}")
+                except:
+                    print(f"⚠️ Error parseando keep_image_ids: {keep_image_ids_str}")
+            
+            # Obtener imágenes existentes
+            existing_images = AppkioskoImagen.objects.filter(
+                categoria_imagen='publicidad',
+                entidad_relacionada_id=publicidad.id
+            )
+            
+            # Eliminar imágenes no seleccionadas
+            for imagen in existing_images:
+                if imagen.id not in keep_ids:
+                    print(f"🗑️ Eliminando imagen ID {imagen.id}: {imagen.ruta}")
+                    self._delete_physical_file(imagen.ruta)
+                    imagen.delete()
+                else:
+                    print(f"✅ Manteniendo imagen ID {imagen.id}")
+            
+            # Agregar nuevas imágenes
+            if new_image_files:
+                print(f"📸 Agregando {len(new_image_files)} nuevas imágenes")
+                
+                media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
+                os.makedirs(media_dir, exist_ok=True)
+                
+                # Obtener el número actual de imágenes para numeración
+                current_count = AppkioskoImagen.objects.filter(
+                    categoria_imagen='publicidad',
+                    entidad_relacionada_id=publicidad.id
+                ).count()
+                
+                for index, image_file in enumerate(new_image_files):
+                    filename = f"publicidad_{publicidad.id}_img_{current_count + index + 1}_{image_file.name}"
+                    file_path = os.path.join('publicidad', filename)
+                    saved_path = default_storage.save(file_path, image_file)
+                    full_url = default_storage.url(saved_path)
+                    
+                    imagen = AppkioskoImagen.objects.create(
+                        ruta=full_url,
+                        categoria_imagen='publicidad',
+                        entidad_relacionada_id=publicidad.id
+                    )
+                    print(f"✅ Nueva imagen creada ID {imagen.id}: {imagen.ruta}")
+            
+            # Verificar límite de 5 imágenes
+            total_images = AppkioskoImagen.objects.filter(
+                categoria_imagen='publicidad',
+                entidad_relacionada_id=publicidad.id
+            ).count()
+            
+            if total_images > 5:
+                raise serializers.ValidationError("No se pueden tener más de 5 imágenes")
+            
+            print(f"✅ Total de imágenes después de actualización: {total_images}")
+            
+        except Exception as e:
+            print(f"❌ Error en actualización de imágenes: {e}")
+            raise serializers.ValidationError(f"Error al actualizar las imágenes: {str(e)}")
+    
+    def _handle_single_video(self, publicidad, video_file, video_duration):
+        """Manejar un solo archivo de video (mismo que en create)"""
+        try:
+            print(f"🎥 Procesando video para publicidad ID {publicidad.id}")
+            
+            media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
+            os.makedirs(media_dir, exist_ok=True)
+            
+            filename = f"publicidad_{publicidad.id}_{video_file.name}"
+            file_path = os.path.join('publicidad', filename)
+            saved_path = default_storage.save(file_path, video_file)
+            full_url = default_storage.url(saved_path)
+            
+            video = AppkioskoVideo.objects.create(
+                nombre=video_file.name,
+                ruta=full_url,
+                duracion=video_duration or 0,
+                publicidad=publicidad
+            )
+            print(f"✅ Video creado ID {video.id}: {video.ruta}")
+            
+        except Exception as e:
+            print(f"❌ Error al procesar video: {e}")
+            raise serializers.ValidationError(f"Error al procesar el video: {str(e)}")
     
     def _remove_existing_media_and_files(self, publicidad):
         """Eliminar archivos de media existentes tanto de BD como del sistema de archivos"""
@@ -509,46 +732,8 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
                 
         except Exception as e:
             print(f"❌ Error al eliminar archivo físico {file_path}: {e}")
-    
-    def _handle_media_file(self, publicidad, media_file, media_type, video_duration):
-        """Manejar el guardado del nuevo archivo de media"""
-        try:
-            print(f"💾 Guardando nuevo archivo: {media_file.name} ({media_type})")
-            
-            # Crear directorio si no existe
-            media_dir = os.path.join(settings.MEDIA_ROOT, 'publicidad')
-            os.makedirs(media_dir, exist_ok=True)
-            
-            # Generar nombre único para el archivo
-            filename = f"publicidad_{publicidad.id}_{media_file.name}"
-            file_path = os.path.join('publicidad', filename)
-            saved_path = default_storage.save(file_path, media_file)
-            full_url = default_storage.url(saved_path)
-            
-            print(f"✅ Archivo guardado en: {full_url}")
-            
-            if media_type == 'video':
-                # Crear registro de video
-                video = AppkioskoVideo.objects.create(
-                    nombre=media_file.name,
-                    ruta=full_url,
-                    duracion=video_duration or 0,
-                    publicidad=publicidad
-                )
-                print(f"✅ Video creado ID {video.id}: {video.ruta}")
-                
-            elif media_type == 'image':
-                # Crear registro de imagen
-                imagen = AppkioskoImagen.objects.create(
-                    ruta=full_url,
-                    categoria_imagen='publicidad',
-                    entidad_relacionada_id=publicidad.id
-                )
-                print(f"✅ Imagen creada ID {imagen.id}: {imagen.ruta}")
-                
-        except Exception as e:
-            print(f"❌ Error al manejar archivo de media: {e}")
-            raise serializers.ValidationError(f"Error al procesar el archivo: {str(e)}")
+
+# ===== RESTO DEL ARCHIVO (PROMOCIONES) SIN CAMBIOS =====
 
 class PromocionProductoDetalleSerializer(serializers.ModelSerializer):
     producto = ProductoSerializer(read_only=True)

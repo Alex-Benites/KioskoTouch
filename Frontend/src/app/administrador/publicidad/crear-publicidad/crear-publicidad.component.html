@@ -35,12 +35,13 @@
           <mat-hint>{{ descripcion?.value?.length || 0 }}/500 caracteres</mat-hint>
         </mat-form-field>
 
+        <!-- ✅ CORREGIDO: Tipo de publicidad deshabilitado en edición -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Tipo de publicidad</mat-label>
           <mat-select formControlName="tipoPublicidad" (selectionChange)="onTipoPublicidadChange()">
             <mat-option value="">Seleccionar tipo</mat-option>
             @for (tipo of tiposPublicidad; track tipo.value) {
-              <mat-option [value]="tipo.value">
+              <mat-option [value]="tipo.value" [disabled]="isEditMode">
                 <div class="tipo-option">
                   <span class="tipo-label">{{ tipo.label }}</span>
                 </div>
@@ -50,7 +51,11 @@
           @if (tipoPublicidad?.hasError('required') && tipoPublicidad?.touched) {
             <mat-error>El tipo de publicidad es requerido</mat-error>
           }
-          <mat-hint>Primero selecciona el tipo de publicidad</mat-hint>
+          <mat-hint>
+            @if (!isEditMode) {
+              Primero selecciona el tipo de publicidad
+            }
+          </mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -112,7 +117,9 @@
           <div class="file-upload-header">
             <label class="file-upload-label">
               <span class="main-label">
-                Archivo de Media {{ isEditMode ? '(opcional)' : '*' }}
+                {{ selectedMediaType === 'image' ? 'Imágenes' : 'Video' }} 
+                {{ isEditMode ? '(opcional)' : '*' }}
+                {{ selectedMediaType === 'image' ? ' - Máximo 5' : '' }}
               </span>
               <span class="file-hint">{{ fileInputPlaceholder }}</span>
               @if (dimensionsInfo) {
@@ -129,25 +136,77 @@
             class="file-input"
             [accept]="acceptedFileTypes"
             [disabled]="isFileInputDisabled"
-            (change)="onFileSelected($event)"
+            [multiple]="selectedMediaType === 'image'"
+            (change)="onFilesSelected($event)"
             #fileInput>
           
           <button 
             type="button" 
             mat-stroked-button 
-            [disabled]="isFileInputDisabled"
+            [disabled]="isFileInputDisabled || (selectedMediaType === 'image' && getTotalImagesCount() >= 5)"
             (click)="fileInput.click()"
             class="file-select-btn">
-            <mat-icon>{{ isFileInputDisabled ? 'block' : 'upload' }}</mat-icon>
-            {{ isFileInputDisabled ? 'Selecciona tipo primero' : (isEditMode ? 'Cambiar archivo' : 'Seleccionar archivo') }}
+            <mat-icon>{{ isFileInputDisabled ? 'block' : 'add' }}</mat-icon>
+            {{ getFileButtonText() }}
           </button>
           
-          @if (mediaPreview) {
+          <!-- Preview para múltiples imágenes -->
+          @if (selectedMediaType === 'image' && (selectedFiles.length > 0 || existingImages.length > 0)) {
+            <div class="images-grid">
+              <!-- Imágenes existentes -->
+              @for (existingImage of existingImages; track existingImage.id) {
+                <div class="image-item existing">
+                  <div class="image-preview-container">
+                    <img [src]="existingImage.url" [alt]="existingImage.name" class="image-preview">
+                    <div class="image-overlay">
+                      <button type="button" mat-icon-button color="warn" 
+                              (click)="removeExistingImage(existingImage.id)"
+                              class="delete-btn">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="image-info">
+                    <span class="image-name">{{ existingImage.name }}</span>
+                    <span class="existing-badge">Existente</span>
+                  </div>
+                </div>
+              }
+              
+              <!-- Nuevas imágenes seleccionadas -->
+              @for (filePreview of filePreviews; track $index) {
+                <div class="image-item new">
+                  <div class="image-preview-container">
+                    <img [src]="filePreview.url" [alt]="filePreview.name" class="image-preview">
+                    <div class="image-overlay">
+                      <button type="button" mat-icon-button color="warn" 
+                              (click)="removeNewFile($index)"
+                              class="delete-btn">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="image-info">
+                    <span class="image-name">{{ filePreview.name }}</span>
+                    <span class="new-badge">Nuevo</span>
+                  </div>
+                </div>
+              }
+            </div>
+            
+            <div class="images-counter">
+              <mat-icon>photo_library</mat-icon>
+              <span>{{ getTotalImagesCount() }}/5 imágenes</span>
+            </div>
+          }
+          
+          <!-- Preview para video (igual que antes) -->
+          @if (selectedMediaType === 'video' && (selectedFile || existingVideoUrl)) {
             <div class="media-preview">
               <div class="preview-header">
                 <span class="file-name">
-                  {{ selectedFileName || 'Archivo existente' }}
-                  @if (!selectedFile && existingMediaUrl) {
+                  {{ selectedFile?.name || 'Video existente' }}
+                  @if (!selectedFile && existingVideoUrl) {
                     <span class="existing-file-badge">(archivo actual)</span>
                   }
                 </span>
@@ -156,34 +215,25 @@
                 </button>
               </div>
               
-              @if (selectedMediaType === 'image') {
-                <img 
-                  [src]="mediaPreview" 
-                  [alt]="'Vista previa de ' + selectedFileName" 
-                  class="image-preview"
-                  (load)="onImageLoaded($event)"
-                  (error)="onImageError($event)">
-              } @else if (selectedMediaType === 'video') {
-                <video 
-                  [src]="mediaPreview" 
-                  controls 
-                  class="video-preview" 
-                  preload="metadata"
-                  (loadedmetadata)="onVideoLoaded($event)"
-                  (error)="onVideoError($event)">
-                  Tu navegador no soporta el elemento video.
-                </video>
-                @if (shouldShowVideoDuration) {
-                  <div class="video-info">
-                    <mat-icon>schedule</mat-icon>
-                    <span>Duración: {{ formatDuration(videoDuration!) }}</span>
-                    @if (!selectedFile && existingMediaUrl) {
-                      <span class="duration-note">(duración del archivo actual)</span>
-                    } @else {
-                      <span class="duration-note">(se usará como tiempo de visualización)</span>
-                    }
-                  </div>
-                }
+              <video 
+                [src]="videoPreview" 
+                controls 
+                class="video-preview" 
+                preload="metadata"
+                (loadedmetadata)="onVideoLoaded($event)"
+                (error)="onVideoError($event)">
+                Tu navegador no soporta el elemento video.
+              </video>
+              @if (shouldShowVideoDuration) {
+                <div class="video-info">
+                  <mat-icon>schedule</mat-icon>
+                  <span>Duración: {{ formatDuration(videoDuration!) }}</span>
+                  @if (!selectedFile && existingVideoUrl) {
+                    <span class="duration-note">(duración del archivo actual)</span>
+                  } @else {
+                    <span class="duration-note">(se usará como tiempo de visualización)</span>
+                  }
+                </div>
               }
             </div>
           }
@@ -258,7 +308,7 @@
       <button 
         type="submit" 
         class="primary__button save-button" 
-        [disabled]="publicidadForm.invalid || isLoading || (!isEditMode && !selectedFile)"
+        [disabled]="publicidadForm.invalid || isLoading || (!isEditMode && !hasMedia)"
         aria-label="Guardar publicidad">
         @if (!isLoading) {
           <span>{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
