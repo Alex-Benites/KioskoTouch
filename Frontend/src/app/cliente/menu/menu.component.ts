@@ -401,7 +401,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   // ✅ Método auxiliar para verificar si es menú
-  private esMenu(item: ProductoConBadge | Menu): item is Menu {
+ esMenu(item: ProductoConBadge | Menu): item is Menu {
     return 'tipo_menu' in item;
   }
 
@@ -417,7 +417,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Cambia el método para obtener la imagen de menú o producto
+  // Cambia el método para obtener la imagen de menú o producto 
   obtenerImagenProducto(producto: ProductoConBadge | Menu): string {
     if ('imagenUrl' in producto && producto.imagenUrl) {
       return this.catalogoService.getFullImageUrl(producto.imagenUrl);

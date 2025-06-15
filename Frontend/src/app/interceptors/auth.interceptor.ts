@@ -11,11 +11,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.getAccessToken();
   
   let authReq = req;
-  // ✅ SOLO excluir /auth/login/ del token - logout SÍ necesita token
-  if (token && !req.url.includes('/auth/login/')) {
+  // ✅ NUEVO: Excluir rutas de cliente y login del token
+  const isClientRoute = req.url.includes('/cliente');
+  const isLoginRoute = req.url.includes('/auth/login/');
+  
+  if (token && !isLoginRoute && !isClientRoute) {
     authReq = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`  
       }
     });
   }
@@ -23,8 +26,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       
-      // 🔑 401 = No autenticado → Ir al LOGIN (pero NO para login)
-      if (error.status === 401 && !req.url.includes('/auth/login/')) {
+      // 🔑 401 = No autenticado → Ir al LOGIN (pero NO para login ni cliente)
+      if (error.status === 401 && !isLoginRoute && !isClientRoute) {
         
         console.warn('🔑 Token inválido o expirado. Redirigiendo al login...');
         
@@ -37,8 +40,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/administrador/login'], { replaceUrl: true });
       }
       
-      // 🚫 403 = Sin permisos → Ir a UNAUTHORIZED
-      if (error.status === 403) {
+      // 🚫 403 = Sin permisos → Ir a UNAUTHORIZED (solo para rutas de admin)
+      if (error.status === 403 && !isClientRoute) {
         console.warn('🚫 Acceso denegado. Sin permisos suficientes...');
         
         // ✅ 403 → UNAUTHORIZED (mantener sesión)

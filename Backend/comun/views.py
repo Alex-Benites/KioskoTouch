@@ -2,7 +2,7 @@ from rest_framework import generics
 from .models import AppkioskoEstados
 from .serializers import EstadosSerializer
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from .models import AppkioskoImagen
 import os
@@ -13,6 +13,7 @@ import time
 class EstadosListView(generics.ListAPIView):
     queryset = AppkioskoEstados.objects.all()
     serializer_class = EstadosSerializer
+    permission_classes = [AllowAny]  
 
 
 @api_view(['GET', 'POST'])
