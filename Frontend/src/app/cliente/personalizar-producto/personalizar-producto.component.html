@@ -9,9 +9,9 @@
     <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
 
-  <!-- ✅ MODIFICAR: Separar en dos secciones -->
+  <!-- ✅ Contenido principal -->
   <main class="personalizacion-content">
-    <!-- ✅ NUEVO: Contenedor centrado solo para el producto -->
+    <!-- ✅ Contenedor centrado solo para el producto -->
     <div class="producto-container-centrado">
       <div class="producto-detalle">
         <!-- Imagen del producto -->
@@ -30,14 +30,14 @@
           <!-- Descripción del producto -->
           <p class="producto-descripcion">{{ descripcionProducto }}</p>
 
-          <!-- ✅ MODIFICAR: Sección horizontal con precio a la izquierda y cantidad+botón a la derecha -->
+          <!-- Sección horizontal con precio a la izquierda y cantidad+botón a la derecha -->
           <div class="precio-cantidad-horizontal">
             <!-- Precio del producto -->
             <div class="precio-seccion">
               <span class="precio-unitario">${{ precioProducto.toFixed(2) }}</span>
             </div>
 
-            <!-- ✅ NUEVO: Contenedor para cantidad y botón añadir -->
+            <!-- Contenedor para cantidad (SIN botón añadir) -->
             <div class="cantidad-accion-container">
               <!-- Control de cantidad -->
               <div class="cantidad-control">
@@ -55,26 +55,71 @@
                 </button>
               </div>
 
-              <!-- Botón añadir -->
-              <button class="boton-anadir-principal" (click)="agregarAlCarrito()">
+              <!-- ✅ QUITAR: Botón añadir de aquí -->
+              <!-- <button class="boton-anadir-principal" (click)="agregarAlCarrito()">
                 Añadir
-              </button>
+              </button> -->
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ✅ SEPARAR: Sección de ingredientes SIN centrar -->
+    <!-- ✅ Sección de ingredientes con cuadrícula -->
     <div class="ingredientes-container">
       <div class="ingredientes-seccion">
         <h2 class="ingredientes-titulo">Ingredientes</h2>
         <div class="ingredientes-separador"></div>
 
-        <!-- Aquí irán los ingredientes después -->
-        <div class="ingredientes-placeholder">
-          <p>Los ingredientes se mostrarán aquí...</p>
+        <!-- ✅ MODIFICAR: Cuadrícula de ingredientes con precios -->
+        <div class="ingredientes-grid" *ngIf="ingredientesDisponibles.length > 0; else loadingIngredientes">
+          <div
+            class="ingrediente-card"
+            *ngFor="let ingrediente of ingredientesDisponibles"
+            [class.seleccionado]="ingrediente.seleccionado"
+            (click)="toggleIngrediente(ingrediente)">
+
+            <!-- Imagen del ingrediente -->
+            <div class="ingrediente-imagen">
+              <img [src]="ingrediente.imagenUrl" [alt]="ingrediente.nombre">
+            </div>
+
+            <!-- ✅ CAMBIAR la sección de información del ingrediente -->
+            <div class="ingrediente-info">
+              <h4 class="ingrediente-nombre">{{ ingrediente.nombre }}</h4>
+              <p class="ingrediente-precio">
+                <!-- ✅ NUEVO: Mostrar "Incluido" si es ingrediente original -->
+                <span *ngIf="ingrediente.esOriginal; else precioConCosto" class="precio-incluido">
+                  Incluido
+                </span>
+                <!-- ✅ CAMBIAR: Mostrar precio solo si NO es original -->
+                <ng-template #precioConCosto>
+                  <span class="precio-adicional">+${{ ingrediente.precio?.toFixed(2) }}</span>
+                </ng-template>
+              </p>
+            </div>
+
+            <!-- Check mark cuando está seleccionado -->
+            <div class="ingrediente-check" [class.visible]="ingrediente.seleccionado">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
+            </div>
+          </div>
         </div>
+
+        <!-- ✅ Loading placeholder -->
+        <ng-template #loadingIngredientes>
+          <div class="ingredientes-loading">
+            <div *ngIf="ingredientesDisponibles.length === 0 && productoDatos; else cargandoMensaje">
+              <p>Este producto no tiene ingredientes personalizables.</p>
+              <p class="text-muted">Puedes cambiar la cantidad y agregarlo a tu orden.</p>
+            </div>
+            <ng-template #cargandoMensaje>
+              <p>Cargando ingredientes disponibles...</p>
+            </ng-template>
+          </div>
+        </ng-template>
       </div>
     </div>
   </main>
@@ -83,13 +128,28 @@
   <footer class="order-summary-footer">
     <h2 class="order-summary-footer__title">Mi Orden</h2>
     <div class="order-summary-footer__content">
-      <p class="order-summary-footer__empty-message">Tu pedido está vacío</p>
+      <!-- ✅ USAR los signals del PedidoService (igual que en el menú) -->
+      <div *ngIf="pedidoService.cantidadItems() > 0; else carritoVacio">
+        <div class="order-summary-footer__details">
+          <span>Total: ${{ pedidoService.total().toFixed(2) }}</span>
+          <span>Productos: {{ pedidoService.cantidadItems() }}</span>
+        </div>
+      </div>
+
+      <!-- ✅ TEMPLATE cuando no hay productos -->
+      <ng-template #carritoVacio>
+        <p class="order-summary-footer__empty-message">Tu pedido está vacío</p>
+      </ng-template>
+
       <div class="order-summary-footer__actions">
         <button class="primary__button order-summary-footer__button" (click)="cancelarPedido()">
-          Cancelar pedido
+          Cancelar personalizacion
         </button>
-        <button class="primary__button order-summary-footer__button" (click)="continuar()">
-          Continuar
+        <!-- ✅ CAMBIAR: Reemplazar "Continuar" por "Añadir" -->
+        <button
+          class="primary__button order-summary-footer__button boton-anadir-footer"
+          (click)="agregarAlCarrito()">
+          Añadir
         </button>
       </div>
     </div>

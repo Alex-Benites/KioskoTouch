@@ -224,9 +224,9 @@ $font-family-base: 'Lato', sans-serif;
   // ✅ ELIMINAR: .precio-cantidad-seccion, .precio-total
 }
 
-// ✅ NUEVO: Sección de ingredientes
+// ✅ MODIFICAR: Sección de ingredientes
 .ingredientes-seccion {
-  margin-top: 0; // Ya no necesita margin-top porque está en otro contenedor
+  margin-top: 0;
 
   .ingredientes-titulo {
     font-size: 1.5rem;
@@ -242,23 +242,142 @@ $font-family-base: 'Lato', sans-serif;
     margin-bottom: 30px;
     border-radius: 2px;
   }
+}
 
-  .ingredientes-placeholder {
-    padding: 30px;
+// ✅ NUEVO: Cuadrícula de ingredientes
+.ingredientes-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  padding: 0;
+  max-width: 100%;
+}
+
+// ✅ NUEVO: Tarjeta de ingrediente
+.ingrediente-card {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  padding: 15px; // ✅ REDUCIR: de 20px a 15px para dar espacio al texto
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column; // ✅ CAMBIAR: a columna para apilar imagen + info
+  align-items: center;
+  justify-content: center;
+  border: 3px solid transparent;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  &.seleccionado {
+    border-color: $kiosko-red;
+    background-color: #fff5f4;
+  }
+
+  // ✅ MODIFICAR: Imagen del ingrediente (más pequeña)
+  .ingrediente-imagen {
+    width: 100%;
+    height: 60%; // ✅ CAMBIAR: ocupar 60% del espacio
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px; // ✅ NUEVO: espacio entre imagen e info
+
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+  }
+
+  // ✅ NUEVO: Información del ingrediente
+  .ingrediente-info {
+    width: 100%;
     text-align: center;
-    color: #999;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
 
-    p {
-      font-size: 16px;
+    .ingrediente-nombre {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
       margin: 0;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .ingrediente-precio {
+      font-size: 10px;
+      font-weight: 500;
+      margin: 0;
+      line-height: 1;
+
+      // ✅ NUEVO: Estilo para ingredientes incluidos (verde)
+      .precio-incluido {
+        color: #28a745; // Verde
+        font-weight: 600;
+        font-size: 10px;
+      }
+
+      // ✅ NUEVO: Estilo para ingredientes con costo adicional (rojo)
+      .precio-adicional {
+        color: $kiosko-red; // Rojo del kiosco
+        font-weight: 600;
+        font-size: 10px;
+      }
+    }
+  }
+
+  // ✅ MANTENER: Check mark en la esquina superior derecha
+  .ingrediente-check {
+    position: absolute;
+    top: 6px; // ✅ AJUSTAR: un poco más abajo
+    right: 6px;
+    width: 20px; // ✅ REDUCIR: de 24px a 20px
+    height: 20px;
+    background-color: $kiosko-red;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+
+    &.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    svg {
+      width: 12px; // ✅ REDUCIR: de 14px a 12px
+      height: 12px;
+      color: white;
     }
   }
 }
 
-// ✅ NUEVO: Contenedor de ingredientes SIN centrar
-.ingredientes-container {
-  width: 100%;
-  // NO tiene justify-content: center
+// ✅ NUEVO: Loading de ingredientes
+.ingredientes-loading {
+  padding: 40px;
+  text-align: center;
+  color: #999;
+
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
 }
 
 // ✅ Footer "Mi Orden" (mantener igual)
@@ -465,6 +584,99 @@ $font-family-base: 'Lato', sans-serif;
       gap: 8px;
       width: 100%;
       max-width: none;
+    }
+  }
+}
+
+// ✅ ACTUALIZAR: Responsive para la cuadrícula
+@media (max-width: 1200px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+
+  .ingrediente-card {
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 11px;
+      }
+
+      .ingrediente-precio {
+        font-size: 9px;
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+
+  .ingrediente-card {
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 10px;
+      }
+
+      .ingrediente-precio {
+        font-size: 8px;
+      }
+    }
+
+    .ingrediente-check {
+      width: 18px;
+      height: 18px;
+      top: 4px;
+      right: 4px;
+
+      svg {
+        width: 10px;
+        height: 10px;
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .ingrediente-card {
+    padding: 12px;
+
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 11px;
+      }
+
+      .ingrediente-precio {
+        font-size: 9px;
+      }
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .ingrediente-card {
+    padding: 10px;
+
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 10px;
+      }
+
+      .ingrediente-precio {
+        font-size: 8px;
+      }
     }
   }
 }

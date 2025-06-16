@@ -18,8 +18,13 @@ export const clienteRoutes: Routes = [
     loadComponent: () => import('./personalizar-producto/personalizar-producto.component').then(m => m.PersonalizarProductoComponent)
   },
   {
+    path: 'carrito',
+    loadComponent: () => import('./carrito-compra/carrito-compra.component').then(m => m.CarritoCompraComponent)
+  },
+  {
     path: 'pop-up',
-    loadComponent: () => import('./pop-up/pop-up.component').then(m => m.PopupComponent)  },
+    loadComponent: () => import('./pop-up/pop-up.component').then(m => m.PopupComponent)
+  },
   {
     path: '',
     redirectTo: 'home',

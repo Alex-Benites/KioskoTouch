@@ -13,6 +13,9 @@ export class CatalogoService {
 
   private apiUrl = `${environment.apiUrl}`;
 
+  // ✅ AGREGAR baseUrl property
+  private baseUrl = 'http://localhost:8000';
+
   constructor(private http: HttpClient) { }
 
   crearProducto(productoData: FormData): Observable<Producto> {
@@ -41,7 +44,7 @@ export class CatalogoService {
 
   getIngredientesPorCategoria(categoria: string, headers?: HttpHeaders): Observable<any[]> {
     console.log('🔍 [SERVICE] Solicitando ingredientes para categoría:', categoria);
-    
+
     // Crear headers por defecto si no se proporcionan
     if (!headers) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -62,19 +65,34 @@ export class CatalogoService {
         }),
         catchError((error: any) => { // ✅ TIPAR el parámetro
           console.error('❌ [SERVICE] Error al obtener ingredientes:', error);
-          
+
           if (error.status === 401) {
             console.error('🚫 [SERVICE] Error de autenticación');
           }
-          
+
           return throwError(() => error);
         })
       );
   }
 
+  // Actualizar el método getFullImageUrl:
   getFullImageUrl(imagenUrl: string | undefined): string {
-    if (!imagenUrl) return 'assets/images/no-image.png';
-    return `${environment.baseUrl}${imagenUrl}`;
+    if (!imagenUrl) {
+      return 'assets/placeholder-ingrediente.png';
+    }
+
+    // Si ya es una URL completa, devolverla tal como está
+    if (imagenUrl.startsWith('http://') || imagenUrl.startsWith('https://')) {
+      return imagenUrl;
+    }
+
+    // Si empieza con /media/, construir URL completa
+    if (imagenUrl.startsWith('/media/')) {
+      return `${this.baseUrl}${imagenUrl}`;
+    }
+
+    // Si no tiene prefijo, asumir que está en /media/
+    return `${this.baseUrl}/media/${imagenUrl}`;
   }
 
   obtenerProductoPorId(id: number): Observable<any> {
@@ -162,16 +180,16 @@ export class CatalogoService {
     if (!producto.aplica_tamanos || !producto.tamanos_detalle) {
       return producto.precio;
     }
-    
+
     const tamanoEncontrado = producto.tamanos_detalle.find(
       t => t.codigo_tamano.toLowerCase() === codigoTamano.toLowerCase()
     );
-    
+
     return tamanoEncontrado ? tamanoEncontrado.precio : producto.precio;
   }
 
   // === MÉTODOS PARA INGREDIENTES ===
-  
+
   // Obtener todos los ingredientes
   getIngredientes(): Observable<Ingrediente[]> {
     const url = `${this.apiUrl}/catalogo/ingredientes/`;
@@ -216,5 +234,41 @@ export class CatalogoService {
         error: () => observer.next(false)
       });
     });
+  }
+
+  // ✅ NUEVO: Obtener ingredientes específicos de un producto
+  // Actualizar el método getIngredientesPorProducto:
+
+  // ✅ MEJORAR: Obtener ingredientes específicos de un producto
+  getIngredientesPorProducto(productoId: number): Observable<any> {
+    const url = `${this.apiUrl}/catalogo/productos/${productoId}/ingredientes/`;
+
+    console.log('🔍 [SERVICE] Solicitando ingredientes para producto ID:', productoId);
+    console.log('🔗 [SERVICE] URL completa:', url);
+
+    return this.http.get<any>(url).pipe(
+      map((response: any) => {
+        console.log('✅ [SERVICE] Ingredientes del producto recibidos:', response);
+
+        // ✅ DEBUG: Mostrar algunas imágenes para verificar
+        if (response.ingredientes && response.ingredientes.length > 0) {
+          console.log('🖼️ [SERVICE] Primeras 3 imágenes de ingredientes:');
+          response.ingredientes.slice(0, 3).forEach((ing: any) => {
+            console.log(`   • ${ing.nombre}: ${ing.imagen_url}`);
+          });
+        }
+
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ [SERVICE] Error al obtener ingredientes del producto:', error);
+        console.error('🔍 [SERVICE] Detalles del error:', {
+          status: error.status,
+          message: error.message,
+          url: url
+        });
+        return throwError(() => error);
+      })
+    );
   }
 }

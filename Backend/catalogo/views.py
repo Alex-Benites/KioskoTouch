@@ -1,22 +1,22 @@
 from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated 
+from rest_framework.permissions import IsAuthenticated
 from .models import (
-    AppkioskoProductos, 
-    AppkioskoCategorias, 
-    AppkioskoIngredientes, 
+    AppkioskoProductos,
+    AppkioskoCategorias,
+    AppkioskoIngredientes,
     AppkioskoProductosIngredientes,
     AppkioskoMenus,
     AppkioskoMenuproductos,
     # Nuevos modelos
     AppkioskoTamanos,
     AppkioskoProductoTamanos,
-    
+
 )
 from .serializers import (
-    ProductoSerializer, 
-    CategoriaSerializer, 
+    ProductoSerializer,
+    CategoriaSerializer,
     MenuSerializer,
     # Nuevo serializer
     TamanoSerializer,
@@ -42,24 +42,24 @@ class ProductoListCreateAPIView(generics.ListCreateAPIView):
         """Crear producto - toda la lógica está en el serializer"""
         print(f"\n🚀 CREANDO PRODUCTO:")
         print(f"   Datos recibidos: {list(request.data.keys())}")
-        
+
         # El serializer maneja toda la lógica
         serializer = self.get_serializer(data=request.data)
-        
+
         if serializer.is_valid():
             producto = serializer.save()
-            
+
             # Contar ingredientes para respuesta
             ingredientes_count = AppkioskoProductosIngredientes.objects.filter(
                 producto=producto
             ).count()
-            
+
             print(f"🎉 PRODUCTO CREADO EXITOSAMENTE:")
             print(f"   ID: {producto.id}")
             print(f"   Nombre: {producto.nombre}")
             print(f"   Ingredientes: {ingredientes_count}")
             print("─" * 50)
-            
+
             return Response({
                 'mensaje': '🎉 Producto creado exitosamente',
                 'producto': serializer.data,
@@ -70,7 +70,7 @@ class ProductoListCreateAPIView(generics.ListCreateAPIView):
             for field, errors in serializer.errors.items():
                 print(f"   {field}: {errors}")
             print("─" * 50)
-            
+
             return Response({
                 'error': 'Datos inválidos',
                 'detalles': serializer.errors
@@ -118,14 +118,14 @@ def get_ingredientes_por_categoria(request, categoria):
     """Obtiene ingredientes filtrados por categoría de producto"""
     try:
         print(f"🥗 Buscando ingredientes para categoría: {categoria}")
-        
+
         # Solo ingredientes de la categoría específica (sin 'general' ya que no existe)
         ingredientes = AppkioskoIngredientes.objects.filter(
             categoria_producto=categoria  # ← QUITAR 'general' ya que solo tienes pizzas y hamburguesas
         ).order_by('nombre')
-        
+
         print(f"   Encontrados: {ingredientes.count()} ingredientes")
-        
+
         # Serializar los ingredientes con sus imágenes
         resultado = []
         for ingrediente in ingredientes:
@@ -138,7 +138,7 @@ def get_ingredientes_por_categoria(request, categoria):
                 imagen_url = imagen.ruta
             except AppkioskoImagen.DoesNotExist:
                 imagen_url = None
-            
+
             resultado.append({
                 'id': ingrediente.id,
                 'nombre': ingrediente.nombre,
@@ -146,9 +146,9 @@ def get_ingredientes_por_categoria(request, categoria):
                 'categoria_producto': ingrediente.categoria_producto,
                 'imagen_url': imagen_url
             })
-        
+
         return Response(resultado)
-        
+
     except Exception as e:
         print(f"❌ Error en get_ingredientes_por_categoria: {str(e)}")
         return Response({'error': str(e)}, status=400)
@@ -163,7 +163,7 @@ def get_producto_con_ingredientes(request, producto_id):
         producto = AppkioskoProductos.objects.select_related('categoria', 'estado').get(id=producto_id)
         serializer = ProductoSerializer(producto)
         return Response(serializer.data)
-        
+
     except AppkioskoProductos.DoesNotExist:
         return Response({'error': 'Producto no encontrado'}, status=404)
     except Exception as e:
@@ -175,14 +175,14 @@ def listar_productos_con_ingredientes(request):
     """Lista todos los productos con conteo de ingredientes"""
     try:
         productos = AppkioskoProductos.objects.select_related('categoria', 'estado').all()
-        
+
         resultado = []
         for producto in productos:
             # Contar ingredientes
             ingredientes_count = AppkioskoProductosIngredientes.objects.filter(
                 producto=producto
             ).count()
-            
+
             # Obtener imagen
             try:
                 imagen = AppkioskoImagen.objects.get(
@@ -192,7 +192,7 @@ def listar_productos_con_ingredientes(request):
                 imagen_url = imagen.ruta
             except AppkioskoImagen.DoesNotExist:
                 imagen_url = None
-            
+
             resultado.append({
                 'id': producto.id,
                 'nombre': producto.nombre,
@@ -204,9 +204,9 @@ def listar_productos_con_ingredientes(request):
                 'ingredientes_count': ingredientes_count,
                 'created_at': producto.created_at
             })
-        
+
         return Response(resultado)
-        
+
     except Exception as e:
         return Response({'error': str(e)}, status=400)
 
@@ -234,23 +234,23 @@ class ProductoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductoSerializer
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [AllowAny]
-    
+
     def update(self, request, *args, **kwargs):
         """Actualizar producto - maneja imagen e ingredientes"""
         print(f"\n🔄 ACTUALIZANDO PRODUCTO ID: {kwargs.get('pk')}")
         print(f"   Datos recibidos: {list(request.data.keys())}")
-        
+
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
-        
+
         if serializer.is_valid():
             producto = serializer.save()
-            
+
             print(f"✅ PRODUCTO ACTUALIZADO:")
             print(f"   ID: {producto.id}")
             print(f"   Nombre: {producto.nombre}")
             print("─" * 50)
-            
+
             return Response({
                 'mensaje': '✅ Producto actualizado exitosamente',
                 'producto': serializer.data
@@ -260,68 +260,68 @@ class ProductoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             for field, errors in serializer.errors.items():
                 print(f"   {field}: {errors}")
             print("─" * 50)
-            
+
             return Response({
                 'error': 'Datos inválidos',
                 'detalles': serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # 🆕 AGREGAR MÉTODO DE ELIMINACIÓN FÍSICA
     def destroy(self, request, *args, **kwargs):
         """Eliminación física - borrar completamente de la base de datos"""
         try:
             producto_id = kwargs.get('pk')
             print(f"\n🗑️ ELIMINACIÓN FÍSICA PRODUCTO ID: {producto_id}")
-            
+
             # Obtener el producto
             producto = self.get_object()
             producto_nombre = producto.nombre
             print(f"   Producto a eliminar: {producto_nombre}")
-            
+
             # 🔗 ELIMINAR RELACIONES CON INGREDIENTES PRIMERO
             relaciones_ingredientes = AppkioskoProductosIngredientes.objects.filter(producto=producto)
             count_relaciones = relaciones_ingredientes.count()
-            
+
             if count_relaciones > 0:
                 relaciones_ingredientes.delete()
                 print(f"   🗑️ Eliminadas {count_relaciones} relaciones de ingredientes")
-            
+
             # 🖼️ ELIMINAR IMAGEN FÍSICA si existe
             try:
                 imagen = AppkioskoImagen.objects.get(
                     categoria_imagen='productos',
                     entidad_relacionada_id=producto_id
                 )
-                
+
                 # Eliminar archivo físico del sistema
                 if imagen.ruta:
                     # Construir la ruta completa del archivo
                     ruta_completa = os.path.join(settings.MEDIA_ROOT, imagen.ruta.lstrip('/media/'))
-                    
+
                     if os.path.exists(ruta_completa):
                         os.remove(ruta_completa)
                         print(f"   🖼️ Archivo de imagen eliminado: {ruta_completa}")
                     else:
                         print(f"   ⚠️ Archivo de imagen no encontrado: {ruta_completa}")
-                
+
                 # Eliminar registro de imagen de la DB
                 imagen.delete()
                 print(f"   🗑️ Registro de imagen eliminado de la DB")
-                
+
             except AppkioskoImagen.DoesNotExist:
                 print(f"   ℹ️ No se encontró imagen asociada al producto")
             except Exception as e:
                 print(f"   ⚠️ Error eliminando imagen: {str(e)}")
-            
+
             # 🗑️ ELIMINAR EL PRODUCTO DE LA BASE DE DATOS
             producto.delete()
-            
+
             print(f"✅ PRODUCTO ELIMINADO COMPLETAMENTE:")
             print(f"   Nombre: {producto_nombre}")
             print(f"   ID: {producto_id}")
             print(f"   Relaciones eliminadas: {count_relaciones}")
             print("─" * 50)
-            
+
             # 📊 RESPUESTA EXITOSA
             return Response({
                 'success': True,
@@ -330,14 +330,14 @@ class ProductoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
                 'tipo_eliminacion': 'fisica',
                 'relaciones_eliminadas': count_relaciones
             }, status=status.HTTP_200_OK)
-            
+
         except AppkioskoProductos.DoesNotExist:
             print(f"❌ Producto ID {producto_id} no encontrado")
             return Response({
                 'success': False,
                 'error': 'Producto no encontrado'
             }, status=status.HTTP_404_NOT_FOUND)
-            
+
         except Exception as e:
             print(f"❌ Error eliminando producto: {str(e)}")
             return Response({
@@ -499,7 +499,7 @@ class IngredienteListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = IngredienteSerializer
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [AllowAny]
-    
+
     def get_queryset(self):
         """Filtrar por categoría si se especifica"""
         queryset = super().get_queryset()
@@ -512,18 +512,18 @@ class IngredienteListCreateAPIView(generics.ListCreateAPIView):
         """Crear ingrediente con imagen"""
         print(f"\n🚀 CREANDO INGREDIENTE:")
         print(f"   Datos recibidos: {list(request.data.keys())}")
-        
+
         serializer = self.get_serializer(data=request.data)
-        
+
         if serializer.is_valid():
             ingrediente = serializer.save()
-            
+
             print(f"🎉 INGREDIENTE CREADO EXITOSAMENTE:")
             print(f"   ID: {ingrediente.id}")
             print(f"   Nombre: {ingrediente.nombre}")
             print(f"   Categoría: {ingrediente.categoria_producto}")
             print("─" * 50)
-            
+
             return Response({
                 'mensaje': '🎉 Ingrediente creado exitosamente',
                 'ingrediente': serializer.data
@@ -533,7 +533,7 @@ class IngredienteListCreateAPIView(generics.ListCreateAPIView):
             for field, errors in serializer.errors.items():
                 print(f"   {field}: {errors}")
             print("─" * 50)
-            
+
             return Response({
                 'error': 'Datos inválidos',
                 'detalles': serializer.errors
@@ -545,23 +545,23 @@ class IngredienteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = IngredienteSerializer
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [AllowAny]
-    
+
     def update(self, request, *args, **kwargs):
         """Actualizar ingrediente"""
         print(f"\n🔄 ACTUALIZANDO INGREDIENTE ID: {kwargs.get('pk')}")
         print(f"   Datos recibidos: {list(request.data.keys())}")
-        
+
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
-        
+
         if serializer.is_valid():
             ingrediente = serializer.save()
-            
+
             print(f"✅ INGREDIENTE ACTUALIZADO:")
             print(f"   ID: {ingrediente.id}")
             print(f"   Nombre: {ingrediente.nombre}")
             print("─" * 50)
-            
+
             return Response({
                 'mensaje': '✅ Ingrediente actualizado exitosamente',
                 'ingrediente': serializer.data
@@ -571,27 +571,27 @@ class IngredienteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             for field, errors in serializer.errors.items():
                 print(f"   {field}: {errors}")
             print("─" * 50)
-            
+
             return Response({
                 'error': 'Datos inválidos',
                 'detalles': serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def destroy(self, request, *args, **kwargs):
         """Eliminación física del ingrediente"""
         try:
             ingrediente_id = kwargs.get('pk')
             print(f"\n🗑️ ELIMINACIÓN FÍSICA INGREDIENTE ID: {ingrediente_id}")
-            
+
             ingrediente = self.get_object()
             ingrediente_nombre = ingrediente.nombre
             print(f"   Ingrediente a eliminar: {ingrediente_nombre}")
-            
+
             # Verificar si está siendo usado en productos
             productos_usando = AppkioskoProductosIngredientes.objects.filter(
                 ingrediente=ingrediente
             ).count()
-            
+
             if productos_usando > 0:
                 print(f"   ⚠️ El ingrediente está siendo usado en {productos_usando} productos")
                 return Response({
@@ -599,50 +599,50 @@ class IngredienteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
                     'error': f'No se puede eliminar el ingrediente "{ingrediente_nombre}" porque está siendo usado en {productos_usando} productos.',
                     'productos_afectados': productos_usando
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
+
             # Eliminar imagen física si existe
             try:
                 imagen = AppkioskoImagen.objects.get(
                     categoria_imagen='ingredientes',
                     entidad_relacionada_id=ingrediente_id
                 )
-                
+
                 if imagen.ruta:
                     ruta_completa = os.path.join(settings.MEDIA_ROOT, imagen.ruta.lstrip('/media/'))
                     if os.path.exists(ruta_completa):
                         os.remove(ruta_completa)
                         print(f"   🖼️ Archivo de imagen eliminado: {ruta_completa}")
-                
+
                 imagen.delete()
                 print(f"   🗑️ Registro de imagen eliminado de la DB")
-                
+
             except AppkioskoImagen.DoesNotExist:
                 print(f"   ℹ️ No se encontró imagen asociada al ingrediente")
             except Exception as e:
                 print(f"   ⚠️ Error eliminando imagen: {str(e)}")
-            
+
             # Eliminar el ingrediente
             ingrediente.delete()
-            
+
             print(f"✅ INGREDIENTE ELIMINADO COMPLETAMENTE:")
             print(f"   Nombre: {ingrediente_nombre}")
             print(f"   ID: {ingrediente_id}")
             print("─" * 50)
-            
+
             return Response({
                 'success': True,
                 'mensaje': f'Ingrediente "{ingrediente_nombre}" eliminado completamente',
                 'id': int(ingrediente_id),
                 'tipo_eliminacion': 'fisica'
             }, status=status.HTTP_200_OK)
-            
+
         except AppkioskoIngredientes.DoesNotExist:
             print(f"❌ Ingrediente ID {ingrediente_id} no encontrado")
             return Response({
                 'success': False,
                 'error': 'Ingrediente no encontrado'
             }, status=status.HTTP_404_NOT_FOUND)
-            
+
         except Exception as e:
             print(f"❌ Error eliminando ingrediente: {str(e)}")
             return Response({
@@ -660,12 +660,12 @@ class IngredientesPorCategoriaView(generics.ListAPIView):
     def get_queryset(self):
         categoria = self.kwargs.get('categoria')
         print(f'🔍 [VIEW] Buscando ingredientes para categoría: {categoria}')
-        
+
         # Filtrar ingredientes por categoría
         queryset = AppkioskoIngredientes.objects.filter(
             categoria_producto=categoria
         ).order_by('-created_at')
-        
+
         print(f'✅ [VIEW] Ingredientes encontrados: {queryset.count()}')
         return queryset
 
@@ -673,22 +673,164 @@ class IngredientesPorCategoriaView(generics.ListAPIView):
         try:
             categoria = self.kwargs.get('categoria')
             print(f'📋 [VIEW] Solicitando ingredientes para: {categoria}')
-            
+
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
-            
+
             response_data = {
                 'ingredientes': serializer.data,
                 'total': len(serializer.data),
                 'categoria': categoria
             }
-            
+
             print(f'📤 [VIEW] Enviando {len(serializer.data)} ingredientes')
             return Response(response_data, status=status.HTTP_200_OK)
-            
+
         except Exception as e:
             print(f'❌ [VIEW] Error al obtener ingredientes por categoría: {str(e)}')
             return Response(
-                {'error': f'Error al obtener ingredientes: {str(e)}'}, 
+                {'error': f'Error al obtener ingredientes: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def obtener_ingredientes_por_producto(request, producto_id):
+    """Obtiene todos los ingredientes disponibles y marca cuáles tiene el producto"""
+    try:
+        # Verificar que el producto existe
+        try:
+            producto = AppkioskoProductos.objects.get(id=producto_id)
+        except AppkioskoProductos.DoesNotExist:
+            return Response({
+                'error': 'Producto no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        print(f"🍔 Producto encontrado: {producto.nombre} (ID: {producto.id})")
+
+        # Obtener categoría del producto
+        categoria_producto = producto.categoria.nombre.lower() if producto.categoria else None
+        print(f"📂 Categoría del producto: '{categoria_producto}'")
+
+        # Obtener ingredientes del producto desde la tabla de relaciones
+        ingredientes_producto_ids = set(
+            AppkioskoProductosIngredientes.objects.filter(producto_id=producto_id)
+            .values_list('ingrediente_id', flat=True)
+        )
+        print(f"🔍 IDs de ingredientes del producto: {list(ingredientes_producto_ids)}")
+
+        # Buscar ingredientes por categoría (manejando plural/singular)
+        ingredientes_categoria = AppkioskoIngredientes.objects.none()
+
+        if categoria_producto:
+            # Intentar búsqueda exacta
+            ingredientes_categoria = AppkioskoIngredientes.objects.filter(
+                categoria_producto__iexact=categoria_producto
+            )
+            print(f"🔎 Búsqueda exacta '{categoria_producto}': {ingredientes_categoria.count()} encontrados")
+
+            # Si no encuentra, probar con 's' al final (singular -> plural)
+            if not ingredientes_categoria.exists():
+                categoria_plural = categoria_producto + 's'
+                ingredientes_categoria = AppkioskoIngredientes.objects.filter(
+                    categoria_producto__iexact=categoria_plural
+                )
+                print(f"🔎 Búsqueda plural '{categoria_plural}': {ingredientes_categoria.count()} encontrados")
+
+        # Si no encuentra nada, usar todos los ingredientes
+        if not ingredientes_categoria.exists():
+            print("⚠️ No se encontraron ingredientes por categoría, usando todos")
+            ingredientes_categoria = AppkioskoIngredientes.objects.all().order_by('nombre')
+        else:
+            ingredientes_categoria = ingredientes_categoria.order_by('nombre')
+
+        print(f"🥗 Total ingredientes a mostrar: {ingredientes_categoria.count()}")
+
+        # ✅ Preparar respuesta con URLs de imagen correctas
+        ingredientes_disponibles = []
+
+        for ingrediente in ingredientes_categoria:
+            try:
+                esta_seleccionado = ingrediente.id in ingredientes_producto_ids
+
+                # ✅ CONSTRUIR URL de imagen correcta
+                imagen_url = None
+                if ingrediente.imagen:
+                    try:
+                        imagen_str = str(ingrediente.imagen)
+                        # ✅ CONSTRUIR URL completa
+                        if imagen_str.startswith('ingredientes/'):
+                            # Ya tiene el prefijo, solo agregar /media/
+                            imagen_url = f"/media/{imagen_str}"
+                        elif imagen_str.startswith('/media/'):
+                            # Ya tiene la ruta completa
+                            imagen_url = imagen_str
+                        else:
+                            # Asumir que es solo el nombre del archivo
+                            imagen_url = f"/media/ingredientes/{imagen_str}"
+
+                        print(f"🖼️ Ingrediente {ingrediente.nombre}: {imagen_str} → {imagen_url}")
+                    except (UnicodeDecodeError, UnicodeEncodeError):
+                        print(f"⚠️ Imagen del ingrediente {ingrediente.nombre} tiene problemas de codificación")
+                        imagen_url = None
+
+                # ✅ MANEJAR descripción y nombre de forma segura
+                descripcion_safe = ""
+                if ingrediente.descripcion:
+                    try:
+                        descripcion_safe = str(ingrediente.descripcion)
+                    except:
+                        descripcion_safe = "Sin descripción"
+
+                nombre_safe = ""
+                try:
+                    nombre_safe = str(ingrediente.nombre)
+                except:
+                    nombre_safe = f"Ingrediente {ingrediente.id}"
+
+                print(f"🧅 ID:{ingrediente.id} - {nombre_safe} - Seleccionado: {'✅' if esta_seleccionado else '❌'} - Imagen: {imagen_url}")
+
+                ingredientes_disponibles.append({
+                    'id': ingrediente.id,
+                    'nombre': nombre_safe,
+                    'descripcion': descripcion_safe,
+                    'precio': float(ingrediente.precio_adicional) if ingrediente.precio_adicional else 0.0,
+                    'categoria': str(ingrediente.categoria_producto) if ingrediente.categoria_producto else "",
+                    'imagen_url': imagen_url,  # ✅ URL completa construida
+                    'seleccionado': esta_seleccionado,
+                    'es_original': esta_seleccionado
+                })
+
+            except Exception as ingredient_error:
+                print(f"❌ Error procesando ingrediente {ingrediente.id}: {str(ingredient_error)}")
+                continue
+
+        # Resumen final
+        seleccionados_count = sum(1 for ing in ingredientes_disponibles if ing['seleccionado'])
+        print(f"🎉 RESUMEN FINAL:")
+        print(f"   • Ingredientes disponibles: {len(ingredientes_disponibles)}")
+        print(f"   • Ingredientes seleccionados: {seleccionados_count}")
+
+        # ✅ MOSTRAR URLs de imagen para debugging
+        print(f"🖼️ URLs de imagen construidas:")
+        for ing in ingredientes_disponibles[:3]:  # Solo mostrar las primeras 3
+            print(f"   • {ing['nombre']}: {ing['imagen_url']}")
+
+        return Response({
+            'producto': {
+                'id': producto.id,
+                'nombre': str(producto.nombre) if producto.nombre else "",
+                'categoria': categoria_producto or ""
+            },
+            'ingredientes': ingredientes_disponibles,
+            'total_ingredientes': len(ingredientes_disponibles),
+            'ingredientes_producto': len(ingredientes_producto_ids)
+        })
+
+    except Exception as e:
+        print(f"❌ ERROR GENERAL: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'error': f'Error interno del servidor'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

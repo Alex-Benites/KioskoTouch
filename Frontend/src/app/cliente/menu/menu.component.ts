@@ -121,8 +121,9 @@ export class MenuComponent implements OnInit, OnDestroy {
     return this.pedidoService.cantidadItems() || 0;
   }
 
-  get puedeontinuar(): boolean {
-    return this.cantidadItemsSeguro > 0;
+  // ✅ CAMBIAR: El botón siempre está habilitado para navegación
+  get puedeContinuar(): boolean {
+    return true; // ✅ SIEMPRE permitir navegación libre
   }
 
   // ✅ Acceso directo a signals del servicio
@@ -132,7 +133,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   cantidadItems = this.pedidoService.cantidadItems;
 
   // ✅ NUEVO: Propiedad para manejar productos seleccionados
-  productosSeleccionados = signal<Set<number>>(new Set());
+  productosSeleccionados = signal<number | null>(null); // Solo un producto seleccionado
 
   ngOnInit() {
     this.renderer.addClass(document.body, 'fondo-home');
@@ -405,19 +406,39 @@ export class MenuComponent implements OnInit, OnDestroy {
     return 'tipo_menu' in item;
   }
 
+  // ✅ CAMBIAR: Permitir navegación libre sin productos
   continuar(): void {
-    const total = this.totalPedidoSeguro;
-    const cantidad = this.cantidadItemsSeguro;
 
-    if (cantidad > 0) {
-      console.log(`🚀 Continuando con ${cantidad} productos, total: $${total}`);
-      this.router.navigate(['/cliente/carrito']);
+    // ✅ NUEVO: Navegación libre siempre permitida
+    if (this.esUltimaCategoria()) {
+      // Si es la última categoría y HAY productos, ir al carrito
+      if (this.cantidadItemsSeguro > 0) {
+        console.log('🛒 Hay productos, navegando al carrito');
+        this.router.navigate(['/cliente/carrito']);
+      } else {
+        // Si es la última categoría pero NO hay productos, volver al inicio
+        console.log('🏠 No hay productos, volviendo al menú principal (primera categoría)');
+        const primeraCategoria = this.categorias()[0];
+        if (primeraCategoria) {
+          this.seleccionarCategoria(primeraCategoria);
+        }
+      }
     } else {
-      console.log('⚠️ No hay productos en el pedido');
+      // Si no es la última, ir a la siguiente categoría (SIEMPRE)
+      const siguienteCategoria = this.obtenerSiguienteCategoria();
+
+      if (siguienteCategoria) {
+        console.log(`📂 Navegando a la siguiente categoría: ${siguienteCategoria.nombre}`);
+        this.seleccionarCategoria(siguienteCategoria);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        console.log('🛒 Fallback: navegando al carrito');
+        this.router.navigate(['/cliente/carrito']);
+      }
     }
   }
 
-  // Cambia el método para obtener la imagen de menú o producto 
+  // Cambia el método para obtener la imagen de menú o producto
   obtenerImagenProducto(producto: ProductoConBadge | Menu): string {
     if ('imagenUrl' in producto && producto.imagenUrl) {
       return this.catalogoService.getFullImageUrl(producto.imagenUrl);
@@ -439,17 +460,17 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   // ✅ SEPARAR: Método para solo seleccionar visualmente (sin agregar al carrito)
   seleccionarProducto(producto: ProductoConBadge | Menu): void {
-    const productosSeleccionadosActuales = new Set(this.productosSeleccionados());
+    const productoActualSeleccionado = this.productosSeleccionados();
 
-    if (productosSeleccionadosActuales.has(producto.id)) {
-      // Si ya está seleccionado, deseleccionarlo
-      productosSeleccionadosActuales.delete(producto.id);
+    if (productoActualSeleccionado === producto.id) {
+      // Si el mismo producto ya está seleccionado, deseleccionarlo
+      this.productosSeleccionados.set(null);
+      console.log(`🔄 Deseleccionado: ${producto.nombre}`);
     } else {
-      // Si no está seleccionado, seleccionarlo
-      productosSeleccionadosActuales.add(producto.id);
+      // Seleccionar el nuevo producto (automáticamente deselecciona el anterior)
+      this.productosSeleccionados.set(producto.id);
+      console.log(`✅ Seleccionado: ${producto.nombre} (deseleccionó el anterior)`);
     }
-
-    this.productosSeleccionados.set(productosSeleccionadosActuales);
   }
 
   // ✅ RESTAURAR: El método agregarProducto solo para agregar al carrito
@@ -548,22 +569,76 @@ export class MenuComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ NUEVO: Determinar si un producto permite personalización
+  // ✅ CAMBIAR: Permitir personalización para TODAS las categorías
   private debePermitirPersonalizacion(producto: ProductoConBadge | Menu): boolean {
-    // Si es menú, no permitir personalización
+    // Si es menú (combo), no permitir personalización
     if (this.esMenu(producto)) {
       return false;
     }
 
-    // Permitir personalización para ciertas categorías
-    const categoriasPersonalizables = ['Hamburguesa', 'Pizza', 'Ensalada'];
-    const categoriaActual = this.categorias().find(cat => cat.id === (producto as ProductoConBadge).categoria);
+    // ✅ NUEVO: Permitir personalización para TODOS los productos individuales
+    return true;
 
-    return categoriaActual ? categoriasPersonalizables.includes(categoriaActual.nombre) : false;
+    // ✅ ALTERNATIVA: Si quieres excluir algunas categorías específicas:
+    // const categoriasNoPersonalizables = ['Promociones', 'Ofertas Especiales'];
+    // const categoriaActual = this.categorias().find(cat => cat.id === (producto as ProductoConBadge).categoria);
+    // return categoriaActual ? !categoriasNoPersonalizables.includes(categoriaActual.nombre) : true;
   }
 
   // ✅ AGREGAR: Método para verificar si está seleccionado
   estaSeleccionado(producto: ProductoConBadge | Menu): boolean {
-    return this.productosSeleccionados().has(producto.id);
+    return this.productosSeleccionados() === producto.id;
   }
+
+  // ✅ NUEVO: Método para obtener la siguiente categoría en secuencia
+  private obtenerSiguienteCategoria(): Categoria | null {
+    const categoriasActuales = this.categorias();
+    const categoriaActualId = this.categoriaSeleccionada();
+
+    if (!categoriaActualId || categoriasActuales.length === 0) {
+      return null;
+    }
+
+    // Encontrar el índice de la categoría actual
+    const indiceActual = categoriasActuales.findIndex(cat => cat.id === categoriaActualId);
+
+    if (indiceActual === -1) {
+      return null;
+    }
+
+    // Si no es la última categoría, devolver la siguiente
+    if (indiceActual < categoriasActuales.length - 1) {
+      const siguienteCategoria = categoriasActuales[indiceActual + 1];
+      console.log(`📂 Siguiente categoría: ${siguienteCategoria.nombre}`);
+      return siguienteCategoria;
+    }
+
+    // Si es la última categoría, devolver null (para ir al carrito)
+    console.log('🏁 Es la última categoría, ir al carrito');
+    return null;
+  }
+
+  // ✅ NUEVO: Computed para saber si estamos en la última categoría
+  esUltimaCategoria = computed(() => {
+    const categoriasActuales = this.categorias();
+    const categoriaActualId = this.categoriaSeleccionada();
+
+    if (!categoriaActualId || categoriasActuales.length === 0) {
+      return false;
+    }
+
+    const indiceActual = categoriasActuales.findIndex(cat => cat.id === categoriaActualId);
+    return indiceActual === categoriasActuales.length - 1;
+  });
+
+  // ✅ MEJORAR: Texto del botón más inteligente
+  textoBotoncontinuar = computed(() => {
+    if (this.esUltimaCategoria()) {
+      // En la última categoría
+      return this.cantidadItemsSeguro > 0 ? 'Ir a Carrito' : 'Continuar';
+    } else {
+      // En categorías intermedias
+      return 'Continuar';
+    }
+  });
 }

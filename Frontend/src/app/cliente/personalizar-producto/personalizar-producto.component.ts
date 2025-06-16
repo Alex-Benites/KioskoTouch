@@ -2,6 +2,17 @@ import { Component, OnInit, inject, computed, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CatalogoService } from '../../services/catalogo.service';
+import { PedidoService } from '../../services/pedido.service'; // ✅ AGREGAR
+
+// ✅ Interface para ingredientes
+interface IngredientePersonalizacion {
+  id: number;
+  nombre: string;
+  imagenUrl: string;
+  seleccionado: boolean;
+  esOriginal: boolean; // Si venía originalmente en el producto
+  precio?: number; // Por si algunos ingredientes tienen costo adicional
+}
 
 @Component({
   selector: 'app-personalizar-producto',
@@ -12,14 +23,15 @@ import { CatalogoService } from '../../services/catalogo.service';
 })
 export class PersonalizarProductoComponent implements OnInit {
 
-  // ✅ Inject services
+  // ✅ AGREGAR inject del PedidoService existente
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private catalogoService = inject(CatalogoService);
+  public pedidoService = inject(PedidoService); // ✅ NUEVO: usar el servicio que ya funciona
 
   // ✅ Propiedades del componente con signals
   productoId: number | null = null;
-  cantidad = signal<number>(1); // ✅ CAMBIAR a signal
+  cantidad = signal<number>(1);
   nombreProducto: string = '';
   precioProducto: number = 0;
   categoriaProducto: number | null = null;
@@ -27,9 +39,51 @@ export class PersonalizarProductoComponent implements OnInit {
   imagenProducto: string = '';
   nombreCategoria: string = '';
 
-  // ✅ NUEVO: Computed para precio total
+  // ✅ Ingredientes disponibles
+  ingredientesDisponibles: IngredientePersonalizacion[] = [];
+
+  // ✅ Computed para precio total
   precioTotalCalculado = computed(() => {
-    return this.precioProducto * this.cantidad();
+    // Precio base del producto
+    const precioBase = this.precioProducto;
+
+    // Calcular costo de ingredientes adicionales (no originales pero seleccionados)
+    const costoIngredientesAdicionales = this.ingredientesDisponibles
+      .filter(ing => !ing.esOriginal && ing.seleccionado && ing.precio && ing.precio > 0)
+      .reduce((total, ing) => total + (ing.precio || 0), 0);
+
+    // Precio unitario con ingredientes adicionales
+    const precioUnitario = precioBase + costoIngredientesAdicionales;
+
+    // Total considerando la cantidad
+    const precioTotal = precioUnitario * this.cantidad();
+
+    console.log('💰 Cálculo de precio:', {
+      precioBase: precioBase,
+      costoIngredientesExtra: costoIngredientesAdicionales,
+      precioUnitario: precioUnitario,
+      cantidad: this.cantidad(),
+      precioTotal: precioTotal
+    });
+
+    return precioTotal;
+  });
+
+  // ✅ NUEVO: Computed para mostrar el precio unitario con ingredientes
+  precioUnitarioConIngredientes = computed(() => {
+    const precioBase = this.precioProducto;
+    const costoIngredientesAdicionales = this.ingredientesDisponibles
+      .filter(ing => !ing.esOriginal && ing.seleccionado && ing.precio && ing.precio > 0)
+      .reduce((total, ing) => total + (ing.precio || 0), 0);
+
+    return precioBase + costoIngredientesAdicionales;
+  });
+
+  // ✅ NUEVO: Computed para mostrar solo el costo de ingredientes adicionales
+  costoIngredientesAdicionales = computed(() => {
+    return this.ingredientesDisponibles
+      .filter(ing => !ing.esOriginal && ing.seleccionado && ing.precio && ing.precio > 0)
+      .reduce((total, ing) => total + (ing.precio || 0), 0);
   });
 
   // ✅ Datos adicionales del producto
@@ -43,7 +97,7 @@ export class PersonalizarProductoComponent implements OnInit {
     // ✅ Obtener parámetros adicionales desde queryParams
     this.route.queryParams.subscribe(params => {
       const cantidadInicial = Number(params['cantidad']) || 1;
-      this.cantidad.set(cantidadInicial); // ✅ USAR signal
+      this.cantidad.set(cantidadInicial);
       this.nombreProducto = params['nombre'] || '';
       this.precioProducto = Number(params['precio']) || 0;
       this.categoriaProducto = Number(params['categoria']) || null;
@@ -62,21 +116,7 @@ export class PersonalizarProductoComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Método para aumentar cantidad
-  aumentarCantidad(): void {
-    this.cantidad.update(value => value + 1);
-    console.log('➕ Cantidad aumentada a:', this.cantidad(), '- Total:', this.precioTotalCalculado());
-  }
-
-  // ✅ NUEVO: Método para disminuir cantidad
-  disminuirCantidad(): void {
-    if (this.cantidad() > 1) {
-      this.cantidad.update(value => value - 1);
-      console.log('➖ Cantidad disminuida a:', this.cantidad(), '- Total:', this.precioTotalCalculado());
-    }
-  }
-
-  // ✅ NUEVO: Cargar datos completos del producto y categoría
+  // ✅ MÉTODOS PRIVADOS
   private cargarDatosCompletos(): void {
     if (!this.productoId) {
       console.error('❌ No se proporcionó ID de producto');
@@ -84,10 +124,11 @@ export class PersonalizarProductoComponent implements OnInit {
       return;
     }
 
-    // Cargar datos del producto y categoría
+    // Cargar datos del producto, categoría e ingredientes
     Promise.all([
       this.cargarProductoDetalle(),
-      this.cargarCategoriaDetalle()
+      this.cargarCategoriaDetalle(),
+      this.cargarIngredientesDisponibles()
     ]).then(() => {
       console.log('✅ Datos completos cargados');
     }).catch(error => {
@@ -95,13 +136,10 @@ export class PersonalizarProductoComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Cargar detalles del producto desde la API
   private async cargarProductoDetalle(): Promise<void> {
     try {
-      // Si ya tenemos algunos datos básicos, usarlos mientras cargamos los completos
       this.establecerDatosIniciales();
 
-      // Intentar cargar datos completos del producto
       this.catalogoService.getProductos().subscribe({
         next: (productos: any[]) => {
           const producto = productos.find(p => p.id === this.productoId);
@@ -112,7 +150,6 @@ export class PersonalizarProductoComponent implements OnInit {
         },
         error: (error) => {
           console.error('❌ Error cargando producto:', error);
-          // Mantener datos básicos si falla la carga
         }
       });
     } catch (error) {
@@ -120,7 +157,6 @@ export class PersonalizarProductoComponent implements OnInit {
     }
   }
 
-  // ✅ NUEVO: Cargar detalles de la categoría
   private async cargarCategoriaDetalle(): Promise<void> {
     if (!this.categoriaProducto) return;
 
@@ -143,31 +179,96 @@ export class PersonalizarProductoComponent implements OnInit {
     }
   }
 
-  // ✅ NUEVO: Establecer datos iniciales desde queryParams
+  private async cargarIngredientesDisponibles(): Promise<void> {
+    try {
+      if (!this.productoId) {
+        console.error('❌ No hay ID de producto para cargar ingredientes');
+        return;
+      }
+
+      console.log('🥗 Cargando ingredientes reales para producto ID:', this.productoId);
+
+      this.catalogoService.getIngredientesPorProducto(this.productoId).subscribe({
+        next: (response) => {
+          console.log('✅ Respuesta completa de ingredientes:', response);
+
+          if (response.ingredientes && response.ingredientes.length > 0) {
+            this.ingredientesDisponibles = response.ingredientes.map((ing: any) => {
+              // ✅ Manejo de imagen del ingrediente
+              let imagenUrl = 'assets/placeholder-ingrediente.png';
+
+              if (ing.imagen_url) {
+                // Si la imagen viene con ruta completa, usarla directamente
+                if (ing.imagen_url.startsWith('http')) {
+                  imagenUrl = ing.imagen_url;
+                } else {
+                  // Si es una ruta relativa, construir la URL completa
+                  imagenUrl = this.catalogoService.getFullImageUrl(ing.imagen_url);
+                }
+              }
+
+              console.log(`🖼️ Ingrediente: ${ing.nombre} - Seleccionado: ${ing.seleccionado} - Precio: $${ing.precio}`);
+
+              return {
+                id: ing.id,
+                nombre: ing.nombre,
+                imagenUrl: imagenUrl,
+                seleccionado: ing.seleccionado, // ✅ Viene desde la base de datos
+                esOriginal: ing.es_original,     // ✅ Viene desde la base de datos
+                precio: Number(ing.precio) || 0  // ✅ Precio real de la base de datos
+              };
+            });
+
+            console.log(`🎉 ${this.ingredientesDisponibles.length} ingredientes reales cargados`);
+            console.log('📋 Ingredientes que tiene el producto:',
+              this.ingredientesDisponibles.filter(ing => ing.seleccionado).map(ing => ing.nombre)
+            );
+            console.log('🛒 Ingredientes disponibles para agregar:',
+              this.ingredientesDisponibles.filter(ing => !ing.seleccionado).map(ing => ing.nombre)
+            );
+          } else {
+            console.log('ℹ️ No se encontraron ingredientes para este producto');
+            this.ingredientesDisponibles = [];
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error cargando ingredientes del producto:', error);
+
+          // ✅ SOLO en caso de error de conexión, mostrar mensaje
+          console.log('⚠️ No se pudieron cargar los ingredientes desde la base de datos');
+          this.ingredientesDisponibles = [];
+
+          // ✅ OPCIONAL: Podrías mostrar un mensaje al usuario
+          // alert('Error cargando ingredientes. Por favor, recarga la página.');
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Error en cargarIngredientesDisponibles:', error);
+      this.ingredientesDisponibles = [];
+    }
+  }
+
   private establecerDatosIniciales(): void {
-    // Establecer imagen placeholder por ahora
     this.imagenProducto = 'assets/placeholder-producto.png';
 
-    // Si no tenemos descripción, poner placeholder
     if (!this.descripcionProducto) {
       this.descripcionProducto = 'Delicioso producto preparado con ingredientes frescos y de alta calidad.';
     }
   }
 
-  // ✅ NUEVO: Actualizar datos del producto con info completa
   private actualizarDatosProducto(producto: any): void {
     this.nombreProducto = producto.nombre || this.nombreProducto;
     this.descripcionProducto = producto.descripcion || this.descripcionProducto;
     this.precioProducto = Number(producto.precio) || this.precioProducto;
 
-    // Actualizar imagen del producto
     if (producto.imagenUrl || producto.imagen_url) {
       this.imagenProducto = this.catalogoService.getFullImageUrl(
         producto.imagenUrl || producto.imagen_url
       );
     }
 
-    console.log('✅ Datos del producto actualizados:', {
+    console.log('✅ Datos del producto actualizados desde la base de datos:', {
       nombre: this.nombreProducto,
       precio: this.precioProducto,
       descripcion: this.descripcionProducto,
@@ -177,44 +278,130 @@ export class PersonalizarProductoComponent implements OnInit {
     });
   }
 
-  // ✅ ACTUALIZAR: Método para agregar producto personalizado al carrito
+  private actualizarPrecioConIngredientes(): void {
+    // Calcular precio de ingredientes extra (reales desde la base de datos)
+    const ingredientesExtra = this.ingredientesDisponibles.filter(ing =>
+      ing.seleccionado && !ing.esOriginal && ing.precio && ing.precio > 0
+    );
+
+    const precioIngredientesExtra = ingredientesExtra.reduce((total, ing) => total + (ing.precio || 0), 0);
+
+    console.log('🍔 Ingredientes extra seleccionados:', ingredientesExtra.map(ing => `${ing.nombre} (+$${ing.precio})`));
+    console.log('💰 Costo adicional por ingredientes:', precioIngredientesExtra);
+
+    // ✅ FUTURO: Aquí podrías actualizar el precio total del producto
+    // this.precioProducto = this.precioProductoBase + precioIngredientesExtra;
+  }
+
+  private obtenerResumenPersonalizaciones(): any {
+    const ingredientesOriginales = this.ingredientesDisponibles.filter(ing => ing.esOriginal);
+    const ingredientesAgregados = this.ingredientesDisponibles.filter(ing => !ing.esOriginal && ing.seleccionado);
+    const ingredientesRemovidos = this.ingredientesDisponibles.filter(ing => ing.esOriginal && !ing.seleccionado);
+
+    return {
+      ingredientesOriginales: ingredientesOriginales.map(ing => ing.nombre),
+      ingredientesAgregados: ingredientesAgregados.map(ing => ({
+        nombre: ing.nombre,
+        precio: ing.precio
+      })),
+      ingredientesRemovidos: ingredientesRemovidos.map(ing => ing.nombre),
+      costoAdicional: ingredientesAgregados.reduce((total, ing) => total + (ing.precio || 0), 0)
+    };
+  }
+
+  // ✅ MÉTODOS PÚBLICOS
+  toggleIngrediente(ingrediente: IngredientePersonalizacion): void {
+    ingrediente.seleccionado = !ingrediente.seleccionado;
+
+    console.log(`🥬 ${ingrediente.seleccionado ? 'Agregando' : 'Removiendo'} ingrediente: ${ingrediente.nombre}`);
+
+    // ✅ NUEVO: Log del cambio de precio
+    if (!ingrediente.esOriginal && ingrediente.precio && ingrediente.precio > 0) {
+      const accion = ingrediente.seleccionado ? 'Sumado' : 'Restado';
+      console.log(`💰 ${accion} $${ingrediente.precio.toFixed(2)} por ${ingrediente.nombre}`);
+      console.log(`💰 Nuevo precio total: $${this.precioTotalCalculado().toFixed(2)}`);
+    }
+  }
+
+  aumentarCantidad(): void {
+    this.cantidad.update(value => value + 1);
+    console.log('➕ Cantidad aumentada a:', this.cantidad(), '- Total:', this.precioTotalCalculado());
+  }
+
+  disminuirCantidad(): void {
+    if (this.cantidad() > 1) {
+      this.cantidad.update(value => value - 1);
+      console.log('➖ Cantidad disminuida a:', this.cantidad(), '- Total:', this.precioTotalCalculado());
+    }
+  }
+
   agregarAlCarrito(): void {
     const cantidadFinal = this.cantidad();
-    const precioTotal = this.precioTotalCalculado();
+    const precioTotal = this.precioTotalCalculado(); // ✅ YA incluye ingredientes adicionales
+    const precioUnitarioConExtras = this.precioUnitarioConIngredientes();
+    const resumenPersonalizaciones = this.obtenerResumenPersonalizaciones();
 
     console.log('🛒 Agregando producto personalizado al carrito:', {
       id: this.productoId,
       nombre: this.nombreProducto,
       cantidad: cantidadFinal,
-      precioUnitario: this.precioProducto,
+      precioBaseUnitario: this.precioProducto,
+      precioUnitarioConExtras: precioUnitarioConExtras,
       precioTotal: precioTotal,
-      personalizaciones: 'aquí irían las personalizaciones'
+      costoIngredientesExtra: this.costoIngredientesAdicionales(),
+      personalizaciones: resumenPersonalizaciones
     });
 
-    // Mostrar confirmación temporal
-    alert(`✅ ${this.nombreProducto} agregado al carrito!\nCantidad: ${cantidadFinal}\nPrecio total: $${precioTotal.toFixed(2)}`);
+    // ✅ USAR el precio unitario que YA incluye los ingredientes adicionales
+    this.pedidoService.agregarProducto(
+      this.productoId!,
+      precioUnitarioConExtras, // ✅ PRECIO UNITARIO CON INGREDIENTES INCLUIDOS
+      cantidadFinal
+    );
 
-    // Aquí implementarías la lógica real para agregar al carrito
-    // this.pedidoService.agregarProductoPersonalizado(this.productoId, this.precioProducto, cantidadFinal, personalizaciones...)
+    // ✅ MANTENER: Log detallado para el usuario
+    let mensaje = `✅ ${this.nombreProducto} agregado al carrito!\n`;
+    mensaje += `Cantidad: ${cantidadFinal}\n`;
 
-    // Regresar al menú después de agregar
+    // ✅ MEJORAR: Mostrar desglose de precio
+    if (this.costoIngredientesAdicionales() > 0) {
+      mensaje += `Precio base: $${this.precioProducto.toFixed(2)}\n`;
+      mensaje += `Ingredientes extra: +$${this.costoIngredientesAdicionales().toFixed(2)}\n`;
+      mensaje += `Precio unitario: $${precioUnitarioConExtras.toFixed(2)}\n`;
+    }
+
+    mensaje += `Precio total: $${precioTotal.toFixed(2)}`;
+
+    if (resumenPersonalizaciones.ingredientesAgregados.length > 0) {
+      mensaje += `\n\n➕ Ingredientes agregados:`;
+      resumenPersonalizaciones.ingredientesAgregados.forEach((ing: any) => {
+        mensaje += `\n• ${ing.nombre} (+$${ing.precio.toFixed(2)})`;
+      });
+    }
+
+    if (resumenPersonalizaciones.ingredientesRemovidos.length > 0) {
+      mensaje += `\n\n➖ Ingredientes removidos:`;
+      resumenPersonalizaciones.ingredientesRemovidos.forEach((nombre: string) => {
+        mensaje += `\n• ${nombre}`;
+      });
+    }
+
+    alert(mensaje);
     this.volverAlMenu();
   }
 
-  // ✅ Método para volver al menú
   volverAlMenu(): void {
     this.router.navigate(['/cliente/menu']);
   }
 
-  // ✅ Método para cancelar pedido
   cancelarPedido(): void {
     console.log('🛒 Cancelando pedido...');
     this.volverAlMenu();
   }
 
-  // ✅ Método para continuar
   continuar(): void {
-    console.log('🚀 Continuando...');
+    console.log('🚀 Continuando con el pedido...');
+    // Aquí podrías navegar a la siguiente página del flujo de pedido
     this.volverAlMenu();
   }
 }
