@@ -13,8 +13,7 @@ export class CatalogoService {
 
   private apiUrl = `${environment.apiUrl}`;
 
-  // ✅ AGREGAR baseUrl property
-  private baseUrl = 'http://localhost:8000';
+  private baseUrl = environment.baseUrl; 
 
   constructor(private http: HttpClient) { }
 
@@ -42,32 +41,20 @@ export class CatalogoService {
     return this.http.get<any>(`${this.apiUrl}/catalogo/productos/${productoId}/imagen/`);
   }
 
-  getIngredientesPorCategoria(categoria: string, headers?: HttpHeaders): Observable<any[]> {
+  getIngredientesPorCategoria(categoria: string): Observable<any[]> {
     console.log('🔍 [SERVICE] Solicitando ingredientes para categoría:', categoria);
 
-    // Crear headers por defecto si no se proporcionan
-    if (!headers) {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      });
-    }
-
-    const options = { headers };
-
-    // ✅ CORREGIR LA URL - usar this.apiUrl en lugar de this.baseUrl
-    return this.http.get<any>(`${this.apiUrl}/catalogo/ingredientes/categoria/${categoria}/`, options)
+    return this.http.get<any>(`${this.apiUrl}/catalogo/ingredientes/categoria/${categoria}/`)
       .pipe(
-        map((response: any) => { // ✅ TIPAR el parámetro
+        map((response: any) => {
           console.log('✅ [SERVICE] Respuesta recibida:', response);
           return response.ingredientes || response || [];
         }),
-        catchError((error: any) => { // ✅ TIPAR el parámetro
+        catchError((error: any) => {
           console.error('❌ [SERVICE] Error al obtener ingredientes:', error);
 
           if (error.status === 401) {
-            console.error('🚫 [SERVICE] Error de autenticación');
+            console.error('🚫 [SERVICE] Error de autenticación - El interceptor redirigirá automáticamente');
           }
 
           return throwError(() => error);

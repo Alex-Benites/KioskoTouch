@@ -500,6 +500,11 @@ class IngredienteListCreateAPIView(generics.ListCreateAPIView):
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [AllowAny]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def get_queryset(self):
         """Filtrar por categoría si se especifica"""
         queryset = super().get_queryset()
@@ -545,6 +550,11 @@ class IngredienteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = IngredienteSerializer
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [AllowAny]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
     def update(self, request, *args, **kwargs):
         """Actualizar ingrediente"""
@@ -655,7 +665,12 @@ class IngredienteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 class IngredientesPorCategoriaView(generics.ListAPIView):
     """Vista para obtener ingredientes filtrados por categoría"""
     serializer_class = IngredienteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
     def get_queryset(self):
         categoria = self.kwargs.get('categoria')
