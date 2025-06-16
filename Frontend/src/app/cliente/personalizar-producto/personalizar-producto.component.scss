@@ -1,105 +1,470 @@
-.personalizar-container {
+// ✅ Variables y estilos base
+@use "sass:color";
+
+$kiosko-red: #C3453A;
+$kiosko-background-light: #f4f4f4;
+$kiosko-card-border-color: #D5D5D5;
+$font-family-base: 'Lato', sans-serif;
+
+* {
+  box-sizing: border-box;
+}
+
+.personalizar-page-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: $kiosko-background-light;
+  font-family: $font-family-base;
 }
 
-.personalizar-header {
-  background-color: #DD453A;
-  color: white;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  .back-button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 4px;
-
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
+// ✅ Banner promocional superior
+.promo-banner-top {
+  width: 100%;
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
   }
+}
 
-  h1 {
-    margin: 0;
-    font-size: 1.5rem;
+// ✅ Header con logo
+.menu-header {
+  padding: 15px 30px;
+  background-color: $kiosko-background-light;
+  text-align: left;
+  display: flex;
+  justify-content: left;
+
+  img {
+    max-width: 300px;
+    height: auto;
+    object-fit: contain;
+  }
+}
+
+// ✅ NUEVO: Contenido principal de personalización
+.personalizacion-content {
+  flex-grow: 1;
+  padding: 30px;
+  background-color: $kiosko-background-light;
+}
+
+// ✅ NUEVO: Contenedor centrado SOLO para el producto
+.producto-container-centrado {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+// ✅ NUEVO: Detalle del producto (imagen + info)
+.producto-detalle {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  max-width: 1200px; // ✅ Limitar ancho máximo
+}
+
+.producto-imagen {
+  flex: 0 0 350px;
+
+  .imagen-principal {
+    width: 100%;
+    height: 350px;
+    object-fit: contain;
+    border-radius: 12px;
   }
 }
 
 .producto-info {
-  background: white;
-  padding: 1.5rem;
-  margin: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  h2 {
-    margin: 0 0 1rem 0;
-    color: #333;
-  }
-
-  p {
-    margin: 0.5rem 0;
-    color: #666;
-  }
-}
-
-.personalizacion-opciones {
   flex: 1;
-  background: white;
-  margin: 0 1rem 1rem 1rem;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding-left: 20px;
 
-  h3 {
-    margin: 0 0 1rem 0;
-    color: #333;
+  .categoria-label {
+    color: #888;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 10px 0;
+    letter-spacing: 1px;
   }
-}
 
-.personalizar-footer {
-  background: white;
-  padding: 1rem;
-  border-top: 1px solid #eee;
+  .producto-nombre {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 20px 0;
+    line-height: 1.1;
+  }
 
-  .agregar-carrito-btn {
-    width: 100%;
-    background-color: #DD453A;
+  .producto-descripcion {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin: 0 0 30px 0;
+    max-width: 600px;
+  }
+
+  // ✅ MODIFICAR: Layout horizontal precio + cantidad/botón
+  .precio-cantidad-horizontal {
+    display: flex;
+    align-items: flex-start; // ✅ CAMBIAR: de 'center' a 'flex-start'
+    justify-content: space-between;
+    gap: 30px;
+  }
+
+  // ✅ MODIFICAR: Sección del precio (lado izquierdo)
+  .precio-seccion {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center; // ✅ NUEVO: centrar verticalmente el precio
+    height: 40px; // ✅ NUEVO: altura fija para alineación
+
+    .precio-unitario {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #333;
+    }
+  }
+
+  // ✅ MODIFICAR: Contenedor para cantidad y botón
+  .cantidad-accion-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    justify-content: flex-start; // ✅ NUEVO: alinear desde arriba
+  }
+
+  // ✅ MANTENER: Control de cantidad (pero ahora dentro del contenedor)
+  .cantidad-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 8px 15px;
+    width: fit-content;
+
+    .cantidad-btn {
+      width: 35px;
+      height: 35px;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.disminuir {
+        background-color: $kiosko-red;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background-color: color.scale($kiosko-red, $lightness: -10%);
+          transform: scale(1.05);
+        }
+
+        &:disabled {
+          background-color: #ccc;
+          cursor: not-allowed;
+          transform: none;
+        }
+      }
+
+      &.aumentar {
+        background-color: $kiosko-red;
+        color: white;
+
+        &:hover {
+          background-color: color.scale($kiosko-red, $lightness: -10%);
+          transform: scale(1.05);
+        }
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .cantidad-numero {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      min-width: 30px;
+      text-align: center;
+    }
+  }
+
+  // ✅ MANTENER: Botón añadir (pero ahora dentro del contenedor)
+  .boton-anadir-principal {
+    background-color: $kiosko-red;
     color: white;
     border: none;
-    padding: 1rem;
+    border-radius: 12px;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: fit-content;
+
+    &:hover {
+      background-color: color.scale($kiosko-red, $lightness: -10%);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  // ✅ ELIMINAR: .precio-cantidad-seccion, .precio-total
+}
+
+// ✅ NUEVO: Sección de ingredientes
+.ingredientes-seccion {
+  margin-top: 0; // Ya no necesita margin-top porque está en otro contenedor
+
+  .ingredientes-titulo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 15px 0;
+  }
+
+  .ingredientes-separador {
+    width: 120px;
+    height: 4px;
+    background: linear-gradient(90deg, $kiosko-red 0%, #888 100%);
+    margin-bottom: 30px;
+    border-radius: 2px;
+  }
+
+  .ingredientes-placeholder {
+    padding: 30px;
+    text-align: center;
+    color: #999;
+
+    p {
+      font-size: 16px;
+      margin: 0;
+    }
+  }
+}
+
+// ✅ NUEVO: Contenedor de ingredientes SIN centrar
+.ingredientes-container {
+  width: 100%;
+  // NO tiene justify-content: center
+}
+
+// ✅ Footer "Mi Orden" (mantener igual)
+.order-summary-footer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+
+  &__title {
+    background-color: $kiosko-red;
+    color: white;
+    font-size: clamp(1.5rem, 3vw, 1.8rem);
+    font-weight: 600;
+    margin: 0;
+    padding: 15px 30px;
+    text-align: center;
+  }
+
+  &__content {
+    background-color: $kiosko-background-light;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  &__empty-message, &__details {
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: #333333;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  &__details {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+    justify-content: center;
+  }
+
+  &__button {
+    flex: 1;
+    background-color: $kiosko-red;
     border-radius: 8px;
-    font-size: 1.1rem;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
 
-    &:hover {
-      background-color: #c23934;
+    &:hover:not(:disabled) {
+      background-color: color.scale($kiosko-red, $lightness: -7%);
     }
 
-    &:active {
-      transform: scale(0.98);
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
     }
   }
 }
 
-// Responsive
-@media (max-width: 768px) {
-  .personalizar-container {
-    margin: 0;
+.primary__button {
+  background-color: $kiosko-red;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: color.scale($kiosko-red, $lightness: -7%);
+    transform: translateY(-1px);
   }
 
-  .producto-info,
-  .personalizacion-opciones {
-    margin: 0.5rem;
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+// ✅ Responsive design
+@media (max-width: 1024px) {
+  .producto-detalle {
+    flex-direction: column;
+    gap: 30px;
+    align-items: center;
+  }
+
+  .producto-imagen {
+    flex: none;
+
+    .imagen-principal {
+      max-width: 400px;
+      height: 300px;
+    }
+  }
+
+  .producto-info {
+    padding-left: 0;
+    text-align: center;
+    max-width: 600px;
+
+    .producto-nombre {
+      font-size: 2.5rem;
+    }
+
+    .precio-cantidad-horizontal {
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .precio-seccion {
+      text-align: center;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .personalizacion-content {
+    padding: 20px;
+  }
+
+  .producto-detalle {
+    max-width: 100%;
+  }
+
+  .producto-imagen {
+    .imagen-principal {
+      max-width: 300px;
+      height: 250px;
+    }
+  }
+
+  .producto-info {
+    max-width: 100%;
+
+    .producto-nombre {
+      font-size: 2rem;
+    }
+
+    .precio-cantidad-horizontal {
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .precio-seccion {
+      .precio-unitario {
+        font-size: 1.8rem;
+      }
+    }
+
+    .cantidad-accion-container {
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .boton-anadir-principal {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-header {
+    img {
+      max-width: 120px;
+    }
+  }
+
+  .order-summary-footer {
+    &__title {
+      font-size: 1.2rem;
+      padding: 10px 12px;
+    }
+
+    &__content {
+      padding: 12px;
+      gap: 10px;
+    }
+
+    &__actions {
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: none;
+    }
   }
 }

@@ -1,30 +1,97 @@
-<div class="personalizar-container">
-  <!-- Header -->
-  <header class="personalizar-header">
-    <button class="back-button" (click)="volverAlMenu()">
-      ← Volver al Menú
-    </button>
-    <h1>Personalizar Producto</h1>
+<div class="personalizar-page-container">
+  <!-- ✅ Banner Promocional Superior -->
+  <div class="promo-banner-top">
+    <img src="assets/cliente/USUARIO_5.png" alt="Nuestra Nueva Hamburguesa">
+  </div>
+
+  <!-- ✅ Header con logo -->
+  <header class="menu-header">
+    <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
 
-  <!-- Información del producto -->
-  <section class="producto-info">
-    <h2>{{ nombreProducto }}</h2>
-    <p>Precio base: ${{ precioProducto.toFixed(2) }}</p>
-    <p>Cantidad: {{ cantidad }}</p>
-  </section>
+  <!-- ✅ MODIFICAR: Separar en dos secciones -->
+  <main class="personalizacion-content">
+    <!-- ✅ NUEVO: Contenedor centrado solo para el producto -->
+    <div class="producto-container-centrado">
+      <div class="producto-detalle">
+        <!-- Imagen del producto -->
+        <div class="producto-imagen">
+          <img [src]="imagenProducto" [alt]="nombreProducto" class="imagen-principal">
+        </div>
 
-  <!-- Aquí irían las opciones de personalización -->
-  <section class="personalizacion-opciones">
-    <h3>Opciones de Personalización</h3>
-    <!-- Ingredientes, tamaños, extras, etc. -->
-    <p>Aquí irían los ingredientes y opciones de personalización...</p>
-  </section>
+        <!-- Información del producto -->
+        <div class="producto-info">
+          <!-- Categoría del producto -->
+          <p class="categoria-label">MENÚ {{ nombreCategoria.toUpperCase() }}</p>
 
-  <!-- Footer con botón de agregar -->
-  <footer class="personalizar-footer">
-    <button class="agregar-carrito-btn" (click)="agregarAlCarrito()">
-      Agregar al Carrito - ${{ (precioProducto * cantidad).toFixed(2) }}
-    </button>
+          <!-- Nombre del producto -->
+          <h1 class="producto-nombre">{{ nombreProducto }}</h1>
+
+          <!-- Descripción del producto -->
+          <p class="producto-descripcion">{{ descripcionProducto }}</p>
+
+          <!-- ✅ MODIFICAR: Sección horizontal con precio a la izquierda y cantidad+botón a la derecha -->
+          <div class="precio-cantidad-horizontal">
+            <!-- Precio del producto -->
+            <div class="precio-seccion">
+              <span class="precio-unitario">${{ precioProducto.toFixed(2) }}</span>
+            </div>
+
+            <!-- ✅ NUEVO: Contenedor para cantidad y botón añadir -->
+            <div class="cantidad-accion-container">
+              <!-- Control de cantidad -->
+              <div class="cantidad-control">
+                <button
+                  class="cantidad-btn disminuir"
+                  (click)="disminuirCantidad()"
+                  [disabled]="cantidad() <= 1">
+                  -
+                </button>
+                <span class="cantidad-numero">{{ cantidad() }}</span>
+                <button
+                  class="cantidad-btn aumentar"
+                  (click)="aumentarCantidad()">
+                  +
+                </button>
+              </div>
+
+              <!-- Botón añadir -->
+              <button class="boton-anadir-principal" (click)="agregarAlCarrito()">
+                Añadir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ SEPARAR: Sección de ingredientes SIN centrar -->
+    <div class="ingredientes-container">
+      <div class="ingredientes-seccion">
+        <h2 class="ingredientes-titulo">Ingredientes</h2>
+        <div class="ingredientes-separador"></div>
+
+        <!-- Aquí irán los ingredientes después -->
+        <div class="ingredientes-placeholder">
+          <p>Los ingredientes se mostrarán aquí...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ✅ Footer "Mi Orden" -->
+  <footer class="order-summary-footer">
+    <h2 class="order-summary-footer__title">Mi Orden</h2>
+    <div class="order-summary-footer__content">
+      <p class="order-summary-footer__empty-message">Tu pedido está vacío</p>
+      <div class="order-summary-footer__actions">
+        <button class="primary__button order-summary-footer__button" (click)="cancelarPedido()">
+          Cancelar pedido
+        </button>
+        <button class="primary__button order-summary-footer__button" (click)="continuar()">
+          Continuar
+        </button>
+      </div>
+    </div>
   </footer>
 </div>
