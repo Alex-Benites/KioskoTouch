@@ -346,7 +346,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     return producto.precio;
   }
 
-  // ✅ Método para obtener texto de precio de PRODUCTOS
+  // ✅ MEJORAR: Método obtenerTextoPrecio para mejor manejo de tamaños
   obtenerTextoPrecio(item: ProductoConBadge | Menu): string {
     // Si es un menú, devolver precio simple
     if (this.esMenu(item)) {
@@ -355,19 +355,27 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     // Si es producto, usar lógica de tamaños
     const producto = item as ProductoConBadge;
+    
+    // ✅ DEBUG: Log para verificar datos de tamaños
+    if (producto.aplica_tamanos) {
+      this.debugTamanos(producto);
+    }
+
     if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
-      const precioMin = Math.min(...producto.tamanos_detalle.map(t => t.precio));
-      const precioMax = Math.max(...producto.tamanos_detalle.map(t => t.precio));
+      const precios = producto.tamanos_detalle.map(t => t.precio);
+      const precioMin = Math.min(...precios);
+      const precioMax = Math.max(...precios);
 
       if (precioMin === precioMax) {
         return `$${precioMin.toFixed(2)}`;
       } else {
-        return `Desde $${precioMin.toFixed(2)}`;
+        return `$${precioMin.toFixed(2)} - $${precioMax.toFixed(2)}`;
       }
     }
 
     return `$${this.obtenerPrecioMostrar(producto).toFixed(2)}`;
   }
+
 
   // ✅ NUEVO: Método para obtener texto de precio de MENÚS
   obtenerTextoPrecioMenu(menu: Menu): string {
@@ -474,21 +482,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   // ✅ RESTAURAR: El método agregarProducto solo para agregar al carrito
-  agregarProducto(producto: ProductoConBadge | Menu, event?: Event): void {
-    // Prevenir que el clic se propague al contenedor padre
-    if (event) {
-      event.stopPropagation();
-    }
-
-    // ✅ NUEVO: Mostrar popup antes de agregar al carrito
-    this.mostrarPopupProducto(producto);
-  }
-
-  // ✅ NUEVO: Método para mostrar popup de producto
   private mostrarPopupProducto(producto: ProductoConBadge | Menu): void {
     const imagenUrl = this.obtenerImagenProducto(producto);
-
-    // Determinar si debe permitir personalización (solo para ciertos productos)
     const permitirPersonalizacion = this.debePermitirPersonalizacion(producto);
 
     const dialogData: ProductPopupData = {
@@ -498,7 +493,16 @@ export class MenuComponent implements OnInit, OnDestroy {
         precio: producto.precio,
         imagenUrl: imagenUrl,
         categoria: (producto as ProductoConBadge).categoria,
-        descripcion: (producto as ProductoConBadge).descripcion
+        descripcion: (producto as ProductoConBadge).descripcion,
+        
+        // ✅ CORREGIR: Usar campos correctos de ProductoTamano
+        aplica_tamanos: (producto as ProductoConBadge).aplica_tamanos,
+        tamanos_detalle: (producto as ProductoConBadge).tamanos_detalle?.map(t => ({
+          id: t.id,
+          tamano_nombre: t.nombre_tamano,        // ✅ USAR: tamano_nombre (ya existe)
+          codigo_tamano: t.codigo_tamano,       // ✅ USAR: codigo_tamano (ya existe)
+          precio: t.precio
+        }))
       },
       imagenUrl: imagenUrl,
       permitirPersonalizacion: permitirPersonalizacion
@@ -519,15 +523,15 @@ export class MenuComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ NUEVO: Procesar resultado del popup
+  // ✅ MODIFICAR: Procesar resultado del popup con información de tamaño
   private procesarResultadoPopup(producto: ProductoConBadge | Menu, resultado: ProductPopupResult): void {
     switch (resultado.accion) {
       case 'agregar':
-        this.agregarProductoAlCarrito(producto, resultado.cantidad);
+        this.agregarProductoAlCarrito(producto, resultado.cantidad, resultado.tamanoSeleccionado);
         break;
 
       case 'personalizar':
-        this.irAPersonalizar(producto, resultado.cantidad);
+        this.irAPersonalizar(producto, resultado.cantidad, resultado.tamanoSeleccionado);
         break;
 
       case 'cancelar':
@@ -536,38 +540,61 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ NUEVO: Agregar producto al carrito con cantidad específica
-  private agregarProductoAlCarrito(producto: ProductoConBadge | Menu, cantidad: number): void {
+
+  // ✅ MODIFICAR: Agregar producto al carrito con tamaño seleccionado
+  private agregarProductoAlCarrito(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
     if (this.esMenu(producto)) {
       this.pedidoService.agregarProducto(producto.id, producto.precio, cantidad);
+      console.log(`🍽️ Menú agregado: ${producto.nombre} x${cantidad} - $${(producto.precio * cantidad).toFixed(2)}`);
     } else {
-      if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 1) {
-        // Para productos con múltiples tamaños, usar el primer tamaño por ahora
-        // Podrías expandir esto para permitir seleccionar tamaño en el popup
-        const tamanoDefault = producto.tamanos_detalle[0];
-        this.pedidoService.agregarProducto(producto.id, tamanoDefault.precio, cantidad);
-      } else {
-        const precio = this.calcularPrecioFinal(producto);
-        this.pedidoService.agregarProducto(producto.id, precio, cantidad);
+      let precio = producto.precio;
+      let descripcionExtra = '';
+
+      if (tamanoSeleccionado) {
+        precio = tamanoSeleccionado.precio;
+        descripcionExtra = ` (${tamanoSeleccionado.codigo})`;
+        console.log(`📏 Producto con tamaño seleccionado: ${tamanoSeleccionado.codigo} - $${precio}`);
       }
+      else if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
+        const primerTamano = producto.tamanos_detalle[0];
+        precio = primerTamano.precio;
+        descripcionExtra = ` (${primerTamano.codigo_tamano})`;    // ✅ USAR: codigo_tamano
+        console.log(`📏 Usando primer tamaño por defecto: ${primerTamano.codigo_tamano} - $${precio}`);
+      }
+      else {
+        precio = this.calcularPrecioFinal(producto);
+        console.log(`💰 Usando precio base: $${precio}`);
+      }
+
+      this.pedidoService.agregarProducto(producto.id, precio, cantidad, descripcionExtra);
+      console.log(`🛒 Producto agregado: ${producto.nombre}${descripcionExtra} x${cantidad} - $${(precio * cantidad).toFixed(2)}`);
     }
   }
 
-  // ✅ NUEVO: Ir a personalizar producto
-  private irAPersonalizar(producto: ProductoConBadge | Menu, cantidad: number): void {
+  // ✅ MODIFICAR: Ir a personalizar con información de tamaño
+  private irAPersonalizar(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
     console.log(`🎨 Navegando a personalizar ${producto.nombre} con cantidad ${cantidad}`);
 
-    // Navegar al componente personalizar-producto
+    const queryParams: any = {
+      cantidad: cantidad,
+      nombre: producto.nombre,
+      precio: producto.precio,
+      categoria: (producto as ProductoConBadge).categoria || null
+    };
+
+    if (tamanoSeleccionado) {
+      queryParams.tamano_id = tamanoSeleccionado.id;
+      queryParams.tamano_codigo = tamanoSeleccionado.codigo;    // ✅ CAMBIAR: codigo_tamano → codigo
+      queryParams.tamano_precio = tamanoSeleccionado.precio;
+      console.log(`📏 Personalizando con tamaño: ${tamanoSeleccionado.codigo} - $${tamanoSeleccionado.precio}`);
+    }
+
     this.router.navigate(['/cliente/personalizar-producto', producto.id], {
-      queryParams: {
-        cantidad: cantidad,
-        // Datos adicionales útiles para la personalización
-        nombre: producto.nombre,
-        precio: producto.precio,
-        categoria: (producto as ProductoConBadge).categoria || null
-      }
+      queryParams: queryParams
     });
   }
+
+
 
   // ✅ CAMBIAR: Permitir personalización para TODAS las categorías
   private debePermitirPersonalizacion(producto: ProductoConBadge | Menu): boolean {
@@ -641,4 +668,32 @@ export class MenuComponent implements OnInit, OnDestroy {
       return 'Continuar';
     }
   });
+
+
+  // ✅ AGREGAR: Método para obtener información de debug de tamaños
+  private debugTamanos(producto: ProductoConBadge): void {
+    console.log('🔍 DEBUG TAMAÑOS:', {
+      nombre: producto.nombre,
+      aplica_tamanos: producto.aplica_tamanos,
+      tiene_tamanos_detalle: !!(producto.tamanos_detalle && producto.tamanos_detalle.length > 0),
+      tamanos_count: producto.tamanos_detalle?.length || 0,
+      tamanos: producto.tamanos_detalle?.map(t => ({
+        codigo: t.codigo_tamano,        // ✅ USAR: codigo_tamano
+        nombre: t.nombre_tamano,        // ✅ USAR: tamano_nombre
+        precio: t.precio
+      }))
+    });
+  }
+
+
+  agregarProducto(producto: ProductoConBadge | Menu, event?: Event): void {
+    // Prevenir que el clic se propague al contenedor padre
+    if (event) {
+      event.stopPropagation();
+    }
+
+    // ✅ NUEVO: Mostrar popup antes de agregar al carrito
+    this.mostrarPopupProducto(producto);
+  }
+    
 }

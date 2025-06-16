@@ -111,21 +111,44 @@ export class PedidoService {
     }));
   }
 
-  // ✅ Método para agregar producto
-  agregarProducto(producto_id: number, precio: number, cantidad: number = 1): void {
-    const detalle: DetallePedido = {
-      producto_id,
-      cantidad,
-      precio_unitario: precio,
-      subtotal: precio * cantidad
-    };
+  agregarProducto(producto_id: number, precio: number, cantidad: number = 1, descripcionExtra: string = ''): void {
+    // Buscar si ya existe un producto similar (mismo ID y misma descripción extra)
+    const detallesActuales = this.detallesState();
+    const detalleExistente = detallesActuales.find(d => 
+      d.producto_id === producto_id && 
+      (d.descripcion_extra || '') === descripcionExtra
+    );
 
-    this.detallesState.update(detalles => [...detalles, detalle]);
+    if (detalleExistente) {
+      // Si existe, actualizar cantidad y subtotal
+      this.detallesState.update(detalles => 
+        detalles.map(d => 
+          d === detalleExistente 
+            ? {
+                ...d,
+                cantidad: d.cantidad + cantidad,
+                subtotal: (d.cantidad + cantidad) * d.precio_unitario
+              }
+            : d
+        )
+      );
+      console.log(`📈 Cantidad actualizada: Producto ${producto_id}${descripcionExtra} = ${detalleExistente.cantidad + cantidad}`);
+    } else {
+      // Si no existe, crear nuevo detalle
+      const detalle: DetallePedido = {
+        producto_id,
+        cantidad,
+        precio_unitario: precio,
+        subtotal: precio * cantidad,
+        descripcion_extra: descripcionExtra // ✅ AGREGAR descripción extra
+      };
+
+      this.detallesState.update(detalles => [...detalles, detalle]);
+      console.log(`➕ Producto agregado: Producto ${producto_id}${descripcionExtra} x${cantidad} - $${detalle.subtotal.toFixed(2)}`);
+    }
+
     this.actualizarTotalEnEstado();
-    
-    console.log('🛒 Producto agregado:', { producto_id, cantidad, subtotal: detalle.subtotal });
   }
-
   agregarDetalle(detalle: Omit<DetallePedido, 'id' | 'pedido_id' | 'created_at' | 'updated_at'>): void {
     this.detallesState.update(detalles => [...detalles, detalle]);
     this.actualizarTotalEnEstado();

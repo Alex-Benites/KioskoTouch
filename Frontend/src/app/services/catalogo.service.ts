@@ -227,10 +227,19 @@ export class CatalogoService {
   // Actualizar el método getIngredientesPorProducto:
 
   // ✅ MEJORAR: Obtener ingredientes específicos de un producto
-  getIngredientesPorProducto(productoId: number): Observable<any> {
-    const url = `${this.apiUrl}/catalogo/productos/${productoId}/ingredientes/`;
+  getIngredientesPorProducto(productoId: number, tamanoCode?: string): Observable<any> {
+    // ✅ CONSTRUIR URL con parámetro opcional
+    let url = `${this.apiUrl}/catalogo/productos/${productoId}/ingredientes/`;
+    
+    // ✅ AGREGAR parámetro de tamaño si existe
+    if (tamanoCode) {
+      url += `?tamano_codigo=${tamanoCode}`;
+    }
 
     console.log('🔍 [SERVICE] Solicitando ingredientes para producto ID:', productoId);
+    if (tamanoCode) {
+      console.log('📏 [SERVICE] Con tamaño:', tamanoCode);
+    }
     console.log('🔗 [SERVICE] URL completa:', url);
 
     return this.http.get<any>(url).pipe(

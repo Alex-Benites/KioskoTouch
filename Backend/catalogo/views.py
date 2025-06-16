@@ -724,9 +724,22 @@ def obtener_ingredientes_por_producto(request, producto_id):
 
         print(f"🍔 Producto encontrado: {producto.nombre} (ID: {producto.id})")
 
+        # ✅ NUEVO: Verificar si viene información de tamaño en los parámetros
+        tamano_codigo = request.GET.get('tamano_codigo', None)
+        print(f"📏 Tamaño solicitado: {tamano_codigo}")
+
         # Obtener categoría del producto
         categoria_producto = producto.categoria.nombre.lower() if producto.categoria else None
         print(f"📂 Categoría del producto: '{categoria_producto}'")
+
+        # ✅ NUEVO: Si el producto tiene tamaños Y se especificó un tamaño, usar lógica específica
+        if producto.aplica_tamanos and tamano_codigo:
+            # Para productos con tamaños, usar la categoría específica del producto
+            print(f"🎯 Producto con tamaños - usando categoría específica: {categoria_producto}")
+            categoria_busqueda = categoria_producto
+        else:
+            # Para productos sin tamaños, usar lógica normal
+            categoria_busqueda = categoria_producto
 
         # Obtener ingredientes del producto desde la tabla de relaciones
         ingredientes_producto_info = {}
@@ -735,7 +748,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
         for relacion in relaciones:
             ingredientes_producto_info[relacion.ingrediente_id] = {
                 'seleccionado': True,
-                'cantidad': relacion.cantidad,  # ✅ USAR LA CANTIDAD DE LA BD
+                'cantidad': relacion.cantidad,
                 'es_base': relacion.es_base,
                 'permite_extra': relacion.permite_extra
             }
@@ -743,26 +756,58 @@ def obtener_ingredientes_por_producto(request, producto_id):
         ingredientes_producto_ids = set(ingredientes_producto_info.keys())
         print(f"🔍 IDs de ingredientes del producto con cantidades: {ingredientes_producto_info}")
 
-        # Buscar ingredientes por categoría (manejando plural/singular)
+        # ✅ MODIFICAR: Búsqueda de ingredientes más específica para productos con tamaños
         ingredientes_categoria = AppkioskoIngredientes.objects.none()
 
-        if categoria_producto:
-            # Intentar búsqueda exacta
-            ingredientes_categoria = AppkioskoIngredientes.objects.filter(
-                categoria_producto__iexact=categoria_producto
-            )
-            print(f"🔎 Búsqueda exacta '{categoria_producto}': {ingredientes_categoria.count()} encontrados")
-
-            # Si no encuentra, probar con 's' al final (singular -> plural)
-            if not ingredientes_categoria.exists():
-                categoria_plural = categoria_producto + 's'
+        if categoria_busqueda:
+            # ✅ NUEVO: Para productos con tamaños, ser más estricto en la búsqueda
+            if producto.aplica_tamanos and tamano_codigo:
+                # Búsqueda EXACTA para productos con tamaños
+                print(f"🎯 Búsqueda EXACTA para producto con tamaños: '{categoria_busqueda}'")
                 ingredientes_categoria = AppkioskoIngredientes.objects.filter(
-                    categoria_producto__iexact=categoria_plural
+                    categoria_producto__iexact=categoria_busqueda
                 )
-                print(f"🔎 Búsqueda plural '{categoria_plural}': {ingredientes_categoria.count()} encontrados")
+                print(f"🔎 Ingredientes encontrados con búsqueda exacta: {ingredientes_categoria.count()}")
+                
+                # Si no encuentra con búsqueda exacta, probar con plural/singular
+                if not ingredientes_categoria.exists():
+                    if categoria_busqueda.endswith('s'):
+                        # Si termina en 's', probar sin la 's'
+                        categoria_singular = categoria_busqueda[:-1]
+                        ingredientes_categoria = AppkioskoIngredientes.objects.filter(
+                            categoria_producto__iexact=categoria_singular
+                        )
+                        print(f"🔎 Búsqueda singular '{categoria_singular}': {ingredientes_categoria.count()}")
+                    else:
+                        # Si no termina en 's', probar con 's'
+                        categoria_plural = categoria_busqueda + 's'
+                        ingredientes_categoria = AppkioskoIngredientes.objects.filter(
+                            categoria_producto__iexact=categoria_plural
+                        )
+                        print(f"🔎 Búsqueda plural '{categoria_plural}': {ingredientes_categoria.count()}")
+            else:
+                # ✅ MANTENER: Lógica original para productos sin tamaños
+                print(f"🔄 Usando lógica original para producto sin tamaños")
+                # Intentar búsqueda exacta
+                ingredientes_categoria = AppkioskoIngredientes.objects.filter(
+                    categoria_producto__iexact=categoria_busqueda
+                )
+                print(f"🔎 Búsqueda exacta '{categoria_busqueda}': {ingredientes_categoria.count()} encontrados")
 
-        # Si no encuentra nada, usar todos los ingredientes
-        if not ingredientes_categoria.exists():
+                # Si no encuentra, probar con 's' al final (singular -> plural)
+                if not ingredientes_categoria.exists():
+                    categoria_plural = categoria_busqueda + 's'
+                    ingredientes_categoria = AppkioskoIngredientes.objects.filter(
+                        categoria_producto__iexact=categoria_plural
+                    )
+                    print(f"🔎 Búsqueda plural '{categoria_plural}': {ingredientes_categoria.count()} encontrados")
+
+        # ✅ NUEVO: Si es producto con tamaños y no encuentra ingredientes específicos, NO usar todos
+        if producto.aplica_tamanos and tamano_codigo and not ingredientes_categoria.exists():
+            print("⚠️ Producto con tamaños sin ingredientes específicos - mostrando lista vacía")
+            ingredientes_categoria = AppkioskoIngredientes.objects.none()
+        elif not ingredientes_categoria.exists():
+            # Solo para productos sin tamaños, usar todos los ingredientes como fallback
             print("⚠️ No se encontraron ingredientes por categoría, usando todos")
             ingredientes_categoria = AppkioskoIngredientes.objects.all().order_by('nombre')
         else:
@@ -770,7 +815,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
 
         print(f"🥗 Total ingredientes a mostrar: {ingredientes_categoria.count()}")
 
-        # ✅ CORREGIR: Preparar respuesta usando AppkioskoImagen
+        # Preparar respuesta usando AppkioskoImagen
         ingredientes_disponibles = []
 
         for ingrediente in ingredientes_categoria:
@@ -782,7 +827,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
                     'permite_extra': False
                 })
 
-                # ✅ BUSCAR IMAGEN EN AppkioskoImagen (igual que productos)
+                # Buscar imagen en AppkioskoImagen
                 imagen_url = None
                 try:
                     imagen = AppkioskoImagen.objects.get(
@@ -795,7 +840,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
                     print(f"📷 No se encontró imagen para ingrediente {ingrediente.nombre} (ID: {ingrediente.id})")
                     imagen_url = None
 
-                # ✅ MANEJAR descripción y nombre de forma segura
+                # Manejar descripción y nombre de forma segura
                 descripcion_safe = ""
                 if ingrediente.descripcion:
                     try:
@@ -817,10 +862,10 @@ def obtener_ingredientes_por_producto(request, producto_id):
                     'descripcion': descripcion_safe,
                     'precio': float(ingrediente.precio_adicional) if ingrediente.precio_adicional else 0.0,
                     'categoria': str(ingrediente.categoria_producto) if ingrediente.categoria_producto else "",
-                    'imagen_url': imagen_url,  # ✅ DESDE AppkioskoImagen
+                    'imagen_url': imagen_url,
                     'seleccionado': info_producto['seleccionado'],
                     'es_original': info_producto['seleccionado'],
-                    'cantidad': info_producto['cantidad']  # ✅ AGREGAR CANTIDAD
+                    'cantidad': info_producto['cantidad']
                 })
 
             except Exception as ingredient_error:
@@ -830,20 +875,19 @@ def obtener_ingredientes_por_producto(request, producto_id):
         # Resumen final
         seleccionados_count = sum(1 for ing in ingredientes_disponibles if ing['seleccionado'])
         print(f"🎉 RESUMEN FINAL:")
+        print(f"   • Producto tiene tamaños: {'✅' if producto.aplica_tamanos else '❌'}")
+        print(f"   • Tamaño solicitado: {tamano_codigo or 'N/A'}")
+        print(f"   • Categoría usada para búsqueda: {categoria_busqueda}")
         print(f"   • Ingredientes disponibles: {len(ingredientes_disponibles)}")
         print(f"   • Ingredientes seleccionados: {seleccionados_count}")
-
-        # ✅ MOSTRAR URLs de imagen para debugging
-        print(f"🖼️ URLs de imagen desde AppkioskoImagen:")
-        for ing in ingredientes_disponibles:
-            if ing['imagen_url']:
-                print(f"   • {ing['nombre']}: {ing['imagen_url']}")
 
         return Response({
             'producto': {
                 'id': producto.id,
                 'nombre': str(producto.nombre) if producto.nombre else "",
-                'categoria': categoria_producto or ""
+                'categoria': categoria_producto or "",
+                'aplica_tamanos': producto.aplica_tamanos,
+                'tamano_solicitado': tamano_codigo
             },
             'ingredientes': ingredientes_disponibles,
             'total_ingredientes': len(ingredientes_disponibles),

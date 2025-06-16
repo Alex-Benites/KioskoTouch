@@ -24,6 +24,7 @@ export interface DetallePedido {
   cantidad: number;
   precio_unitario: number;
   subtotal: number;
+  descripcion_extra?: string;
   created_at?: string;
   updated_at?: string;
 }

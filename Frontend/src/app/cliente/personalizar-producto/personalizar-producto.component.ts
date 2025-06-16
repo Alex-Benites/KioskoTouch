@@ -94,13 +94,23 @@ export class PersonalizarProductoComponent implements OnInit {
     // ✅ Obtener ID del producto desde la URL
     this.productoId = Number(this.route.snapshot.paramMap.get('id'));
 
-    // ✅ Obtener parámetros adicionales desde queryParams
+    // ✅ MODIFICAR: Obtener parámetros adicionales incluyendo información de tamaño
     this.route.queryParams.subscribe(params => {
       const cantidadInicial = Number(params['cantidad']) || 1;
       this.cantidad.set(cantidadInicial);
       this.nombreProducto = params['nombre'] || '';
-      this.precioProducto = Number(params['precio']) || 0;
       this.categoriaProducto = Number(params['categoria']) || null;
+
+      // ✅ NUEVO: Procesar precio según si tiene tamaño seleccionado
+      if (params['tamano_precio']) {
+        // Si viene con tamaño seleccionado, usar ese precio
+        this.precioProducto = Number(params['tamano_precio']) || 0;
+        console.log(`📏 Producto con tamaño seleccionado: ${params['tamano_codigo']} - $${this.precioProducto}`);
+      } else {
+        // Si no tiene tamaño, usar precio base
+        this.precioProducto = Number(params['precio']) || 0;
+        console.log(`💰 Producto sin tamaño, precio base: $${this.precioProducto}`);
+      }
 
       console.log('🎨 Datos recibidos para personalización:', {
         id: this.productoId,
@@ -108,6 +118,10 @@ export class PersonalizarProductoComponent implements OnInit {
         nombre: this.nombreProducto,
         precio: this.precioProducto,
         categoria: this.categoriaProducto,
+        // ✅ NUEVO: Log de información de tamaño
+        tamano_id: params['tamano_id'] || 'N/A',
+        tamano_codigo: params['tamano_codigo'] || 'N/A',
+        tamano_precio: params['tamano_precio'] || 'N/A',
         precioTotal: this.precioTotalCalculado()
       });
 
@@ -188,21 +202,30 @@ export class PersonalizarProductoComponent implements OnInit {
 
       console.log('🥗 Cargando ingredientes reales para producto ID:', this.productoId);
 
-      this.catalogoService.getIngredientesPorProducto(this.productoId).subscribe({
+      // ✅ NUEVO: Obtener información de tamaño de los query params
+      const queryParams = this.route.snapshot.queryParams;
+      const tamano_codigo = queryParams['tamano_codigo'];
+      
+      // ✅ NUEVO: Construir URL con parámetro de tamaño si existe
+      let url = `ingredientes-por-producto/${this.productoId}/`;
+      if (tamano_codigo) {
+        url += `?tamano_codigo=${tamano_codigo}`;
+        console.log(`📏 Solicitando ingredientes para tamaño: ${tamano_codigo}`);
+      }
+
+      this.catalogoService.getIngredientesPorProducto(this.productoId, tamano_codigo).subscribe({
         next: (response) => {
           console.log('✅ Respuesta completa de ingredientes:', response);
 
           if (response.ingredientes && response.ingredientes.length > 0) {
             this.ingredientesDisponibles = response.ingredientes.map((ing: any) => {
-              // ✅ Manejo de imagen del ingrediente
+              // Manejo de imagen del ingrediente
               let imagenUrl = 'assets/placeholder-ingrediente.png';
 
               if (ing.imagen_url) {
-                // Si la imagen viene con ruta completa, usarla directamente
                 if (ing.imagen_url.startsWith('http')) {
                   imagenUrl = ing.imagen_url;
                 } else {
-                  // Si es una ruta relativa, construir la URL completa
                   imagenUrl = this.catalogoService.getFullImageUrl(ing.imagen_url);
                 }
               }
@@ -213,33 +236,21 @@ export class PersonalizarProductoComponent implements OnInit {
                 id: ing.id,
                 nombre: ing.nombre,
                 imagenUrl: imagenUrl,
-                seleccionado: ing.seleccionado, // ✅ Viene desde la base de datos
-                esOriginal: ing.es_original,     // ✅ Viene desde la base de datos
-                precio: Number(ing.precio) || 0  // ✅ Precio real de la base de datos
+                seleccionado: ing.seleccionado,
+                esOriginal: ing.es_original,
+                precio: Number(ing.precio) || 0
               };
             });
 
-            console.log(`🎉 ${this.ingredientesDisponibles.length} ingredientes reales cargados`);
-            console.log('📋 Ingredientes que tiene el producto:',
-              this.ingredientesDisponibles.filter(ing => ing.seleccionado).map(ing => ing.nombre)
-            );
-            console.log('🛒 Ingredientes disponibles para agregar:',
-              this.ingredientesDisponibles.filter(ing => !ing.seleccionado).map(ing => ing.nombre)
-            );
+            console.log(`🎉 ${this.ingredientesDisponibles.length} ingredientes reales cargados para ${tamano_codigo ? `tamaño ${tamano_codigo}` : 'producto sin tamaños'}`);
           } else {
-            console.log('ℹ️ No se encontraron ingredientes para este producto');
+            console.log('ℹ️ No se encontraron ingredientes para este producto/tamaño');
             this.ingredientesDisponibles = [];
           }
         },
         error: (error) => {
           console.error('❌ Error cargando ingredientes del producto:', error);
-
-          // ✅ SOLO en caso de error de conexión, mostrar mensaje
-          console.log('⚠️ No se pudieron cargar los ingredientes desde la base de datos');
           this.ingredientesDisponibles = [];
-
-          // ✅ OPCIONAL: Podrías mostrar un mensaje al usuario
-          // alert('Error cargando ingredientes. Por favor, recarga la página.');
         }
       });
 
@@ -260,7 +271,16 @@ export class PersonalizarProductoComponent implements OnInit {
   private actualizarDatosProducto(producto: any): void {
     this.nombreProducto = producto.nombre || this.nombreProducto;
     this.descripcionProducto = producto.descripcion || this.descripcionProducto;
-    this.precioProducto = Number(producto.precio) || this.precioProducto;
+    
+    // ✅ MODIFICAR: NO sobrescribir precio si ya viene con tamaño seleccionado
+    // Solo actualizar precio si no se recibió un precio de tamaño
+    const tienePrecionTamano = this.route.snapshot.queryParams['tamano_precio'];
+    if (!tienePrecionTamano) {
+      this.precioProducto = Number(producto.precio) || this.precioProducto;
+      console.log('💰 Precio actualizado desde producto base:', this.precioProducto);
+    } else {
+      console.log('📏 Manteniendo precio de tamaño seleccionado:', this.precioProducto);
+    }
 
     if (producto.imagenUrl || producto.imagen_url) {
       this.imagenProducto = this.catalogoService.getFullImageUrl(

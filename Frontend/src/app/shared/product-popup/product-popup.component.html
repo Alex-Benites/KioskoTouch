@@ -12,7 +12,26 @@
   <!-- Información del producto -->
   <div class="product-info">
     <h2 class="product-name">{{ data.producto.nombre }}</h2>
-    <p class="product-price">${{ data.producto.precio.toFixed(2) }}</p>
+    
+    <!-- ✅ AGREGAR: Selector de tamaños (NUEVO) -->
+    <div *ngIf="tieneTamanos" class="tamanos-selector">
+      <h3 class="tamanos-title">Selecciona el tamaño:</h3>
+      <div class="tamanos-grid">
+        <div 
+          *ngFor="let tamano of data.producto.tamanos_detalle"
+          class="tamano-option"
+          [class.selected]="tamanoSeleccionado?.id === tamano.id"
+          (click)="seleccionarTamano(tamano)">
+          <div class="tamano-codigo">{{ tamano.codigo_tamano }}</div>
+          <div class="tamano-nombre">{{ tamano.tamano_nombre }}</div>
+          <!-- ✅ CORREGIR: Usar el método formatearPrecio DENTRO del ngFor -->
+          <div class="tamano-precio">${{ formatearPrecio(tamano.precio) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ CORREGIR: Precio dinámico del producto (NO del tamaño) -->
+    <p class="product-price">${{ getPrecioActual().toFixed(2) }}</p>
   </div>
 
   <!-- Control de cantidad -->
@@ -44,12 +63,11 @@
       Personalizar
     </button>
 
-    <!-- Botón agregar -->
+    <!-- ✅ MODIFICAR: Botón agregar con total dinámico -->
     <button
       class="add-button"
       (click)="agregarAlCarrito()">
-      Añadir a mi orden
-      <!--Añadir a mi orden ${{ precioTotal.toFixed(2) }}-->
+      Añadir a mi orden ${{ precioTotal.toFixed(2) }}
     </button>
   </div>
 </div>
