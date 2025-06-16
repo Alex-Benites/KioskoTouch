@@ -286,7 +286,6 @@ export class CrearComponent implements OnInit {
   }
 
 
-  // ✅ MODIFICAR: Método cargarIngredientesPorCategoria para inicializar cantidad
   cargarIngredientesPorCategoria(categoriaNombre: string): void {
     console.log('🥗 Cargando ingredientes para:', categoriaNombre);
 
@@ -295,20 +294,14 @@ export class CrearComponent implements OnInit {
       this.ingredientesSeleccionados = [];
     }
 
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-
     console.log('🔐 Enviando petición con token de autenticación');
 
-    this.catalogoService.getIngredientesPorCategoria(categoriaNombre, headers).subscribe({
+    this.catalogoService.getIngredientesPorCategoria(categoriaNombre).subscribe({
       next: (ingredientes) => {
         console.log('✅ Ingredientes cargados exitosamente:', ingredientes);
         this.ingredientesDisponibles = ingredientes.map(ing => ({
           ...ing,
-          cantidad: 0, // ✅ INICIALIZAR CANTIDAD EN 0
+          cantidad: 0, 
           seleccionado: false,
           es_base: ing.es_base || false,
           permite_extra: ing.permite_extra || false
