@@ -691,7 +691,7 @@ class IngredientesPorCategoriaView(generics.ListAPIView):
 
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
-
+ 
             response_data = {
                 'ingredientes': serializer.data,
                 'total': len(serializer.data),
@@ -707,6 +707,7 @@ class IngredientesPorCategoriaView(generics.ListAPIView):
                 {'error': f'Error al obtener ingredientes: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -728,11 +729,19 @@ def obtener_ingredientes_por_producto(request, producto_id):
         print(f"📂 Categoría del producto: '{categoria_producto}'")
 
         # Obtener ingredientes del producto desde la tabla de relaciones
-        ingredientes_producto_ids = set(
-            AppkioskoProductosIngredientes.objects.filter(producto_id=producto_id)
-            .values_list('ingrediente_id', flat=True)
-        )
-        print(f"🔍 IDs de ingredientes del producto: {list(ingredientes_producto_ids)}")
+        ingredientes_producto_info = {}
+        relaciones = AppkioskoProductosIngredientes.objects.filter(producto_id=producto_id)
+        
+        for relacion in relaciones:
+            ingredientes_producto_info[relacion.ingrediente_id] = {
+                'seleccionado': True,
+                'cantidad': relacion.cantidad,  # ✅ USAR LA CANTIDAD DE LA BD
+                'es_base': relacion.es_base,
+                'permite_extra': relacion.permite_extra
+            }
+        
+        ingredientes_producto_ids = set(ingredientes_producto_info.keys())
+        print(f"🔍 IDs de ingredientes del producto con cantidades: {ingredientes_producto_info}")
 
         # Buscar ingredientes por categoría (manejando plural/singular)
         ingredientes_categoria = AppkioskoIngredientes.objects.none()
@@ -761,33 +770,30 @@ def obtener_ingredientes_por_producto(request, producto_id):
 
         print(f"🥗 Total ingredientes a mostrar: {ingredientes_categoria.count()}")
 
-        # ✅ Preparar respuesta con URLs de imagen correctas
+        # ✅ CORREGIR: Preparar respuesta usando AppkioskoImagen
         ingredientes_disponibles = []
 
         for ingrediente in ingredientes_categoria:
             try:
-                esta_seleccionado = ingrediente.id in ingredientes_producto_ids
+                info_producto = ingredientes_producto_info.get(ingrediente.id, {
+                    'seleccionado': False,
+                    'cantidad': 0,
+                    'es_base': False,
+                    'permite_extra': False
+                })
 
-                # ✅ CONSTRUIR URL de imagen correcta
+                # ✅ BUSCAR IMAGEN EN AppkioskoImagen (igual que productos)
                 imagen_url = None
-                if ingrediente.imagen:
-                    try:
-                        imagen_str = str(ingrediente.imagen)
-                        # ✅ CONSTRUIR URL completa
-                        if imagen_str.startswith('ingredientes/'):
-                            # Ya tiene el prefijo, solo agregar /media/
-                            imagen_url = f"/media/{imagen_str}"
-                        elif imagen_str.startswith('/media/'):
-                            # Ya tiene la ruta completa
-                            imagen_url = imagen_str
-                        else:
-                            # Asumir que es solo el nombre del archivo
-                            imagen_url = f"/media/ingredientes/{imagen_str}"
-
-                        print(f"🖼️ Ingrediente {ingrediente.nombre}: {imagen_str} → {imagen_url}")
-                    except (UnicodeDecodeError, UnicodeEncodeError):
-                        print(f"⚠️ Imagen del ingrediente {ingrediente.nombre} tiene problemas de codificación")
-                        imagen_url = None
+                try:
+                    imagen = AppkioskoImagen.objects.get(
+                        categoria_imagen='ingredientes',
+                        entidad_relacionada_id=ingrediente.id
+                    )
+                    imagen_url = imagen.ruta
+                    print(f"🖼️ Imagen encontrada para {ingrediente.nombre}: {imagen_url}")
+                except AppkioskoImagen.DoesNotExist:
+                    print(f"📷 No se encontró imagen para ingrediente {ingrediente.nombre} (ID: {ingrediente.id})")
+                    imagen_url = None
 
                 # ✅ MANEJAR descripción y nombre de forma segura
                 descripcion_safe = ""
@@ -803,7 +809,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
                 except:
                     nombre_safe = f"Ingrediente {ingrediente.id}"
 
-                print(f"🧅 ID:{ingrediente.id} - {nombre_safe} - Seleccionado: {'✅' if esta_seleccionado else '❌'} - Imagen: {imagen_url}")
+                print(f"🧅 ID:{ingrediente.id} - {nombre_safe} - Seleccionado: {'✅' if info_producto['seleccionado'] else '❌'} - Cantidad: {info_producto['cantidad']} - Imagen: {imagen_url}")
 
                 ingredientes_disponibles.append({
                     'id': ingrediente.id,
@@ -811,9 +817,10 @@ def obtener_ingredientes_por_producto(request, producto_id):
                     'descripcion': descripcion_safe,
                     'precio': float(ingrediente.precio_adicional) if ingrediente.precio_adicional else 0.0,
                     'categoria': str(ingrediente.categoria_producto) if ingrediente.categoria_producto else "",
-                    'imagen_url': imagen_url,  # ✅ URL completa construida
-                    'seleccionado': esta_seleccionado,
-                    'es_original': esta_seleccionado
+                    'imagen_url': imagen_url,  # ✅ DESDE AppkioskoImagen
+                    'seleccionado': info_producto['seleccionado'],
+                    'es_original': info_producto['seleccionado'],
+                    'cantidad': info_producto['cantidad']  # ✅ AGREGAR CANTIDAD
                 })
 
             except Exception as ingredient_error:
@@ -827,9 +834,10 @@ def obtener_ingredientes_por_producto(request, producto_id):
         print(f"   • Ingredientes seleccionados: {seleccionados_count}")
 
         # ✅ MOSTRAR URLs de imagen para debugging
-        print(f"🖼️ URLs de imagen construidas:")
-        for ing in ingredientes_disponibles[:3]:  # Solo mostrar las primeras 3
-            print(f"   • {ing['nombre']}: {ing['imagen_url']}")
+        print(f"🖼️ URLs de imagen desde AppkioskoImagen:")
+        for ing in ingredientes_disponibles:
+            if ing['imagen_url']:
+                print(f"   • {ing['nombre']}: {ing['imagen_url']}")
 
         return Response({
             'producto': {
