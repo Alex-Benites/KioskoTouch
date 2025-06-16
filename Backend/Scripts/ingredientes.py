@@ -3,376 +3,435 @@ import sys
 import django
 
 # Configurar Django para que el script pueda usar los modelos
-# Añadir el directorio padre (Backend) al path de Python
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Configurar Django settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'KioskoTouch.settings')
 django.setup()
 
-# Ahora podemos importar los modelos
 from comun.models import AppkioskoImagen
 from catalogo.models import AppkioskoIngredientes
 from django.db import transaction
 from django.conf import settings
+from decimal import Decimal
 
-def limpiar_ingredientes():
-    """Elimina todos los ingredientes existentes"""
-    ingredientes_count = AppkioskoIngredientes.objects.count()
-    if ingredientes_count > 0:
-        print(f"Eliminando {ingredientes_count} ingredientes existentes...")
-        AppkioskoIngredientes.objects.all().delete()
-        print("✓ Ingredientes eliminados correctamente")
-    else:
-        print("No hay ingredientes existentes para eliminar")
-
-def limpiar_imagenes_ingredientes():
-    """Elimina todas las imágenes de ingredientes de la BD"""
+def limpiar_ingredientes_completo():
+    """Elimina todos los ingredientes e imágenes existentes"""
     imagenes_count = AppkioskoImagen.objects.filter(categoria_imagen='ingredientes').count()
     if imagenes_count > 0:
         print(f"Eliminando {imagenes_count} imágenes de ingredientes...")
         AppkioskoImagen.objects.filter(categoria_imagen='ingredientes').delete()
-        print("✓ Imágenes de ingredientes eliminadas correctamente")
-    else:
-        print("No hay imágenes de ingredientes para eliminar")
-
-def crear_ingredientes_iniciales():
-    """Crea los ingredientes iniciales del sistema - Solo Pizzas y Hamburguesas"""
-    ingredientes_a_crear = [
-        # Ingredientes para Hamburguesas
-        {'nombre': 'Lechuga', 'descripcion': 'Lechuga fresca', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Tomate', 'descripcion': 'Tomate rojo fresco', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Cebolla', 'descripcion': 'Cebolla blanca', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Queso Amarillo', 'descripcion': 'Queso amarillo', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Pepinillos', 'descripcion': 'Pepinillos en vinagre', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Bacon', 'descripcion': 'Tocino crujiente', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Aguacate', 'descripcion': 'Aguacate fresco', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Champiñones', 'descripcion': 'Champiñones frescos', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Mayonesa', 'descripcion': 'Mayonesa casera', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Ketchup', 'descripcion': 'Salsa de tomate', 'categoria_producto': 'hamburguesas'},
-        {'nombre': 'Mostaza', 'descripcion': 'Mostaza americana', 'categoria_producto': 'hamburguesas'},
-        
-        # Ingredientes para Pizzas
-        {'nombre': 'Mozzarella', 'descripcion': 'Queso mozzarella', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Pepperoni', 'descripcion': 'Pepperoni italiano', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Jamón', 'descripcion': 'Jamón cocido', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Piña', 'descripcion': 'Piña natural', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Pimientos', 'descripcion': 'Pimientos rojos y verdes', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Aceitunas', 'descripcion': 'Aceitunas negras', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Salami', 'descripcion': 'Salami italiano', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Albahaca', 'descripcion': 'Albahaca fresca', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Tomate Cherry', 'descripcion': 'Tomate cherry', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Queso Parmesano', 'descripcion': 'Queso parmesano rallado', 'categoria_producto': 'pizzas'},
-        {'nombre': 'Orégano', 'descripcion': 'Orégano seco', 'categoria_producto': 'pizzas'},
-    ]
-
-    print("Creando ingredientes iniciales para PIZZAS y HAMBURGUESAS...")
-    ingredientes_creados = []
-
-    for ingrediente_data in ingredientes_a_crear:
-        # Verificar si ya existe un ingrediente con ese nombre
-        ingrediente_existente = AppkioskoIngredientes.objects.filter(
-            nombre=ingrediente_data['nombre']
-        ).first()
-        
-        if ingrediente_existente:
-            print(f"⚠ Ingrediente '{ingrediente_data['nombre']}' ya existe (ID: {ingrediente_existente.id})")
-        else:
-            ingrediente = AppkioskoIngredientes.objects.create(**ingrediente_data)
-            ingredientes_creados.append(ingrediente)
-            print(f"✓ Creado: {ingrediente.nombre} [{ingrediente.categoria_producto}] (ID: {ingrediente.id})")
-
-    return ingredientes_creados
-
-def migrar_imagenes_ingredientes():
-    """Migra las imágenes existentes de ingredientes a la base de datos"""
-    print("\n" + "="*50)
-    print("MIGRANDO IMÁGENES DE INGREDIENTES")
-    print("="*50)
+        print("✓ Imágenes de ingredientes eliminadas")
     
-    # Ruta de la carpeta de imágenes de ingredientes
+    ingredientes_count = AppkioskoIngredientes.objects.count()
+    if ingredientes_count > 0:
+        print(f"Eliminando {ingredientes_count} ingredientes existentes...")
+        AppkioskoIngredientes.objects.all().delete()
+        print("✓ Ingredientes eliminados")
+
+def verificar_imagen_existe(nombre_archivo):
+    """Verifica si la imagen existe en el sistema de archivos"""
     ingredientes_path = os.path.join(settings.MEDIA_ROOT, 'ingredientes')
+    ruta_completa = os.path.join(ingredientes_path, f"{nombre_archivo}.png")
+    return os.path.exists(ruta_completa)
+
+def crear_ingredientes_por_categoria():
+    """Crea ingredientes separados para cada categoría con nombres simples y precios ecuatorianos"""
+    print("\n" + "="*70)
+    print("CREANDO INGREDIENTES POR CATEGORÍA (NOMBRES SIMPLES + PRECIOS ECUADOR)")
+    print("="*70)
     
-    if not os.path.exists(ingredientes_path):
-        print(f"❌ La carpeta {ingredientes_path} no existe")
-        return
-    
-    # Obtener solo ingredientes de pizzas y hamburguesas
-    ingredientes = AppkioskoIngredientes.objects.filter(
-        categoria_producto__in=['pizzas', 'hamburguesas']
-    )
-    
-    print(f"📁 Buscando imágenes en: {ingredientes_path}")
-    print(f"📊 Ingredientes encontrados: {ingredientes.count()} (solo pizzas y hamburguesas)")
-    print("─" * 50)
-    
-    # Mapeo especial para nombres que no coinciden exactamente
-    mapeo_nombres = {
-        'champiñones': 'champinones',  # Sin ñ
-        'pepinillos': 'pepinillo',     # Singular/plural
-        'queso amarillo': 'queso',
-        'queso parmesano': 'parmesano',
-        'tomate cherry': 'tomate_cherry',
-        'orégano': 'oregano',
-        'jamón': 'jamon',
-        'piña': 'pina',
-        'aceitunas': 'aceitunas',
-        'pimientos': 'pimientos',
-        'albahaca': 'albahaca',
-        'aguacate': 'aguacate', 
-        'ketchup': 'ketchup',
-        'mayonesa': 'mayonesa',
-        'mostaza': 'mostaza',
-        'mozzarella': 'mozzarella',
+    # 🍽️ Ingredientes base con nombres simples y precios en USD (Ecuador)
+    ingredientes_base = {
+        # Proteínas
+        'carne': {
+            'nombre_base': 'Carne',
+            'descripcion': 'Carne de res premium',
+            'precio_adicional': Decimal('1.50'),  # $1.50 carne extra
+            'categorias': ['hamburguesas']
+        },
+        'tocino': {
+            'nombre_base': 'Tocino',
+            'descripcion': 'Tocino crujiente',
+            'precio_adicional': Decimal('0.75'),  # $0.75 tocino extra
+            'categorias': ['pizzas', 'snacks', 'hamburguesas']
+        },
+        'pepperoni': {
+            'nombre_base': 'Pepperoni',
+            'descripcion': 'Pepperoni italiano',
+            'precio_adicional': Decimal('1.00'),  # $1.00 pepperoni extra
+            'categorias': ['pizzas']
+        },
+        
+        # Panes y bases
+        'pan': {
+            'nombre_base': 'Pan',
+            'descripcion': 'Pan de hamburguesa fresco',
+            'precio_adicional': Decimal('0.50'),  # $0.50 pan extra
+            'categorias': ['hamburguesas']
+        },
+        
+        # Quesos
+        'quesoamarillo': {
+            'nombre_base': 'Queso Amarillo',
+            'descripcion': 'Queso amarillo americano',
+            'precio_adicional': Decimal('0.50'),  # $0.50 queso extra
+            'categorias': ['ensaladas', 'snacks', 'hamburguesas']
+        },
+        'quesoparmesano': {
+            'nombre_base': 'Queso Parmesano',
+            'descripcion': 'Queso parmesano rallado',
+            'precio_adicional': Decimal('0.75'),  # $0.75 parmesano (más caro)
+            'categorias': ['pizzas']
+        },
+        
+        # Vegetales
+        'lechuga': {
+            'nombre_base': 'Lechuga',
+            'descripcion': 'Lechuga fresca y crujiente',
+            'precio_adicional': Decimal('0.25'),  # $0.25 vegetales baratos
+            'categorias': ['ensaladas', 'hamburguesas']
+        },
+        'tomate': {
+            'nombre_base': 'Tomate',
+            'descripcion': 'Tomate rojo fresco',
+            'precio_adicional': Decimal('0.30'),  # $0.30 tomate
+            'categorias': ['ensaladas', 'pizzas', 'hamburguesas']
+        },
+        'cebolla': {
+            'nombre_base': 'Cebolla',
+            'descripcion': 'Cebolla blanca fresca',
+            'precio_adicional': Decimal('0.25'),  # $0.25 cebolla
+            'categorias': ['ensaladas', 'pizzas', 'hamburguesas']
+        },
+        'cebollin': {
+            'nombre_base': 'Cebollín',
+            'descripcion': 'Cebollín fresco',
+            'precio_adicional': Decimal('0.30'),  # $0.30 cebollín
+            'categorias': ['ensaladas', 'snacks']
+        },
+        'pimientorojo': {
+            'nombre_base': 'Pimiento Rojo',
+            'descripcion': 'Pimiento rojo fresco',
+            'precio_adicional': Decimal('0.40'),  # $0.40 pimiento
+            'categorias': ['pizzas']
+        },
+        'pepinillo': {
+            'nombre_base': 'Pepinillo',
+            'descripcion': 'Pepinillos encurtidos',
+            'precio_adicional': Decimal('0.35'),  # $0.35 pepinillos
+            'categorias': ['hamburguesas']
+        },
+        
+        # Salsas y aderezos
+        'mayonesa': {
+            'nombre_base': 'Mayonesa',
+            'descripcion': 'Mayonesa casera',
+            'precio_adicional': Decimal('0.15'),  # $0.15 salsas básicas
+            'categorias': ['ensaladas', 'pollos', 'snacks', 'hamburguesas']
+        },
+        'ketchup': {
+            'nombre_base': 'Ketchup',
+            'descripcion': 'Salsa de tomate',
+            'precio_adicional': Decimal('0.15'),  # $0.15 salsas básicas
+            'categorias': ['ensaladas', 'pollos', 'pizzas', 'snacks', 'hamburguesas']
+        },
+        
+        # Para bebidas
+        'hielo': {
+            'nombre_base': 'Hielo',
+            'descripcion': 'Hielo fresco',
+            'precio_adicional': Decimal('0.00'),  # Gratis el hielo
+            'categorias': ['bebidas']
+        },
+        
+        # Helados base
+        'heladochocolate': {
+            'nombre_base': 'Helado Chocolate',
+            'descripcion': 'Helado sabor chocolate',
+            'precio_adicional': Decimal('0.50'),  # $0.50 sabor extra
+            'categorias': ['helados']
+        },
+        'heladovainilla': {
+            'nombre_base': 'Helado Vainilla',
+            'descripcion': 'Helado sabor vainilla',
+            'precio_adicional': Decimal('0.50'),  # $0.50 sabor extra
+            'categorias': ['helados']
+        },
+        'heladofresa': {
+            'nombre_base': 'Helado Fresa',
+            'descripcion': 'Helado sabor fresa',
+            'precio_adicional': Decimal('0.50'),  # $0.50 sabor extra
+            'categorias': ['helados']
+        },
+        
+        # Frutas y toppings
+        'fresa': {
+            'nombre_base': 'Fresa',
+            'descripcion': 'Fresas frescas',
+            'precio_adicional': Decimal('0.60'),  # $0.60 frutas frescas
+            'categorias': ['helados']
+        },
+        'frambuesa': {
+            'nombre_base': 'Frambuesa',
+            'descripcion': 'Frambuesas frescas',
+            'precio_adicional': Decimal('0.80'),  # $0.80 frambuesas (más caras)
+            'categorias': ['helados']
+        },
+        'cereza': {
+            'nombre_base': 'Cereza',
+            'descripcion': 'Cerezas frescas',
+            'precio_adicional': Decimal('0.70'),  # $0.70 cerezas
+            'categorias': ['helados']
+        },
+        
+        # Complementos crujientes
+        'barquillo': {
+            'nombre_base': 'Barquillo',
+            'descripcion': 'Barquillo crujiente',
+            'precio_adicional': Decimal('0.40'),  # $0.40 barquillo
+            'categorias': ['helados']
+        },
+        'galleta': {
+            'nombre_base': 'Galleta',
+            'descripcion': 'Galleta dulce',
+            'precio_adicional': Decimal('0.35'),  # $0.35 galleta
+            'categorias': ['helados']
+        }
     }
     
-    imagenes_migradas = 0
+    ingredientes_creados = 0
+    imagenes_creadas = 0
+    resumen_por_categoria = {}
+    ingredientes_sin_imagen = []
     
-    for ingrediente in ingredientes:
-        # Buscar imagen que coincida con el nombre del ingrediente (en minúsculas)
-        nombre_ingrediente = ingrediente.nombre.lower()
+    print("🔄 Procesando ingredientes con nombres simples y precios ecuatorianos...")
+    print("─" * 50)
+    
+    for imagen_nombre, data in ingredientes_base.items():
+        print(f"\n📦 Procesando: {data['nombre_base']} (${data['precio_adicional']})")
         
-        # Aplicar mapeo especial si existe
-        nombre_archivo = mapeo_nombres.get(nombre_ingrediente, nombre_ingrediente)
-        
-        imagen_encontrada = False
-        
-        # Posibles extensiones
-        extensiones = ['.png', '.jpg', '.jpeg']
-        
-        for ext in extensiones:
-            archivo_imagen = f"{nombre_archivo}{ext}"
-            ruta_completa = os.path.join(ingredientes_path, archivo_imagen)
+        for categoria in data['categorias']:
+            # ✅ CORREGIDO: Usar solo el nombre base, no agregar "para Categoria"
+            nombre_ingrediente = data['nombre_base']
             
-            if os.path.exists(ruta_completa):
-                # Verificar si ya existe en la BD
-                existe_en_bd = AppkioskoImagen.objects.filter(
+            # Verificar si ya existe este ingrediente específico en esta categoría
+            ingrediente_existente = AppkioskoIngredientes.objects.filter(
+                nombre=nombre_ingrediente,
+                categoria_producto=categoria
+            ).first()
+            
+            if ingrediente_existente:
+                print(f"  ⚠️  {categoria}: Ya existe (ID: {ingrediente_existente.id})")
+                continue
+            
+            # Crear el ingrediente para esta categoría
+            ingrediente = AppkioskoIngredientes.objects.create(
+                nombre=nombre_ingrediente,
+                descripcion=data['descripcion'],
+                categoria_producto=categoria,
+                precio_adicional=data['precio_adicional']  # ✅ NUEVO: Agregar precio
+            )
+            ingredientes_creados += 1
+            
+            # Contabilizar por categoría
+            if categoria not in resumen_por_categoria:
+                resumen_por_categoria[categoria] = 0
+            resumen_por_categoria[categoria] += 1
+            
+            # Verificar y asociar imagen
+            if verificar_imagen_existe(imagen_nombre):
+                ruta_imagen = f"/media/ingredientes/{imagen_nombre}.png"
+                
+                imagen_obj = AppkioskoImagen.objects.create(
+                    ruta=ruta_imagen,
                     categoria_imagen='ingredientes',
                     entidad_relacionada_id=ingrediente.id
-                ).exists()
-                
-                if not existe_en_bd:
-                    # Crear la ruta relativa
-                    ruta_relativa = f"/media/ingredientes/{archivo_imagen}"
-                    
-                    # Crear registro en AppkioskoImagen
-                    imagen_obj = AppkioskoImagen.objects.create(
-                        ruta=ruta_relativa,
-                        categoria_imagen='ingredientes',
-                        entidad_relacionada_id=ingrediente.id
-                    )
-                    
-                    print(f"✅ {ingrediente.nombre}: {archivo_imagen} → BD (ID: {imagen_obj.id})")
-                    imagenes_migradas += 1
-                else:
-                    print(f"⚠️  {ingrediente.nombre}: Ya existe en BD")
-                
-                imagen_encontrada = True
-                break
-        
-        if not imagen_encontrada:
-            print(f"❌ {ingrediente.nombre}: No se encontró imagen (buscando: {nombre_archivo}.*)")
+                )
+                imagenes_creadas += 1
+                print(f"  ✅ {categoria}: {nombre_ingrediente} (${data['precio_adicional']}) con imagen (ID: {ingrediente.id})")
+            else:
+                ingredientes_sin_imagen.append(f"{imagen_nombre}.png ({nombre_ingrediente} → {categoria})")
+                print(f"  ✅ {categoria}: {nombre_ingrediente} (${data['precio_adicional']}) SIN imagen (ID: {ingrediente.id})")
     
-    print("─" * 50)
-    print(f"🎉 Migración completada! {imagenes_migradas} imágenes migradas.")
+    # Resumen final detallado
+    print("\n" + "="*70)
+    print("📊 RESUMEN POR CATEGORÍA:")
+    print("="*70)
+    
+    orden_categorias = ['hamburguesas', 'pizzas', 'snacks', 'ensaladas', 'pollos', 'bebidas', 'helados']
+    
+    for categoria in orden_categorias:
+        if categoria in resumen_por_categoria:
+            emoji_categoria = {
+                'hamburguesas': '🍔',
+                'pizzas': '🍕', 
+                'snacks': '🍿',
+                'ensaladas': '🥗',
+                'pollos': '🍗',
+                'bebidas': '🥤',
+                'helados': '🍦'
+            }.get(categoria, '🍽️')
+            
+            cantidad = resumen_por_categoria[categoria]
+            print(f"{emoji_categoria} {categoria.upper()}: {cantidad} ingredientes")
+    
+    print("\n" + "="*70)
+    print("📈 RESUMEN GENERAL:")
+    print("="*70)
+    print(f"✅ Total ingredientes creados: {ingredientes_creados}")
+    print(f"🖼️  Total imágenes asociadas: {imagenes_creadas}")
+    print(f"📂 Categorías procesadas: {len(resumen_por_categoria)}")
+    
+    # Mostrar ingredientes sin imagen
+    if ingredientes_sin_imagen:
+        print(f"\n⚠️  IMÁGENES FALTANTES ({len(ingredientes_sin_imagen)}):")
+        print("─" * 40)
+        for item in ingredientes_sin_imagen:
+            print(f"   📷 {item}")
+        print(f"\n💡 Ubicación esperada: {os.path.join(settings.MEDIA_ROOT, 'ingredientes')}")
+    
+    return ingredientes_creados, imagenes_creadas
 
-def listar_ingredientes():
-    """Lista todos los ingredientes en la base de datos"""
-    print("\n" + "="*50)
-    print("INGREDIENTES EN LA BASE DE DATOS:")
-    print("="*50)
+def verificar_especificacion():
+    """Muestra la especificación con precios ecuatorianos"""
+    print("\n" + "="*70)
+    print("ESPECIFICACIÓN CON PRECIOS ECUATORIANOS (USD):")
+    print("="*70)
     
-    ingredientes = AppkioskoIngredientes.objects.filter(
-        categoria_producto__in=['pizzas', 'hamburguesas']
-    ).order_by('categoria_producto', 'nombre')
+    especificacion = {
+        '🥤 BEBIDAS': [('hielo', '$0.00')],
+        '🥗 ENSALADAS': [
+            ('lechuga', '$0.25'), ('quesoamarillo', '$0.50'), ('cebollin', '$0.30'), 
+            ('cebolla', '$0.25'), ('tomate', '$0.30'), ('ketchup', '$0.15'), ('mayonesa', '$0.15')
+        ],
+        '🍗 POLLOS': [('ketchup', '$0.15'), ('mayonesa', '$0.15')],
+        '🍕 PIZZAS': [
+            ('pepperoni', '$1.00'), ('quesoparmesano', '$0.75'), ('pimientorojo', '$0.40'), 
+            ('tocino', '$0.75'), ('ketchup', '$0.15'), ('cebolla', '$0.25'), ('tomate', '$0.30')
+        ],
+        '🍿 SNACKS': [
+            ('tocino', '$0.75'), ('quesoamarillo', '$0.50'), ('cebollin', '$0.30'), 
+            ('ketchup', '$0.15'), ('mayonesa', '$0.15')
+        ],
+        '🍔 HAMBURGUESAS': [
+            ('pan', '$0.50'), ('carne', '$1.50'), ('quesoamarillo', '$0.50'), ('pepinillo', '$0.35'),
+            ('lechuga', '$0.25'), ('cebolla', '$0.25'), ('tocino', '$0.75'), ('tomate', '$0.30'), 
+            ('ketchup', '$0.15'), ('mayonesa', '$0.15')
+        ],
+        '🍦 HELADOS': [
+            ('heladochocolate', '$0.50'), ('heladovainilla', '$0.50'), ('heladofresa', '$0.50'),
+            ('fresa', '$0.60'), ('frambuesa', '$0.80'), ('cereza', '$0.70'), 
+            ('barquillo', '$0.40'), ('galleta', '$0.35')
+        ]
+    }
     
-    if not ingredientes:
-        print("No hay ingredientes de pizzas o hamburguesas en la base de datos")
-        return
-        
-    for ingrediente in ingredientes:
-        # Verificar si tiene imagen
-        tiene_imagen = AppkioskoImagen.objects.filter(
-            categoria_imagen='ingredientes',
-            entidad_relacionada_id=ingrediente.id
-        ).exists()
-        
-        icono_imagen = "🖼️ " if tiene_imagen else "📷"
-        categoria = getattr(ingrediente, 'categoria_producto', 'hamburguesas')
-        print(f"ID {ingrediente.id}: {icono_imagen} {ingrediente.nombre} [{categoria}] - {ingrediente.descripcion}")
+    for categoria, ingredientes in especificacion.items():
+        print(f"\n{categoria} ({len(ingredientes)} ingredientes):")
+        for ingrediente, precio in ingredientes:
+            print(f"  • {ingrediente} → {precio}")
 
 def listar_ingredientes_por_categoria():
-    """Lista ingredientes agrupados por categoría (solo pizzas y hamburguesas)"""
-    print("\n" + "="*50)
-    print("INGREDIENTES POR CATEGORÍA (PIZZAS Y HAMBURGUESAS):")
-    print("="*50)
+    """Lista todos los ingredientes agrupados por categoría con precios"""
+    print("\n" + "="*70)
+    print("INGREDIENTES CREADOS CON PRECIOS:")
+    print("="*70)
     
-    # Solo pizzas y hamburguesas
-    categorias = ['hamburguesas', 'pizzas']
+    orden_categorias = ['hamburguesas', 'pizzas', 'snacks', 'ensaladas', 'pollos', 'bebidas', 'helados']
     
-    # Mapeo de nombres de categorías para mostrar
-    nombre_categorias = {
-        'hamburguesas': 'HAMBURGUESAS',
-        'pizzas': 'PIZZAS'
-    }
+    total_ingredientes = 0
+    total_con_imagen = 0
     
-    for categoria in categorias:
-        ingredientes = AppkioskoIngredientes.objects.filter(
-            categoria_producto=categoria
-        ).order_by('nombre')
+    for categoria in orden_categorias:
+        emoji_categoria = {
+            'hamburguesas': '🍔',
+            'pizzas': '🍕', 
+            'snacks': '🍿',
+            'ensaladas': '🥗',
+            'pollos': '🍗',
+            'bebidas': '🥤',
+            'helados': '🍦'
+        }.get(categoria, '🍽️')
         
-        if ingredientes.exists():
-            categoria_nombre = nombre_categorias.get(categoria, categoria.upper())
-            print(f"\n🍽️  {categoria_nombre} ({ingredientes.count()} ingredientes):")
-            print("─" * 30)
+        ingredientes = AppkioskoIngredientes.objects.filter(categoria_producto=categoria).order_by('nombre')
+        
+        if ingredientes:
+            print(f"\n{emoji_categoria} {categoria.upper()} ({len(ingredientes)} ingredientes):")
+            print("─" * 60)
             
             for ingrediente in ingredientes:
-                # Verificar si tiene imagen
-                tiene_imagen = AppkioskoImagen.objects.filter(
+                total_ingredientes += 1
+                
+                # Verificar imagen
+                imagen_bd = AppkioskoImagen.objects.filter(
                     categoria_imagen='ingredientes',
                     entidad_relacionada_id=ingrediente.id
-                ).exists()
+                ).first()
                 
-                icono_imagen = "🖼️ " if tiene_imagen else "📷"
-                print(f"  {icono_imagen} {ingrediente.nombre} - {ingrediente.descripcion}")
-        else:
-            categoria_nombre = nombre_categorias.get(categoria, categoria.upper())
-            print(f"\n🍽️  {categoria_nombre}: Sin ingredientes")
-
-def listar_imagenes_ingredientes():
-    """Lista todas las imágenes de ingredientes en la BD"""
-    print("\n" + "="*50)
-    print("IMÁGENES DE INGREDIENTES EN LA BD:")
-    print("="*50)
+                if imagen_bd:
+                    ruta_fisica = os.path.join(settings.MEDIA_ROOT, 'ingredientes', 
+                                             os.path.basename(imagen_bd.ruta))
+                    existe_archivo = os.path.exists(ruta_fisica)
+                    
+                    if existe_archivo:
+                        icono = "✅🖼️ "
+                        total_con_imagen += 1
+                    else:
+                        icono = "⚠️🖼️ "
+                else:
+                    icono = "❌📷 "
+                    
+                # ✅ NUEVO: Mostrar precio también
+                precio = f"${ingrediente.precio_adicional}" if hasattr(ingrediente, 'precio_adicional') else "$0.00"
+                print(f"  {icono}{ingrediente.nombre} ({precio}) - ID: {ingrediente.id}")
     
-    imagenes = AppkioskoImagen.objects.filter(categoria_imagen='ingredientes').order_by('entidad_relacionada_id')
-    
-    if not imagenes:
-        print("No hay imágenes de ingredientes en la base de datos")
-        return
-    
-    for imagen in imagenes:
-        try:
-            ingrediente = AppkioskoIngredientes.objects.get(id=imagen.entidad_relacionada_id)
-            categoria = getattr(ingrediente, 'categoria_producto', 'hamburguesas')
-            
-            # Solo mostrar pizzas y hamburguesas
-            if categoria in ['pizzas', 'hamburguesas']:
-                print(f"ID {imagen.id}: {ingrediente.nombre} [{categoria}] → {imagen.ruta}")
-        except AppkioskoIngredientes.DoesNotExist:
-            print(f"ID {imagen.id}: ⚠️  Ingrediente no encontrado (ID: {imagen.entidad_relacionada_id}) → {imagen.ruta}")
-
-def eliminar_ingrediente_por_nombre(nombre_ingrediente):
-    """Elimina un ingrediente específico por su nombre (solo pizzas y hamburguesas)"""
-    try:
-        ingrediente = AppkioskoIngredientes.objects.get(
-            nombre__iexact=nombre_ingrediente,
-            categoria_producto__in=['pizzas', 'hamburguesas']
-        )
-        
-        # Eliminar también su imagen asociada
-        imagenes_eliminadas = AppkioskoImagen.objects.filter(
-            categoria_imagen='ingredientes',
-            entidad_relacionada_id=ingrediente.id
-        ).delete()
-        
-        print(f"✓ Eliminando ingrediente: {ingrediente.nombre} [{ingrediente.categoria_producto}] (ID: {ingrediente.id})")
-        if imagenes_eliminadas[0] > 0:
-            print(f"✓ También se eliminó su imagen asociada")
-        
-        ingrediente.delete()
-        print(f"✅ Ingrediente '{nombre_ingrediente}' eliminado correctamente")
-        
-    except AppkioskoIngredientes.DoesNotExist:
-        print(f"❌ No se encontró el ingrediente '{nombre_ingrediente}' en pizzas o hamburguesas")
-        print("Ingredientes disponibles:")
-        ingredientes = AppkioskoIngredientes.objects.filter(
-            categoria_producto__in=['pizzas', 'hamburguesas']
-        ).order_by('nombre')
-        for ing in ingredientes:
-            print(f"  - {ing.nombre} [{ing.categoria_producto}]")
+    print("\n" + "="*70)
+    print("📊 ESTADÍSTICAS GLOBALES:")
+    print("="*70)
+    print(f"📦 Total ingredientes: {total_ingredientes}")
+    print(f"🖼️  Con imagen: {total_con_imagen}")
+    print(f"❌ Sin imagen: {total_ingredientes - total_con_imagen}")
 
 def main():
     """Función principal del script"""
-    print("SCRIPT DE GESTIÓN DE INGREDIENTES - PIZZAS Y HAMBURGUESAS")
-    print("="*55)
+    print("SCRIPT DE INGREDIENTES (NOMBRES SIMPLES + PRECIOS ECUADOR)")
+    print("="*60)
     
     if len(sys.argv) < 2:
-        print("Uso:")
-        print("  python Scripts/ingredientes.py listar               - Lista ingredientes existentes")
-        print("  python Scripts/ingredientes.py listar_categorias    - Lista ingredientes por categoría")
-        print("  python Scripts/ingredientes.py crear                - Crea ingredientes (sin eliminar existentes)")
-        print("  python Scripts/ingredientes.py limpiar_crear        - Elimina todo y crea ingredientes nuevos")
-        print("  python Scripts/ingredientes.py limpiar              - Solo elimina ingredientes existentes")
-        print("  python Scripts/ingredientes.py eliminar <nombre>    - Elimina un ingrediente específico")
-        print("  python Scripts/ingredientes.py migrar_imagenes      - Migra imágenes existentes a la BD")
-        print("  python Scripts/ingredientes.py listar_imagenes      - Lista imágenes de ingredientes en BD")
-        print("  python Scripts/ingredientes.py limpiar_imagenes     - Elimina imágenes de ingredientes de BD")
-        print("\n🍕🍔 NOTA: Este script solo gestiona ingredientes de PIZZAS y HAMBURGUESAS")
+        print("Comandos disponibles:")
+        print("  crear           - Crear ingredientes con nombres simples y precios")
+        print("  limpiar_crear   - Limpiar todo y crear desde cero")
+        print("  listar          - Listar ingredientes con precios por categoría")
+        print("  verificar       - Mostrar especificación con precios")
+        print("\n🖼️  NOTA: Las imágenes deben estar en /media/ingredientes/ con extensión .png")
+        print("💰 PRECIOS: Basados en economía ecuatoriana (USD)")
         return
 
     comando = sys.argv[1].lower()
 
     try:
+        if comando == 'verificar':
+            verificar_especificacion()
+            return
+            
         with transaction.atomic():
-            if comando == 'listar':
-                listar_ingredientes()
-                
-            elif comando == 'listar_categorias':
-                listar_ingredientes_por_categoria()
-                
-            elif comando == 'crear':
-                ingredientes_creados = crear_ingredientes_iniciales()
-                listar_ingredientes_por_categoria()
-                print("="*50)
-                print(f"✓ Proceso completado. {len(ingredientes_creados)} nuevos ingredientes creados.")
+            if comando == 'crear':
+                ingredientes_creados, imagenes_creadas = crear_ingredientes_por_categoria()
+                print(f"\n🎉 Proceso completado con nombres simples y precios!")
                 
             elif comando == 'limpiar_crear':
-                respuesta = input("¿Estás seguro de que quieres ELIMINAR todos los ingredientes existentes? (sí/no): ")
+                respuesta = input("¿Estás seguro de que quieres ELIMINAR todos los ingredientes e imágenes existentes? (sí/no): ")
                 if respuesta.lower() in ['sí', 'si', 's', 'yes', 'y']:
-                    limpiar_ingredientes()
-                    ingredientes_creados = crear_ingredientes_iniciales()
-                    listar_ingredientes_por_categoria()
-                    print("="*50)
-                    print(f"✓ Proceso completado. {len(ingredientes_creados)} ingredientes creados desde cero.")
+                    limpiar_ingredientes_completo()
+                    ingredientes_creados, imagenes_creadas = crear_ingredientes_por_categoria()
+                    print(f"\n🎉 Proceso completado desde cero!")
                 else:
                     print("Operación cancelada.")
                     
-            elif comando == 'limpiar':
-                respuesta = input("¿Estás seguro de que quieres ELIMINAR todos los ingredientes existentes? (sí/no): ")
-                if respuesta.lower() in ['sí', 'si', 's', 'yes', 'y']:
-                    limpiar_ingredientes()
-                    print("✓ Ingredientes eliminados correctamente.")
-                else:
-                    print("Operación cancelada.")
-                    
-            elif comando == 'eliminar':
-                if len(sys.argv) < 3:
-                    print("❌ Debes especificar el nombre del ingrediente a eliminar")
-                    print("Ejemplo: python Scripts/ingredientes.py eliminar 'Tomate Cherry'")
-                    print("\nPara ver ingredientes disponibles:")
-                    print("python Scripts/ingredientes.py listar")
-                else:
-                    nombre_ingrediente = ' '.join(sys.argv[2:])
-                    eliminar_ingrediente_por_nombre(nombre_ingrediente)
-                    
-            elif comando == 'migrar_imagenes':
-                migrar_imagenes_ingredientes()
+            elif comando == 'listar':
+                listar_ingredientes_por_categoria()
                 
-            elif comando == 'listar_imagenes':
-                listar_imagenes_ingredientes()
-                
-            elif comando == 'limpiar_imagenes':
-                respuesta = input("¿Estás seguro de que quieres ELIMINAR todas las imágenes de ingredientes de la BD? (sí/no): ")
-                if respuesta.lower() in ['sí', 'si', 's', 'yes', 'y']:
-                    limpiar_imagenes_ingredientes()
-                    print("✓ Imágenes de ingredientes eliminadas correctamente.")
-                else:
-                    print("Operación cancelada.")
-                    
             else:
                 print(f"Comando '{comando}' no reconocido.")
-                print("Comandos disponibles: listar, listar_categorias, crear, limpiar_crear, limpiar, eliminar, migrar_imagenes, listar_imagenes, limpiar_imagenes")
+                print("Comandos disponibles: crear, limpiar_crear, listar, verificar")
 
     except Exception as e:
         print(f"✗ Error durante la ejecución: {str(e)}")

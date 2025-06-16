@@ -690,6 +690,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
 # ← AGREGAR SERIALIZER PARA INGREDIENTES
 class IngredienteSerializer(serializers.ModelSerializer):
     imagen_url = serializers.SerializerMethodField()
+    imagen = serializers.ImageField(write_only=True, required=False)
     
     class Meta:
         model = AppkioskoIngredientes
@@ -699,31 +700,118 @@ class IngredienteSerializer(serializers.ModelSerializer):
             'unidad_medida', 'estado', 'imagen', 'imagen_url',
             'created_at', 'updated_at'
         ]
-        
+    
     def get_imagen_url(self, obj):
-        if obj.imagen:
-            return obj.imagen.url
-        return None
-        
+        """✅ CORREGIDO: Buscar en AppkioskoImagen igual que productos"""
+        try:
+            imagen = AppkioskoImagen.objects.get(
+                categoria_imagen='ingredientes',
+                entidad_relacionada_id=obj.id
+            )
+            return imagen.ruta  # ← Igual que productos, retorna solo la ruta
+        except AppkioskoImagen.DoesNotExist:
+            # Fallback al campo directo si no existe en AppkioskoImagen
+            if obj.imagen:
+                return obj.imagen.url
+            return None
+    
     def create(self, validated_data):
+        """Crear ingrediente y guardar imagen en AppkioskoImagen"""
         print("🔍 [SERIALIZER CREATE] Datos recibidos:", list(validated_data.keys()))
-        if 'imagen' in validated_data:
+        
+        imagen = validated_data.pop('imagen', None)
+        
+        if imagen:
             print("✅ [SERIALIZER CREATE] Imagen encontrada en validated_data")
-            print("📸 [SERIALIZER CREATE] Tipo de imagen:", type(validated_data['imagen']))
+            print("📸 [SERIALIZER CREATE] Tipo de imagen:", type(imagen))
         else:
             print("❌ [SERIALIZER CREATE] NO se encontró imagen en validated_data")
-            
-        return super().create(validated_data)
         
+        # Crear el ingrediente
+        ingrediente = super().create(validated_data)
+        print(f"✅ Ingrediente creado: {ingrediente.nombre} (ID: {ingrediente.id})")
+        
+        # Guardar imagen en AppkioskoImagen igual que productos
+        if imagen:
+            imagen_url = self._crear_imagen_ingrediente(ingrediente, imagen)
+            if imagen_url:
+                print(f"📸 Imagen guardada: {imagen_url}")
+        
+        return ingrediente
+    
     def update(self, instance, validated_data):
+        """Actualizar ingrediente y su imagen"""
         print("🔍 [SERIALIZER UPDATE] Datos recibidos:", list(validated_data.keys()))
-        if 'imagen' in validated_data:
+        
+        imagen = validated_data.pop('imagen', None)
+        
+        if imagen:
             print("✅ [SERIALIZER UPDATE] Imagen encontrada en validated_data")
-            print("📸 [SERIALIZER UPDATE] Tipo de imagen:", type(validated_data['imagen']))
+            print("📸 [SERIALIZER UPDATE] Tipo de imagen:", type(imagen))
         else:
             print("❌ [SERIALIZER UPDATE] NO se encontró imagen en validated_data")
+        
+        # Actualizar campos básicos
+        instance = super().update(instance, validated_data)
+        
+        # Actualizar imagen si se proporcionó
+        if imagen:
+            self._actualizar_imagen_ingrediente(instance, imagen)
+        
+        return instance
+    
+    def _crear_imagen_ingrediente(self, ingrediente, imagen):
+        """Crea y guarda la imagen del ingrediente en AppkioskoImagen"""
+        try:
+            # Crear directorio si no existe
+            ingredientes_dir = os.path.join(settings.MEDIA_ROOT, 'ingredientes')
+            os.makedirs(ingredientes_dir, exist_ok=True)
             
-        return super().update(instance, validated_data)
+            # Generar nombre único
+            extension = imagen.name.split('.')[-1] if '.' in imagen.name else 'png'
+            nombre_archivo = f"ingrediente_{ingrediente.id}_{uuid.uuid4().hex[:8]}.{extension}"
+            
+            # Guardar archivo físico
+            ruta_fisica = os.path.join(ingredientes_dir, nombre_archivo)
+            with open(ruta_fisica, 'wb+') as destination:
+                for chunk in imagen.chunks():
+                    destination.write(chunk)
+            
+            # Guardar en AppkioskoImagen
+            ruta_relativa = f"/media/ingredientes/{nombre_archivo}"
+            AppkioskoImagen.objects.create(
+                ruta=ruta_relativa,
+                categoria_imagen='ingredientes',
+                entidad_relacionada_id=ingrediente.id
+            )
+            
+            return ruta_relativa
+            
+        except Exception as e:
+            print(f"❌ Error al guardar imagen de ingrediente: {str(e)}")
+            return None
+    
+    def _actualizar_imagen_ingrediente(self, instance, imagen):
+        """Actualiza la imagen del ingrediente"""
+        try:
+            # Eliminar imagen anterior de AppkioskoImagen
+            imagen_anterior = AppkioskoImagen.objects.get(
+                categoria_imagen='ingredientes',
+                entidad_relacionada_id=instance.id
+            )
+            if imagen_anterior.ruta:
+                ruta_fisica = os.path.join(settings.MEDIA_ROOT, imagen_anterior.ruta.lstrip('/media/'))
+                if os.path.exists(ruta_fisica):
+                    os.remove(ruta_fisica)
+            imagen_anterior.delete()
+            print(f"   🗑️ Imagen anterior eliminada")
+        except AppkioskoImagen.DoesNotExist:
+            print(f"   📝 No había imagen anterior")
+        
+        # Crear nueva imagen
+        imagen_url = self._crear_imagen_ingrediente(instance, imagen)
+        if imagen_url:
+            print(f"   📸 Nueva imagen guardada: {imagen_url}")
 
 class MenuProductoDetalleSerializer(serializers.ModelSerializer):
     """Detalle de productos dentro de un menú"""
