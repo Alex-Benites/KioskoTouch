@@ -378,6 +378,187 @@
         </div>
       </mat-tab>
 
+      <!-- AGREGAR estos tabs que faltan DESPUÉS del tab de Snacks -->
+
+      <!-- TAB BEBIDAS -->
+      <mat-tab label="🥤 Bebidas">
+        <div class="tab-content">
+          <div *ngIf="cargandoBebidas" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando ingredientes de bebidas...</p>
+          </div>
+          
+          <div *ngIf="!cargandoBebidas && ingredientesBebidas.length === 0" class="empty-state">
+            <mat-icon class="empty-icon">local_drink</mat-icon>
+            <h3>No hay ingredientes de bebidas</h3>
+            <p>Crea el primer ingrediente para bebidas</p>
+            <button mat-raised-button color="primary" (click)="crearIngrediente()">
+              <mat-icon>add</mat-icon>
+              Crear Ingrediente
+            </button>
+          </div>
+          
+          <div class="ingredients-grid" *ngIf="!cargandoBebidas && ingredientesBebidas.length > 0">
+            <mat-card *ngFor="let ingrediente of ingredientesBebidas" class="ingredient-card">
+              <div class="card-image">
+                <img 
+                  [src]="getFullImageUrl(ingrediente.imagen_url)"
+                  [alt]="ingrediente.nombre"
+                  class="ingredient-image"
+                  (error)="onImageError($event)">
+                <div class="price-badge">
+                  +${{ ingrediente.precio_adicional }}
+                </div>
+              </div>
+              
+              <mat-card-header>
+                <mat-card-title>{{ ingrediente.nombre }}</mat-card-title>
+                <mat-card-subtitle>{{ ingrediente.descripcion }}</mat-card-subtitle>
+              </mat-card-header>
+              
+              <mat-card-content>
+                <div class="ingredient-info">
+                  <small class="creation-date">
+                    <mat-icon>schedule</mat-icon>
+                    {{ formatDate(ingrediente.created_at) }}
+                  </small>
+                </div>
+              </mat-card-content>
+              
+              <mat-card-actions class="card-actions">
+                <button mat-button color="primary" (click)="editarIngrediente(ingrediente.id)">
+                  <mat-icon>edit</mat-icon>
+                  Editar
+                </button>
+                <button mat-button color="warn" (click)="eliminarIngrediente(ingrediente)">
+                  <mat-icon>delete</mat-icon>
+                  Eliminar
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- TAB INFANTIL -->
+      <mat-tab label="👶 Infantil">
+        <div class="tab-content">
+          <div *ngIf="cargandoInfantil" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando ingredientes infantiles...</p>
+          </div>
+          
+          <div *ngIf="!cargandoInfantil && ingredientesInfantil.length === 0" class="empty-state">
+            <mat-icon class="empty-icon">child_care</mat-icon>
+            <h3>No hay ingredientes infantiles</h3>
+            <p>Crea el primer ingrediente para el menú infantil</p>
+            <button mat-raised-button color="primary" (click)="crearIngrediente()">
+              <mat-icon>add</mat-icon>
+              Crear Ingrediente
+            </button>
+          </div>
+          
+          <div class="ingredients-grid" *ngIf="!cargandoInfantil && ingredientesInfantil.length > 0">
+            <mat-card *ngFor="let ingrediente of ingredientesInfantil" class="ingredient-card">
+              <div class="card-image">
+                <img 
+                  [src]="getFullImageUrl(ingrediente.imagen_url)"
+                  [alt]="ingrediente.nombre"
+                  class="ingredient-image"
+                  (error)="onImageError($event)">
+                <div class="price-badge">
+                  +${{ ingrediente.precio_adicional }}
+                </div>
+              </div>
+              
+              <mat-card-header>
+                <mat-card-title>{{ ingrediente.nombre }}</mat-card-title>
+                <mat-card-subtitle>{{ ingrediente.descripcion }}</mat-card-subtitle>
+              </mat-card-header>
+              
+              <mat-card-content>
+                <div class="ingredient-info">
+                  <small class="creation-date">
+                    <mat-icon>schedule</mat-icon>
+                    {{ formatDate(ingrediente.created_at) }}
+                  </small>
+                </div>
+              </mat-card-content>
+              
+              <mat-card-actions class="card-actions">
+                <button mat-button color="primary" (click)="editarIngrediente(ingrediente.id)">
+                  <mat-icon>edit</mat-icon>
+                  Editar
+                </button>
+                <button mat-button color="warn" (click)="eliminarIngrediente(ingrediente)">
+                  <mat-icon>delete</mat-icon>
+                  Eliminar
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- TAB COMBOS -->
+      <mat-tab label="🍽️ Combos">
+        <div class="tab-content">
+          <div *ngIf="cargandoCombos" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando ingredientes de combos...</p>
+          </div>
+          
+          <div *ngIf="!cargandoCombos && ingredientesCombos.length === 0" class="empty-state">
+            <mat-icon class="empty-icon">restaurant</mat-icon>
+            <h3>No hay ingredientes de combos</h3>
+            <p>Crea el primer ingrediente para combos</p>
+            <button mat-raised-button color="primary" (click)="crearIngrediente()">
+              <mat-icon>add</mat-icon>
+              Crear Ingrediente
+            </button>
+          </div>
+          
+          <div class="ingredients-grid" *ngIf="!cargandoCombos && ingredientesCombos.length > 0">
+            <mat-card *ngFor="let ingrediente of ingredientesCombos" class="ingredient-card">
+              <div class="card-image">
+                <img 
+                  [src]="getFullImageUrl(ingrediente.imagen_url)"
+                  [alt]="ingrediente.nombre"
+                  class="ingredient-image"
+                  (error)="onImageError($event)">
+                <div class="price-badge">
+                  +${{ ingrediente.precio_adicional }}
+                </div>
+              </div>
+              
+              <mat-card-header>
+                <mat-card-title>{{ ingrediente.nombre }}</mat-card-title>
+                <mat-card-subtitle>{{ ingrediente.descripcion }}</mat-card-subtitle>
+              </mat-card-header>
+              
+              <mat-card-content>
+                <div class="ingredient-info">
+                  <small class="creation-date">
+                    <mat-icon>schedule</mat-icon>
+                    {{ formatDate(ingrediente.created_at) }}
+                  </small>
+                </div>
+              </mat-card-content>
+              
+              <mat-card-actions class="card-actions">
+                <button mat-button color="primary" (click)="editarIngrediente(ingrediente.id)">
+                  <mat-icon>edit</mat-icon>
+                  Editar
+                </button>
+                <button mat-button color="warn" (click)="eliminarIngrediente(ingrediente)">
+                  <mat-icon>delete</mat-icon>
+                  Eliminar
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
     </mat-tab-group>
   </div>
 </div>

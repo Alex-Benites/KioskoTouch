@@ -155,6 +155,7 @@ export class CrearIngredienteComponent implements OnInit {
         console.log('⚠️ Usando categoría fallback');
       }
     });
+
   }
 
   private cargarIngredienteParaEditar(): void {

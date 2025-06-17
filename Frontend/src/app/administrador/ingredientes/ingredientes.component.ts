@@ -43,6 +43,8 @@ export class IngredientesComponent implements OnInit {
   ingredientesHelados: Ingrediente[] = [];     // ✅ CAMBIO: Postres → Helados
   ingredientesSnacks: Ingrediente[] = [];      // ✅ NUEVO: Snacks
   ingredientesBebidas: Ingrediente[] = [];
+  ingredientesInfantil: Ingrediente[] = [];    // ✅ AGREGAR
+  ingredientesCombos: Ingrediente[] = [];      // ✅ AGREGAR
   
   cargandoHamburguesas = false;
   cargandoPizzas = false;
@@ -51,6 +53,8 @@ export class IngredientesComponent implements OnInit {
   cargandoHelados = false;     // ✅ CAMBIO: cargandoPostres → cargandoHelados
   cargandoSnacks = false;      // ✅ NUEVO: cargandoSnacks
   cargandoBebidas = false;
+  cargandoInfantil = false;    // ✅ AGREGAR
+  cargandoCombos = false;      // ✅ AGREGAR
 
   ngOnInit() {
     this.cargarTodosLosIngredientes();
@@ -60,10 +64,12 @@ export class IngredientesComponent implements OnInit {
     this.cargarIngredientesPorCategoria('hamburguesas');
     this.cargarIngredientesPorCategoria('pizzas');
     this.cargarIngredientesPorCategoria('ensaladas');
-    this.cargarIngredientesPorCategoria('pollos');     // ✅ CAMBIO: pollo → pollos
-    this.cargarIngredientesPorCategoria('helados');    // ✅ CAMBIO: postres → helados
-    this.cargarIngredientesPorCategoria('snacks');     // ✅ NUEVO: snacks
+    this.cargarIngredientesPorCategoria('pollos');
+    this.cargarIngredientesPorCategoria('helados');
+    this.cargarIngredientesPorCategoria('snacks');
     this.cargarIngredientesPorCategoria('bebidas');
+    this.cargarIngredientesPorCategoria('infantil');   // ✅ AGREGAR
+    this.cargarIngredientesPorCategoria('combos');     // ✅ AGREGAR
   }
 
   cargarIngredientesPorCategoria(categoria: string) {
@@ -95,6 +101,8 @@ export class IngredientesComponent implements OnInit {
       case 'helados': this.cargandoHelados = cargando; break;      // ✅ CAMBIO
       case 'snacks': this.cargandoSnacks = cargando; break;        // ✅ NUEVO
       case 'bebidas': this.cargandoBebidas = cargando; break;
+      case 'infantil': this.cargandoInfantil = cargando; break;  // ✅ AGREGAR
+      case 'combos': this.cargandoCombos = cargando; break;      // ✅ AGREGAR
     }
   }
 
@@ -107,6 +115,8 @@ export class IngredientesComponent implements OnInit {
       case 'helados': this.ingredientesHelados = ingredientes; break;      // ✅ CAMBIO
       case 'snacks': this.ingredientesSnacks = ingredientes; break;        // ✅ NUEVO
       case 'bebidas': this.ingredientesBebidas = ingredientes; break;
+      case 'infantil': this.ingredientesInfantil = ingredientes; break;  // ✅ AGREGAR
+      case 'combos': this.ingredientesCombos = ingredientes; break;      // ✅ AGREGAR
     }
   }
 
@@ -183,9 +193,11 @@ export class IngredientesComponent implements OnInit {
     return this.ingredientesHamburguesas.length + 
            this.ingredientesPizzas.length + 
            this.ingredientesEnsaladas.length + 
-           this.ingredientesPollos.length +      // ✅ CAMBIO
-           this.ingredientesHelados.length +     // ✅ CAMBIO
-           this.ingredientesSnacks.length +      // ✅ NUEVO
-           this.ingredientesBebidas.length;
+           this.ingredientesPollos.length +
+           this.ingredientesHelados.length +
+           this.ingredientesSnacks.length +
+           this.ingredientesBebidas.length +
+           this.ingredientesInfantil.length +   // ✅ AGREGAR
+           this.ingredientesCombos.length;      // ✅ AGREGAR
   }
 }
