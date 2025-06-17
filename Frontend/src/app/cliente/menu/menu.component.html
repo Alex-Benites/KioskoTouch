@@ -1,8 +1,11 @@
 <div class="menu-page-container">
   <!-- Banner Promocional Superior -->
-  <div class="promo-banner-top">
-    <img src="assets/cliente/USUARIO_5.png" alt="Nuestra Nueva Hamburguesa">
-  </div>
+  <app-publicidad-section 
+    tipo="banner"
+    altura="200px"
+    [mostrarIndicadores]="true"
+    (publicidadCambio)="onPublicidadCambio($event)">
+  </app-publicidad-section>
 
   <header class="menu-header">
     <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">

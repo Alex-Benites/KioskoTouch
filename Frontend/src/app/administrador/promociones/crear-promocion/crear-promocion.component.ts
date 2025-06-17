@@ -576,7 +576,7 @@ private cargarPromocionParaEditar(): void {
       });
 
       if (promocion.imagen_url) {
-        this.currentImageUrl = this.publicidadService.getFullImageUrl(promocion.imagen_url);
+        this.currentImageUrl = this.publicidadService.getFullMediaUrl(promocion.imagen_url);
         this.imagePreview = this.currentImageUrl;
         this.promocionForm.get('imagen')?.clearValidators();
         this.promocionForm.get('imagen')?.updateValueAndValidity();
