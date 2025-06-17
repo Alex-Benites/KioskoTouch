@@ -14,6 +14,7 @@ urlpatterns = [
     path('publicidades/<int:pk>/', views.PublicidadDetailView.as_view(), name='publicidad-detail'),
     path('publicidades/<int:pk>/toggle-estado/', views.PublicidadToggleEstadoView.as_view(), name='publicidad-toggle-estado'),
     path('publicidades/stats/', views.PublicidadStatsView.as_view(), name='publicidad-stats'),
+    path('publicidades/activas/', views.get_publicidades_activas_publicas, name='publicidades-activas-publicas'),
     
     # Estados (para los dropdowns)
     path('estados/', views.EstadoListView.as_view(), name='estado-list'),

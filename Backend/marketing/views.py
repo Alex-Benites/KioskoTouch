@@ -463,7 +463,6 @@ def get_promocion_imagen(request, promocion_id):
     except Exception as e:
         return Response({'error': str(e)}, status=400)
 
-# ✅ SOLO AGREGAR esta nueva vista al final del archivo
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_tamanos_promociones(request):
@@ -477,3 +476,108 @@ def get_tamanos_promociones(request):
         return Response(serializer.data)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_publicidades_activas_publicas(request):
+    """
+    Endpoint público para obtener publicidades activas para el carrusel.
+    Incluye TODAS las imágenes de cada publicidad.
+    """
+    try:
+        print(f"🎬 Solicitud de publicidades activas públicas")
+        
+        # Filtro correcto usando is_active
+        queryset = AppkioskoPublicidades.objects.filter(
+            estado__is_active=True
+        ).select_related('estado').prefetch_related('appkioskovideo_set')
+        
+        # Filtrar por tipo si se especifica
+        tipo_publicidad = request.query_params.get('tipo_publicidad', None)
+        if tipo_publicidad:
+            queryset = queryset.filter(tipo_publicidad=tipo_publicidad)
+            print(f"   📋 Filtrado por tipo: {tipo_publicidad}")
+        
+        # Filtrar por fechas vigentes
+        from django.utils import timezone
+        fecha_actual = timezone.now().date()
+        queryset = queryset.filter(
+            fecha_inicio_publicidad__lte=fecha_actual,
+            fecha_fin_publicidad__gte=fecha_actual
+        )
+        
+        queryset = queryset.order_by('-created_at')
+        print(f"   📊 Publicidades encontradas: {queryset.count()}")
+        
+        # ✅ SERIALIZAR CON MÚLTIPLES IMÁGENES
+        resultados = []
+        for publicidad in queryset:
+            # Obtener videos
+            videos = list(publicidad.appkioskovideo_set.all())
+            
+            if videos:
+                # Si tiene video, agregar como item único
+                video = videos[0]
+                resultados.append({
+                    'id': publicidad.id,
+                    'nombre': publicidad.nombre,
+                    'descripcion': publicidad.descripcion,
+                    'media_type': 'video',
+                    'media_url': video.ruta,
+                    'tiempo_visualizacion': publicidad.tiempo_visualizacion,
+                    'duracion_video': video.duracion,
+                    'tipo_publicidad': publicidad.tipo_publicidad,
+                    'es_multiple': False  
+                })
+                print(f"   ✅ Video: {publicidad.nombre}")
+            else:
+                imagenes = AppkioskoImagen.objects.filter(
+                    categoria_imagen='publicidad',
+                    entidad_relacionada_id=publicidad.id
+                ).order_by('id')  # Ordenar por ID para consistencia
+                
+                if imagenes.exists():
+                    imagenes_list = list(imagenes)
+                    
+                    if len(imagenes_list) == 1:
+                        # Una sola imagen - comportamiento normal
+                        imagen = imagenes_list[0]
+                        resultados.append({
+                            'id': publicidad.id,
+                            'nombre': publicidad.nombre,
+                            'descripcion': publicidad.descripcion,
+                            'media_type': 'image',
+                            'media_url': imagen.ruta,
+                            'tiempo_visualizacion': publicidad.tiempo_visualizacion,
+                            'duracion_video': None,
+                            'tipo_publicidad': publicidad.tipo_publicidad,
+                            'es_multiple': False
+                        })
+                        print(f"   ✅ Imagen única: {publicidad.nombre}")
+                    else:
+                 
+                        todas_las_imagenes = [img.ruta for img in imagenes_list]
+                        resultados.append({
+                            'id': publicidad.id,
+                            'nombre': publicidad.nombre,
+                            'descripcion': publicidad.descripcion,
+                            'media_type': 'image_multiple', 
+                            'media_url': imagenes_list[0].ruta,  # Primera imagen como principal
+                            'media_urls': todas_las_imagenes,    
+                            'tiempo_visualizacion': publicidad.tiempo_visualizacion,
+                            'duracion_video': None,
+                            'tipo_publicidad': publicidad.tipo_publicidad,
+                            'es_multiple': True,
+                            'total_imagenes': len(imagenes_list)
+                        })
+                        print(f"   ✅ Múltiples imágenes: {publicidad.nombre} ({len(imagenes_list)} imágenes)")
+        
+        print(f"   🎯 Items válidos para carrusel: {len(resultados)}")
+        return Response(resultados, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        print(f"❌ Error obteniendo publicidades activas: {e}")
+        return Response({
+            'error': 'Error al obtener publicidades activas',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
