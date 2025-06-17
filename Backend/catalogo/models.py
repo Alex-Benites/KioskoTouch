@@ -16,24 +16,16 @@ class AppkioskoCategorias(models.Model):
         return self.nombre
 
 class AppkioskoIngredientes(models.Model):
-    CATEGORIA_INGREDIENTE_CHOICES = [
-        ('hamburguesas', 'Hamburguesas'),
-        ('pizzas', 'Pizzas'),
-        ('ensaladas', 'Ensaladas'),
-        ('pollo', 'Pollo'),
-        ('postres', 'Postres'),
-        ('bebidas', 'Bebidas'),
-        ('general', 'General'),  # Para ingredientes que van en varios productos
-    ]
-    
     nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True)
+    descripcion = models.TextField(blank=True, null=True)
+    
+    # ✅ OPCIÓN RECOMENDADA: Hacer el campo libre (sin choices)
     categoria_producto = models.CharField(
-        max_length=20,
-        choices=CATEGORIA_INGREDIENTE_CHOICES,
-        default='general'
+        max_length=50,
+        help_text="Categoría del producto para el cual aplica este ingrediente"
     )
-    precio_adicional = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    
+    precio_adicional = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     # ✅ AGREGAR CAMPO DE STOCK
     stock = models.IntegerField(
         default=0,

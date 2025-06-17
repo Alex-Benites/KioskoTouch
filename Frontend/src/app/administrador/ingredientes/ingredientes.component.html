@@ -200,25 +200,25 @@
       </mat-tab>
 
       <!-- TABS ADICIONALES -->
-      <mat-tab label="🍗 Pollo">
+      <mat-tab label="🍗 Pollos">
         <div class="tab-content">
-          <div *ngIf="cargandoPollo" class="loading-container">
+          <div *ngIf="cargandoPollos" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
-            <p>Cargando ingredientes de pollo...</p>
+            <p>Cargando ingredientes de pollos...</p>
           </div>
           
-          <div *ngIf="!cargandoPollo && ingredientesPollo.length === 0" class="empty-state">
+          <div *ngIf="!cargandoPollos && ingredientesPollos.length === 0" class="empty-state">
             <mat-icon class="empty-icon">restaurant</mat-icon>
-            <h3>No hay ingredientes de pollo</h3>
-            <p>Crea el primer ingrediente para pollo</p>
+            <h3>No hay ingredientes de pollos</h3>
+            <p>Crea el primer ingrediente para pollos</p>
             <button mat-raised-button color="primary" (click)="crearIngrediente()">
               <mat-icon>add</mat-icon>
               Crear Ingrediente
             </button>
           </div>
           
-          <div class="ingredients-grid" *ngIf="!cargandoPollo && ingredientesPollo.length > 0">
-            <mat-card *ngFor="let ingrediente of ingredientesPollo" class="ingredient-card">
+          <div class="ingredients-grid" *ngIf="!cargandoPollos && ingredientesPollos.length > 0">
+            <mat-card *ngFor="let ingrediente of ingredientesPollos" class="ingredient-card">
               <div class="card-image">
                 <img 
                   [src]="getFullImageUrl(ingrediente.imagen_url)"
@@ -259,25 +259,25 @@
         </div>
       </mat-tab>
 
-      <mat-tab label="🍰 Postres">
+      <mat-tab label="🍦 Helados">
         <div class="tab-content">
-          <div *ngIf="cargandoPostres" class="loading-container">
+          <div *ngIf="cargandoHelados" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
-            <p>Cargando ingredientes de postres...</p>
+            <p>Cargando ingredientes de helados...</p>
           </div>
           
-          <div *ngIf="!cargandoPostres && ingredientesPostres.length === 0" class="empty-state">
-            <mat-icon class="empty-icon">cake</mat-icon>
-            <h3>No hay ingredientes de postres</h3>
-            <p>Crea el primer ingrediente para postres</p>
+          <div *ngIf="!cargandoHelados && ingredientesHelados.length === 0" class="empty-state">
+            <mat-icon class="empty-icon">icecream</mat-icon>
+            <h3>No hay ingredientes de helados</h3>
+            <p>Crea el primer ingrediente para helados</p>
             <button mat-raised-button color="primary" (click)="crearIngrediente()">
               <mat-icon>add</mat-icon>
               Crear Ingrediente
             </button>
           </div>
           
-          <div class="ingredients-grid" *ngIf="!cargandoPostres && ingredientesPostres.length > 0">
-            <mat-card *ngFor="let ingrediente of ingredientesPostres" class="ingredient-card">
+          <div class="ingredients-grid" *ngIf="!cargandoHelados && ingredientesHelados.length > 0">
+            <mat-card *ngFor="let ingrediente of ingredientesHelados" class="ingredient-card">
               <div class="card-image">
                 <img 
                   [src]="getFullImageUrl(ingrediente.imagen_url)"
@@ -318,25 +318,26 @@
         </div>
       </mat-tab>
 
-      <mat-tab label="🥤 Bebidas">
+      <!-- TAB SNACKS (agregar nuevo) -->
+      <mat-tab label="🍿 Snacks">
         <div class="tab-content">
-          <div *ngIf="cargandoBebidas" class="loading-container">
+          <div *ngIf="cargandoSnacks" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
-            <p>Cargando ingredientes de bebidas...</p>
+            <p>Cargando ingredientes de snacks...</p>
           </div>
           
-          <div *ngIf="!cargandoBebidas && ingredientesBebidas.length === 0" class="empty-state">
-            <mat-icon class="empty-icon">local_drink</mat-icon>
-            <h3>No hay ingredientes de bebidas</h3>
-            <p>Crea el primer ingrediente para bebidas</p>
+          <div *ngIf="!cargandoSnacks && ingredientesSnacks.length === 0" class="empty-state">
+            <mat-icon class="empty-icon">fastfood</mat-icon>
+            <h3>No hay ingredientes de snacks</h3>
+            <p>Crea el primer ingrediente para snacks</p>
             <button mat-raised-button color="primary" (click)="crearIngrediente()">
               <mat-icon>add</mat-icon>
               Crear Ingrediente
             </button>
           </div>
           
-          <div class="ingredients-grid" *ngIf="!cargandoBebidas && ingredientesBebidas.length > 0">
-            <mat-card *ngFor="let ingrediente of ingredientesBebidas" class="ingredient-card">
+          <div class="ingredients-grid" *ngIf="!cargandoSnacks && ingredientesSnacks.length > 0">
+            <mat-card *ngFor="let ingrediente of ingredientesSnacks" class="ingredient-card">
               <div class="card-image">
                 <img 
                   [src]="getFullImageUrl(ingrediente.imagen_url)"

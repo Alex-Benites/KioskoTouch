@@ -42,24 +42,16 @@ export class CrearIngredienteComponent implements OnInit {
 
   ingredienteForm: FormGroup;
   estados: Estado[] = [];
+  categorias: any[] = [];  // ✅ CAMBIO: Hacer dinámico
   imagePreview: string | null = null;
   selectedFile: File | null = null;
   isEditMode = false;
   ingredienteId: number | null = null;
   currentImageUrl: string | null = null;
   saving = false;
+  cargandoCategorias = false;  // ✅ NUEVO: Estado de carga
 
-  categorias = [
-    { value: 'hamburguesas', label: 'Hamburguesas' },
-    { value: 'pizzas', label: 'Pizzas' },
-    { value: 'ensaladas', label: 'Ensaladas' },
-    { value: 'pollo', label: 'Pollo' },
-    { value: 'postres', label: 'Postres' },
-    { value: 'bebidas', label: 'Bebidas' },
-    { value: 'general', label: 'General' }
-  ];
-
-  // ✅ AGREGAR OPCIONES DE UNIDADES DE MEDIDA
+  // ✅ MANTENER: Unidades de medida (estas están bien)
   unidadesMedida = [
     { value: 'unidades', label: 'Unidades' },
     { value: 'gramos', label: 'Gramos (g)' },
@@ -75,13 +67,12 @@ export class CrearIngredienteComponent implements OnInit {
     this.ingredienteForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(2)]],
       descripcion: ['', [Validators.required, Validators.minLength(5)]],
-      categoria_producto: ['hamburguesas', Validators.required],
+      categoria_producto: ['', Validators.required],  // ✅ CAMBIO: Sin valor por defecto
       precio_adicional: ['0.00', [
         Validators.required,
         Validators.pattern(/^\d+(\.\d{1,2})?$/),
         Validators.min(0)
       ]],
-      // ✅ AGREGAR CAMPOS DE STOCK
       stock: ['0', [
         Validators.required,
         Validators.pattern(/^\d+$/),
@@ -107,6 +98,9 @@ export class CrearIngredienteComponent implements OnInit {
     console.log('   Modo edición:', this.isEditMode);
     console.log('   ID ingrediente:', this.ingredienteId);
 
+    // ✅ NUEVO: Cargar categorías dinámicamente
+    this.cargarCategorias();
+
     // Cargar estados
     this.catalogoService.getEstados().subscribe({
       next: (data) => {
@@ -124,6 +118,45 @@ export class CrearIngredienteComponent implements OnInit {
     }
   }
 
+  // ✅ NUEVO: Método para cargar categorías dinámicamente
+  private cargarCategorias(): void {
+    this.cargandoCategorias = true;
+    console.log('📂 Cargando categorías desde la base de datos...');
+
+    this.catalogoService.getCategorias().subscribe({
+      next: (categorias) => {
+        // ✅ CORREGIR: Quitar filtro por 'activo' ya que no existe ese campo
+        this.categorias = categorias
+          .map(cat => ({
+            value: cat.nombre.toLowerCase(),
+            label: cat.nombre
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));  // Ordenar alfabéticamente
+
+        this.cargandoCategorias = false;
+        console.log('✅ Categorías cargadas:', this.categorias);
+
+        // ✅ NUEVO: Establecer primera categoría como predeterminada si no es modo edición
+        if (!this.isEditMode && this.categorias.length > 0) {
+          this.ingredienteForm.patchValue({
+            categoria_producto: this.categorias[0].value
+          });
+          console.log('🎯 Categoría predeterminada establecida:', this.categorias[0].value);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar categorías:', error);
+        this.cargandoCategorias = false;
+        
+        // ✅ FALLBACK: Usar categorías básicas si falla la carga
+        this.categorias = [
+          { value: 'general', label: 'General' }
+        ];
+        console.log('⚠️ Usando categoría fallback');
+      }
+    });
+  }
+
   private cargarIngredienteParaEditar(): void {
     if (!this.ingredienteId) return;
 
@@ -136,9 +169,8 @@ export class CrearIngredienteComponent implements OnInit {
         this.ingredienteForm.patchValue({
           nombre: ingrediente.nombre,
           descripcion: ingrediente.descripcion,
-          categoria_producto: ingrediente.categoria_producto,
+          categoria_producto: ingrediente.categoria_producto?.toLowerCase() || '',  // ✅ CORREGIR: Convertir a minúsculas
           precio_adicional: ingrediente.precio_adicional,
-          // ✅ AGREGAR CAMPOS DE STOCK
           stock: ingrediente.stock,
           stock_minimo: ingrediente.stock_minimo,
           unidad_medida: ingrediente.unidad_medida,
@@ -212,7 +244,6 @@ export class CrearIngredienteComponent implements OnInit {
       formData.append('descripcion', this.ingredienteForm.get('descripcion')?.value);
       formData.append('categoria_producto', this.ingredienteForm.get('categoria_producto')?.value);
       formData.append('precio_adicional', this.ingredienteForm.get('precio_adicional')?.value);
-      // ✅ AGREGAR CAMPOS DE STOCK
       formData.append('stock', this.ingredienteForm.get('stock')?.value);
       formData.append('stock_minimo', this.ingredienteForm.get('stock_minimo')?.value);
       formData.append('unidad_medida', this.ingredienteForm.get('unidad_medida')?.value);
@@ -323,15 +354,19 @@ export class CrearIngredienteComponent implements OnInit {
     this.selectedFile = null;
     this.currentImageUrl = null;
 
+    // ✅ CAMBIO: Establecer primera categoría disponible como predeterminada
+    const primeraCategoria = this.categorias.length > 0 ? this.categorias[0].value : '';
+    
     this.ingredienteForm.patchValue({
-      categoria_producto: 'hamburguesas',
+      categoria_producto: primeraCategoria,
       precio_adicional: '0.00',
-      // ✅ AGREGAR VALORES POR DEFECTO DE STOCK
       stock: '0',
       stock_minimo: '5',
       unidad_medida: 'unidades',
       estado: ''
     });
+    
+    console.log('🔄 Formulario limpiado, categoría predeterminada:', primeraCategoria);
   }
 
   volver(): void {

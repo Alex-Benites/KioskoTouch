@@ -34,10 +34,21 @@
         <div class="form-group half-width">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Categoría</mat-label>
-            <mat-select formControlName="categoria_producto">
+            <mat-select formControlName="categoria_producto" [disabled]="cargandoCategorias">
+              <!-- ✅ NUEVO: Mostrar loading mientras carga -->
+              <mat-option *ngIf="cargandoCategorias" disabled>
+                Cargando categorías...
+              </mat-option>
+              
+              <!-- ✅ NUEVO: Mostrar categorías dinámicas -->
               <mat-option *ngFor="let categoria of categorias" 
                          [value]="categoria.value">
                 {{ categoria.label }}
+              </mat-option>
+              
+              <!-- ✅ NUEVO: Mensaje si no hay categorías -->
+              <mat-option *ngIf="!cargandoCategorias && categorias.length === 0" disabled>
+                No hay categorías disponibles
               </mat-option>
             </mat-select>
             <mat-error *ngIf="categoriaError">{{ categoriaError }}</mat-error>

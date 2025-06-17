@@ -319,11 +319,16 @@ export class CrearComponent implements OnInit {
   }
 
 
-  // ✅ MODIFICAR: Método cargarIngredientesYMarcarSeleccionados para edición
+  // ✅ ACTUALIZAR: Método cargarIngredientesYMarcarSeleccionados con lógica dinámica
   private cargarIngredientesYMarcarSeleccionados(categoria: string, ingredientesSeleccionados: any[]): void {
     console.log('🥗 [EDICIÓN] Cargando ingredientes para categoría:', categoria);
 
-    this.catalogoService.getIngredientesPorCategoria(categoria).subscribe({
+    // ✅ NUEVO: Usar el mismo método de normalización
+    const categoriaIngredientes = this.normalizarNombreCategoria(categoria);
+    
+    console.log('🔗 [EDICIÓN] Usando categoría normalizada:', categoriaIngredientes);
+
+    this.catalogoService.getIngredientesPorCategoria(categoriaIngredientes).subscribe({
       next: (ingredientesDisponibles) => {
         // Mapear ingredientes disponibles y establecer cantidades
         this.ingredientesDisponibles = ingredientesDisponibles.map(ingrediente => {
@@ -332,7 +337,7 @@ export class CrearComponent implements OnInit {
           
           return {
             ...ingrediente,
-            cantidad: cantidad, // ✅ USAR CANTIDAD DEL BACKEND O 0
+            cantidad: cantidad,
             seleccionado: cantidad > 0,
             es_base: ingrediente.es_base || false,
             permite_extra: ingrediente.permite_extra || false
@@ -341,6 +346,8 @@ export class CrearComponent implements OnInit {
 
         // Actualizar ingredientes seleccionados con cantidades
         this.actualizarIngredientesSeleccionados();
+        
+        console.log('✅ [EDICIÓN] Ingredientes cargados y marcados');
       },
       error: (error) => {
         console.error('❌ [EDICIÓN] Error al cargar ingredientes:', error);
@@ -348,7 +355,6 @@ export class CrearComponent implements OnInit {
       }
     });
   }
-
 
 
   onCategoriaSeleccionada(event: MatSelectChange): void {
@@ -363,32 +369,22 @@ export class CrearComponent implements OnInit {
     console.log('🏷️ Categoría seleccionada:', categoria);
 
     if (categoria) {
-      let categoriaIngredientes = '';
-
-      if (categoria.nombre === 'Hamburguesa') {
-        categoriaIngredientes = 'hamburguesas';
-      } else if (categoria.nombre === 'Pizzas') {
-        categoriaIngredientes = 'pizzas';
-      } else if (categoria.nombre === 'Ensalada') {
-        categoriaIngredientes = 'ensaladas';
-      } else if (categoria.nombre === 'Pollo') {
-        categoriaIngredientes = 'pollo';
-      } else if (categoria.nombre === 'Postres') {
-        categoriaIngredientes = 'postres';
-      } else if (categoria.nombre === 'Bebidas') {
-        categoriaIngredientes = 'bebidas';
-      }
+      // ✅ NUEVO: Mapeo dinámico usando el nombre de la categoría
+      const categoriaIngredientes = this.normalizarNombreCategoria(categoria.nombre);
+      
+      console.log('🔗 Categoría normalizada para ingredientes:', categoriaIngredientes);
 
       if (categoriaIngredientes) {
         this.cargarIngredientesPorCategoria(categoriaIngredientes);
       } else {
+        console.log('📭 No hay ingredientes para esta categoría');
         this.ingredientesDisponibles = [];
       }
     } else {
+      console.log('❌ Categoría no encontrada');
       this.ingredientesDisponibles = [];
     }
   }
-
 
 
   getFullImageUrl(imagenUrl: string | undefined): string {
@@ -785,7 +781,6 @@ export class CrearComponent implements OnInit {
     return true;
   }
 
-  // ✅ CORREGIR: Método para validar formulario en modo edición
   private validarFormularioParaEdicion(): boolean {
     console.log('🔍 Validando formulario para edición...');
 
@@ -848,23 +843,68 @@ export class CrearComponent implements OnInit {
       }
     }
 
-    // ✅ OPCIONAL: Validar ingredientes solo para categorías específicas
+    // ✅ NUEVO: Validar ingredientes dinámicamente
     const categoria = this.categorias.find(cat => cat.id === categoriaValue);
     if (categoria) {
-      const categoriasConIngredientes = ['Hamburguesa', 'Pizzas', 'Ensalada'];
-      if (categoriasConIngredientes.includes(categoria.nombre)) {
-        if (this.ingredientesSeleccionados.length === 0) {
-          console.log('⚠️ Categoría requiere ingredientes pero no es bloqueante en edición');
-          // En edición, solo advertir pero no bloquear
-          const confirmar = confirm('⚠️ Esta categoría generalmente requiere ingredientes. ¿Deseas continuar sin ingredientes?');
-          if (!confirmar) {
-            return false;
-          }
+      // ✅ CAMBIO: Usar método dinámico en lugar de lista hardcodeada
+      const deberiaTenerIngredientes = this.categoriaDeberiaTenerIngredientes(categoria.nombre);
+      
+      if (deberiaTenerIngredientes && this.ingredientesSeleccionados.length === 0) {
+        console.log('⚠️ Categoría requiere ingredientes pero no es bloqueante en edición');
+        console.log('🔍 Categoría evaluada:', categoria.nombre, '→ Requiere ingredientes:', deberiaTenerIngredientes);
+        
+        // En edición, solo advertir pero no bloquear
+        const confirmar = confirm(`⚠️ La categoría "${categoria.nombre}" generalmente requiere ingredientes. ¿Deseas continuar sin ingredientes?`);
+        if (!confirmar) {
+          return false;
         }
+      } else if (deberiaTenerIngredientes) {
+        console.log('✅ Categoría tiene ingredientes seleccionados:', this.ingredientesSeleccionados.length);
+      } else {
+        console.log('ℹ️ Categoría no requiere ingredientes:', categoria.nombre);
       }
     }
 
     console.log('✅ Formulario válido para edición');
     return true;
   }
+
+
+  // ✅ NUEVO: Método para determinar si una categoría debería tener ingredientes
+  private categoriaDeberiaTenerIngredientes(nombreCategoria: string): boolean {
+    if (!nombreCategoria) return false;
+    
+    const nombreLimpio = nombreCategoria.toLowerCase().trim();
+    
+    // ✅ NUEVO: Lista de categorías que típicamente NO tienen ingredientes personalizables
+    const categoriasSinIngredientes = [
+      'bebidas',
+      'infantil',
+      'combos'
+    ];
+    
+    // Si no está en la lista de exclusiones, probablemente debería tener ingredientes
+    const deberiaTener = !categoriasSinIngredientes.includes(nombreLimpio);
+    
+    console.log('🔍 Verificando si categoría necesita ingredientes:', nombreCategoria, '→', deberiaTener);
+    
+    return deberiaTener;
+  }
+
+
+  // ✅ NUEVO: Método helper para normalizar nombres de categorías
+  private normalizarNombreCategoria(nombreCategoria: string): string {
+    if (!nombreCategoria) return '';
+    
+    // Convertir a minúsculas y limpiar
+    const nombreLimpio = nombreCategoria.toLowerCase().trim();
+    
+    console.log('🔄 Normalizando categoría:', nombreCategoria, '→', nombreLimpio);
+    
+    // El nombre ya está en el formato correcto para buscar ingredientes
+    return nombreLimpio;
+  }
+
+
+
 }

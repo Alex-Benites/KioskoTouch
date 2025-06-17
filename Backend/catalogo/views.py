@@ -732,14 +732,45 @@ def obtener_ingredientes_por_producto(request, producto_id):
         categoria_producto = producto.categoria.nombre.lower() if producto.categoria else None
         print(f"📂 Categoría del producto: '{categoria_producto}'")
 
-        # ✅ NUEVO: Si el producto tiene tamaños Y se especificó un tamaño, usar lógica específica
+        # ✅ NUEVO: Obtener mapeo dinámico de categorías activas
+        categoria_normalizada = categoria_producto
+        if categoria_producto:
+            # Obtener todas las categorías activas de la DB
+            categorias_activas = AppkioskoCategorias.objects.filter(activo=True).values_list('nombre', flat=True)
+            categorias_activas_lower = {cat.lower() for cat in categorias_activas}
+            
+            print(f"📊 Categorías activas en DB: {categorias_activas_lower}")
+            
+            # Si la categoría del producto no está en las activas, buscar similar
+            if categoria_producto.lower() not in categorias_activas_lower:
+                print(f"⚠️ Categoría '{categoria_producto}' no encontrada en categorías activas")
+                
+                # Buscar categoría similar (por si cambió el nombre)
+                for cat_activa in categorias_activas_lower:
+                    # Comparar sin considerar plural/singular y contenido parcial
+                    cat_producto_clean = categoria_producto.lower().rstrip('s')
+                    cat_activa_clean = cat_activa.rstrip('s')
+                    
+                    if (cat_producto_clean == cat_activa_clean or
+                        categoria_producto.lower() in cat_activa or 
+                        cat_activa in categoria_producto.lower()):
+                        categoria_normalizada = cat_activa
+                        print(f"🔄 Categoría similar encontrada: '{categoria_producto}' → '{categoria_normalizada}'")
+                        break
+            else:
+                categoria_normalizada = categoria_producto.lower()
+            
+            if categoria_normalizada != categoria_producto:
+                print(f"🔄 Categoría mapeada: '{categoria_producto}' → '{categoria_normalizada}'")
+
+        # ✅ NUEVO: Usar categoría normalizada para la búsqueda
         if producto.aplica_tamanos and tamano_codigo:
             # Para productos con tamaños, usar la categoría específica del producto
-            print(f"🎯 Producto con tamaños - usando categoría específica: {categoria_producto}")
-            categoria_busqueda = categoria_producto
+            print(f"🎯 Producto con tamaños - usando categoría específica: {categoria_normalizada}")
+            categoria_busqueda = categoria_normalizada
         else:
             # Para productos sin tamaños, usar lógica normal
-            categoria_busqueda = categoria_producto
+            categoria_busqueda = categoria_normalizada
 
         # Obtener ingredientes del producto desde la tabla de relaciones
         ingredientes_producto_info = {}
@@ -769,22 +800,31 @@ def obtener_ingredientes_por_producto(request, producto_id):
                 )
                 print(f"🔎 Ingredientes encontrados con búsqueda exacta: {ingredientes_categoria.count()}")
                 
-                # Si no encuentra con búsqueda exacta, probar con plural/singular
+                # ✅ NUEVO: Si no encuentra, buscar con variaciones dinámicas basadas en categorías activas
                 if not ingredientes_categoria.exists():
+                    # Obtener todas las posibles variaciones de la categoría
+                    variaciones_categoria = set()
+                    
+                    # Agregar la categoría original
+                    variaciones_categoria.add(categoria_busqueda)
+                    
+                    # Agregar variaciones plural/singular
                     if categoria_busqueda.endswith('s'):
-                        # Si termina en 's', probar sin la 's'
-                        categoria_singular = categoria_busqueda[:-1]
-                        ingredientes_categoria = AppkioskoIngredientes.objects.filter(
-                            categoria_producto__iexact=categoria_singular
-                        )
-                        print(f"🔎 Búsqueda singular '{categoria_singular}': {ingredientes_categoria.count()}")
+                        variaciones_categoria.add(categoria_busqueda[:-1])  # sin 's'
                     else:
-                        # Si no termina en 's', probar con 's'
-                        categoria_plural = categoria_busqueda + 's'
+                        variaciones_categoria.add(categoria_busqueda + 's')  # con 's'
+                    
+                    # Buscar en todas las variaciones
+                    for variacion in variaciones_categoria:
                         ingredientes_categoria = AppkioskoIngredientes.objects.filter(
-                            categoria_producto__iexact=categoria_plural
+                            categoria_producto__iexact=variacion
                         )
-                        print(f"🔎 Búsqueda plural '{categoria_plural}': {ingredientes_categoria.count()}")
+                        if ingredientes_categoria.exists():
+                            print(f"🔎 Ingredientes encontrados con variación '{variacion}': {ingredientes_categoria.count()}")
+                            break
+                    
+                    if not ingredientes_categoria.exists():
+                        print(f"🔎 No se encontraron ingredientes para ninguna variación de '{categoria_busqueda}'")
             else:
                 # ✅ MANTENER: Lógica original para productos sin tamaños
                 print(f"🔄 Usando lógica original para producto sin tamaños")
@@ -901,3 +941,4 @@ def obtener_ingredientes_por_producto(request, producto_id):
         return Response({
             'error': f'Error interno del servidor'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

@@ -27,9 +27,18 @@ export class CatalogoService {
     return this.http.get<Producto[]>(url);
   }
 
-  getCategorias(): Observable<Categoria[]> {
-    const url = `${this.apiUrl}/catalogo/categorias/`;
-    return this.http.get<Categoria[]>(url);
+  getCategorias(): Observable<any[]> {
+    console.log('📂 [SERVICE] Solicitando categorías');
+    return this.http.get<any[]>(`${this.apiUrl}/catalogo/categorias/`).pipe(
+      map((response: any) => {
+        console.log('✅ [SERVICE] Categorías recibidas:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ [SERVICE] Error al obtener categorías:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getEstados(): Observable<Estado[]> {

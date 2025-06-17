@@ -39,15 +39,17 @@ export class IngredientesComponent implements OnInit {
   ingredientesHamburguesas: Ingrediente[] = [];
   ingredientesPizzas: Ingrediente[] = [];
   ingredientesEnsaladas: Ingrediente[] = [];
-  ingredientesPollo: Ingrediente[] = [];
-  ingredientesPostres: Ingrediente[] = [];
+  ingredientesPollos: Ingrediente[] = [];      // ✅ CAMBIO: Pollo → Pollos
+  ingredientesHelados: Ingrediente[] = [];     // ✅ CAMBIO: Postres → Helados
+  ingredientesSnacks: Ingrediente[] = [];      // ✅ NUEVO: Snacks
   ingredientesBebidas: Ingrediente[] = [];
   
   cargandoHamburguesas = false;
   cargandoPizzas = false;
   cargandoEnsaladas = false;
-  cargandoPollo = false;
-  cargandoPostres = false;
+  cargandoPollos = false;      // ✅ CAMBIO: cargandoPollo → cargandoPollos
+  cargandoHelados = false;     // ✅ CAMBIO: cargandoPostres → cargandoHelados
+  cargandoSnacks = false;      // ✅ NUEVO: cargandoSnacks
   cargandoBebidas = false;
 
   ngOnInit() {
@@ -58,8 +60,9 @@ export class IngredientesComponent implements OnInit {
     this.cargarIngredientesPorCategoria('hamburguesas');
     this.cargarIngredientesPorCategoria('pizzas');
     this.cargarIngredientesPorCategoria('ensaladas');
-    this.cargarIngredientesPorCategoria('pollo');
-    this.cargarIngredientesPorCategoria('postres');
+    this.cargarIngredientesPorCategoria('pollos');     // ✅ CAMBIO: pollo → pollos
+    this.cargarIngredientesPorCategoria('helados');    // ✅ CAMBIO: postres → helados
+    this.cargarIngredientesPorCategoria('snacks');     // ✅ NUEVO: snacks
     this.cargarIngredientesPorCategoria('bebidas');
   }
 
@@ -88,8 +91,9 @@ export class IngredientesComponent implements OnInit {
       case 'hamburguesas': this.cargandoHamburguesas = cargando; break;
       case 'pizzas': this.cargandoPizzas = cargando; break;
       case 'ensaladas': this.cargandoEnsaladas = cargando; break;
-      case 'pollo': this.cargandoPollo = cargando; break;
-      case 'postres': this.cargandoPostres = cargando; break;
+      case 'pollos': this.cargandoPollos = cargando; break;        // ✅ CAMBIO
+      case 'helados': this.cargandoHelados = cargando; break;      // ✅ CAMBIO
+      case 'snacks': this.cargandoSnacks = cargando; break;        // ✅ NUEVO
       case 'bebidas': this.cargandoBebidas = cargando; break;
     }
   }
@@ -99,8 +103,9 @@ export class IngredientesComponent implements OnInit {
       case 'hamburguesas': this.ingredientesHamburguesas = ingredientes; break;
       case 'pizzas': this.ingredientesPizzas = ingredientes; break;
       case 'ensaladas': this.ingredientesEnsaladas = ingredientes; break;
-      case 'pollo': this.ingredientesPollo = ingredientes; break;
-      case 'postres': this.ingredientesPostres = ingredientes; break;
+      case 'pollos': this.ingredientesPollos = ingredientes; break;        // ✅ CAMBIO
+      case 'helados': this.ingredientesHelados = ingredientes; break;      // ✅ CAMBIO
+      case 'snacks': this.ingredientesSnacks = ingredientes; break;        // ✅ NUEVO
       case 'bebidas': this.ingredientesBebidas = ingredientes; break;
     }
   }
@@ -178,8 +183,9 @@ export class IngredientesComponent implements OnInit {
     return this.ingredientesHamburguesas.length + 
            this.ingredientesPizzas.length + 
            this.ingredientesEnsaladas.length + 
-           this.ingredientesPollo.length + 
-           this.ingredientesPostres.length + 
+           this.ingredientesPollos.length +      // ✅ CAMBIO
+           this.ingredientesHelados.length +     // ✅ CAMBIO
+           this.ingredientesSnacks.length +      // ✅ NUEVO
            this.ingredientesBebidas.length;
   }
 }

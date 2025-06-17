@@ -27,14 +27,15 @@ def limpiar_categorias():
     else:
         print("No hay categorías existentes para eliminar")
 
+
 def crear_categorias_iniciales():
     """Crea las categorías iniciales del sistema"""
     categorias_a_crear = [
-        {'nombre': 'Hamburguesa'},
+        {'nombre': 'Hamburguesas'},
         {'nombre': 'Bebidas'},
-        {'nombre': 'Extras'},
-        {'nombre': 'Postres'},
-        {'nombre': 'Pollo'},
+        {'nombre': 'Snacks'},
+        {'nombre': 'Helados'},
+        {'nombre': 'Pollos'},
         {'nombre': 'Ensaladas'},
         {'nombre': 'Pizzas'},
         {'nombre': 'Infantil'},

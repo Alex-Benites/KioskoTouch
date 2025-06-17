@@ -519,7 +519,7 @@ class ProductoSerializer(serializers.ModelSerializer):
     def _detectar_cambio_categoria(self, producto, ingredientes_actuales_ids, nuevos_ingredientes_ids_set):
         """Detecta si hubo un cambio de categoría basándose en los ingredientes"""
         if not ingredientes_actuales_ids:
-            return False  # No hay ingredientes anteriores, no es cambio de categoría
+            return False
         
         try:
             # Obtener categorías de los ingredientes actuales
@@ -533,8 +533,27 @@ class ProductoSerializer(serializers.ModelSerializer):
             print(f"   🔍 Categorías actuales de ingredientes: {categorias_actuales}")
             print(f"   🔍 Categorías nuevas de ingredientes: {categorias_nuevas}")
             
-            # Si las categorías son completamente diferentes, es un cambio
-            if categorias_actuales and categorias_nuevas and not (categorias_actuales & categorias_nuevas):
+            # ✅ NUEVO: Obtener categorías dinámicamente de la DB
+            from .models import AppkioskoCategorias
+            categorias_db = AppkioskoCategorias.objects.filter(activo=True).values_list('nombre', flat=True)
+            categorias_principales = set()
+            
+            for categoria in categorias_db:
+                categoria_lower = categoria.lower()
+                categorias_principales.add(categoria_lower)
+                # Agregar variaciones comunes (singular/plural)
+                if categoria_lower.endswith('s'):
+                    categorias_principales.add(categoria_lower[:-1])  # sin la 's'
+                else:
+                    categorias_principales.add(categoria_lower + 's')  # con 's'
+            
+            print(f"   📊 Categorías principales obtenidas de DB: {categorias_principales}")
+            
+            # Si las categorías son completamente diferentes Y ambas son principales, es un cambio
+            if (categorias_actuales and categorias_nuevas and 
+                not (categorias_actuales & categorias_nuevas) and
+                any(cat.lower() in categorias_principales for cat in categorias_actuales) and
+                any(cat.lower() in categorias_principales for cat in categorias_nuevas)):
                 return True
                 
             return False
@@ -542,7 +561,6 @@ class ProductoSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(f"   ❌ Error detectando cambio de categoría: {str(e)}")
             return False
-
             
 
     def _actualizar_imagen(self, instance, imagen):
@@ -1056,4 +1074,52 @@ class MenuSerializer(serializers.ModelSerializer):
         self._crear_imagen_menu(instance, imagen)
 
 
+
+@staticmethod
+def _obtener_categorias_activas():
+    """Obtiene las categorías activas de la DB con cache"""
+    from django.core.cache import cache
+    from .models import AppkioskoCategorias
+    
+    # Intentar obtener del cache
+    categorias = cache.get('categorias_activas')
+    if categorias is None:
+        # Si no está en cache, obtener de DB
+        categorias_db = AppkioskoCategorias.objects.filter(activo=True).values_list('nombre', flat=True)
+        categorias = set()
+        
+        for categoria in categorias_db:
+            categoria_lower = categoria.lower()
+            categorias.add(categoria_lower)
+            # Agregar variaciones
+            if categoria_lower.endswith('s'):
+                categorias.add(categoria_lower[:-1])
+            else:
+                categorias.add(categoria_lower + 's')
+        
+        # Guardar en cache por 1 hora
+        cache.set('categorias_activas', categorias, 3600)
+        print(f"📊 Categorías cargadas de DB: {categorias}")
+    else:
+        print(f"📊 Categorías obtenidas del cache: {categorias}")
+    
+    return categorias
+
+def _detectar_cambio_categoria(self, producto, ingredientes_actuales_ids, nuevos_ingredientes_ids_set):
+    """Detecta si hubo un cambio de categoría basándose en los ingredientes"""
+    if not ingredientes_actuales_ids:
+        return False
+    
+    try:
+        # ... código anterior ...
+        
+        # ✅ USAR: Método helper para obtener categorías
+        categorias_principales = self._obtener_categorias_activas()
+        
+        # ... resto del código ...
+    except Exception as e:
+        print(f"   ❌ Error detectando cambio de categoría: {str(e)}")
+        return False
+
+        
 
