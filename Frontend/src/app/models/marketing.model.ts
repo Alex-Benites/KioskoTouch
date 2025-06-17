@@ -28,9 +28,9 @@ export interface Publicidad {
   tiempo_visualizacion: number;
   
   media_type: 'image' | 'video' | 'image_multiple' | null;
-  media_url: string | null;
-  media_urls?: string[];  
-  duracion_video?: number;
+  media_url: string | null;       
+  media_urls?: string[];        
+  duracion_video?: number;        
   
   es_multiple?: boolean;
   total_imagenes?: number;

@@ -23,6 +23,7 @@
             autoplay
             muted
             playsinline
+            [loop]="esVideoUnico()"
             [controls]="false"
             (ended)="onVideoTerminado()"
             (error)="onMediaError($event)"
@@ -30,18 +31,6 @@
             <source [src]="obtenerMediaUrl()" type="video/mp4">
             Tu navegador no soporta video HTML5.
           </video>
-        </div>
-      }
-      
-      @if (publicidades.length > 1 && mostrarIndicadores) {
-        <div class="indicadores-publicidades">
-          @for (pub of publicidades; track pub.id; let i = $index) {
-            <button 
-              class="indicador-publicidad"
-              [class.activo]="i === indicePublicidadActual"
-              (click)="irAPublicidad(i)">
-            </button>
-          }
         </div>
       }
       

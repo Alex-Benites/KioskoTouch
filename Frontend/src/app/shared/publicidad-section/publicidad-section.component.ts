@@ -12,9 +12,7 @@ import { Publicidad } from '../../models/marketing.model';
   styleUrls: ['./publicidad-section.component.scss']
 })
 export class PublicidadSectionComponent implements OnInit, OnDestroy {
-  @Input() tipo: string = 'banner';
   @Input() altura: string = '200px';
-  @Input() mostrarIndicadores: boolean = true;
   
   @Output() publicidadCambio = new EventEmitter<Publicidad>();
 
@@ -48,11 +46,20 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
     this.error = null;
 
     this.subscription.add(
-      this.publicidadService.getPublicidadesActivasParaCarrusel(this.tipo).subscribe({
+      this.publicidadService.getPublicidadesActivasParaCarrusel().subscribe({
         next: (publicidades) => {
+          console.log('📺 Todas las publicidades recibidas:', publicidades);
+          
           this.publicidades = publicidades.filter(pub => 
-            pub.media_url || (pub.media_urls && pub.media_urls.length > 0)
+            pub.media_url || 
+            (pub.media_urls && pub.media_urls.length > 0)
           );
+          
+          console.log('✅ Publicidades válidas:', this.publicidades.map(p => ({
+            nombre: p.nombre,
+            media_type: p.media_type,
+            media_url: p.media_url
+          })));
           
           if (this.publicidades.length > 0) {
             this.iniciarCarrusel();
@@ -75,13 +82,25 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
 
     this.indicePublicidadActual = 0;
     this.mostrarPublicidadActual();
-    this.iniciarTimer();
+    
+    if (this.publicidades.length > 1) {
+      this.iniciarTimer();
+    }
   }
 
   private mostrarPublicidadActual(): void {
     if (!this.publicidades[this.indicePublicidadActual]) return;
 
     this.publicidadActual = this.publicidades[this.indicePublicidadActual];
+    
+    console.log('🔍 Mostrando publicidad:', {
+      nombre: this.publicidadActual.nombre,
+      media_type: this.publicidadActual.media_type,
+      media_url: this.publicidadActual.media_url,
+      esVideo: this.esVideo(),
+      esImagen: this.esImagen(),
+      esUnicaPublicidad: this.publicidades.length === 1
+    });
     
     this.configurarImagenesActuales();
     
@@ -155,19 +174,19 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
     this.detenerTimer();
   }
 
-  public irAPublicidad(indice: number): void {
-    if (indice >= 0 && indice < this.publicidades.length) {
-      this.indicePublicidadActual = indice;
-      this.mostrarPublicidadActual();
-      this.iniciarTimer();
-    }
-  }
-
   public onVideoTerminado(): void {
+    console.log('🎬 Video terminado');
+    
+    if (this.publicidades.length === 1 && this.esVideo()) {
+      console.log('🔄 Video único en loop - no avanzar');
+      return;
+    }
+    
     this.siguientePublicidad();
   }
 
   public onMediaError(event: any): void {
+    console.error('❌ Error cargando media:', event);
     this.error = 'Error cargando contenido';
     
     setTimeout(() => {
@@ -180,8 +199,14 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
   }
 
   public obtenerMediaUrl(): string {
+    if (this.esVideo() && this.publicidadActual?.media_url) {
+      console.log('🎥 Usando media_url para video:', this.publicidadActual.media_url);
+      return this.publicidadService.getFullMediaUrl(this.publicidadActual.media_url);
+    }
+    
     if (this.imagenesActuales.length > 0) {
       const urlActual = this.imagenesActuales[this.imagenActualIndex];
+      console.log('🖼️ Usando imagen:', urlActual);
       return this.publicidadService.getFullMediaUrl(urlActual);
     }
     
@@ -200,6 +225,10 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
   public tieneMultiplesImagenes(): boolean {
     return this.publicidadActual?.media_type === 'image_multiple' && 
            this.imagenesActuales.length > 1;
+  }
+
+  public esVideoUnico(): boolean {
+    return this.publicidades.length === 1 && this.esVideo();
   }
 
   get hayPublicidades(): boolean {

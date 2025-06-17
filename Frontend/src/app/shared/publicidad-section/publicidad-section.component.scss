@@ -86,37 +86,6 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
-.indicadores-publicidades {
-  position: absolute;
-  top: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  z-index: 4;
-}
-
-.indicador-publicidad {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.7);
-  background-color: rgba(255,255,255,0.3);
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: rgba(255,255,255,0.6);
-    transform: scale(1.2);
-  }
-  
-  &.activo {
-    background-color: white;
-    border-color: $kiosko-red;
-    box-shadow: 0 0 10px rgba($kiosko-red, 0.7);
-  }
-}
-
 @keyframes shimmer {
   0% { left: -100%; }
   100% { left: 100%; }
@@ -134,27 +103,5 @@ $font-family-base: 'Lato', sans-serif;
   to {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@media (max-width: 768px) {
-  .indicadores-publicidades {
-    gap: 6px;
-  }
-
-  .indicador-publicidad {
-    width: 12px;
-    height: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .indicadores-publicidades {
-    gap: 4px;
-  }
-
-  .indicador-publicidad {
-    width: 10px;
-    height: 10px;
   }
 }
