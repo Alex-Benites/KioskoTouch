@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PedidoService } from '../../services/pedido.service'; // ✅ AGREGAR
+import { PersonalizacionIngrediente } from '../../models/pedido.model';
 
 // ✅ Interface para ingredientes
 interface IngredientePersonalizacion {
@@ -12,7 +13,7 @@ interface IngredientePersonalizacion {
   seleccionado: boolean;
   esOriginal: boolean; // Si venía originalmente en el producto
   precio?: number; // Por si algunos ingredientes tienen costo adicional
-  cantidad: number; 
+  cantidad: number;
 }
 
 @Component({
@@ -91,7 +92,7 @@ export class PersonalizarProductoComponent implements OnInit {
 
     // Precio unitario con ingredientes adicionales
     const precioUnitario = precioBase + costoIngredientesExtra;
-    
+
     // Total considerando la cantidad del producto
     const precioTotal = precioUnitario * this.cantidad();
 
@@ -264,7 +265,7 @@ export class PersonalizarProductoComponent implements OnInit {
       // Obtener información de tamaño de los query params
       const queryParams = this.route.snapshot.queryParams;
       const tamano_codigo = queryParams['tamano_codigo'];
-      
+
       this.catalogoService.getIngredientesPorProducto(this.productoId, tamano_codigo).subscribe({
         next: (response) => {
           console.log('✅ Respuesta completa de ingredientes:', response);
@@ -300,7 +301,7 @@ export class PersonalizarProductoComponent implements OnInit {
           } else {
             console.log('ℹ️ Este producto no tiene ingredientes personalizables');
             this.ingredientesDisponibles = [];
-            
+
             if (response.mensaje) {
               console.log(`💬 Mensaje del servidor: ${response.mensaje}`);
             }
@@ -313,11 +314,11 @@ export class PersonalizarProductoComponent implements OnInit {
         error: (error) => {
           console.error('❌ Error cargando ingredientes del producto:', error);
           this.ingredientesDisponibles = [];
-          
+
           // ✅ MARCAR que terminamos (aunque con error)
           this.cargandoIngredientes.set(false);
           this.ingredientesCargados.set(true);
-          
+
           if (error.status === 404) {
             console.log('🔍 Producto no encontrado');
           } else if (error.status === 500) {
@@ -329,7 +330,7 @@ export class PersonalizarProductoComponent implements OnInit {
     } catch (error) {
       console.error('❌ Error en cargarIngredientesDisponibles:', error);
       this.ingredientesDisponibles = [];
-      
+
       // ✅ MARCAR que terminamos (aunque con error)
       this.cargandoIngredientes.set(false);
       this.ingredientesCargados.set(true);
@@ -347,7 +348,7 @@ export class PersonalizarProductoComponent implements OnInit {
   private actualizarDatosProducto(producto: any): void {
     this.nombreProducto = producto.nombre || this.nombreProducto;
     this.descripcionProducto = producto.descripcion || this.descripcionProducto;
-    
+
     // ✅ MODIFICAR: NO sobrescribir precio si ya viene con tamaño seleccionado
     // Solo actualizar precio si no se recibió un precio de tamaño
     const tienePrecionTamano = this.route.snapshot.queryParams['tamano_precio'];
@@ -435,26 +436,18 @@ export class PersonalizarProductoComponent implements OnInit {
 
   agregarAlCarrito(): void {
     const cantidadFinal = this.cantidad();
-    const precioTotal = this.precioTotalCalculado(); // ✅ YA incluye ingredientes adicionales
+    const precioTotal = this.precioTotalCalculado();
     const precioUnitarioConExtras = this.precioUnitarioConIngredientes();
     const resumenPersonalizaciones = this.obtenerResumenPersonalizaciones();
 
-    console.log('🛒 Agregando producto personalizado al carrito:', {
-      id: this.productoId,
-      nombre: this.nombreProducto,
-      cantidad: cantidadFinal,
-      precioBaseUnitario: this.precioProducto,
-      precioUnitarioConExtras: precioUnitarioConExtras,
-      precioTotal: precioTotal,
-      costoIngredientesExtra: this.costoIngredientesAdicionales(),
-      personalizaciones: resumenPersonalizaciones
-    });
+    // NUEVO: Obtén las personalizaciones
+    const personalizaciones = this.obtenerPersonalizacionesParaPedido();
 
-    // ✅ USAR el precio unitario que YA incluye los ingredientes adicionales
     this.pedidoService.agregarProducto(
       this.productoId!,
-      precioUnitarioConExtras, // ✅ PRECIO UNITARIO CON INGREDIENTES INCLUIDOS
-      cantidadFinal
+      precioUnitarioConExtras,
+      cantidadFinal,
+      personalizaciones // <-- Aquí pasas las personalizaciones
     );
 
     // ✅ MANTENER: Log detallado para el usuario
@@ -484,7 +477,6 @@ export class PersonalizarProductoComponent implements OnInit {
       });
     }
 
-    alert(mensaje);
     this.volverAlMenu();
   }
 
@@ -506,7 +498,7 @@ export class PersonalizarProductoComponent implements OnInit {
   aumentarIngrediente(ingrediente: IngredientePersonalizacion): void {
     ingrediente.cantidad++;
     ingrediente.seleccionado = ingrediente.cantidad > 0;
-    
+
     console.log(`➕ ${ingrediente.nombre}: cantidad = ${ingrediente.cantidad}`);
     console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
   }
@@ -515,10 +507,46 @@ export class PersonalizarProductoComponent implements OnInit {
     if (ingrediente.cantidad > 0) {
       ingrediente.cantidad--;
       ingrediente.seleccionado = ingrediente.cantidad > 0;
-      
+
       console.log(`➖ ${ingrediente.nombre}: cantidad = ${ingrediente.cantidad}`);
       console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
     }
+  }
+
+  private obtenerPersonalizacionesParaPedido(): PersonalizacionIngrediente[] {
+    const personalizaciones: PersonalizacionIngrediente[] = [];
+
+    // Ingredientes agregados (no originales y cantidad > 0)
+    this.ingredientesDisponibles.forEach(ing => {
+      if (!ing.esOriginal && ing.cantidad > 0) {
+        personalizaciones.push({
+          ingrediente_id: ing.id,
+          accion: 'agregar',
+          precio_aplicado: ing.precio || 0
+        });
+      }
+      // Ingredientes originales removidos (originales y cantidad == 0)
+      if (ing.esOriginal && ing.cantidad === 0) {
+        personalizaciones.push({
+          ingrediente_id: ing.id,
+          accion: 'quitar',
+          precio_aplicado: 0
+        });
+      }
+      // Ingredientes originales con cantidad extra (>1)
+      if (ing.esOriginal && ing.cantidad > 1) {
+        // Por cada extra, agrega una acción "agregar"
+        for (let i = 1; i < ing.cantidad; i++) {
+          personalizaciones.push({
+            ingrediente_id: ing.id,
+            accion: 'agregar',
+            precio_aplicado: ing.precio || 0
+          });
+        }
+      }
+    });
+
+    return personalizaciones;
   }
 
 }

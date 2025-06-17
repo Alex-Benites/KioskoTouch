@@ -360,6 +360,9 @@ private procesarFormularioPromocion(): void {
   }
   if (this.promocionForm.get('limite_uso_total')?.enabled && formValue.limite_uso_total) {
     formData.append('limite_uso_total', Number(formValue.limite_uso_total).toString());
+  } else {
+    // Si está deshabilitado, envía vacío para que el backend lo borre
+    formData.append('limite_uso_total', '');
   }
   if (this.promocionForm.get('limite_uso_usuario')?.enabled && formValue.limite_uso_usuario) {
     formData.append('limite_uso_usuario', Number(formValue.limite_uso_usuario).toString());
@@ -710,15 +713,21 @@ private actualizarValidacionesPorTipo(tipo: string): void {
   }
   codigoCtrl?.updateValueAndValidity();
 
-  if (tipo === 'cumpleanos') {
+
+  if (tipo === 'cumpleanos' || tipo === 'navidad') {
     limiteTotalCtrl?.setValue('');
     limiteTotalCtrl?.clearValidators();
     limiteTotalCtrl?.disable();
-    const year = new Date().getFullYear();
-    fechaInicioCtrl?.setValue(new Date(year, 0, 1));
-    fechaFinCtrl?.setValue(new Date(year, 11, 31));
-    fechaInicioCtrl?.disable();
-    fechaFinCtrl?.disable();
+    if (tipo === 'cumpleanos') {
+      const year = new Date().getFullYear();
+      fechaInicioCtrl?.setValue(new Date(year, 0, 1));
+      fechaFinCtrl?.setValue(new Date(year, 11, 31));
+      fechaInicioCtrl?.disable();
+      fechaFinCtrl?.disable();
+    } else {
+      fechaInicioCtrl?.enable();
+      fechaFinCtrl?.enable();
+    }
     limiteUsuarioCtrl?.setValidators([
       Validators.required,
       Validators.pattern(/^\d+$/),

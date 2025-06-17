@@ -314,6 +314,10 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
             except AppkioskoEstados.DoesNotExist:
                 raise serializers.ValidationError(f"Estado con ID {estado_id} no existe")
         
+        # Nueva validación para limite_uso_total
+        if 'limite_uso_total' in validated_data and not validated_data['limite_uso_total']:
+            validated_data['limite_uso_total'] = None
+        
         publicidad = AppkioskoPublicidades.objects.create(**validated_data)
         print(f"✅ Publicidad creada ID {publicidad.id}")
         
