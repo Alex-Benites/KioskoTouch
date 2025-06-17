@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
@@ -20,53 +20,124 @@ export class PublicidadService {
   constructor(private http: HttpClient) {}
 
 
-  // Obtener TODAS las publicidades
   getPublicidades(): Observable<Publicidad[]> {
     return this.http.get<Publicidad[]>(`${this.apiUrl}/publicidades/`)
       .pipe(catchError(this.handleError));
   }
 
-  // Obtener una publicidad por ID
   getPublicidadById(id: number): Observable<Publicidad> {
     return this.http.get<Publicidad>(`${this.apiUrl}/publicidades/${id}/`)
       .pipe(catchError(this.handleError));
   }
 
-  // Crear nueva publicidad
   createPublicidad(formData: FormData): Observable<Publicidad> {
     return this.http.post<Publicidad>(`${this.apiUrl}/publicidades/`, formData)
       .pipe(catchError(this.handleError));
   }
 
-  // Actualizar publicidad
   updatePublicidad(id: number, formData: FormData): Observable<Publicidad> {
     return this.http.patch<Publicidad>(`${this.apiUrl}/publicidades/${id}/`, formData)
       .pipe(catchError(this.handleError));
   }
 
-  // Eliminar publicidad
   deletePublicidad(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/publicidades/${id}/`)
       .pipe(catchError(this.handleError));
   }
 
-  // Cambiar estado de publicidad (activo/inactivo)
   toggleEstadoPublicidad(id: number): Observable<Publicidad> {
     return this.http.patch<Publicidad>(`${this.apiUrl}/publicidades/${id}/toggle-estado/`, {})
       .pipe(catchError(this.handleError));
   }
 
-  // Obtener estadísticas de publicidades
   getPublicidadStats(): Observable<PublicidadStats> {
     return this.http.get<PublicidadStats>(`${this.apiUrl}/publicidades/stats/`)
       .pipe(catchError(this.handleError));
   }
 
-  // Obtener estados desde el endpoint común
   getEstados(): Observable<Estado[]> {
     return this.http.get<Estado[]>(`${environment.apiUrl}/comun/estados/`)
       .pipe(catchError(this.handleError));
   }
+
+
+  getPublicidadesActivasParaCarrusel(tipo?: string): Observable<Publicidad[]> {
+    let url = `${this.apiUrl}/publicidades/activas/`;
+    
+    if (tipo) {
+      url += `?tipo_publicidad=${tipo}`;
+    }
+    
+    console.log(`📡 Solicitando publicidades activas: ${url}`);
+    return this.http.get<Publicidad[]>(url)
+      .pipe(catchError(this.handleError));
+  }
+
+  crearPromocion(promocionData: FormData): Observable<Promocion> {
+    return this.http.post<Promocion>(`${this.apiUrl}/promociones/`, promocionData)
+      .pipe(catchError(this.handleError));
+  }
+
+  getPromociones(): Observable<Promocion[]> {
+    return this.http.get<Promocion[]>(`${this.apiUrl}/promociones/`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getPromocionImagen(promocionId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/promociones/${promocionId}/imagen/`)
+      .pipe(catchError(this.handleError));
+  }
+
+  obtenerPromocionPorId(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/promociones/${id}/`)
+      .pipe(catchError(this.handleError));
+  }
+
+  actualizarPromocion(id: number, formData: FormData): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/promociones/${id}/`, formData)
+      .pipe(catchError(this.handleError));
+  }
+
+  eliminarPromocion(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/promociones/${id}/`)
+      .pipe(catchError(this.handleError));
+  }
+
+  obtenerPromociones(): Observable<Promocion[]> {
+    return this.getPromociones();
+  }
+
+  verificarPromocionExiste(id: number): Observable<boolean> {
+    return new Observable(observer => {
+      this.obtenerPromocionPorId(id).subscribe({
+        next: () => observer.next(true),
+        error: () => observer.next(false)
+      });
+    });
+  }
+
+  getTamanos(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tamanos/`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getFullMediaUrl(mediaUrl: string | undefined): string {
+    if (!mediaUrl) {
+      return 'assets/images/placeholder-banner.png';
+    }
+
+    if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
+      return mediaUrl;
+    }
+
+    if (mediaUrl.startsWith('/media/')) {
+      return `${environment.baseUrl}${mediaUrl}`;
+    }
+
+    return `${environment.baseUrl}/media/${mediaUrl}`;
+  }
+
+
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let apiError: ApiError = {
       message: 'Ha ocurrido un error inesperado',
@@ -81,7 +152,6 @@ export class PublicidadService {
       } else if (error.error.message) {
         apiError.message = error.error.message;
       } else {
-        // Errores de validación de campos
         const errors = [];
         for (const [field, messages] of Object.entries(error.error)) {
           if (Array.isArray(messages)) {
@@ -107,57 +177,5 @@ export class PublicidadService {
 
     return throwError(() => apiError);
   };
-  getFullImageUrl(imagenUrl: string | undefined): string {
-    if (!imagenUrl) return 'assets/images/no-image.png';
-    return `${environment.baseUrl}${imagenUrl}`;
-  }
-  private getHttpOptions() {
-    return {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json'
-      })
-    };
-  }
-  crearPromocion(PromocionData: FormData): Observable<Promocion> {
-    const url = `${this.apiUrl}/promociones/`;
-    return this.http.post<Promocion>(url, PromocionData);
-  }
-  getPromociones(): Observable<Promocion[]> {
-    const url = `${this.apiUrl}/promociones/`;
-    return this.http.get<Promocion[]>(url, this.getHttpOptions());
-  }
-  getPromocionImagen(PromocionId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/promociones/${PromocionId}/imagen/`);
-  }
-  obtenerPromocionPorId(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/promociones/${id}/`);
-  }
 
-  actualizarPromocion(id: number, formData: FormData): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/promociones/${id}/`, formData);
-  }
-
-  eliminarPromocion(id: number): Observable<any> {
-    const url = `${this.apiUrl}/promociones/${id}/`;
-    return this.http.delete<any>(url, this.getHttpOptions());
-  }
-
-  obtenerPromociones(): Observable<Promocion[]> {
-    return this.getPromociones();
-  }
-
-  verificarPromocionExiste(id: number): Observable<boolean> {
-    return new Observable(observer => {
-      this.obtenerPromocionPorId(id).subscribe({
-        next: () => observer.next(true),
-        error: () => observer.next(false)
-      });
-    });
-  }
-
-  // ✅ SOLO AGREGAR este método
-  getTamanos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/tamanos/`)
-      .pipe(catchError(this.handleError));
-  }
 }

@@ -1,0 +1,42 @@
+<div class="publicidad-container" [style.height]="altura">
+  
+  @if (publicidadActual && !cargando && !error) {
+    <div class="publicidad-wrapper">
+      
+      @if (esImagen()) {
+        <div class="publicidad-media-container">
+          <img 
+            [src]="obtenerMediaUrl()" 
+            [alt]="publicidadActual.nombre"
+            class="publicidad-media publicidad-imagen"
+            (error)="onMediaError($event)"
+            (load)="onMediaCargado()"
+          />
+        </div>
+      }
+      
+      @if (esVideo()) {
+        <div class="publicidad-media-container">
+          <video 
+            [src]="obtenerMediaUrl()"
+            class="publicidad-media publicidad-video"
+            autoplay
+            muted
+            playsinline
+            [loop]="esVideoUnico()"
+            [controls]="false"
+            (ended)="onVideoTerminado()"
+            (error)="onMediaError($event)"
+            (loadeddata)="onMediaCargado()">
+            <source [src]="obtenerMediaUrl()" type="video/mp4">
+            Tu navegador no soporta video HTML5.
+          </video>
+        </div>
+      }
+      
+    </div>
+  } @else {
+    <div class="publicidad-placeholder"></div>
+  }
+  
+</div>

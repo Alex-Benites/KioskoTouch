@@ -9,6 +9,8 @@ import { Producto, Categoria, Menu } from '../../models/catalogo.model'; // Aseg
 import { catchError, forkJoin, of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ProductPopupComponent, ProductPopupData, ProductPopupResult } from '../../shared/product-popup/product-popup.component';
+import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
+import { Publicidad } from '../../models/marketing.model';
 
 // ✅ Interfaz extendida para productos con badges promocionales
 interface ProductoConBadge extends Producto {
@@ -25,7 +27,11 @@ interface ItemConBadge extends Menu {
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+     FormsModule,
+     PublicidadSectionComponent
+  ],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -694,6 +700,11 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     // ✅ NUEVO: Mostrar popup antes de agregar al carrito
     this.mostrarPopupProducto(producto);
+  }
+
+  onPublicidadCambio(publicidad: Publicidad): void {
+    console.log('📺 Nueva publicidad mostrada:', publicidad.nombre);
+    // Aquí puedes agregar lógica adicional como analytics
   }
     
 }

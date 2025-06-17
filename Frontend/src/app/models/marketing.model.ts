@@ -19,23 +19,26 @@ export interface Video {
 export interface Publicidad {
   id: number;
   nombre: string;
-  descripcion: string;
-  tipo_publicidad: TipoPublicidad;
+  descripcion?: string;
+  tipo_publicidad: string;
   fecha_inicio_publicidad: string;
   fecha_fin_publicidad: string;
   estado: number;
   estado_nombre?: string;
-  estado_info?: Estado;
   tiempo_visualizacion: number;
-  media_type?: 'image' | 'video' | null;
-  media_url?: string;
-  duracion_video?: number;
-  videos?: Video[];
-  imagenes?: Imagen[];
-  promocion?: number;
+  
+  media_type: 'image' | 'video' | 'image_multiple' | null;
+  media_url: string | null;       
+  media_urls?: string[];        
+  duracion_video?: number;        
+  
+  es_multiple?: boolean;
+  total_imagenes?: number;
+  
   created_at: string;
   updated_at?: string;
 }
+
 export interface Promocion {
   id: number;
   nombre: string;
