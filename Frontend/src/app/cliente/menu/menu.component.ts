@@ -187,7 +187,10 @@ export class MenuComponent implements OnInit, OnDestroy {
           this.cargandoCategorias.set(false);
 
           // Filtra solo promociones activas por id
-          const promocionesActivas = (promociones as any[]).filter((p: any) => p.estado === idEstadoActivado);
+          const promocionesActivas = (promociones as any[]).filter((p: any) =>
+  p.estado === idEstadoActivado &&
+  (!p.codigo_promocional || String(p.codigo_promocional).trim() === '')
+);
           console.log('🔴 Promociones activas:', promocionesActivas);
 
           // Procesar productos con badges de promociones activas
@@ -361,7 +364,7 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     // Si es producto, usar lógica de tamaños
     const producto = item as ProductoConBadge;
-    
+
     // ✅ DEBUG: Log para verificar datos de tamaños
     if (producto.aplica_tamanos) {
       this.debugTamanos(producto);
@@ -500,7 +503,7 @@ export class MenuComponent implements OnInit, OnDestroy {
         imagenUrl: imagenUrl,
         categoria: (producto as ProductoConBadge).categoria,
         descripcion: (producto as ProductoConBadge).descripcion,
-        
+
         // ✅ CORREGIR: Usar campos correctos de ProductoTamano
         aplica_tamanos: (producto as ProductoConBadge).aplica_tamanos,
         tamanos_detalle: (producto as ProductoConBadge).tamanos_detalle?.map(t => ({
@@ -550,7 +553,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   // ✅ MODIFICAR: Agregar producto al carrito con tamaño seleccionado
   private agregarProductoAlCarrito(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
     if (this.esMenu(producto)) {
-      this.pedidoService.agregarProducto(producto.id, producto.precio, cantidad);
+      // Ahora usa agregarMenu
+      this.pedidoService.agregarMenu(producto.id, producto.precio, cantidad, []);
       console.log(`🍽️ Menú agregado: ${producto.nombre} x${cantidad} - $${(producto.precio * cantidad).toFixed(2)}`);
     } else {
       let precio = producto.precio;
@@ -564,7 +568,7 @@ export class MenuComponent implements OnInit, OnDestroy {
       else if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
         const primerTamano = producto.tamanos_detalle[0];
         precio = primerTamano.precio;
-        descripcionExtra = ` (${primerTamano.codigo_tamano})`;    // ✅ USAR: codigo_tamano
+        descripcionExtra = ` (${primerTamano.codigo_tamano})`;
         console.log(`📏 Usando primer tamaño por defecto: ${primerTamano.codigo_tamano} - $${precio}`);
       }
       else {
@@ -572,9 +576,12 @@ export class MenuComponent implements OnInit, OnDestroy {
         console.log(`💰 Usando precio base: $${precio}`);
       }
 
-      this.pedidoService.agregarProducto(producto.id, precio, cantidad, descripcionExtra);
+      this.pedidoService.agregarProducto(producto.id, precio, cantidad);
       console.log(`🛒 Producto agregado: ${producto.nombre}${descripcionExtra} x${cantidad} - $${(precio * cantidad).toFixed(2)}`);
     }
+
+    // Mostrar el detalle del pedido en consola
+    console.log('📝 Detalle actual del pedido:', this.pedidoService.detalles());
   }
 
   // ✅ MODIFICAR: Ir a personalizar con información de tamaño
@@ -602,20 +609,16 @@ export class MenuComponent implements OnInit, OnDestroy {
 
 
 
-  // ✅ CAMBIAR: Permitir personalización para TODAS las categorías
   private debePermitirPersonalizacion(producto: ProductoConBadge | Menu): boolean {
     // Si es menú (combo), no permitir personalización
     if (this.esMenu(producto)) {
       return false;
     }
 
-    // ✅ NUEVO: Permitir personalización para TODOS los productos individuales
-    return true;
-
-    // ✅ ALTERNATIVA: Si quieres excluir algunas categorías específicas:
-    // const categoriasNoPersonalizables = ['Promociones', 'Ofertas Especiales'];
-    // const categoriaActual = this.categorias().find(cat => cat.id === (producto as ProductoConBadge).categoria);
-    // return categoriaActual ? !categoriasNoPersonalizables.includes(categoriaActual.nombre) : true;
+    // Excluir categorías no personalizables
+    const categoriasNoPersonalizables = ['Bebidas', 'Extras', 'Postres'];
+    const categoriaActual = this.categorias().find(cat => cat.id === (producto as ProductoConBadge).categoria);
+    return categoriaActual ? !categoriasNoPersonalizables.includes(categoriaActual.nombre) : true;
   }
 
   // ✅ AGREGAR: Método para verificar si está seleccionado
@@ -706,5 +709,5 @@ export class MenuComponent implements OnInit, OnDestroy {
     console.log('📺 Nueva publicidad mostrada:', publicidad.nombre);
     // Aquí puedes agregar lógica adicional como analytics
   }
-    
+
 }

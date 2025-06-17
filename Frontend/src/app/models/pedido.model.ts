@@ -15,19 +15,29 @@ export interface Pedido {
   updated_at?: string;
 }
 
+export interface DetallePedidoProducto {
+  producto_id: number;
+  cantidad: number;
+  subtotal: number;
+  personalizacion?: PersonalizacionIngrediente[];
+}
+
+export interface DetallePedidoMenu {
+  menu_id: number;
+  cantidad: number;
+  subtotal: number;
+  productos: DetallePedidoProducto[];
+}
 
 export interface DetallePedido {
   id?: number;
-  pedido_id?: number;
-  producto_id?: number;
+  productos?: DetallePedidoProducto[];
+  menus?: DetallePedidoMenu[];
   menu_id?: number;
-  cantidad: number;
-  precio_unitario: number;
-  subtotal: number;
-  descripcion_extra?: string;
   created_at?: string;
   updated_at?: string;
 }
+
 
 
 export interface PersonalizacionIngrediente {
