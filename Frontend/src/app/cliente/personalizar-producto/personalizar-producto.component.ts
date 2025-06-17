@@ -260,6 +260,8 @@ export class PersonalizarProductoComponent implements OnInit {
     }
   }
 
+  
+
   private establecerDatosIniciales(): void {
     this.imagenProducto = 'assets/placeholder-producto.png';
 
