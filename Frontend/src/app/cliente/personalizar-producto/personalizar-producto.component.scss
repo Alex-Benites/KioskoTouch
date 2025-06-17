@@ -366,6 +366,107 @@ $font-family-base: 'Lato', sans-serif;
       color: white;
     }
   }
+
+  // En personalizar-producto.component.scss - AGREGAR:
+
+  .ingrediente-controles {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px;
+
+    .control-btn {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #007bff;
+      background: white;
+      border-radius: 50%;
+      color: #007bff;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: #007bff;
+        color: white;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .cantidad-ingrediente {
+      min-width: 24px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+  }
+
+  .extra-info {
+    font-size: 0.8em;
+    color: #28a745;
+    font-weight: bold;
+  }
+
+  // En personalizar-producto.component.scss - AGREGAR:
+
+  .ingrediente-precio {
+    .sin-ingrediente {
+      color: #dc3545;
+      font-weight: 600;
+      font-style: italic;
+    }
+    
+    .incluido-normal {
+      color: #28a745;
+      font-weight: 600;
+    }
+    
+    .incluido-con-extra {
+      color: #28a745;
+      font-weight: 600;
+      
+      .costo-extra {
+        color: #fd7e14;
+        font-weight: bold;
+      }
+    }
+    
+    .no-seleccionado {
+      color: #6c757d;
+    }
+    
+    .seleccionado-adicional {
+      color: #007bff;
+      font-weight: 600;
+      
+      .total-ingrediente {
+        color: #fd7e14;
+        font-weight: bold;
+      }
+    }
+  }
+
+  // ✅ También actualizar el estilo de las cards cuando tienen cantidad 0
+  &.sin-ingrediente {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+    
+    .ingrediente-imagen img {
+      opacity: 0.5;
+      filter: grayscale(50%);
+    }
+  }
 }
 
 // ✅ NUEVO: Loading de ingredientes
@@ -678,5 +779,35 @@ $font-family-base: 'Lato', sans-serif;
         font-size: 8px;
       }
     }
+  }
+}
+
+
+// En personalizar-producto.component.scss - AGREGAR:
+
+.sin-ingredientes-message {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px dashed #adb5bd;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin: 20px 0;
+  
+  .message-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+  }
+  
+  .message-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+  }
+  
+  .message-subtext {
+    font-size: 0.95rem;
+    color: #6c757d;
+    margin: 0;
   }
 }

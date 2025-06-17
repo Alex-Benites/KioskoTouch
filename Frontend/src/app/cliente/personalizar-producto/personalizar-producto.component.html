@@ -71,55 +71,93 @@
         <h2 class="ingredientes-titulo">Ingredientes</h2>
         <div class="ingredientes-separador"></div>
 
-        <!-- ✅ MODIFICAR: Cuadrícula de ingredientes con precios -->
-        <div class="ingredientes-grid" *ngIf="ingredientesDisponibles.length > 0; else loadingIngredientes">
-          <div
-            class="ingrediente-card"
-            *ngFor="let ingrediente of ingredientesDisponibles"
-            [class.seleccionado]="ingrediente.seleccionado"
-            (click)="toggleIngrediente(ingrediente)">
+        <!-- ✅ MOSTRAR loading mientras carga -->
+        <div *ngIf="mostrandoCarga()" class="ingredientes-loading">
+          <div class="loading-spinner">⏳</div>
+          <p>Cargando opciones de personalización...</p>
+        </div>
 
-            <!-- Imagen del ingrediente -->
-            <div class="ingrediente-imagen">
-              <img [src]="ingrediente.imagenUrl" [alt]="ingrediente.nombre">
-            </div>
+        <!-- ✅ MOSTRAR mensaje solo si ya cargó y no hay ingredientes -->
+        <div *ngIf="ingredientesCargados() && !tieneIngredientesPersonalizables()" class="sin-ingredientes-message">
+          <div class="message-icon">ℹ️</div>
+          <p class="message-text">{{ mensajeSinIngredientes() }}</p>
+          <p class="message-subtext">Este producto se agregará al carrito con su preparación estándar.</p>
+        </div>
 
-            <!-- ✅ CAMBIAR la sección de información del ingrediente -->
-            <div class="ingrediente-info">
-              <h4 class="ingrediente-nombre">{{ ingrediente.nombre }}</h4>
-              <p class="ingrediente-precio">
-                <!-- ✅ NUEVO: Mostrar "Incluido" si es ingrediente original -->
-                <span *ngIf="ingrediente.esOriginal; else precioConCosto" class="precio-incluido">
-                  Incluido
-                </span>
-                <!-- ✅ CAMBIAR: Mostrar precio solo si NO es original -->
-                <ng-template #precioConCosto>
-                  <span class="precio-adicional">+${{ ingrediente.precio?.toFixed(2) }}</span>
-                </ng-template>
-              </p>
-            </div>
+        <!-- ✅ MOSTRAR ingredientes solo si ya cargó y hay ingredientes -->
+        <div *ngIf="ingredientesCargados() && tieneIngredientesPersonalizables()" class="ingredientes-section">
+          <h3 class="section-title">🥗 Personaliza tus ingredientes</h3>
+          <p class="section-subtitle">Agrega o quita ingredientes según tu preferencia</p>
+          
+          <!-- Grid de ingredientes -->
+          <div class="ingredientes-grid">
+            <div
+              class="ingrediente-card"
+              *ngFor="let ingrediente of ingredientesDisponibles"
+              [class.seleccionado]="ingrediente.seleccionado">
 
-            <!-- Check mark cuando está seleccionado -->
-            <div class="ingrediente-check" [class.visible]="ingrediente.seleccionado">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-              </svg>
+              <!-- Imagen del ingrediente -->
+              <div class="ingrediente-imagen">
+                <img [src]="ingrediente.imagenUrl" [alt]="ingrediente.nombre">
+              </div>
+
+              <!-- Información del ingrediente -->
+              <div class="ingrediente-info">
+                <h4 class="ingrediente-nombre">{{ ingrediente.nombre }}</h4>
+                <p class="ingrediente-precio">
+                  <!-- ✅ NUEVO: Para ingredientes incluidos -->
+                  <span *ngIf="ingrediente.esOriginal" class="precio-incluido">
+                    <!-- Mostrar "Sin [ingrediente]" cuando cantidad es 0 -->
+                    <span *ngIf="ingrediente.cantidad === 0" class="sin-ingrediente">
+                      Sin {{ ingrediente.nombre.toLowerCase() }}
+                    </span>
+                    <!-- Mostrar "Incluido" cuando cantidad es 1 -->
+                    <span *ngIf="ingrediente.cantidad === 1" class="incluido-normal">
+                      Incluido
+                    </span>
+                    <!-- Mostrar cantidad extra cuando es mayor a 1 -->
+                    <span *ngIf="ingrediente.cantidad > 1" class="incluido-con-extra">
+                      Incluido + {{ ingrediente.cantidad - 1 }} extra 
+                      <span class="costo-extra">(+${{ ((ingrediente.cantidad - 1) * (ingrediente.precio || 0)).toFixed(2) }})</span>
+                    </span>
+                  </span>
+                  
+                  <!-- ✅ Para ingredientes NO incluidos -->
+                  <span *ngIf="!ingrediente.esOriginal" class="precio-adicional">
+                    <span *ngIf="ingrediente.cantidad === 0" class="no-seleccionado">
+                      +${{ (ingrediente.precio || 0).toFixed(2) }} c/u
+                    </span>
+                    <span *ngIf="ingrediente.cantidad > 0" class="seleccionado-adicional">
+                      {{ ingrediente.cantidad }} x ${{ (ingrediente.precio || 0).toFixed(2) }} = 
+                      <span class="total-ingrediente">+${{ (ingrediente.cantidad * (ingrediente.precio || 0)).toFixed(2) }}</span>
+                    </span>
+                  </span>
+                </p>
+              </div>
+
+              <!-- ✅ NUEVO: Controles de cantidad -->
+              <div class="ingrediente-controles">
+                <!-- Botón disminuir -->
+                <button 
+                  class="control-btn disminuir"
+                  (click)="disminuirIngrediente(ingrediente)"
+                  [disabled]="ingrediente.cantidad <= 0">
+                  -
+                </button>
+                
+                <!-- Cantidad actual -->
+                <span class="cantidad-ingrediente">{{ ingrediente.cantidad }}</span>
+                
+                <!-- Botón aumentar -->
+                <button 
+                  class="control-btn aumentar"
+                  (click)="aumentarIngrediente(ingrediente)">
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- ✅ Loading placeholder -->
-        <ng-template #loadingIngredientes>
-          <div class="ingredientes-loading">
-            <div *ngIf="ingredientesDisponibles.length === 0 && productoDatos; else cargandoMensaje">
-              <p>Este producto no tiene ingredientes personalizables.</p>
-              <p class="text-muted">Puedes cambiar la cantidad y agregarlo a tu orden.</p>
-            </div>
-            <ng-template #cargandoMensaje>
-              <p>Cargando ingredientes disponibles...</p>
-            </ng-template>
-          </div>
-        </ng-template>
       </div>
     </div>
   </main>
