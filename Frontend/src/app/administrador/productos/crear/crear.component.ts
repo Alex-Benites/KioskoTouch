@@ -173,7 +173,7 @@ export class CrearComponent implements OnInit {
 
           // Esperar a que los campos se creen
           setTimeout(() => {
-            producto.tamanos_detalle.forEach((tamano: ProductoTamano) => {  // Añadir tipo explícito aquí
+            producto.tamanos_detalle.forEach((tamano: ProductoTamano) => {
               const controlName = 'precio_' + tamano.codigo_tamano.toLowerCase();
               if (this.productoForm.get(controlName)) {
                 this.productoForm.get(controlName)?.setValue(tamano.precio);
@@ -196,21 +196,43 @@ export class CrearComponent implements OnInit {
           this.productoForm.get('imagen')?.updateValueAndValidity();
         }
 
-        // Cargar ingredientes
-        let categoriaIngredientes = '';
-        if (producto.categoria_nombre === 'Hamburguesa') {
-          categoriaIngredientes = 'hamburguesas';
-        } else if (producto.categoria_nombre === 'Pizza' || producto.categoria_nombre === 'Pizzas') {
-          categoriaIngredientes = 'pizzas';
-        } else if (producto.categoria_nombre === 'Ensalada') {
-          categoriaIngredientes = 'ensaladas';
-        }
+        // ✅ NUEVO: Cargar ingredientes usando lógica dinámica
+        console.log('🔍 Información de categoría del producto:', {
+          categoria_id: producto.categoria,
+          categoria_nombre: producto.categoria_nombre
+        });
 
-        if (categoriaIngredientes) {
-          this.cargarIngredientesYMarcarSeleccionados(
-            categoriaIngredientes,
-            producto.ingredientes_detalle || []
-          );
+        // Usar el nombre de la categoría para cargar ingredientes
+        if (producto.categoria_nombre) {
+          // ✅ NUEVO: Usar método dinámico en lugar de hardcodear
+          const categoriaIngredientes = this.normalizarNombreCategoria(producto.categoria_nombre);
+          
+          console.log('🔗 [EDICIÓN] Categoría normalizada para ingredientes:', categoriaIngredientes);
+
+          if (categoriaIngredientes) {
+            // ✅ NUEVO: Verificar si esta categoría debería tener ingredientes
+            const deberiaTenerIngredientes = this.categoriaDeberiaTenerIngredientes(producto.categoria_nombre);
+            
+            if (deberiaTenerIngredientes) {
+              console.log('🥗 [EDICIÓN] Cargando ingredientes para categoría:', categoriaIngredientes);
+              this.cargarIngredientesYMarcarSeleccionados(
+                categoriaIngredientes,
+                producto.ingredientes_detalle || []
+              );
+            } else {
+              console.log('ℹ️ [EDICIÓN] Categoría no requiere ingredientes:', producto.categoria_nombre);
+              this.ingredientesDisponibles = [];
+              this.ingredientesSeleccionados = [];
+            }
+          } else {
+            console.log('⚠️ [EDICIÓN] No se pudo normalizar la categoría:', producto.categoria_nombre);
+            this.ingredientesDisponibles = [];
+            this.ingredientesSeleccionados = [];
+          }
+        } else {
+          console.log('⚠️ [EDICIÓN] Producto sin información de categoría');
+          this.ingredientesDisponibles = [];
+          this.ingredientesSeleccionados = [];
         }
 
         console.log('✅ Producto cargado completamente para edición');
@@ -222,7 +244,6 @@ export class CrearComponent implements OnInit {
       }
     });
   }
-
 
     // ✅ NUEVO: Método para aumentar cantidad
   aumentarCantidad(ingrediente: any): void {
