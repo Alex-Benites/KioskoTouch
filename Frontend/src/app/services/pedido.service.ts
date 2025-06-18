@@ -122,25 +122,24 @@ export class PedidoService {
   }
 
   agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[]): void {
-    // Busca un DetallePedido con productos (puedes mejorar la lógica según tu flujo)
     let detalles = this.detallesState();
     let detalle = detalles.find(d => d.productos);
 
     if (!detalle) {
-      // Si no existe, crea uno nuevo
       detalle = { productos: [] };
       this.detallesState.update(detalles => [...detalles, detalle!]);
     }
 
-    // Busca si el producto ya existe en el array productos
-    let productoExistente = detalle.productos!.find(p => p.producto_id === producto_id);
+    // Busca si el producto ya existe en el array productos, considerando la personalización
+    let productoExistente = detalle.productos!.find(p =>
+      p.producto_id === producto_id &&
+      this.personalizacionesIguales(p.personalizacion, personalizacion)
+    );
 
     if (productoExistente) {
       productoExistente.cantidad += cantidad;
       productoExistente.subtotal = productoExistente.cantidad * precio;
-      if (personalizacion) {
-        productoExistente.personalizacion = personalizacion;
-      }
+      // No actualices la personalización, ya que es la misma
     } else {
       detalle.productos!.push({
         producto_id,
@@ -150,7 +149,6 @@ export class PedidoService {
       });
     }
 
-    // Actualiza el array de detalles
     this.detallesState.set([...this.detallesState()]);
     this.actualizarTotalEnEstado();
   }
@@ -297,5 +295,24 @@ export class PedidoService {
       console.error('Error al enviar pedido:', error);
       throw error;
     }
+  }
+
+  private personalizacionesIguales(a?: PersonalizacionIngrediente[], b?: PersonalizacionIngrediente[]): boolean {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (a.length !== b.length) return false;
+
+    // Ordena ambos arrays para comparar sin importar el orden
+    const sortFn = (x: PersonalizacionIngrediente, y: PersonalizacionIngrediente) =>
+      x.ingrediente_id - y.ingrediente_id || x.accion.localeCompare(y.accion);
+
+    const aSorted = [...a].sort(sortFn);
+    const bSorted = [...b].sort(sortFn);
+
+    return aSorted.every((item, idx) =>
+      item.ingrediente_id === bSorted[idx].ingrediente_id &&
+      item.accion === bSorted[idx].accion &&
+      item.precio_aplicado === bSorted[idx].precio_aplicado
+    );
   }
 }
