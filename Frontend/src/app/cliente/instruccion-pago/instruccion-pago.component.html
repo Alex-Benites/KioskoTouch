@@ -1,4 +1,5 @@
-<div class="instruccion-pago-container">
+<div class="instruccion-pago-container" [class]="tipoPago">
+
   <!-- Banner Promocional Superior -->
   <app-publicidad-section 
     altura="150px"
@@ -10,14 +11,24 @@
     <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
 
     <div class="pago-icon-wrapper">
-      <img src="assets/cliente/tarjeta.png" alt="Pago con Tarjeta" class="pago-icon">
+      <img [src]="obtenerImagenTipo()" [alt]="obtenerTitulo()" class="pago-icon">
     </div>
 
-    <h2 class="pago-title">Pago con Tarjeta</h2>
+    <h2 class="pago-title">{{ obtenerTitulo() }}</h2>
+
+    @if (tipoPago === 'completado') {
+      <div class="orden-info">
+        <p class="orden-subtitle">Orden</p>
+        <p class="orden-number">#{{ numeroOrden }}</p>
+      </div>
+    }
+
     <p class="pago-instructions">
-      Acerque su tarjeta para proceder con el pago, por favor.
+      {{ obtenerInstrucciones() }}
     </p>
 
-    <button class="pago-button" (click)="continuar()">Continuar</button>
+    <button class="pago-button" (click)="continuar()">
+      {{ obtenerTextoBoton() }}
+    </button>
   </main>
 </div>
