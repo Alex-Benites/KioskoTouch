@@ -1,0 +1,427 @@
+// ✅ IMPORTAR las mismas variables que menu.component.scss
+@use "sass:color";
+
+$kiosko-red: #C3453A;
+$kiosko-background-light: #f4f4f4;
+$kiosko-card-border-color: #D5D5D5;
+$font-family-base: 'Lato', sans-serif;
+
+* {
+  box-sizing: border-box;
+}
+
+// ✅ ESTRUCTURA PRINCIPAL (igual que menu)
+.carrito-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: $kiosko-background-light;
+  font-family: $font-family-base;
+}
+
+// ✅ HEADER (copiado de menu)
+.carrito-header {
+  padding: 15px 30px;
+  background-color: $kiosko-background-light;
+  text-align: left;
+  display: flex;
+  justify-content: left;
+
+  img {
+    max-width: 300px;
+    height: auto;
+    object-fit: contain;
+  }
+}
+
+// ✅ CONTENIDO PRINCIPAL
+.carrito-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 30px;
+}
+
+.carrito-title-section {
+  margin-bottom: 30px;
+  text-align: left;
+
+  .carrito-title-label {
+    display: block;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    font-weight: 500;
+    color: #666;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .carrito-subtitle {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+  }
+}
+
+// ✅ ESPACIO PARA EL CONTENIDO DEL CARRITO
+.carrito-body {
+  flex-grow: 1;
+  //background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+  //box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .placeholder-content {
+    font-size: 1.2rem;
+    color: #666;
+    text-align: center;
+    margin: 0;
+  }
+}
+
+// ✅ FOOTER (copiado de menu con modificaciones)
+.order-summary-footer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+
+  &__title {
+    background-color: $kiosko-red;
+    color: white;
+    font-size: clamp(1.5rem, 3vw, 1.8rem);
+    font-weight: 600;
+    margin: 0;
+    padding: 15px 30px;
+    text-align: center;
+  }
+
+  &__content {
+    background-color: $kiosko-background-light;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  &__details {
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: #333333;
+    text-align: center;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+    justify-content: center;
+  }
+
+  &__button {
+    flex: 1;
+    background-color: $kiosko-red;
+    border-radius: 8px;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: color.scale($kiosko-red, $lightness: -7%);
+    }
+
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ✅ ESTILO ESPECIAL para el botón "Finalizar Pedido"
+.carrito-finalizar-btn {
+  background-color: #28a745 !important; // Verde para finalizar
+
+  &:hover:not(:disabled) {
+    background-color: color.scale(#28a745, $lightness: -10%) !important;
+  }
+}
+
+// ✅ AGREGAR estilos para la lista de productos
+.productos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.producto-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 15px;
+  position: relative;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// ✅ Barra roja lateral (como en la imagen)
+.producto-barra-lateral {
+  width: 4px;
+  height: 60px;
+  background-color: $kiosko-red;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+// ✅ Imagen del producto
+.producto-imagen {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// ✅ Información del producto
+.producto-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  .producto-nombre {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+
+  .personalizar-label {
+    font-size: 0.85rem;
+    color: $kiosko-red;
+    font-weight: 500;
+  }
+
+  .ingredientes-agregados {
+    font-size: 0.8rem;
+    color: #28a745;
+
+    span {
+      font-weight: 500;
+    }
+  }
+
+  .ingredientes-removidos {
+    font-size: 0.8rem;
+    color: #dc3545;
+
+    span {
+      font-weight: 500;
+    }
+  }
+}
+
+// ✅ Controles de cantidad
+.producto-controles {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .control-btn {
+    width: 30px;
+    height: 30px;
+    border: 2px solid $kiosko-red;
+    background: white;
+    border-radius: 50%;
+    color: $kiosko-red;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: $kiosko-red;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &.disminuir:disabled {
+      border-color: #ccc;
+      color: #ccc;
+    }
+  }
+
+  .cantidad-numero {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    min-width: 30px;
+    text-align: center;
+  }
+}
+
+// ✅ Precio del producto
+.producto-precio {
+  .precio-valor {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+  }
+}
+
+// ✅ Botón eliminar
+.producto-eliminar {
+  .eliminar-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+  }
+}
+
+// ✅ Carrito vacío
+.carrito-vacio {
+  text-align: center;
+  padding: 60px 20px;
+
+  .carrito-vacio-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+  }
+
+  .carrito-vacio-titulo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 10px 0;
+  }
+
+  .carrito-vacio-mensaje {
+    font-size: 1rem;
+    color: #666;
+    margin: 0 0 30px 0;
+  }
+
+  .btn-ir-menu {
+    background-color: $kiosko-red;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: color.scale($kiosko-red, $lightness: -10%);
+    }
+  }
+}
+
+// ✅ RESPONSIVE (copiado de menu)
+@media (max-width: 768px) {
+  .carrito-content {
+    padding: 15px;
+  }
+
+  .carrito-body {
+    padding: 20px 15px;
+    min-height: 300px;
+  }
+
+  .order-summary-footer {
+    &__title {
+      font-size: 1.2rem;
+      padding: 10px 12px;
+    }
+
+    &__content {
+      padding: 12px;
+      gap: 10px;
+    }
+
+    &__details {
+      font-size: 0.9rem;
+      margin-bottom: 0;
+    }
+
+    &__actions {
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: none;
+    }
+  }
+
+  .producto-item {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .producto-info {
+    min-width: 150px;
+  }
+
+  .producto-precio {
+    order: 4;
+    width: 100%;
+    text-align: right;
+  }
+}
+
+@media (max-width: 480px) {
+  .carrito-header {
+    img {
+      max-width: 120px;
+    }
+  }
+
+  .carrito-title-section {
+    .carrito-subtitle {
+      font-size: 1.5rem;
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import {
@@ -11,6 +11,7 @@ import {
   DetallePedidoProducto,
   DetallePedidoMenu
 } from '../models/pedido.model';
+import { CatalogoService } from './catalogo.service';
 
 @Injectable({
   providedIn: 'root'
@@ -95,6 +96,9 @@ export class PedidoService {
       total: this.total()
     };
   });
+
+  private catalogoService = inject(CatalogoService);
+  private productosCache: Map<number, any> = new Map();
 
   constructor(private http: HttpClient) {}
 
@@ -297,22 +301,257 @@ export class PedidoService {
     }
   }
 
-  private personalizacionesIguales(a?: PersonalizacionIngrediente[], b?: PersonalizacionIngrediente[]): boolean {
-    if (!a && !b) return true;
-    if (!a || !b) return false;
-    if (a.length !== b.length) return false;
+  // ✅ MÉTODOS INTERNOS PRIVADOS
 
-    // Ordena ambos arrays para comparar sin importar el orden
-    const sortFn = (x: PersonalizacionIngrediente, y: PersonalizacionIngrediente) =>
-      x.ingrediente_id - y.ingrediente_id || x.accion.localeCompare(y.accion);
+  private aumentarCantidadProductoInterno(producto_id: number, personalizacion?: PersonalizacionIngrediente[]): void {
+    const detalles = this.detallesState();
+    let updated = false;
 
-    const aSorted = [...a].sort(sortFn);
-    const bSorted = [...b].sort(sortFn);
+    detalles.forEach(detalle => {
+      if (detalle.productos) {
+        const producto = detalle.productos.find(p =>
+          p.producto_id === producto_id &&
+          this.personalizacionesIguales(p.personalizacion, personalizacion)
+        );
 
-    return aSorted.every((item, idx) =>
-      item.ingrediente_id === bSorted[idx].ingrediente_id &&
-      item.accion === bSorted[idx].accion &&
-      item.precio_aplicado === bSorted[idx].precio_aplicado
-    );
+        if (producto) {
+          const precioUnitario = producto.subtotal / producto.cantidad;
+          producto.cantidad++;
+          producto.subtotal = producto.cantidad * precioUnitario;
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      this.detallesState.set([...detalles]);
+      this.actualizarTotalEnEstado();
+    }
+  }
+
+  private disminuirCantidadProductoInterno(producto_id: number, personalizacion?: PersonalizacionIngrediente[]): void {
+    const detalles = this.detallesState();
+    let updated = false;
+
+    detalles.forEach(detalle => {
+      if (detalle.productos) {
+        const producto = detalle.productos.find(p =>
+          p.producto_id === producto_id &&
+          this.personalizacionesIguales(p.personalizacion, personalizacion)
+        );
+
+        if (producto && producto.cantidad > 1) {
+          const precioUnitario = producto.subtotal / producto.cantidad;
+          producto.cantidad--;
+          producto.subtotal = producto.cantidad * precioUnitario;
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      this.detallesState.set([...detalles]);
+      this.actualizarTotalEnEstado();
+    }
+  }
+
+  private eliminarProductoInterno(producto_id: number, personalizacion?: PersonalizacionIngrediente[]): void {
+    const detalles = this.detallesState();
+    let updated = false;
+
+    detalles.forEach(detalle => {
+      if (detalle.productos) {
+        const index = detalle.productos.findIndex(p =>
+          p.producto_id === producto_id &&
+          this.personalizacionesIguales(p.personalizacion, personalizacion)
+        );
+
+        if (index !== -1) {
+          detalle.productos.splice(index, 1);
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      this.detallesState.set([...detalles]);
+      this.actualizarTotalEnEstado();
+    }
+  }
+
+  private aumentarCantidadMenuInterno(menu_id: number): void {
+    const detalles = this.detallesState();
+    let updated = false;
+
+    detalles.forEach(detalle => {
+      if (detalle.menus) {
+        const menu = detalle.menus.find(m => m.menu_id === menu_id);
+
+        if (menu) {
+          const precioUnitario = menu.subtotal / menu.cantidad;
+          menu.cantidad++;
+          menu.subtotal = menu.cantidad * precioUnitario;
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      this.detallesState.set([...detalles]);
+      this.actualizarTotalEnEstado();
+    }
+  }
+
+  private disminuirCantidadMenuInterno(menu_id: number): void {
+    const detalles = this.detallesState();
+    let updated = false;
+
+    detalles.forEach(detalle => {
+      if (detalle.menus) {
+        const menu = detalle.menus.find(m => m.menu_id === menu_id);
+
+        if (menu && menu.cantidad > 1) {
+          const precioUnitario = menu.subtotal / menu.cantidad;
+          menu.cantidad--;
+          menu.subtotal = menu.cantidad * precioUnitario;
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      this.detallesState.set([...detalles]);
+      this.actualizarTotalEnEstado();
+    }
+  }
+
+  private eliminarMenuInterno(menu_id: number): void {
+    const detalles = this.detallesState();
+    let updated = false;
+
+    detalles.forEach(detalle => {
+      if (detalle.menus) {
+        const index = detalle.menus.findIndex(m => m.menu_id === menu_id);
+
+        if (index !== -1) {
+          detalle.menus.splice(index, 1);
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      this.detallesState.set([...detalles]);
+      this.actualizarTotalEnEstado();
+    }
+  }
+
+  // ✅ MÉTODO AUXILIAR para comparar personalizaciones
+  private personalizacionesIguales(p1?: PersonalizacionIngrediente[], p2?: PersonalizacionIngrediente[]): boolean {
+    if (!p1 && !p2) return true;
+    if (!p1 || !p2) return false;
+    if (p1.length !== p2.length) return false;
+
+    // Comparación básica - puedes mejorarla según tus necesidades
+    return JSON.stringify(p1.sort()) === JSON.stringify(p2.sort());
+  }
+
+  // ✅ AGREGAR: Métodos públicos que faltan para el carrito
+
+  // Obtener productos para el carrito
+  obtenerProductosParaCarrito(): any[] {
+    const detalles = this.detallesState();
+    const productos: any[] = [];
+
+    console.log('🔍 [PedidoService] Obteniendo productos para carrito...');
+    console.log('   - Detalles disponibles:', detalles);
+
+    detalles.forEach((detalle, detalleIndex) => {
+      // Agregar productos individuales
+      if (detalle.productos && detalle.productos.length > 0) {
+        detalle.productos.forEach((producto, index) => {
+          const item = {
+            id: `producto_${producto.producto_id}_${detalleIndex}_${index}`,
+            tipo: 'producto',
+            producto_id: producto.producto_id,
+            cantidad: producto.cantidad,
+            precio_unitario: producto.subtotal / producto.cantidad,
+            subtotal: producto.subtotal,
+            personalizacion: producto.personalizacion || [],
+            nombre: `Producto ${producto.producto_id}`, // Temporal
+            imagen_url: null
+          };
+          productos.push(item);
+        });
+      }
+
+      // Agregar menús
+      if (detalle.menus && detalle.menus.length > 0) {
+        detalle.menus.forEach((menu, index) => {
+          const item = {
+            id: `menu_${menu.menu_id}_${detalleIndex}_${index}`,
+            tipo: 'menu',
+            menu_id: menu.menu_id,
+            cantidad: menu.cantidad,
+            precio_unitario: menu.subtotal / menu.cantidad,
+            subtotal: menu.subtotal,
+            productos: menu.productos || [],
+            nombre: `Menú ${menu.menu_id}`, // Temporal
+            imagen_url: null
+          };
+          productos.push(item);
+        });
+      }
+    });
+
+    console.log('🛒 [PedidoService] Productos finales:', productos);
+    return productos;
+  }
+
+  // Aumentar cantidad de un producto
+  aumentarCantidadProducto(index: number): void {
+    const productosCarrito = this.obtenerProductosParaCarrito();
+    if (index < 0 || index >= productosCarrito.length) return;
+
+    const item = productosCarrito[index];
+    console.log(`➕ Aumentando cantidad del producto:`, item);
+
+    if (item.tipo === 'producto') {
+      this.aumentarCantidadProductoInterno(item.producto_id, item.personalizacion);
+    } else if (item.tipo === 'menu') {
+      this.aumentarCantidadMenuInterno(item.menu_id);
+    }
+  }
+
+  // Disminuir cantidad de un producto
+  disminuirCantidadProducto(index: number): void {
+    const productosCarrito = this.obtenerProductosParaCarrito();
+    if (index < 0 || index >= productosCarrito.length) return;
+
+    const item = productosCarrito[index];
+    if (item.cantidad <= 1) return;
+
+    console.log(`➖ Disminuyendo cantidad del producto:`, item);
+
+    if (item.tipo === 'producto') {
+      this.disminuirCantidadProductoInterno(item.producto_id, item.personalizacion);
+    } else if (item.tipo === 'menu') {
+      this.disminuirCantidadMenuInterno(item.menu_id);
+    }
+  }
+
+  // Eliminar producto del carrito
+  eliminarProducto(index: number): void {
+    const productosCarrito = this.obtenerProductosParaCarrito();
+    if (index < 0 || index >= productosCarrito.length) return;
+
+    const item = productosCarrito[index];
+    console.log(`🗑️ Eliminando producto:`, item);
+
+    if (item.tipo === 'producto') {
+      this.eliminarProductoInterno(item.producto_id, item.personalizacion);
+    } else if (item.tipo === 'menu') {
+      this.eliminarMenuInterno(item.menu_id);
+    }
   }
 }

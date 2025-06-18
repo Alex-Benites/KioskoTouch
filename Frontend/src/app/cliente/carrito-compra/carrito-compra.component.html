@@ -1,1 +1,150 @@
-<p>carrito-compra works!</p>
+<div class="carrito-page-container">
+  <!-- Banner Promocional Superior -->
+  <app-publicidad-section
+    tipo="banner"
+    altura="200px"
+    (publicidadCambio)="onPublicidadCambio($event)">
+  </app-publicidad-section>
+
+  <!-- Header igual que en menu -->
+  <header class="carrito-header">
+    <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
+  </header>
+
+  <!-- Contenido principal del carrito -->
+  <main class="carrito-content">
+    <div class="carrito-title-section">
+      <span class="carrito-title-label">MENÙ</span>
+      <h2 class="carrito-subtitle">Resumen del pedido</h2>
+
+      <!-- ✅ BOTÓN TEMPORAL para debug -->
+      <button (click)="verificarDatos()" style="margin: 10px; padding: 10px; background: blue; color: white;">
+        🔍 Debug Datos
+      </button>
+    </div>
+
+    <!-- ✅ ESPACIO EN BLANCO para el contenido del carrito -->
+    <div class="carrito-body">
+      <!-- ✅ MOSTRAR lista de productos si hay items -->
+      <div *ngIf="productosCarrito.length > 0; else carritoVacio" class="productos-lista">
+        <!-- ✅ CORREGIR: Iterar sobre el computed -->
+        <div
+          *ngFor="let item of productosCarrito; let i = index"
+          class="producto-item">
+
+          <!-- Barra roja lateral -->
+          <div class="producto-barra-lateral"></div>
+
+          <!-- Imagen del producto -->
+          <div class="producto-imagen">
+            <img [src]="obtenerImagenProducto(item)" [alt]="obtenerNombreProducto(item)">
+          </div>
+
+          <!-- Información del producto -->
+          <div class="producto-info">
+            <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
+
+            <!-- ✅ MOSTRAR personalizaciones si las tiene -->
+            <div *ngIf="tienePersonalizaciones(item)" class="producto-personalizaciones">
+              <span class="personalizar-label">Personalizar</span>
+
+              <!-- Lista de ingredientes agregados -->
+              <div *ngIf="obtenerIngredientesAgregados(item).length > 0" class="ingredientes-agregados">
+                <span *ngFor="let ing of obtenerIngredientesAgregados(item); let last = last">
+                  +{{ ing.nombre }}{{ !last ? ', ' : '' }}
+                </span>
+              </div>
+
+              <!-- Lista de ingredientes removidos -->
+              <div *ngIf="obtenerIngredientesRemovidos(item).length > 0" class="ingredientes-removidos">
+                <span *ngFor="let ing of obtenerIngredientesRemovidos(item); let last = last">
+                  -{{ ing.nombre }}{{ !last ? ', ' : '' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Si no tiene personalizaciones, mostrar "Personalizar" como opción -->
+            <div *ngIf="!tienePersonalizaciones(item)" class="producto-sin-personalizaciones">
+              <span class="personalizar-label">Personalizar</span>
+            </div>
+          </div>
+
+          <!-- Controles de cantidad -->
+          <div class="producto-controles">
+            <button
+              class="control-btn disminuir"
+              (click)="disminuirCantidad(i)"
+              [disabled]="item.cantidad <= 1">
+              -
+            </button>
+
+            <span class="cantidad-numero">{{ item.cantidad }}</span>
+
+            <button
+              class="control-btn aumentar"
+              (click)="aumentarCantidad(i)">
+              +
+            </button>
+          </div>
+
+          <!-- Precio total del producto -->
+          <div class="producto-precio">
+            <span class="precio-valor">${{ calcularPrecioTotalProducto(item).toFixed(2) }}</span>
+          </div>
+
+          <!-- Botón eliminar -->
+          <div class="producto-eliminar">
+            <button
+              class="eliminar-btn"
+              (click)="eliminarProducto(i)"
+              title="Eliminar producto">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TEMPLATE cuando el carrito está vacío -->
+      <ng-template #carritoVacio>
+        <div class="carrito-vacio">
+          <div class="carrito-vacio-icon">🛒</div>
+          <h3 class="carrito-vacio-titulo">Tu carrito está vacío</h3>
+          <p class="carrito-vacio-mensaje">Agrega productos desde el menú para comenzar tu pedido</p>
+          <button
+            class="btn-ir-menu"
+            (click)="volverAlMenu()">
+            Ir al Menú
+          </button>
+        </div>
+      </ng-template>
+    </div>
+  </main>
+
+  <!-- Footer: Igual que en menu pero con botones específicos del carrito -->
+  <footer class="order-summary-footer">
+    <h2 class="order-summary-footer__title">Resumen del Pedido</h2>
+    <div class="order-summary-footer__content">
+      <!-- ✅ Mostrar totales del pedido -->
+      <div class="order-summary-footer__details">
+        <span>Total: ${{ totalPedido.toFixed(2) }}</span>
+        <!-- <span>Productos: {{ cantidadProductos }}</span> -->
+        <span>Productos: {{ cantidadProductosFooter }}</span>
+      </div>
+
+      <!-- ✅ Botones específicos del carrito -->
+      <div class="order-summary-footer__actions">
+        <button
+          class="primary__button order-summary-footer__button"
+          (click)="volverAlMenu()">
+          Seguir Comprando
+        </button>
+        <button
+          class="primary__button order-summary-footer__button carrito-finalizar-btn"
+          (click)="finalizarPedido()"
+          [disabled]="cantidadProductos === 0">
+          Finalizar Pedido
+        </button>
+      </div>
+    </div>
+  </footer>
+</div>

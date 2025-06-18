@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs'; // ✅ AGREGAR throwError
+import { Observable, throwError, forkJoin } from 'rxjs'; // ✅ AGREGAR throwError
 import { map, catchError } from 'rxjs/operators'; // ✅ AGREGAR map y catchError
 import { Producto, Categoria, Estado, Menu, Ingrediente } from '../models/catalogo.model';
 import { environment } from '../../environments/environment';
@@ -13,7 +13,7 @@ export class CatalogoService {
 
   private apiUrl = `${environment.apiUrl}`;
 
-  private baseUrl = environment.baseUrl; 
+  private baseUrl = environment.baseUrl;
 
   constructor(private http: HttpClient) { }
 
@@ -91,8 +91,20 @@ export class CatalogoService {
     return `${this.baseUrl}/media/${imagenUrl}`;
   }
 
+  // ✅ CAMBIAR: Renombrar el método para evitar duplicados
+  obtenerProductosPorIds(ids: number[]): Observable<any[]> {
+    const requests = ids.map(id => this.obtenerProductoPorId(id));
+    return forkJoin(requests);
+  }
+
+  // ✅ MANTENER: El método original obtenerProductos() (sin parámetros)
+  obtenerProductos(): Observable<Producto[]> {
+    return this.getProductos();
+  }
+
+  // ✅ AGREGAR: Método para obtener un producto por ID
   obtenerProductoPorId(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/catalogo/productos/${id}/`);
+    return this.http.get(`${this.apiUrl}/catalogo/productos/${id}/`);
   }
 
   actualizarProducto(id: number, formData: FormData): Observable<any> {
@@ -102,10 +114,6 @@ export class CatalogoService {
   eliminarProducto(id: number): Observable<any> {
     const url = `${this.apiUrl}/catalogo/productos/${id}/`;
     return this.http.delete<any>(url);
-  }
-
-  obtenerProductos(): Observable<Producto[]> {
-    return this.getProductos();
   }
 
   verificarProductoExiste(id: number): Observable<boolean> {
@@ -239,7 +247,7 @@ export class CatalogoService {
   getIngredientesPorProducto(productoId: number, tamanoCode?: string): Observable<any> {
     // ✅ CONSTRUIR URL con parámetro opcional
     let url = `${this.apiUrl}/catalogo/productos/${productoId}/ingredientes/`;
-    
+
     // ✅ AGREGAR parámetro de tamaño si existe
     if (tamanoCode) {
       url += `?tamano_codigo=${tamanoCode}`;
