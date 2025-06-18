@@ -70,8 +70,9 @@ export class CrearMenuComponent implements OnInit {
       descripcion: ['', Validators.required],
       precio: ['', [
         Validators.required,
-        Validators.pattern(/^(?!0+(\.0{1,2})?$)\d+(\.\d{1,2})?$/),
-        Validators.min(0.01)
+        Validators.pattern(/^(?:1000(?:\.00?)?|(?:\d{1,3})(?:\.\d{1,2})?)$/),
+        Validators.min(0.01),
+        Validators.max(1000)
       ]],
       tipo_menu: ['', Validators.required],
       estado: ['', Validators.required],
@@ -464,5 +465,52 @@ export class CrearMenuComponent implements OnInit {
     this.productosFiltrados = this.productos.filter(p =>
       p.nombre.toLowerCase().includes(texto)
     );
+  }
+
+  onPrecioInput(event: any): void {
+    let value = event.target.value;
+
+    // Permite borrar el campo
+    if (value === '') {
+      this.menuForm.get('precio')?.setValue('');
+      return;
+    }
+
+    // Limita a dos decimales
+    if (value && value.includes('.')) {
+      const [entero, decimales] = value.split('.');
+      value = entero + '.' + decimales.substring(0, 2);
+    }
+
+    // No fuerces el mínimo/máximo aquí, solo actualiza el valor
+    this.menuForm.get('precio')?.setValue(value);
+  }
+
+  // Nuevo: fuerza el mínimo/máximo solo al perder el foco
+  onPrecioBlur(event: any): void {
+    let value = event.target.value;
+
+    if (value === '') {
+      this.menuForm.get('precio')?.setValue('');
+      return;
+    }
+
+    let num = parseFloat(value);
+
+    if (isNaN(num)) {
+      num = 0.01;
+    }
+
+    if (num > 1000) {
+      num = 1000;
+    }
+    if (num < 0.01) {
+      num = 0.01;
+    }
+
+    num = Math.floor(num * 100) / 100;
+
+    event.target.value = num.toFixed(2);
+    this.menuForm.get('precio')?.setValue(event.target.value);
   }
 }
