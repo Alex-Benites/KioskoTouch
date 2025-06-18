@@ -48,7 +48,7 @@ export class InstruccionPagoComponent implements OnInit {
     const titulos = {
       'tarjeta': 'Pago con Tarjeta',
       'efectivo': 'Pago en Efectivo',
-      'completado': '¿Pedido Completado?'
+      'completado': '¡Pedido Completado!'
     };
     return titulos[this.tipoPago];
   }
