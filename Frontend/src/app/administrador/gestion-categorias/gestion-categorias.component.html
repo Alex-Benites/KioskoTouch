@@ -4,17 +4,21 @@
 <div class="gestion-categorias-container">
   <!-- Header existente -->
   <div class="page-header">
-    <div class="header-content">
+  <div class="header-content">
+    <div class="title-section">
       <h1 class="page-title">
-        <i class="material-icons">category</i>
-        Gestión de Categorías
+        <!-- <i class="material-icons">category</i> -->
+        GESTIÓN DE CATEGORÍAS
       </h1>
-      <button class="btn btn-primary crear-btn" (click)="irACrearCategoria()">
-        <i class="material-icons">add</i>
-        Nueva Categoría
-      </button>
+      <!-- ✅ AGREGAR: Subtítulo -->
+      <p class="page-subtitle">Creación/Edición/Eliminación de Categorías</p>
     </div>
+    <button class="btn btn-primary crear-btn" (click)="irACrearCategoria()">
+      <i class="material-icons">add</i>
+      Nueva Categoría
+    </button>
   </div>
+</div>
 
   <!-- Stats bar existente -->
   <div class="stats-bar" *ngIf="!loading && !error && categorias.length > 0">
@@ -53,7 +57,7 @@
   <!-- Grid de categorías existente -->
   <div class="categorias-grid" *ngIf="!loading && !error && categorias.length > 0">
     <div *ngFor="let categoria of categorias; trackBy: trackByCategoria" class="categoria-card">
-      
+
       <!-- Badges existentes -->
       <div *ngIf="!categoria.puede_eliminar" class="no-eliminar-badge">
         <i class="material-icons">shield</i>
@@ -68,7 +72,7 @@
       <!-- Info existente -->
       <div class="categoria-info">
         <h3 class="categoria-nombre">{{ categoria.nombre }}</h3>
-        
+
         <div class="categoria-stats">
           <div class="stat" [class.stat-highlight]="(categoria.productos_count || 0) > 0">
             <i class="material-icons">inventory</i>
@@ -103,8 +107,8 @@
           <i class="material-icons">edit</i>
           Editar
         </button>
-        <button 
-          class="btn btn-outline-danger" 
+        <button
+          class="btn btn-outline-danger"
           (click)="eliminarCategoria(categoria)"
           [disabled]="!categoria.puede_eliminar">
           <i class="material-icons">delete</i>
@@ -146,8 +150,8 @@
     <div class="popup-body" *ngIf="categoriaSeleccionada">
       <!-- Imagen principal -->
       <div class="detalle-imagen">
-        <img 
-          [src]="getImagenUrl(categoriaSeleccionada)" 
+        <img
+          [src]="getImagenUrl(categoriaSeleccionada)"
           [alt]="categoriaSeleccionada.nombre"
           (error)="onImageError($event)">
       </div>
@@ -155,7 +159,7 @@
       <!-- Información principal -->
       <div class="detalle-info">
         <h2 class="detalle-nombre">{{ categoriaSeleccionada.nombre }}</h2>
-        
+
         <!-- Stats principales -->
         <div class="detalle-stats">
           <div class="stat-box productos">
@@ -165,7 +169,7 @@
               <span class="stat-texto">Productos</span>
             </div>
           </div>
-          
+
           <div class="stat-box ingredientes">
             <i class="material-icons">restaurant</i>
             <div class="stat-content">
@@ -194,13 +198,13 @@
           </div>
 
           <div class="detalle-row">
-            <i class="material-icons" [class.text-success]="categoriaSeleccionada.puede_eliminar" 
+            <i class="material-icons" [class.text-success]="categoriaSeleccionada.puede_eliminar"
                [class.text-warning]="!categoriaSeleccionada.puede_eliminar">
               {{ categoriaSeleccionada.puede_eliminar ? 'check_circle' : 'shield' }}
             </i>
             <div class="row-content">
               <strong>Estado:</strong>
-              <span [class.text-success]="categoriaSeleccionada.puede_eliminar" 
+              <span [class.text-success]="categoriaSeleccionada.puede_eliminar"
                     [class.text-warning]="!categoriaSeleccionada.puede_eliminar">
                 {{ categoriaSeleccionada.puede_eliminar ? 'Puede eliminarse' : 'Protegida' }}
               </span>
@@ -223,7 +227,7 @@
             <div class="uso-item" *ngIf="categoriaSeleccionada.productos_count && categoriaSeleccionada.productos_count > 0">
               <span class="uso-label">Productos</span>
               <div class="uso-barra">
-                <div class="uso-fill productos-fill" 
+                <div class="uso-fill productos-fill"
                      [style.width.%]="getProductosPercentage(categoriaSeleccionada)"></div>
               </div>
               <span class="uso-valor">{{ categoriaSeleccionada.productos_count }}</span>
@@ -232,7 +236,7 @@
             <div class="uso-item" *ngIf="categoriaSeleccionada.ingredientes_count && categoriaSeleccionada.ingredientes_count > 0">
               <span class="uso-label">Ingredientes</span>
               <div class="uso-barra">
-                <div class="uso-fill ingredientes-fill" 
+                <div class="uso-fill ingredientes-fill"
                      [style.width.%]="getIngredientesPercentage(categoriaSeleccionada)"></div>
               </div>
               <span class="uso-valor">{{ categoriaSeleccionada.ingredientes_count }}</span>

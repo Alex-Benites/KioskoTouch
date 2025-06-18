@@ -9,55 +9,78 @@
 
 // ✅ HEADER MEJORADO
 .page-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  //background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); // ✅ Degradado rojo
   border-radius: 16px;
   padding: 30px;
   margin-bottom: 30px;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25);
+  //box-shadow: 0 8px 32px rgba(231, 76, 60, 0.25); // ✅ Sombra roja
 
   .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     flex-wrap: wrap;
     gap: 20px;
 
-    .page-title {
+    // ✅ AGREGAR: Contenedor para título y subtítulo
+    .title-section {
       display: flex;
-      align-items: center;
-      gap: 15px;
-      color: white;
-      font-size: 2.2rem;
-      font-weight: 700;
-      margin: 0;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex-direction: column;
+      gap: 5px;
 
-      i {
-        font-size: 2rem;
-        color: rgba(255,255,255,0.9);
+      .page-title {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: #666;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0; // ✅ AGREGAR para quitar margin por defecto
+
+        //i {
+        //  font-size: 2rem;
+        //  color: #666;
+        //}
+      }
+
+      // ✅ AGREGAR: Estilos del subtítulo
+      .page-subtitle {
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.5px;
       }
     }
 
     .crear-btn {
-      background: rgba(255,255,255,0.2);
-      border: 2px solid rgba(255,255,255,0.3);
-      color: white;
-      font-weight: 600;
+      background: white;
+      border: 2px solid #e74c3c;
+      color: #e74c3c;
+      font-weight: 800;
       padding: 12px 24px;
       border-radius: 25px;
       transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-      font-size: 1rem;
+      //backdrop-filter: blur(10px);
+      font-size: 1.1rem;
+
 
       &:hover {
-        background: rgba(255,255,255,0.3);
-        border-color: rgba(255,255,255,0.5);
+        background: #e74c3c;
+        color: white;
+        border-color: #e74c3c;
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+      }
+
+      &:active {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
       }
 
       i {
         margin-right: 8px;
+        font-size: 1.1rem;
       }
     }
   }
@@ -78,7 +101,7 @@
 
     i {
       font-size: 3rem;
-      color: #667eea;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
       margin-bottom: 20px;
     }
 
@@ -138,7 +161,7 @@
   gap: 20px;
   flex-wrap: wrap;
   margin-bottom: 30px;
-  padding: 20px;
+  padding: 25px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -146,11 +169,11 @@
   .stat-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
+    gap: 15px;
+    padding: 15px 20px;
     background: #f8f9fa;
     border-radius: 8px;
-    font-weight: 500;
+    font-weight: 700;
     color: #495057;
     transition: all 0.2s ease;
 
@@ -160,8 +183,8 @@
     }
 
     i {
-      color: #667eea;
-      font-size: 1.1rem;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      font-size: 1.4rem;
     }
 
     span {
@@ -196,30 +219,29 @@
     border-left: 5px solid #ffc107;
   }
 
-  // === IMAGEN ===
+  // === IMAGEN (sin cambios) ===
   .categoria-imagen {
-    height: 200px; // ✅ Aumentar altura para mejor proporción
+    height: 200px;
     overflow: hidden;
     position: relative;
     background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     display: flex;
     align-items: center;
-    justify-content: center; // ✅ Centrar imagen
+    justify-content: center;
 
     img {
       width: 100%;
       height: 100%;
-      object-fit: contain; // ✅ CAMBIAR de 'cover' a 'contain' para evitar distorsión
-      object-position: center; // ✅ Centrar la imagen
-      transition: transform 0.3s ease; // ✅ Transición más suave
-      padding: 10px; // ✅ Agregar padding para evitar que toque los bordes
+      object-fit: contain;
+      object-position: center;
+      transition: transform 0.3s ease;
+      padding: 10px;
     }
 
     &:hover img {
-      transform: scale(1.05); // ✅ Menos zoom para evitar que se vea mal
+      transform: scale(1.05);
     }
 
-    // ✅ Agregar placeholder para cuando no hay imagen
     &::before {
       content: '';
       position: absolute;
@@ -247,7 +269,7 @@
     .categoria-nombre {
       font-size: 1.3rem;
       font-weight: 700;
-      color: #212529;
+      color: #000000; // ✅ MANTENER: Negro como solicitaste
       margin: 0 0 15px 0;
     }
 
@@ -265,7 +287,7 @@
         font-weight: 500;
 
         &.stat-highlight {
-          color: #667eea;
+          color: #556fff; // ✅ CAMBIAR: De azul a rojo
           font-weight: 600;
         }
 
@@ -299,7 +321,8 @@
 
         .uso-fill {
           height: 100%;
-          background: linear-gradient(90deg, #667eea, #764ba2);
+          // ✅ CAMBIAR: De azul a rojo
+          background: linear-gradient(90deg, #e74c3c, #c0392b);
           transition: width 0.5s ease;
         }
       }
@@ -311,7 +334,7 @@
     }
   }
 
-  // === ACCIONES ===
+  // ✅ MANTENER: Botones de las cards SIN cambios (como solicitaste)
   .categoria-acciones {
     padding: 0 20px 20px 20px;
     display: flex;
@@ -340,7 +363,7 @@
     }
   }
 
-  // === BADGES ===
+  // === BADGES (sin cambios) ===
   .no-eliminar-badge {
     position: absolute;
     top: 15px;
@@ -382,7 +405,7 @@
   }
 }
 
-// ✅ EMPTY STATE MEJORADO
+// ✅ CAMBIAR: Empty state
 .empty-state {
   text-align: center;
   padding: 80px 40px;
@@ -391,7 +414,7 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 
   i {
-    color: #667eea;
+    color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
     margin-bottom: 30px;
   }
 
@@ -437,7 +460,7 @@
   }
 }
 
-// ✅ BOTONES GENERALES MEJORADOS
+// ✅ CAMBIAR: Botones principales
 .btn {
   display: inline-flex;
   align-items: center;
@@ -449,27 +472,29 @@
   font-family: inherit;
 
   &.btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    // ✅ CAMBIAR: De azul a rojo
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: white;
     border: 2px solid transparent;
 
     &:hover {
-      background: linear-gradient(135deg, #5a6fd8, #6a42a0);
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      background: linear-gradient(135deg, #d32f2f, #b71c1c);
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
     }
   }
 
   &.btn-outline-primary {
     background: transparent;
-    color: #667eea;
-    border: 1.5px solid #667eea;
+    color: #2c79ff; // ✅ CAMBIAR: De azul a rojo
+    border: 1.5px solid #2c79ff;
 
     &:hover {
-      background: #667eea;
+      background: #2c79ff; // ✅ CAMBIAR: De azul a rojo
       color: white;
     }
   }
 
+  // ✅ MANTENER: Otros botones sin cambios
   &.btn-outline-info {
     background: transparent;
     color: #17a2b8;
@@ -504,70 +529,152 @@
   }
 }
 
-// ✅ RESPONSIVE
-@media (max-width: 1024px) {
-  .categorias-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+// ✅ CAMBIAR: Popup header
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  // ✅ CAMBIAR: De azul a rojo
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+
+    i {
+      font-size: 1.5rem;
+    }
+  }
+
+  .btn-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    i {
+      font-size: 1.2rem;
+    }
   }
 }
 
-@media (max-width: 768px) {
-  .gestion-categorias-container {
-    padding: 15px;
-  }
+// ✅ CAMBIAR: Stats del popup
+.detalle-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
 
-  .page-header {
-    padding: 20px;
+  .stat-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid transparent;
 
-    .header-content {
-      flex-direction: column;
-      text-align: center;
+    &.productos {
+      border-left-color: #4caf50;
+    }
 
-      .page-title {
-        font-size: 1.8rem;
+    &.ingredientes {
+      border-left-color: #ff9800;
+    }
+
+    i {
+      font-size: 1.8rem;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+    }
+
+    .stat-content {
+      .stat-numero {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1;
+      }
+
+      .stat-texto {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
       }
     }
   }
-
-  .stats-bar {
-    flex-direction: column;
-    gap: 10px;
-
-    .stat-item {
-      justify-content: center;
-    }
-  }
-
-  .categorias-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .empty-state {
-    padding: 60px 20px;
-
-    .empty-actions {
-      flex-direction: column;
-      align-items: center;
-    }
-  }
 }
 
-@media (max-width: 480px) {
-  .categoria-card {
-    .categoria-acciones {
-      flex-wrap: wrap;
-      justify-content: center;
+// ✅ CAMBIAR: Rows del popup
+.detalle-rows {
+  .detalle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
 
-      .btn {
-        flex: 1;
-        min-width: 80px;
+    i {
+      margin-top: 2px;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+
+      &.text-success {
+        color: #4caf50;
+      }
+
+      &.text-warning {
+        color: #ff9800;
+      }
+    }
+
+    .row-content {
+      flex: 1;
+
+      strong {
+        display: block;
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      span {
+        color: #666;
+
+        &.text-success {
+          color: #4caf50;
+          font-weight: 500;
+        }
+
+        &.text-warning {
+          color: #ff9800;
+          font-weight: 500;
+        }
       }
     }
   }
 }
-
-
-// ✅ AGREGAR al final de gestion-categorias.component.scss
 
 // === POPUP INTEGRADO ===
 .popup-overlay {
@@ -604,7 +711,8 @@
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #e0e0e0;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  // ✅ CAMBIAR: De azul a rojo
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
 
   h3 {
@@ -704,7 +812,7 @@
 
     i {
       font-size: 1.8rem;
-      color: #667eea;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
     }
 
     .stat-content {
@@ -739,7 +847,374 @@
 
     i {
       margin-top: 2px;
-      color: #667eea;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+
+      &.text-success {
+        color: #4caf50;
+      }
+
+      &.text-warning {
+        color: #ff9800;
+      }
+    }
+
+    .row-content {
+      flex: 1;
+
+      strong {
+        display: block;
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      span {
+        color: #666;
+
+        &.text-success {
+          color: #4caf50;
+          font-weight: 500;
+        }
+
+        &.text-warning {
+          color: #ff9800;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+// === USO VISUAL ===
+.uso-visual {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+
+  h4 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .uso-items {
+    .uso-item {
+      display: grid;
+      grid-template-columns: 80px 1fr 40px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+
+      .uso-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #666;
+      }
+
+      .uso-barra {
+        height: 8px;
+        background: #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+
+        .uso-fill {
+          height: 100%;
+          transition: width 0.8s ease;
+
+          &.productos-fill {
+            background: linear-gradient(90deg, #4caf50, #66bb6a);
+          }
+
+          &.ingredientes-fill {
+            background: linear-gradient(90deg, #ff9800, #ffb74d);
+          }
+        }
+      }
+
+      .uso-valor {
+        font-weight: 600;
+        color: #333;
+        text-align: center;
+      }
+    }
+  }
+}
+
+// === POPUP FOOTER ===
+.popup-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+
+  .btn {
+    font-weight: 600;
+    padding: 10px 20px;
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+// === ANIMACIONES ===
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// === RESPONSIVE ===
+@media (max-width: 1024px) {
+  .categorias-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .gestion-categorias-container {
+    padding: 15px;
+  }
+
+  .page-header {
+    padding: 20px;
+
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+
+      .page-title {
+        font-size: 1.8rem;
+      }
+    }
+  }
+
+  .stats-bar {
+    flex-direction: column;
+    gap: 10px;
+
+    .stat-item {
+      justify-content: center;
+    }
+  }
+
+  .categorias-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .empty-state {
+    padding: 60px 20px;
+
+    .empty-actions {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .categoria-card {
+    .categoria-acciones {
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .btn {
+        flex: 1;
+        min-width: 80px;
+      }
+    }
+  }
+}
+
+
+// ✅ AGREGAR al final de gestion-categorias.component.scss
+
+// === POPUP INTEGRADO ===
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.popup-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+// === POPUP HEADER ===
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  // ✅ CAMBIAR: De azul a rojo
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+
+    i {
+      font-size: 1.5rem;
+    }
+  }
+
+  .btn-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    i {
+      font-size: 1.2rem;
+    }
+  }
+}
+
+// === POPUP BODY ===
+.popup-body {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+// === IMAGEN DETALLE ===
+.detalle-imagen {
+  text-align: center;
+  margin-bottom: 24px;
+
+  img {
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+    background: #f8f9fa;
+    padding: 8px;
+  }
+}
+
+// === INFO DETALLE ===
+.detalle-info {
+  .detalle-nombre {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 24px 0;
+  }
+}
+
+// === STATS DETALLE ===
+.detalle-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .stat-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid transparent;
+
+    &.productos {
+      border-left-color: #4caf50;
+    }
+
+    &.ingredientes {
+      border-left-color: #ff9800;
+    }
+
+    i {
+      font-size: 1.8rem;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+    }
+
+    .stat-content {
+      .stat-numero {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1;
+      }
+
+      .stat-texto {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// === ROWS DETALLE ===
+.detalle-rows {
+  .detalle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+
+    i {
+      margin-top: 2px;
+      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
 
       &.text-success {
         color: #4caf50;

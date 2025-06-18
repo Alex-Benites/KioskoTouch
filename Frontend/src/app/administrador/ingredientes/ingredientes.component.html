@@ -5,27 +5,23 @@
   <!-- ✅ HEADER SECTION -->
   <div class="header-section">
     <div class="breadcrumb-section">
-      <p class="breadcrumb">ADMINISTRADOR / PRODUCTOS</p>
-      <h1 class="page-title">
-        <mat-icon>restaurant</mat-icon>
-        Gestión de Ingredientes
-      </h1>
-      <p class="subtitle">Organiza los ingredientes por categorías dinámicas</p>
+      <p class="breadcrumb-title">GESTIÓN DE INGREDIENTES</p>
+      <h1 class="section-title">Edición/Eliminación de Ingredientes</h1>
     </div>
 
     <div class="header-actions">
-      <button 
-        mat-raised-button 
-        color="primary" 
+      <button
+        mat-raised-button
+        color="primary"
         (click)="crearIngrediente()"
         class="create-btn">
         <mat-icon>add</mat-icon>
         Nuevo Ingrediente
       </button>
-      
-      <button 
-        mat-stroked-button 
-        color="accent" 
+
+      <button
+        mat-stroked-button
+        color="accent"
         (click)="refrescar()"
         [disabled]="cargandoCategorias"
         class="refresh-btn">
@@ -55,12 +51,12 @@
   <!-- ✅ TABS DINÁMICOS -->
   <div *ngIf="!cargandoCategorias && !errorCargandoCategorias && totalCategorias > 0" class="tabs-container">
     <mat-tab-group class="ingredients-tabs" dynamicHeight animationDuration="300ms">
-      
+
       <!-- ✅ TAB POR CADA CATEGORÍA -->
-      <mat-tab 
+      <mat-tab
         *ngFor="let categoriaItem of categoriasConIngredientes; trackBy: trackByCategoria"
         [label]="getCategoriaTabLabel(categoriaItem)">
-        
+
         <div class="tab-content">
           <!-- Loading de ingredientes -->
           <div *ngIf="categoriaItem.cargando" class="loading-container">
@@ -70,22 +66,22 @@
 
           <!-- Grid de ingredientes -->
           <div *ngIf="!categoriaItem.cargando" class="ingredients-grid">
-            
+
             <!-- ✅ INGREDIENTE CARD -->
-            <mat-card 
+            <mat-card
               *ngFor="let ingrediente of categoriaItem.ingredientes; trackBy: trackByIngrediente"
               class="ingredient-card"
               [class.stock-bajo]="ingrediente.necesita_reposicion && !ingrediente.esta_agotado"
               [class.agotado]="ingrediente.esta_agotado">
-              
+
               <!-- Imagen -->
               <div class="card-image">
-                <img 
-                  [src]="getFullImageUrl(ingrediente.imagen_url)" 
+                <img
+                  [src]="getFullImageUrl(ingrediente.imagen_url)"
                   [alt]="ingrediente.nombre"
                   class="ingredient-image"
                   (error)="onImageError($event)">
-                
+
                 <div class="price-badge">
                   ${{ ingrediente.precio_adicional | number:'1.2-2' }}
                 </div>
@@ -137,17 +133,17 @@
 
               <!-- Acciones -->
               <div class="card-actions">
-                <button 
-                  mat-button 
-                  color="primary" 
+                <button
+                  mat-button
+                  color="primary"
                   (click)="editarIngrediente(ingrediente.id)">
                   <mat-icon>edit</mat-icon>
                   Editar
                 </button>
-                
-                <button 
-                  mat-button 
-                  color="warn" 
+
+                <button
+                  mat-button
+                  color="warn"
                   (click)="eliminarIngrediente(ingrediente)">
                   <mat-icon>delete</mat-icon>
                   Eliminar
@@ -171,7 +167,7 @@
         <div class="tab-content">
           <div class="stats-summary">
             <h2>Estadísticas Generales</h2>
-            
+
             <div class="stats-grid">
               <div class="stat-item">
                 <mat-icon>category</mat-icon>
@@ -212,8 +208,8 @@
               <div class="distribution-list">
                 <div *ngFor="let categoriaItem of categoriasConIngredientes" class="distribution-item">
                   <div class="categoria-info">
-                    <img 
-                      [src]="getCategoriaImagenUrl(categoriaItem.categoria)" 
+                    <img
+                      [src]="getCategoriaImagenUrl(categoriaItem.categoria)"
                       [alt]="categoriaItem.categoria.nombre"
                       class="categoria-mini-imagen"
                       (error)="onImageError($event)">
@@ -221,8 +217,8 @@
                     <span class="categoria-count">{{ categoriaItem.ingredientes.length }}</span>
                   </div>
                   <div class="progress-bar">
-                    <div 
-                      class="progress-fill" 
+                    <div
+                      class="progress-fill"
                       [style.width.%]="getCategoriaPorcentaje(categoriaItem)">
                     </div>
                   </div>

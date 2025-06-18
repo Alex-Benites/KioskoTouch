@@ -9,7 +9,7 @@
   color: #888;
   font-size: 20px;
   margin-bottom: 5px;
-  margin-left: 150px;
+  margin-left: 60px;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -19,13 +19,13 @@
   font-weight: 900;
   margin-bottom: 30px;
   margin-top: 0px;
-  margin-left: 150px;
+  margin-left: 60px;
   color: #333;
 }
 
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(4, 250px);
+  grid-template-columns: repeat(5, 250px);
   gap: 40px;
   justify-items: center;
   justify-content: center;
