@@ -27,27 +27,27 @@ $text-color-light: #6c757d;
   justify-content: center;
   text-align: center;
   padding: 20px;
-  gap: 25px;
+  gap: 35px; // Aumentado
+
 }
 
-.kiosko-title {
-  font-size: clamp(3rem, 8vw, 4.5rem);
-  font-weight: 900;
-  color: $kiosko-red;
-  margin: 0;
-  margin-bottom: 10px;
+.kiosko-logo {
+  max-width: 450px;
+  width: 80%;
+  height: auto;
+  margin-bottom: 15px;
 }
 
 .pago-icon-wrapper {
-  width: 200px;
-  height: 200px;
+  width: 400px; // Aumentado
+  height: 400px; // Aumentado
   background-color: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  padding: 30px;
+  box-shadow: 0 8px chunky-px rgba(0, 0, 0, 0.08);
+  padding: 40px; // Aumentado
 }
 
 .pago-icon {
@@ -57,70 +57,70 @@ $text-color-light: #6c757d;
 }
 
 .pago-title {
-  font-size: clamp(1.8rem, 4vw, 2.2rem);
+  font-size: clamp(2.2rem, 5vw, 2.8rem); 
   font-weight: 700;
   color: $text-color-dark;
   margin: 0;
 }
 
 .pago-instructions {
-  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-size: clamp(1.2rem, 3vw, 1.5rem); 
   color: $text-color-light;
-  max-width: 400px;
+  max-width: 500px; 
   line-height: 1.6;
-  margin: -15px 0 0 0;
+  margin: -20px 0 0 0; 
 }
 
 .pago-button {
   background-color: $kiosko-red;
   color: white;
   border: none;
-  border-radius: 10px;
-  padding: 18px 60px;
-  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-  font-weight: 600;
+  border-radius: 25px; 
+  padding: 22px 80px; 
+  font-size: clamp(1.3rem, 3vw, 1.6rem); 
+  font-weight: 700; 
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
-  box-shadow: 0 4px 12px rgba(color.scale($kiosko-red, $alpha: -60%), 0.4);
+  box-shadow: 0 5px 15px rgba(color.scale($kiosko-red, $alpha: -60%), 0.4);
 
   &:hover {
     background-color: color.scale($kiosko-red, $lightness: -7%);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(color.scale($kiosko-red, $alpha: -60%), 0.3);
+    box-shadow: 0 2px 8px rgba(color.scale($kiosko-red, $alpha: -60%), 0.3);
   }
 }
 
 // Media queries para adaptabilidad
 @media (max-width: 480px) {
   .pago-content {
-    gap: 20px;
+    gap: 25px;
     padding: 15px;
   }
 
-  .kiosko-title {
-    font-size: 2.5rem;
+  .kiosko-logo {
+    max-width: 300px;
   }
 
   .pago-icon-wrapper {
-    width: 160px;
-    height: 160px;
+    width: 180px;
+    height: 180px;
   }
 
   .pago-title {
-    font-size: 1.5rem;
+    font-size: 1.8rem; 
   }
 
   .pago-instructions {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 
   .pago-button {
     width: 100%;
-    padding: 15px;
-    font-size: 1.1rem;
+    padding: 18px;
+    font-size: 1.2rem; 
   }
 }
