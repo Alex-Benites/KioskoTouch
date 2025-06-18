@@ -7,6 +7,13 @@
 
   <!-- Contenido Principal -->
   <main class="turno-content">
+    <!-- ✅ NUEVO: Botón de prueba -->
+    <button 
+      (click)="abrirDialogoPrueba()" 
+      style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">
+      Abrir Diálogo de Turno (Prueba)
+    </button>
+
     <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
 
     <div class="turno-display">{{ numeroTurno || '' }}</div>
@@ -38,4 +45,3 @@
 
     <button class="turno-button" (click)="continuar()" [disabled]="!numeroTurno">Continuar</button>
   </main>
-</div>
