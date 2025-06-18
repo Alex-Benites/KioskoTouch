@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     'ventas.apps.VentasConfig',
     'marketing.apps.MarketingConfig',
     'establecimientos.apps.EstablecimientosConfig',
+    'categoria.apps.CategoriaConfig',
 
 ]
 

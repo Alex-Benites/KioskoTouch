@@ -327,6 +327,214 @@
   }
 }
 
+// === NUEVOS ESTILOS PARA CATEGORÍAS DINÁMICAS ===
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  
+  &.stock-critical {
+    color: #e74c3c;
+    font-weight: 600;
+  }
+  
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+  
+  .stock-warning {
+    color: #f39c12;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+}
+
+.estado-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  
+  &.estado-disponible {
+    background: #d4edda;
+    color: #155724;
+  }
+  
+  &.estado-agotado {
+    background: #f8d7da;
+    color: #721c24;
+  }
+  
+  &.estado-stock_bajo {
+    background: #fff3cd;
+    color: #856404;
+  }
+}
+
+// === INGREDIENT CARD STATES ===
+.ingredient-card {
+  &.stock-bajo {
+    border-left: 4px solid #f39c12;
+  }
+  
+  &.agotado {
+    border-left: 4px solid #e74c3c;
+    opacity: 0.7;
+  }
+}
+
+// === STATS SUMMARY ===
+.stats-summary {
+  h2 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-weight: 700;
+  }
+  
+  h3 {
+    color: #34495e;
+    margin: 30px 0 15px 0;
+    font-weight: 600;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #3498db;
+    }
+    
+    .stat-info {
+      .stat-number {
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
+      }
+      
+      .stat-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// === CATEGORY DISTRIBUTION ===
+.category-distribution {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.distribution-list {
+  .distribution-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+    
+    .categoria-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .categoria-mini-imagen {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      
+      .categoria-nombre {
+        flex: 1;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+      
+      .categoria-count {
+        background: #3498db;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        min-width: 30px;
+        text-align: center;
+      }
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: #ecf0f1;
+      border-radius: 3px;
+      overflow: hidden;
+      
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3498db, #2980b9);
+        transition: width 0.3s ease;
+      }
+    }
+  }
+}
+
+// === RESPONSIVE ADDITIONS ===
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    
+    .stat-item {
+      padding: 15px;
+      
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+      
+      .stat-info .stat-number {
+        font-size: 1.5rem;
+      }
+    }
+  }
+  
+  .category-distribution {
+    padding: 20px;
+  }
+  
+  .distribution-item .categoria-info {
+    .categoria-mini-imagen {
+      width: 25px;
+      height: 25px;
+    }
+  }
+}
+
 // === ANIMATIONS ===
 @keyframes fadeIn {
   from {
@@ -429,4 +637,37 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+
+// ✅ OPCIÓN MINIMALISTA
+.ingredients-grid .empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+
+  .empty-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: #bbb;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    margin: 0 0 8px 0;
+    color: #555;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+
+    strong {
+      color: #333;
+    }
+  }
 }

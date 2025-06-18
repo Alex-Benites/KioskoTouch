@@ -66,7 +66,9 @@ export class CrearIngredienteComponent implements OnInit {
   constructor() {
     this.ingredienteForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(2)]],
-      descripcion: ['', [Validators.required, Validators.minLength(5)]],
+      descripcion: ['', [
+        Validators.maxLength(500) // Solo validación de longitud máxima
+      ]],
       categoria_producto: ['', Validators.required],  // ✅ CAMBIO: Sin valor por defecto
       precio_adicional: ['0.00', [
         Validators.required,
@@ -386,16 +388,6 @@ export class CrearIngredienteComponent implements OnInit {
     return '';
   }
 
-  get descripcionError(): string {
-    const control = this.ingredienteForm.get('descripcion');
-    if (control?.hasError('required') && control?.touched) {
-      return 'La descripción es obligatoria';
-    }
-    if (control?.hasError('minlength') && control?.touched) {
-      return 'La descripción debe tener al menos 5 caracteres';
-    }
-    return '';
-  }
 
   get categoriaError(): string {
     const control = this.ingredienteForm.get('categoria_producto');

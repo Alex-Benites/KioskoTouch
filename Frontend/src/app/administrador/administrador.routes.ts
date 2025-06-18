@@ -58,6 +58,10 @@ import { KioskoTouchComponent } from './kiosko-touch/kiosko-touch.component';
 import { CrearKioskoTouchComponent } from './kiosko-touch/crear-kiosko-touch/crear-kiosko-touch.component';
 import { EditarEliminarKioskoTouchComponent } from './kiosko-touch/editar-eliminar-kiosko-touch/editar-eliminar-kiosko-touch.component';
 
+// 🏷️ Componentes de categorías
+import { GestionCategoriasComponent } from './gestion-categorias/gestion-categorias.component';
+import { CrearCategoriaComponent } from './gestion-categorias/crear-categoria/crear-categoria.component';
+
 export const administradorRoutes: Routes = [
   // 🔓 Rutas públicas
   {
@@ -300,6 +304,21 @@ export const administradorRoutes: Routes = [
     path: 'gestion-kiosko-touch/editar-eliminar',
     component: EditarEliminarKioskoTouchComponent,
     canActivate: [authGuard, permissionGuard(['establecimientos.view_appkioskokioskostouch'])] // Solo VER (decide internamente)
+  },
+  {
+    path: 'gestion-categorias',
+    component: GestionCategoriasComponent,
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])]
+  },
+  {
+    path: 'gestion-categorias/crear',
+    component: CrearCategoriaComponent,
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias', 'catalogo.add_appkioskocategorias'])] // VER + CREAR
+  },
+  {
+    path: 'gestion-categorias/crear/:id',
+    component: CrearCategoriaComponent,
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias', 'catalogo.change_appkioskocategorias'])] // VER + MODIFICAR
   },
 
   // ❌ Página de no autorizado

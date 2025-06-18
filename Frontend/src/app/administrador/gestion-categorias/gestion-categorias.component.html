@@ -1,0 +1,259 @@
+<!-- ✅ ACTUALIZAR gestion-categorias.component.html -->
+<app-header-admin></app-header-admin>
+
+<div class="gestion-categorias-container">
+  <!-- Header existente -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="material-icons">category</i>
+        Gestión de Categorías
+      </h1>
+      <button class="btn btn-primary crear-btn" (click)="irACrearCategoria()">
+        <i class="material-icons">add</i>
+        Nueva Categoría
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats bar existente -->
+  <div class="stats-bar" *ngIf="!loading && !error && categorias.length > 0">
+    <div class="stat-item">
+      <i class="material-icons">category</i>
+      <span>{{ categorias.length }} categorías</span>
+    </div>
+    <div class="stat-item">
+      <i class="material-icons">inventory</i>
+      <span>{{ getTotalProductos() }} productos</span>
+    </div>
+    <div class="stat-item">
+      <i class="material-icons">restaurant</i>
+      <span>{{ getTotalIngredientes() }} ingredientes</span>
+    </div>
+  </div>
+
+  <!-- Loading existente -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner">
+      <i class="material-icons spin">refresh</i>
+      <p>Cargando categorías...</p>
+    </div>
+  </div>
+
+  <!-- Error existente -->
+  <div *ngIf="error" class="error-container">
+    <div class="error-card">
+      <i class="material-icons">error</i>
+      <h3>Error al cargar</h3>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="refrescar()">Reintentar</button>
+    </div>
+  </div>
+
+  <!-- Grid de categorías existente -->
+  <div class="categorias-grid" *ngIf="!loading && !error && categorias.length > 0">
+    <div *ngFor="let categoria of categorias; trackBy: trackByCategoria" class="categoria-card">
+      
+      <!-- Badges existentes -->
+      <div *ngIf="!categoria.puede_eliminar" class="no-eliminar-badge">
+        <i class="material-icons">shield</i>
+        Protegida
+      </div>
+
+      <!-- Imagen existente -->
+      <div class="categoria-imagen">
+        <img [src]="getImagenUrl(categoria)" [alt]="categoria.nombre" (error)="onImageError($event)">
+      </div>
+
+      <!-- Info existente -->
+      <div class="categoria-info">
+        <h3 class="categoria-nombre">{{ categoria.nombre }}</h3>
+        
+        <div class="categoria-stats">
+          <div class="stat" [class.stat-highlight]="(categoria.productos_count || 0) > 0">
+            <i class="material-icons">inventory</i>
+            <span>{{ categoria.productos_count || 0 }} productos</span>
+          </div>
+          <div class="stat" [class.stat-highlight]="(categoria.ingredientes_count || 0) > 0">
+            <i class="material-icons">restaurant</i>
+            <span>{{ categoria.ingredientes_count || 0 }} ingredientes</span>
+          </div>
+        </div>
+
+        <div class="categoria-fecha">
+          <i class="material-icons">schedule</i>
+          <span>{{ formatearFecha(categoria.created_at) }}</span>
+        </div>
+
+        <div class="categoria-uso" *ngIf="getTotalElementos(categoria) > 0">
+          <div class="uso-bar">
+            <div class="uso-fill" [style.width.%]="getUsoPercentage(categoria)"></div>
+          </div>
+          <small>{{ getTotalElementos(categoria) }} elementos asociados</small>
+        </div>
+      </div>
+
+      <!-- Acciones existentes -->
+      <div class="categoria-acciones">
+        <button class="btn btn-outline-info" (click)="verDetalles(categoria)">
+          <i class="material-icons">visibility</i>
+          Ver
+        </button>
+        <button class="btn btn-outline-primary" (click)="editarCategoria(categoria)">
+          <i class="material-icons">edit</i>
+          Editar
+        </button>
+        <button 
+          class="btn btn-outline-danger" 
+          (click)="eliminarCategoria(categoria)"
+          [disabled]="!categoria.puede_eliminar">
+          <i class="material-icons">delete</i>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state existente -->
+  <div *ngIf="!loading && !error && categorias.length === 0" class="empty-state">
+    <i class="material-icons">category</i>
+    <h3>No hay categorías</h3>
+    <p>Comienza creando tu primera categoría para organizar tus productos.</p>
+    <div class="empty-actions">
+      <button class="btn btn-primary" (click)="irACrearCategoria()">
+        <i class="material-icons">add</i>
+        Crear Primera Categoría
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ POPUP DE DETALLES INTEGRADO -->
+<div class="popup-overlay" *ngIf="mostrarDetalles" (click)="cerrarDetalles()">
+  <div class="popup-content" (click)="$event.stopPropagation()">
+    <!-- Header del popup -->
+    <div class="popup-header">
+      <h3>
+        <i class="material-icons">category</i>
+        Detalles de Categoría
+      </h3>
+      <button class="btn-close" (click)="cerrarDetalles()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <!-- Contenido del popup -->
+    <div class="popup-body" *ngIf="categoriaSeleccionada">
+      <!-- Imagen principal -->
+      <div class="detalle-imagen">
+        <img 
+          [src]="getImagenUrl(categoriaSeleccionada)" 
+          [alt]="categoriaSeleccionada.nombre"
+          (error)="onImageError($event)">
+      </div>
+
+      <!-- Información principal -->
+      <div class="detalle-info">
+        <h2 class="detalle-nombre">{{ categoriaSeleccionada.nombre }}</h2>
+        
+        <!-- Stats principales -->
+        <div class="detalle-stats">
+          <div class="stat-box productos">
+            <i class="material-icons">inventory</i>
+            <div class="stat-content">
+              <span class="stat-numero">{{ categoriaSeleccionada.productos_count || 0 }}</span>
+              <span class="stat-texto">Productos</span>
+            </div>
+          </div>
+          
+          <div class="stat-box ingredientes">
+            <i class="material-icons">restaurant</i>
+            <div class="stat-content">
+              <span class="stat-numero">{{ categoriaSeleccionada.ingredientes_count || 0 }}</span>
+              <span class="stat-texto">Ingredientes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información detallada -->
+        <div class="detalle-rows">
+          <div class="detalle-row">
+            <i class="material-icons">event</i>
+            <div class="row-content">
+              <strong>Fecha de creación:</strong>
+              <span>{{ formatearFecha(categoriaSeleccionada.created_at) }}</span>
+            </div>
+          </div>
+
+          <div class="detalle-row">
+            <i class="material-icons">update</i>
+            <div class="row-content">
+              <strong>Última actualización:</strong>
+              <span>{{ formatearFecha(categoriaSeleccionada.updated_at) }}</span>
+            </div>
+          </div>
+
+          <div class="detalle-row">
+            <i class="material-icons" [class.text-success]="categoriaSeleccionada.puede_eliminar" 
+               [class.text-warning]="!categoriaSeleccionada.puede_eliminar">
+              {{ categoriaSeleccionada.puede_eliminar ? 'check_circle' : 'shield' }}
+            </i>
+            <div class="row-content">
+              <strong>Estado:</strong>
+              <span [class.text-success]="categoriaSeleccionada.puede_eliminar" 
+                    [class.text-warning]="!categoriaSeleccionada.puede_eliminar">
+                {{ categoriaSeleccionada.puede_eliminar ? 'Puede eliminarse' : 'Protegida' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detalle-row" *ngIf="getTotalElementos(categoriaSeleccionada) > 0">
+            <i class="material-icons">trending_up</i>
+            <div class="row-content">
+              <strong>Elementos asociados:</strong>
+              <span>{{ getTotalElementos(categoriaSeleccionada) }} en total</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de uso visual -->
+        <div class="uso-visual" *ngIf="getTotalElementos(categoriaSeleccionada) > 0">
+          <h4>Distribución de uso</h4>
+          <div class="uso-items">
+            <div class="uso-item" *ngIf="categoriaSeleccionada.productos_count && categoriaSeleccionada.productos_count > 0">
+              <span class="uso-label">Productos</span>
+              <div class="uso-barra">
+                <div class="uso-fill productos-fill" 
+                     [style.width.%]="getProductosPercentage(categoriaSeleccionada)"></div>
+              </div>
+              <span class="uso-valor">{{ categoriaSeleccionada.productos_count }}</span>
+            </div>
+
+            <div class="uso-item" *ngIf="categoriaSeleccionada.ingredientes_count && categoriaSeleccionada.ingredientes_count > 0">
+              <span class="uso-label">Ingredientes</span>
+              <div class="uso-barra">
+                <div class="uso-fill ingredientes-fill" 
+                     [style.width.%]="getIngredientesPercentage(categoriaSeleccionada)"></div>
+              </div>
+              <span class="uso-valor">{{ categoriaSeleccionada.ingredientes_count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer del popup -->
+    <div class="popup-footer">
+      <button class="btn btn-outline-primary" (click)="editarDesdePopup()">
+        <i class="material-icons">edit</i>
+        Editar Categoría
+      </button>
+      <button class="btn btn-primary" (click)="cerrarDetalles()">
+        <i class="material-icons">check</i>
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-productos'"></app-footer-admin>

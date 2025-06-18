@@ -21,11 +21,10 @@
       <!-- Descripción -->
       <div class="form-group">
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Descripción</mat-label>
+          <mat-label>Descripción (Opcional)</mat-label>
           <textarea matInput formControlName="descripcion" 
                    placeholder="Descripción detallada del ingrediente" 
                    rows="3"></textarea>
-          <mat-error *ngIf="descripcionError">{{ descripcionError }}</mat-error>
         </mat-form-field>
       </div>
 

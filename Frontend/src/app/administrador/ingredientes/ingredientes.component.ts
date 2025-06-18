@@ -11,7 +11,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
 import { CatalogoService } from '../../services/catalogo.service';
+import { CategoriaService, Categoria } from '../../services/categoria.service'; // ✅ AGREGAR
 import { Ingrediente } from '../../models/catalogo.model';
+
+// ✅ INTERFAZ PARA ORGANIZAR DATOS
+interface CategoriaConIngredientes {
+  categoria: Categoria;
+  ingredientes: Ingrediente[];
+  cargando: boolean;
+}
 
 @Component({
   selector: 'app-ingredientes',
@@ -33,91 +41,107 @@ import { Ingrediente } from '../../models/catalogo.model';
 export class IngredientesComponent implements OnInit {
   
   private catalogoService = inject(CatalogoService);
+  private categoriaService = inject(CategoriaService); // ✅ AGREGAR
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
-  ingredientesHamburguesas: Ingrediente[] = [];
-  ingredientesPizzas: Ingrediente[] = [];
-  ingredientesEnsaladas: Ingrediente[] = [];
-  ingredientesPollos: Ingrediente[] = [];      // ✅ CAMBIO: Pollo → Pollos
-  ingredientesHelados: Ingrediente[] = [];     // ✅ CAMBIO: Postres → Helados
-  ingredientesSnacks: Ingrediente[] = [];      // ✅ NUEVO: Snacks
-  ingredientesBebidas: Ingrediente[] = [];
-  ingredientesInfantil: Ingrediente[] = [];    // ✅ AGREGAR
-  ingredientesCombos: Ingrediente[] = [];      // ✅ AGREGAR
-  
-  cargandoHamburguesas = false;
-  cargandoPizzas = false;
-  cargandoEnsaladas = false;
-  cargandoPollos = false;      // ✅ CAMBIO: cargandoPollo → cargandoPollos
-  cargandoHelados = false;     // ✅ CAMBIO: cargandoPostres → cargandoHelados
-  cargandoSnacks = false;      // ✅ NUEVO: cargandoSnacks
-  cargandoBebidas = false;
-  cargandoInfantil = false;    // ✅ AGREGAR
-  cargandoCombos = false;      // ✅ AGREGAR
+  // ✅ NUEVA ESTRUCTURA DINÁMICA
+  categoriasConIngredientes: CategoriaConIngredientes[] = [];
+  cargandoCategorias = false;
+  errorCargandoCategorias = false;
 
   ngOnInit() {
-    this.cargarTodosLosIngredientes();
+    this.cargarCategoriasYIngredientes();
+  }
+
+  // ✅ CARGAR CATEGORÍAS DINÁMICAS Y SUS INGREDIENTES
+  cargarCategoriasYIngredientes() {
+    this.cargandoCategorias = true;
+    this.errorCargandoCategorias = false;
+
+    console.log('🔄 Cargando categorías dinámicas...');
+
+    this.categoriaService.getCategorias().subscribe({
+      next: (categorias) => {
+        console.log(`✅ ${categorias.length} categorías cargadas`);
+        
+        // Filtrar solo categorías que tienen ingredientes o crear estructura vacía
+        this.categoriasConIngredientes = categorias
+          .filter(categoria => categoria.ingredientes_count !== undefined)
+          .sort((a, b) => {
+            // Ordenar por más ingredientes primero, luego alfabético
+            const countA = a.ingredientes_count || 0;
+            const countB = b.ingredientes_count || 0;
+            
+            if (countA !== countB) {
+              return countB - countA; // Más ingredientes primero
+            }
+            
+            return a.nombre.localeCompare(b.nombre);
+          })
+          .map(categoria => ({
+            categoria,
+            ingredientes: [],
+            cargando: false
+          }));
+
+        this.cargandoCategorias = false;
+        
+        // Cargar ingredientes para cada categoría
+        this.cargarTodosLosIngredientes();
+      },
+      error: (error) => {
+        console.error('❌ Error cargando categorías:', error);
+        this.cargandoCategorias = false;
+        this.errorCargandoCategorias = true;
+        this.snackBar.open('Error al cargar categorías', 'Cerrar', {
+          duration: 3000
+        });
+      }
+    });
   }
 
   cargarTodosLosIngredientes() {
-    this.cargarIngredientesPorCategoria('hamburguesas');
-    this.cargarIngredientesPorCategoria('pizzas');
-    this.cargarIngredientesPorCategoria('ensaladas');
-    this.cargarIngredientesPorCategoria('pollos');
-    this.cargarIngredientesPorCategoria('helados');
-    this.cargarIngredientesPorCategoria('snacks');
-    this.cargarIngredientesPorCategoria('bebidas');
-    this.cargarIngredientesPorCategoria('infantil');   // ✅ AGREGAR
-    this.cargarIngredientesPorCategoria('combos');     // ✅ AGREGAR
+    console.log('🔄 Cargando ingredientes para todas las categorías...');
+    
+    this.categoriasConIngredientes.forEach(categoriaItem => {
+      this.cargarIngredientesPorCategoria(categoriaItem);
+    });
   }
 
-  cargarIngredientesPorCategoria(categoria: string) {
-    this.setCargando(categoria, true);
+  cargarIngredientesPorCategoria(categoriaItem: CategoriaConIngredientes) {
+    const nombreCategoria = categoriaItem.categoria.nombre.toLowerCase();
+    categoriaItem.cargando = true;
     
-    this.catalogoService.getIngredientesPorCategoriaFiltro(categoria)
+    console.log(`🔍 Cargando ingredientes para: ${categoriaItem.categoria.nombre}`);
+    
+    this.catalogoService.getIngredientesPorCategoriaFiltro(nombreCategoria)
       .subscribe({
         next: (ingredientes) => {
-          this.setIngredientes(categoria, ingredientes);
-          this.setCargando(categoria, false);
-          console.log(`✅ Ingredientes ${categoria} cargados:`, ingredientes.length);
+          categoriaItem.ingredientes = ingredientes;
+          categoriaItem.cargando = false;
+          console.log(`✅ ${ingredientes.length} ingredientes cargados para ${categoriaItem.categoria.nombre}`);
         },
         error: (error) => {
-          console.error(`❌ Error al cargar ingredientes de ${categoria}:`, error);
-          this.setCargando(categoria, false);
-          this.snackBar.open(`Error al cargar ingredientes de ${categoria}`, 'Cerrar', {
-            duration: 3000
-          });
+          console.error(`❌ Error al cargar ingredientes de ${categoriaItem.categoria.nombre}:`, error);
+          categoriaItem.cargando = false;
+          categoriaItem.ingredientes = []; // Asegurar array vacío en caso de error
+          
+          // Solo mostrar error si no es un 404 (categoría sin ingredientes)
+          if (error.status !== 404) {
+            this.snackBar.open(
+              `Error al cargar ingredientes de ${categoriaItem.categoria.nombre}`, 
+              'Cerrar', 
+              { duration: 3000 }
+            );
+          }
         }
       });
   }
 
-  private setCargando(categoria: string, cargando: boolean) {
-    switch (categoria) {
-      case 'hamburguesas': this.cargandoHamburguesas = cargando; break;
-      case 'pizzas': this.cargandoPizzas = cargando; break;
-      case 'ensaladas': this.cargandoEnsaladas = cargando; break;
-      case 'pollos': this.cargandoPollos = cargando; break;        // ✅ CAMBIO
-      case 'helados': this.cargandoHelados = cargando; break;      // ✅ CAMBIO
-      case 'snacks': this.cargandoSnacks = cargando; break;        // ✅ NUEVO
-      case 'bebidas': this.cargandoBebidas = cargando; break;
-      case 'infantil': this.cargandoInfantil = cargando; break;  // ✅ AGREGAR
-      case 'combos': this.cargandoCombos = cargando; break;      // ✅ AGREGAR
-    }
-  }
-
-  private setIngredientes(categoria: string, ingredientes: Ingrediente[]) {
-    switch (categoria) {
-      case 'hamburguesas': this.ingredientesHamburguesas = ingredientes; break;
-      case 'pizzas': this.ingredientesPizzas = ingredientes; break;
-      case 'ensaladas': this.ingredientesEnsaladas = ingredientes; break;
-      case 'pollos': this.ingredientesPollos = ingredientes; break;        // ✅ CAMBIO
-      case 'helados': this.ingredientesHelados = ingredientes; break;      // ✅ CAMBIO
-      case 'snacks': this.ingredientesSnacks = ingredientes; break;        // ✅ NUEVO
-      case 'bebidas': this.ingredientesBebidas = ingredientes; break;
-      case 'infantil': this.ingredientesInfantil = ingredientes; break;  // ✅ AGREGAR
-      case 'combos': this.ingredientesCombos = ingredientes; break;      // ✅ AGREGAR
-    }
+  // ✅ HELPER: Recargar una categoría específica
+  recargarCategoria(categoriaItem: CategoriaConIngredientes) {
+    this.cargarIngredientesPorCategoria(categoriaItem);
   }
 
   crearIngrediente() {
@@ -149,7 +173,13 @@ export class IngredientesComponent implements OnInit {
             );
             
             // Recargar la categoría correspondiente
-            this.cargarIngredientesPorCategoria(ingrediente.categoria_producto);
+            const categoriaItem = this.categoriasConIngredientes.find(
+              item => item.categoria.nombre.toLowerCase() === ingrediente.categoria_producto.toLowerCase()
+            );
+            
+            if (categoriaItem) {
+              this.recargarCategoria(categoriaItem);
+            }
           },
           error: (error) => {
             console.error('❌ Error al eliminar ingrediente:', error);
@@ -167,8 +197,13 @@ export class IngredientesComponent implements OnInit {
     }
   }
 
+  // ✅ HELPERS
   getFullImageUrl(imagenUrl: string | undefined): string {
     return this.catalogoService.getFullImageUrl(imagenUrl);
+  }
+
+  getCategoriaImagenUrl(categoria: Categoria): string {
+    return this.categoriaService.getFullImageUrl(categoria.imagen_url);
   }
 
   onImageError(event: any) {
@@ -188,16 +223,98 @@ export class IngredientesComponent implements OnInit {
     this.router.navigate(['/administrador/gestion-productos']);
   }
 
-  // Getters para facilitar el template
+  // ✅ REFRESCAR TODO
+  refrescar() {
+    this.cargarCategoriasYIngredientes();
+  }
+
+  // ✅ GETTERS DINÁMICOS
+  get totalCategorias(): number {
+    return this.categoriasConIngredientes.length;
+  }
+
   get totalIngredientes(): number {
-    return this.ingredientesHamburguesas.length + 
-           this.ingredientesPizzas.length + 
-           this.ingredientesEnsaladas.length + 
-           this.ingredientesPollos.length +
-           this.ingredientesHelados.length +
-           this.ingredientesSnacks.length +
-           this.ingredientesBebidas.length +
-           this.ingredientesInfantil.length +   // ✅ AGREGAR
-           this.ingredientesCombos.length;      // ✅ AGREGAR
+    return this.categoriasConIngredientes.reduce(
+      (total, item) => total + item.ingredientes.length, 
+      0
+    );
+  }
+
+  get categoriasConIngredientesDisponibles(): CategoriaConIngredientes[] {
+    return this.categoriasConIngredientes.filter(item => item.ingredientes.length > 0);
+  }
+
+  get categoriasSinIngredientes(): CategoriaConIngredientes[] {
+    return this.categoriasConIngredientes.filter(item => item.ingredientes.length === 0);
+  }
+
+  // ✅ HELPER: Obtener estadísticas
+  getEstadisticas() {
+    return {
+      totalCategorias: this.totalCategorias,
+      totalIngredientes: this.totalIngredientes,
+      categoriasConIngredientes: this.categoriasConIngredientesDisponibles.length,
+      categoriasSinIngredientes: this.categoriasSinIngredientes.length,
+      promedioPorCategoria: this.totalCategorias > 0 ? 
+        Math.round(this.totalIngredientes / this.totalCategorias) : 0
+    };
+  }
+
+  // ✅ HELPER: TrackBy para optimizar rendering
+  trackByCategoria(index: number, item: CategoriaConIngredientes): number {
+    return item.categoria.id || index;
+  }
+
+  trackByIngrediente(index: number, ingrediente: Ingrediente): number {
+    return ingrediente.id;
+  }
+
+  // Helper para obtener color del icono de stock
+  getStockIconColor(ingrediente: Ingrediente): string {
+    if (ingrediente.esta_agotado) return 'warn';
+    if (ingrediente.necesita_reposicion) return 'accent';
+    return 'primary';
+  }
+
+  // Helper para obtener color del estado
+  getEstadoColor(estadoStock: string | undefined): string {
+    if (!estadoStock) return 'primary'; // ✅ Valor por defecto
+    
+    switch (estadoStock.toLowerCase()) {
+      case 'disponible': return 'primary';
+      case 'agotado': return 'warn';
+      case 'stock_bajo': return 'accent';
+      default: return 'primary';
+    }
+  }
+
+  // Helper para obtener icono del estado
+  getEstadoIcon(estadoStock: string | undefined): string {
+    if (!estadoStock) return 'help'; // ✅ Valor por defecto
+    
+    switch (estadoStock.toLowerCase()) {
+      case 'disponible': return 'check_circle';
+      case 'agotado': return 'cancel';
+      case 'stock_bajo': return 'warning';
+      default: return 'help';
+    }
+  }
+
+  // Helper para etiquetas de tabs
+  getCategoriaTabLabel(categoriaItem: CategoriaConIngredientes): string {
+    const count = categoriaItem.ingredientes.length;
+    const loading = categoriaItem.cargando ? ' ⏳' : '';
+    return `${categoriaItem.categoria.nombre} (${count})${loading}`;
+  }
+
+  // Helper para porcentajes en resumen
+  getCategoriaPorcentaje(categoriaItem: CategoriaConIngredientes): number {
+    if (this.totalIngredientes === 0) return 0;
+    return (categoriaItem.ingredientes.length / this.totalIngredientes) * 100;
+  }
+
+  // Navegación pública para template
+  navegarACategorias(): void {
+    this.router.navigate(['/administrador/gestion-categorias']);
   }
 }
