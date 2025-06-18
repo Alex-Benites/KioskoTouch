@@ -16,7 +16,7 @@ import { Publicidad } from '../../models/marketing.model';
 })
 export class TurnoComponent {
   numeroTurno: string = '';
-  readonly MAX_DIGITS = 4;
+  readonly MAX_DIGITS = 3; // Corregido a 3
 
   constructor(private router: Router) {}
 
@@ -30,11 +30,16 @@ export class TurnoComponent {
     }
   }
 
+  /**
+   * Elimina el último dígito del turno.
+   */
+  eliminarNumero(): void {
+    this.numeroTurno = this.numeroTurno.slice(0, -1);
+  }
+
   continuar(): void {
     if (this.numeroTurno) {
       console.log(`Turno seleccionado: ${this.numeroTurno}`);
-      // Aquí puedes navegar a la siguiente pantalla, por ejemplo:
-      // this.router.navigate(['/cliente/espera', this.numeroTurno]);
       alert(`Turno ${this.numeroTurno} confirmado.`);
       this.numeroTurno = ''; // Limpiar el turno después de confirmar
     }

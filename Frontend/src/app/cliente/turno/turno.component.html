@@ -12,16 +12,21 @@
     <div class="turno-display">{{ numeroTurno || '' }}</div>
 
     <div class="keypad-container">
+      <!-- Fila 1 -->
       <button class="keypad-button" (click)="agregarNumero('1')">1</button>
       <button class="keypad-button" (click)="agregarNumero('2')">2</button>
       <button class="keypad-button" (click)="agregarNumero('3')">3</button>
+      <!-- Fila 2 -->
       <button class="keypad-button" (click)="agregarNumero('4')">4</button>
       <button class="keypad-button" (click)="agregarNumero('5')">5</button>
       <button class="keypad-button" (click)="agregarNumero('6')">6</button>
+      <!-- Fila 3 -->
       <button class="keypad-button" (click)="agregarNumero('7')">7</button>
       <button class="keypad-button" (click)="agregarNumero('8')">8</button>
       <button class="keypad-button" (click)="agregarNumero('9')">9</button>
-      <button class="keypad-button wide" (click)="agregarNumero('0')">0</button>
+      <!-- Fila 4 (Corregida) -->
+      <button class="keypad-button double-wide" (click)="agregarNumero('0')">0</button>
+      <button class="keypad-button" (click)="eliminarNumero()">⌫</button>
     </div>
 
     <div class="turno-text-wrapper">

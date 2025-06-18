@@ -77,8 +77,8 @@ $line-color: #e0e0e0;
   align-items: center;
   justify-content: center;
 
-  &.wide {
-    grid-column: 1 / -1;
+  &.double-wide {
+    grid-column: span 2;
     aspect-ratio: auto;
   }
 
