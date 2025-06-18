@@ -1,0 +1,23 @@
+<div class="instruccion-pago-container">
+  <!-- Banner Promocional Superior -->
+  <app-publicidad-section 
+    altura="150px"
+    (publicidadCambio)="onPublicidadCambio($event)">
+  </app-publicidad-section>
+
+  <!-- Contenido Principal -->
+  <main class="pago-content">
+    <h1 class="kiosko-title">KIOSCO GO!</h1>
+
+    <div class="pago-icon-wrapper">
+      <img src="assets/cliente/tarjeta.png" alt="Pago con Tarjeta" class="pago-icon">
+    </div>
+
+    <h2 class="pago-title">Pago con Tarjeta</h2>
+    <p class="pago-instructions">
+      Acerque su tarjeta para proceder con el pago, por favor.
+    </p>
+
+    <button class="pago-button" (click)="continuar()">Continuar</button>
+  </main>
+</div>

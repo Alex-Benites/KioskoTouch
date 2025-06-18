@@ -22,6 +22,10 @@ export const clienteRoutes: Routes = [
     loadComponent: () => import('./carrito-compra/carrito-compra.component').then(m => m.CarritoCompraComponent)
   },
   {
+    path: 'instruccion-pago',
+    loadComponent: () => import('./instruccion-pago/instruccion-pago.component').then(m => m.InstruccionPagoComponent)
+  },
+  {
     path: 'pop-up',
     loadComponent: () => import('./pop-up/pop-up.component').then(m => m.PopupComponent)
   },

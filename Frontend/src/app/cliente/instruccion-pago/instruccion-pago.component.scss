@@ -1,0 +1,126 @@
+@use "sass:color";
+
+// Variables principales del tema
+$kiosko-red: #C3453A;
+$kiosko-background-light: #f4f4f4;
+$font-family-base: 'Lato', sans-serif;
+$text-color-dark: #333;
+$text-color-light: #6c757d;
+
+* {
+  box-sizing: border-box;
+}
+
+.instruccion-pago-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: $kiosko-background-light;
+  font-family: $font-family-base;
+}
+
+.pago-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  gap: 25px;
+}
+
+.kiosko-title {
+  font-size: clamp(3rem, 8vw, 4.5rem);
+  font-weight: 900;
+  color: $kiosko-red;
+  margin: 0;
+  margin-bottom: 10px;
+}
+
+.pago-icon-wrapper {
+  width: 200px;
+  height: 200px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+}
+
+.pago-icon {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.pago-title {
+  font-size: clamp(1.8rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: $text-color-dark;
+  margin: 0;
+}
+
+.pago-instructions {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: $text-color-light;
+  max-width: 400px;
+  line-height: 1.6;
+  margin: -15px 0 0 0;
+}
+
+.pago-button {
+  background-color: $kiosko-red;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 18px 60px;
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(color.scale($kiosko-red, $alpha: -60%), 0.4);
+
+  &:hover {
+    background-color: color.scale($kiosko-red, $lightness: -7%);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(color.scale($kiosko-red, $alpha: -60%), 0.3);
+  }
+}
+
+// Media queries para adaptabilidad
+@media (max-width: 480px) {
+  .pago-content {
+    gap: 20px;
+    padding: 15px;
+  }
+
+  .kiosko-title {
+    font-size: 2.5rem;
+  }
+
+  .pago-icon-wrapper {
+    width: 160px;
+    height: 160px;
+  }
+
+  .pago-title {
+    font-size: 1.5rem;
+  }
+
+  .pago-instructions {
+    font-size: 1rem;
+  }
+
+  .pago-button {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1rem;
+  }
+}
