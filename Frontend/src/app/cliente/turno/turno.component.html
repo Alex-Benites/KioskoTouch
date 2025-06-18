@@ -1,0 +1,36 @@
+<div class="turno-container">
+  <!-- Banner Promocional Superior -->
+  <app-publicidad-section 
+    altura="150px"
+    (publicidadCambio)="onPublicidadCambio($event)">
+  </app-publicidad-section>
+
+  <!-- Contenido Principal -->
+  <main class="turno-content">
+    <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
+
+    <div class="turno-display">{{ numeroTurno || '' }}</div>
+
+    <div class="keypad-container">
+      <button class="keypad-button" (click)="agregarNumero('1')">1</button>
+      <button class="keypad-button" (click)="agregarNumero('2')">2</button>
+      <button class="keypad-button" (click)="agregarNumero('3')">3</button>
+      <button class="keypad-button" (click)="agregarNumero('4')">4</button>
+      <button class="keypad-button" (click)="agregarNumero('5')">5</button>
+      <button class="keypad-button" (click)="agregarNumero('6')">6</button>
+      <button class="keypad-button" (click)="agregarNumero('7')">7</button>
+      <button class="keypad-button" (click)="agregarNumero('8')">8</button>
+      <button class="keypad-button" (click)="agregarNumero('9')">9</button>
+      <button class="keypad-button wide" (click)="agregarNumero('0')">0</button>
+    </div>
+
+    <div class="turno-text-wrapper">
+        <h2 class="turno-title">Tome un turno</h2>
+        <p class="turno-instructions">
+          Digite un número que se encuentra a su izquierda.
+        </p>
+    </div>
+
+    <button class="turno-button" (click)="continuar()" [disabled]="!numeroTurno">Continuar</button>
+  </main>
+</div>

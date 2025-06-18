@@ -1,0 +1,170 @@
+@use "sass:color";
+
+// Variables
+$kiosko-red: #C3453A;
+$kiosko-background-light: #f4f4f4;
+$font-family-base: 'Lato', sans-serif;
+$text-color-dark: #333;
+$text-color-light: #6c757d;
+$line-color: #e0e0e0;
+
+* {
+  box-sizing: border-box;
+}
+
+.turno-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: $kiosko-background-light;
+  font-family: $font-family-base;
+}
+
+.turno-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  gap: 25px;
+}
+
+.kiosko-logo {
+  max-width: 450px;
+  width: 80%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.turno-display {
+  background-color: #ffffff;
+  border: 2px solid $line-color;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 320px;
+  padding: 15px 20px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: $text-color-dark;
+  letter-spacing: 5px;
+  text-align: center;
+  min-height: 70px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.keypad-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.keypad-button {
+  background-color: $kiosko-red;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 2rem;
+  font-weight: 700;
+  padding: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.wide {
+    grid-column: 1 / -1;
+    aspect-ratio: auto;
+  }
+
+  &:hover {
+    background-color: color.scale($kiosko-red, $lightness: -7%);
+  }
+
+  &:active {
+    transform: translateY(2px);
+  }
+}
+
+.turno-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.turno-title {
+  font-size: clamp(1.8rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: $text-color-dark;
+  margin: 0;
+  position: relative;
+  padding-bottom: 15px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background-color: $line-color;
+    border-radius: 2px;
+  }
+}
+
+.turno-instructions {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: $text-color-light;
+  max-width: 400px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.turno-button {
+  background-color: $kiosko-red;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 18px 60px;
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(color.scale($kiosko-red, $alpha: -60%), 0.4);
+  width: 100%;
+  max-width: 320px;
+
+  &:hover {
+    background-color: color.scale($kiosko-red, $lightness: -7%);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    background-color: color.scale($kiosko-red, $lightness: 30%, $saturation: -50%);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 480px) {
+    .turno-display, .keypad-container, .turno-button {
+        max-width: 280px;
+    }
+    .keypad-button {
+        font-size: 1.8rem;
+        padding: 15px;
+    }
+}

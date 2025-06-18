@@ -30,6 +30,10 @@ export const clienteRoutes: Routes = [
     loadComponent: () => import('./pop-up/pop-up.component').then(m => m.PopupComponent)
   },
   {
+    path: 'turno',
+    loadComponent: () => import('./turno/turno.component').then(m => m.TurnoComponent)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'
