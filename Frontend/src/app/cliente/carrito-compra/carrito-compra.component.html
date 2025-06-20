@@ -43,7 +43,6 @@
             <!-- Si no tiene personalizaciones, mostrar "Personalizar" como opción -->
             <div *ngIf="!tienePersonalizaciones(item)" class="producto-sin-personalizaciones">
 
-
               <!-- ✅ AGREGAR ESTE BOTÓN -->
               <button
                 class="btn-personalizar-inline"
@@ -55,25 +54,11 @@
             <!-- ✅ MOSTRAR personalizaciones si las tiene -->
             <div *ngIf="tienePersonalizaciones(item)" class="producto-personalizaciones">
 
-              <!-- Lista de ingredientes agregados -->
-              <div *ngIf="obtenerIngredientesAgregados(item).length > 0" class="ingredientes-agregados">
-                <span *ngFor="let ing of obtenerIngredientesAgregados(item); let last = last">
-                  +{{ ing.nombre }}{{ !last ? ', ' : '' }}
-                </span>
-              </div>
-
-              <!-- Lista de ingredientes removidos -->
-              <div *ngIf="obtenerIngredientesRemovidos(item).length > 0" class="ingredientes-removidos">
-                <span *ngFor="let ing of obtenerIngredientesRemovidos(item); let last = last">
-                  -{{ ing.nombre }}{{ !last ? ', ' : '' }}
-                </span>
-              </div>
-
               <!-- ✅ AGREGAR ESTE BOTÓN -->
               <button
                 class="btn-modificar-personalizacion"
                 (click)="personalizarProducto(item, i)">
-                  Modificar
+                  Personalizar
               </button>
             </div>
           </div>

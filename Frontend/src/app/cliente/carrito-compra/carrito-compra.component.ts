@@ -190,21 +190,6 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
            (item.productos && item.productos.length > 0); // Para menús
   }
 
-  // ✅ NUEVO: Obtener ingredientes agregados
-  obtenerIngredientesAgregados(item: any): any[] {
-    if (item.personalizacion) {
-      return item.personalizacion.filter((p: any) => p.accion === 'agregar');
-    }
-    return [];
-  }
-
-  // ✅ NUEVO: Obtener ingredientes removidos
-  obtenerIngredientesRemovidos(item: any): any[] {
-    if (item.personalizacion) {
-      return item.personalizacion.filter((p: any) => p.accion === 'quitar');
-    }
-    return [];
-  }
 
   // ✅ NUEVO: Calcular precio total del producto (cantidad × precio unitario)
   calcularPrecioTotalProducto(item: any): number {
@@ -350,4 +335,6 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  
 }
