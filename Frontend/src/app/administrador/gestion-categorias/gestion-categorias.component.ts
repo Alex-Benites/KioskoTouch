@@ -1,10 +1,12 @@
-// ✅ ACTUALIZAR Frontend/src/app/administrador/gestion-categorias/gestion-categorias.component.ts
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog'; 
 import { CategoriaService, Categoria } from '../../services/categoria.service';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
+import { AuthService } from '../../services/auth.service'; 
+import { PermissionDeniedDialogComponent } from '../../shared/permission-denied-dialog/permission-denied-dialog.component'; 
 
 @Component({
   selector: 'app-gestion-categorias',
@@ -28,7 +30,9 @@ export class GestionCategoriasComponent implements OnInit {
 
   constructor(
     private categoriaService: CategoriaService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService, 
+    private dialog: MatDialog 
   ) {}
 
   ngOnInit(): void {
@@ -38,15 +42,6 @@ export class GestionCategoriasComponent implements OnInit {
   verDetalles(categoria: Categoria): void {
     this.categoriaSeleccionada = categoria;
     this.mostrarDetalles = true;
-    // ✅ Evitar scroll del body cuando popup está abierto
-    document.body.style.overflow = 'hidden';
-  }
-
-    editarDesdePopup(): void {
-    if (this.categoriaSeleccionada) {
-      this.cerrarDetalles();
-      this.editarCategoria(this.categoriaSeleccionada);
-    }
   }
 
   getProductosPercentage(categoria: Categoria): number {
@@ -91,28 +86,50 @@ export class GestionCategoriasComponent implements OnInit {
     });
   }
 
-  // ✅ NAVEGACIÓN
   irACrearCategoria(): void {
+    console.log('✏️ Intentando crear nueva categoría');
+    
+    if (!this.authService.hasPermission('catalogo.add_appkioskocategorias')) {
+      console.log('❌ Sin permisos para crear categorías');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a creación');
     this.router.navigate(['/administrador/gestion-categorias/crear']);
   }
 
   editarCategoria(categoria: Categoria): void {
+    console.log('✏️ Intentando editar categoría ID:', categoria.id);
+    
+    if (!this.authService.hasPermission('catalogo.change_appkioskocategorias')) {
+      console.log('❌ Sin permisos para editar categorías');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-categorias/crear', categoria.id]);
   }
-
 
   cerrarDetalles(): void {
     this.mostrarDetalles = false;
     this.categoriaSeleccionada = null;
-    // ✅ Restaurar scroll del body
-    document.body.style.overflow = 'auto';
   }
 
-  // ✅ ELIMINAR CATEGORÍA
   eliminarCategoria(categoria: Categoria): void {
     if (!categoria.id) return;
 
-    // Verificar si puede eliminar
+    console.log('🗑️ Intentando eliminar categoría:', categoria.nombre);
+    
+    if (!this.authService.hasPermission('catalogo.delete_appkioskocategorias')) {
+      console.log('❌ Sin permisos para eliminar categorías');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, verificando si puede eliminar');
+
     if (!categoria.puede_eliminar) {
       const productosText = categoria.productos_count ? `${categoria.productos_count} productos` : '';
       const ingredientesText = categoria.ingredientes_count ? `${categoria.ingredientes_count} ingredientes` : '';
@@ -126,14 +143,13 @@ export class GestionCategoriasComponent implements OnInit {
       return;
     }
 
-    // Confirmar eliminación
     const confirmacion = confirm(
       `🗑️ ¿Eliminar categoría "${categoria.nombre}"?\n\n` +
       `Esta acción no se puede deshacer.\n\n` +
       `✅ Esta categoría no tiene elementos asociados, es seguro eliminarla.`
     );
 
-    if (!confirmacion) return; // ✅ CORREGIDO: confirmacion (sin acento)
+    if (!confirmacion) return;
 
     console.log(`🗑️ Eliminando categoría: ${categoria.nombre}`);
 
@@ -155,7 +171,15 @@ export class GestionCategoriasComponent implements OnInit {
     });
   }
 
-  // ✅ CREAR CATEGORÍAS POR DEFECTO
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
+    });
+  }
+
   cargarCategoriasDefault(): void {
     const categoriasDefault = [
       'Hamburguesas', 'Pizzas', 'Ensaladas', 'Pollos', 'Helados',
@@ -168,7 +192,7 @@ export class GestionCategoriasComponent implements OnInit {
       `Las categorías que ya existan serán omitidas.`
     );
 
-    if (!confirmacion) return; // ✅ CORREGIDO: confirmacion (sin acento)
+    if (!confirmacion) return;
 
     console.log('🎯 Creando categorías por defecto...');
 
@@ -205,7 +229,6 @@ export class GestionCategoriasComponent implements OnInit {
     });
   }
 
-  // ✅ HELPERS SIMPLIFICADOS
   getImagenUrl(categoria: Categoria): string {
     return this.categoriaService.getFullImageUrl(categoria.imagen_url);
   }
@@ -223,7 +246,6 @@ export class GestionCategoriasComponent implements OnInit {
     event.target.src = 'assets/placeholder-categoria.png';
   }
 
-  // ✅ ESTADÍSTICAS
   getTotalProductos(): number {
     return this.categorias.reduce((total, cat) => total + (cat.productos_count || 0), 0);
   }

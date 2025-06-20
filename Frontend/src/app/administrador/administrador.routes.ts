@@ -156,17 +156,12 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-ingredientes/crear',
     component: CrearIngredienteComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes', 'catalogo.add_appkioskoingredientes'])] // VER + CREAR
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])] 
   },
   {
     path: 'gestion-ingredientes/crear/:id',
     component: CrearIngredienteComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes', 'catalogo.change_appkioskoingredientes'])] // VER + MODIFICAR
-  },
-  {
-    path: 'gestion-ingredientes/editar-eliminar',
-    component: EditarEliminarIngredienteComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])] // Solo VER (decide internamente)
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])] 
   },
 
   // 🍽️ GESTIÓN DE MENÚS
@@ -313,12 +308,12 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-categorias/crear',
     component: CrearCategoriaComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias', 'catalogo.add_appkioskocategorias'])] // VER + CREAR
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])] 
   },
   {
     path: 'gestion-categorias/crear/:id',
     component: CrearCategoriaComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias', 'catalogo.change_appkioskocategorias'])] // VER + MODIFICAR
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])] 
   },
 
   // ❌ Página de no autorizado
