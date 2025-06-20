@@ -354,6 +354,11 @@ def get_permisos_disponibles(request):
             'modelo': 'appkioskoingredientes',
             'app_label': 'catalogo'
         },
+        'categorias': {
+            'label': 'Gestión de Categorías',
+            'modelo': 'appkioskocategorias',
+            'app_label': 'catalogo'
+        },
         'menus': {
             'label': 'Gestión de Menús',
             'modelo': 'appkioskomenus',
