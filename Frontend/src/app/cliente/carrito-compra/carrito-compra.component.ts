@@ -9,6 +9,8 @@ import { Publicidad } from '../../models/marketing.model';
 // ✅ AGREGAR: Imports para el diálogo
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TurnoConfirmationDialogComponent } from '../../shared/turno-confirmation-dialog/turno-confirmation-dialog.component';
+// ✅ AGREGAR: Import del ConfirmationDialog
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-carrito-compra',
@@ -227,16 +229,45 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
 
   // ✅ NUEVO: Eliminar producto del carrito
   eliminarProducto(index: number): void {
-    const productos = this.productosCarrito; // ✅ SIN paréntesis
+    const productos = this.productosCarrito;
     const item = productos[index];
-    if (item) {
-      const nombreProducto = this.obtenerNombreProducto(item);
-      const confirmacion = confirm(`¿Eliminar ${nombreProducto} del carrito?`);
-      if (confirmacion) {
-        console.log(`🗑️ Eliminando producto: ${nombreProducto}`);
-        this.pedidoService.eliminarProducto(index);
-      }
+
+    if (!item) {
+      console.error('❌ No se encontró el producto en el índice', index);
+      return;
     }
+
+    const nombreProducto = this.obtenerNombreProducto(item);
+    console.log(`🗑️ Solicitando confirmación para eliminar: ${nombreProducto}`);
+
+    // ✅ NUEVO: Abrir diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'confirmation-dialog-panel',
+      data: {
+        itemType: nombreProducto, // ✅ Pasar el nombre del producto
+        action: 'delete' // ✅ Acción de eliminar
+      }
+    });
+
+    // ✅ NUEVO: Manejar la respuesta del diálogo
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🎯 Respuesta del diálogo de confirmación:', result);
+
+      if (result === true) {
+        // ✅ Usuario confirmó → Eliminar el producto
+        console.log(`✅ Confirmado: Eliminando ${nombreProducto} del carrito`);
+        this.pedidoService.eliminarProducto(index);
+
+        // ✅ Opcional: Mostrar mensaje de éxito
+        console.log(`🗑️ Producto eliminado exitosamente: ${nombreProducto}`);
+
+      } else {
+        // ✅ Usuario canceló → No hacer nada
+        console.log(`❌ Cancelado: ${nombreProducto} permanece en el carrito`);
+      }
+    });
   }
 
   // ✅ CORREGIR: Cantidad de productos en el footer

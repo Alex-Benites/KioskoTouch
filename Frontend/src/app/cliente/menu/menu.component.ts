@@ -11,6 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ProductPopupComponent, ProductPopupData, ProductPopupResult } from '../../shared/product-popup/product-popup.component';
 import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
 import { Publicidad } from '../../models/marketing.model';
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 
 // ✅ Interfaz extendida para productos con badges promocionales
 interface ProductoConBadge extends Producto {
@@ -298,8 +299,49 @@ export class MenuComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ✅ REEMPLAZAR: Método limpiarPedido con diálogo elegante
   limpiarPedido(): void {
-    this.pedidoService.limpiarPedido();
+    console.log('🗑️ Solicitando confirmación para cancelar pedido desde menú...');
+
+    // ✅ NUEVO: Abrir diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '450px',
+      disableClose: false,
+      panelClass: 'confirmation-dialog-panel',
+      data: {
+        itemType: 'PEDIDO COMPLETO',
+        action: 'delete',
+        context: 'menu' // ✅ Contexto específico para menú
+      }
+    });
+
+    // ✅ NUEVO: Manejar la respuesta del diálogo
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🎯 Respuesta del diálogo de cancelación desde menú:', result);
+
+      if (result === true) {
+        // ✅ Usuario confirmó → Cancelar pedido completo
+        console.log('✅ Confirmado: Cancelando pedido desde menú...');
+
+        // ✅ LIMPIAR completamente el pedido
+        this.pedidoService.limpiarPedido();
+
+        console.log('🗑️ Pedido limpiado completamente desde menú');
+        console.log('🏠 Permaneciendo en el menú...');
+
+        // ✅ OPCIONAL: Volver a la primera categoría
+        const primeraCategoria = this.categorias()[0];
+        if (primeraCategoria && this.categoriaSeleccionada() !== primeraCategoria.id) {
+          console.log('📂 Volviendo a la primera categoría...');
+          this.seleccionarCategoria(primeraCategoria);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+      } else {
+        // ✅ Usuario canceló → No hacer nada
+        console.log('❌ Cancelado: El pedido permanece activo en el menú');
+      }
+    });
   }
 
   // ✅ Lógica personalizable para determinar si un producto debe tener descuento

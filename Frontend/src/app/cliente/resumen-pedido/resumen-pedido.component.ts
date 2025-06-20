@@ -1,29 +1,35 @@
 import { Component, OnInit, OnDestroy, inject, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // ✅ AGREGAR
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PedidoService } from '../../services/pedido.service';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
+// ✅ AGREGAR: Imports para el diálogo
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-resumen-pedido',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule, // ✅ AGREGAR para ngModel
-    PublicidadSectionComponent
+    FormsModule,
+    PublicidadSectionComponent,
+    MatDialogModule // ✅ AGREGAR
   ],
   templateUrl: './resumen-pedido.component.html',
   styleUrl: './resumen-pedido.component.scss'
 })
 export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
-  // ✅ Inject de servicios
+  // ✅ Inject de servicios existentes
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private pedidoService = inject(PedidoService);
   private catalogoService = inject(CatalogoService);
+  // ✅ AGREGAR: Inject del diálogo
+  private dialog = inject(MatDialog);
 
   // ✅ Propiedades para el template
   private productosInfo: Map<number, any> = new Map();
@@ -197,20 +203,42 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   // ✅ NUEVO: Cancelar pedido completamente (limpiar carrito)
   cancelarPedido(): void {
-    const confirmacion = confirm('¿Estás seguro de que deseas cancelar todo el pedido?');
+    console.log('🗑️ Solicitando confirmación para cancelar pedido completo...');
 
-    if (confirmacion) {
-      console.log('❌ Cancelando pedido completo...');
+    // ✅ NUEVO: Abrir diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '450px',
+      disableClose: false,
+      panelClass: 'confirmation-dialog-panel',
+      data: {
+        itemType: 'PEDIDO COMPLETO',
+        action: 'delete',
+        context: 'pedido' // ✅ Contexto específico para pedido
+      }
+    });
 
-      // ✅ LIMPIAR completamente el carrito
-      this.pedidoService.limpiarCarrito();
+    // ✅ NUEVO: Manejar la respuesta del diálogo
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🎯 Respuesta del diálogo de cancelación:', result);
 
-      console.log('🗑️ Carrito limpiado completamente');
-      console.log('🏠 Regresando al menú principal...');
+      if (result === true) {
+        // ✅ Usuario confirmó → Cancelar pedido completo
+        console.log('✅ Confirmado: Cancelando pedido completo...');
 
-      // ✅ Regresar al menú principal
-      this.router.navigate(['/cliente/menu']);
-    }
+        // ✅ LIMPIAR completamente el carrito
+        this.pedidoService.limpiarCarrito();
+
+        console.log('🗑️ Carrito limpiado completamente');
+        console.log('🏠 Regresando al menú principal...');
+
+        // ✅ Regresar al menú principal
+        this.router.navigate(['/cliente/menu']);
+
+      } else {
+        // ✅ Usuario canceló → No hacer nada
+        console.log('❌ Cancelado: El pedido permanece activo');
+      }
+    });
   }
 
   // ✅ NUEVO: Editar pedido (ir al carrito para modificar)
