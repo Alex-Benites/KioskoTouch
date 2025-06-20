@@ -34,6 +34,10 @@ export const clienteRoutes: Routes = [
     loadComponent: () => import('./turno/turno.component').then(m => m.TurnoComponent)
   },
   {
+    path: 'resumen-pedido',
+    loadComponent: () => import('./resumen-pedido/resumen-pedido.component').then(m => m.ResumenPedidoComponent)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'

@@ -7,7 +7,7 @@ $text-color-light: #6c757d;
   flex-direction: column;
   align-items: center;
   padding: 35px 40px;
-  max-width: 400px;
+  max-width: 450px; // ✅ Hacer ligeramente más ancho
   text-align: center;
   background-color: #fff;
   border-radius: 20px;
@@ -61,7 +61,7 @@ $text-color-light: #6c757d;
     background-color: $kiosko-red;
     color: white;
     border: none;
-    border-radius: 50px; 
+    border-radius: 50px;
     padding: 12px 0;
     min-width: 140px;
     font-size: 1.1rem;
@@ -73,5 +73,23 @@ $text-color-light: #6c757d;
       filter: brightness(1.1);
       transform: translateY(-2px);
     }
+
+    // ✅ NUEVO: Estilos específicos para botón de cancelar
+    &.cancel-button {
+      background-color:#DD453A;
+
+      &:hover {
+        background-color:#DD453A;
+      }
+    }
+  }
+}
+
+// ✅ NUEVO: Estilos globales para el panel del diálogo
+:host ::ng-deep .turno-dialog-panel {
+  .mat-mdc-dialog-container {
+    padding: 0;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   }
 }

@@ -149,7 +149,7 @@ $line-color: #e0e0e0;
   &:active {
     transform: translateY(0);
   }
-  
+
   &:disabled {
     background-color: color.scale($kiosko-red, $lightness: 30%, $saturation: -50%);
     cursor: not-allowed;

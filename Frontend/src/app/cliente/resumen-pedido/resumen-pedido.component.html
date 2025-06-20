@@ -1,0 +1,193 @@
+<div class="resumen-page-container">
+
+  <!-- Banner Promocional Superior (igual que instruccion-pago) -->
+  <app-publicidad-section
+    altura="150px"
+    (publicidadCambio)="onPublicidadCambio($event)">
+  </app-publicidad-section>
+
+  <!-- Contenido Principal -->
+  <main class="resumen-content">
+
+    <!-- Logo Kiosko (alineado a la izquierda) -->
+    <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
+
+    <!-- Título (alineado a la izquierda) -->
+    <h1 class="resumen-title">Resumen del Pedido</h1>
+
+    <!-- Card Principal con productos (ancho completo) -->
+    <div class="resumen-card">
+
+      <!-- Lista de productos -->
+      <div *ngIf="productosCarrito.length > 0; else sinProductos" class="productos-lista">
+        <div
+          *ngFor="let item of productosCarrito; let i = index"
+          class="producto-item">
+
+          <!-- Imagen del producto -->
+          <div class="producto-imagen">
+            <img
+              [src]="obtenerImagenProducto(item)"
+              [alt]="obtenerNombreProducto(item)"
+              class="producto-img">
+          </div>
+
+          <!-- Info del producto -->
+          <div class="producto-info">
+            <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
+            <p class="producto-precio">${{ item.subtotal | number:'1.2-2' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensaje si no hay productos -->
+      <ng-template #sinProductos>
+        <div class="sin-productos">
+          <p>No hay productos en el pedido</p>
+          <button class="link-button" (click)="irAlMenu()">Ir al Menú</button>
+        </div>
+      </ng-template>
+
+      <!-- Separador -->
+      <div class="separador"></div>
+
+      <!-- Totales -->
+      <div class="totales-section">
+        <div class="total-item">
+          <span class="total-label">Subtotal</span>
+          <span class="total-valor">${{ calcularSubtotal() | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="total-item">
+          <span class="total-label">IVA 15%</span>
+          <span class="total-valor">${{ calcularIVA() | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="total-item total-final">
+          <span class="total-label">Total</span>
+          <span class="total-valor">${{ totalPedido | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Métodos de Pago -->
+    <div class="metodos-pago">
+      <h2 class="metodos-title">Métodos de Pago</h2>
+
+      <div class="pago-opciones">
+        <div class="pago-opcion" [class.selected]="metodoPagoSeleccionado === 'tarjeta'" (click)="seleccionarMetodoPago('tarjeta')">
+          <div class="pago-icon">
+            <img src="assets/cliente/USUARIO_84.png" alt="Tarjeta">
+          </div>
+          <span class="pago-texto">Tarjeta</span>
+          <div class="check-icon" *ngIf="metodoPagoSeleccionado === 'tarjeta'">✓</div>
+        </div>
+
+        <div class="pago-opcion" [class.selected]="metodoPagoSeleccionado === 'efectivo'" (click)="seleccionarMetodoPago('efectivo')">
+          <div class="pago-icon">
+            <img src="assets/cliente/USUARIO_85.png" alt="Efectivo">
+          </div>
+          <span class="pago-texto">Efectivo</span>
+          <div class="check-icon" *ngIf="metodoPagoSeleccionado === 'efectivo'">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ NUEVO: Datos de Facturación con Checkbox -->
+    <div class="datos-facturacion">
+      <div class="checkbox-container">
+        <input
+          type="checkbox"
+          id="facturacion-checkbox"
+          [(ngModel)]="mostrarDatosFacturacion"
+          class="facturacion-checkbox">
+        <label for="facturacion-checkbox" class="checkbox-label">
+          <span class="checkbox-custom"></span>
+          Datos de Facturación
+        </label>
+      </div>
+
+      <!-- ✅ NUEVO: Formulario de datos de facturación -->
+      <div class="datos-form" *ngIf="mostrarDatosFacturacion">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nombre-completo">Nombre Completo</label>
+            <input
+              type="text"
+              id="nombre-completo"
+              [(ngModel)]="datosFacturacion.nombreCompleto"
+              placeholder="Ingresa tu nombre completo"
+              class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label for="cedula">Cédula</label>
+            <input
+              type="text"
+              id="cedula"
+              [(ngModel)]="datosFacturacion.cedula"
+              placeholder="Ingresa tu cédula"
+              class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input
+              type="tel"
+              id="telefono"
+              [(ngModel)]="datosFacturacion.telefono"
+              placeholder="Ingresa tu teléfono"
+              class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label for="correo">Correo Electrónico</label>
+            <input
+              type="email"
+              id="correo"
+              [(ngModel)]="datosFacturacion.correo"
+              placeholder="Ingresa tu correo"
+              class="form-input">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ OPCIONAL: Mostrar el turno si existe -->
+    <div class="turno-info" *ngIf="tieneTurno">
+      <div class="turno-display">
+        <i class="fas fa-ticket-alt"></i>
+        <span class="turno-label">Tu Turno:</span>
+        <span class="turno-numero">{{ numeroTurno }}</span>
+      </div>
+    </div>
+
+    <!-- Botones de acción (centrados) -->
+    <div class="botones-accion">
+      <button
+        class="secondary-button cancel-btn"
+        (click)="cancelarPedido()">
+        <i class="fas fa-times"></i>
+        Cancelar Pedido
+      </button>
+
+      <button
+        class="tertiary-button edit-btn"
+        (click)="editarPedido()">
+        <i class="fas fa-edit"></i>
+        Editar Pedido
+      </button>
+
+      <button
+        class="primary-button confirm-btn"
+        (click)="confirmarPedido()"
+        [disabled]="cantidadProductos === 0 || !metodoPagoSeleccionado">
+        <i class="fas fa-check"></i>
+        Continuar
+      </button>
+    </div>
+
+  </main>
+</div>

@@ -1,18 +1,12 @@
 <div class="turno-container">
   <!-- Banner Promocional Superior -->
-  <app-publicidad-section 
+  <app-publicidad-section
     altura="150px"
     (publicidadCambio)="onPublicidadCambio($event)">
   </app-publicidad-section>
 
   <!-- Contenido Principal -->
   <main class="turno-content">
-    <!-- ✅ NUEVO: Botón de prueba -->
-    <button 
-      (click)="abrirDialogoPrueba()" 
-      style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">
-      Abrir Diálogo de Turno (Prueba)
-    </button>
 
     <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
 

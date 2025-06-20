@@ -151,3 +151,30 @@ html, body {
   background: transparent !important;
   box-shadow: none !important;
 }
+
+// ✅ AGREGAR: Ocultar scroll indicators globalmente en todos los diálogos
+.turno-dialog-panel {
+  .mat-mdc-dialog-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+
+    // ✅ Ocultar las pseudo-elements que crean las flechitas
+    &::before,
+    &::after {
+      display: none !important;
+      content: none !important;
+    }
+
+    // ✅ Ocultar cualquier indicador de scroll
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  // ✅ También ocultar en el contenedor principal
+  .mat-mdc-dialog-container {
+    overflow: visible !important;
+  }
+}

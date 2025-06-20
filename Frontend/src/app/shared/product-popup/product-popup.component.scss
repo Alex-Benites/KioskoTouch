@@ -128,17 +128,24 @@
 
 .action-buttons {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; // ✅ Mantener en columna
   gap: 12px;
+  margin-top: 20px;
+  width: 100%; // ✅ Asegurar ancho completo
 
   button {
-    padding: 15px 20px;
+    width: 100%; // ✅ Todos los botones del mismo ancho
+    padding: 15px 20px; // ✅ Mismo padding
     border: none;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-height: 50px; // ✅ Altura mínima consistente
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .personalize-button {
@@ -149,6 +156,7 @@
     &:hover {
       background: #e0e0e0;
       border-color: #ccc;
+      transform: translateY(-1px);
     }
   }
 
@@ -336,10 +344,51 @@
 
 .action-buttons {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column; // ✅ Mantener en columna
   gap: 12px;
   margin-top: 20px;
+  width: 100%; // ✅ Asegurar ancho completo
+
+  button {
+    width: 100%; // ✅ Todos los botones del mismo ancho
+    padding: 15px 20px; // ✅ Mismo padding
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 50px; // ✅ Altura mínima consistente
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .personalize-button {
+    background: #f0f0f0;
+    color: #333;
+    border: 2px solid #ddd;
+
+    &:hover {
+      background: #e0e0e0;
+      border-color: #ccc;
+      transform: translateY(-1px);
+    }
+  }
+
+  .add-button {
+    background: #DD453A;
+    color: white;
+
+    &:hover {
+      background: #c23934;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
 }
 
 // ✅ MEJORAR CONTROLES DE CANTIDAD
@@ -475,4 +524,34 @@
 .quantity-section {
   margin: 20px 0;
   text-align: center;
+}
+
+// ✅ REEMPLAZAR: Los estilos de precio existentes por estos
+.precio-section {
+  margin: 16px 0;
+  text-align: center;
+
+  .precio-total-simple {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .precio-valor-unico {
+      font-size: 28px; // ✅ Más grande al ser el único precio
+      font-weight: bold;
+      color: #28a745;
+      padding: 12px 20px;
+      background-color: #f8f9fa;
+      border-radius: 12px;
+      border: 2px solid #28a745;
+      min-width: 120px;
+      text-align: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+      }
+    }
+  }
 }
