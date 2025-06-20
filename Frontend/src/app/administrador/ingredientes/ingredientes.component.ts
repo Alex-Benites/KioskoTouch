@@ -7,11 +7,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
 
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
 import { CatalogoService } from '../../services/catalogo.service';
-import { CategoriaService, Categoria } from '../../services/categoria.service'; // ✅ AGREGAR
+import { CategoriaService, Categoria } from '../../services/categoria.service';
+import { AuthService } from '../../services/auth.service'; 
+import { PermissionDeniedDialogComponent } from '../../shared/permission-denied-dialog/permission-denied-dialog.component'; 
 import { Ingrediente } from '../../models/catalogo.model';
 
 // ✅ INTERFAZ PARA ORGANIZAR DATOS
@@ -41,9 +44,11 @@ interface CategoriaConIngredientes {
 export class IngredientesComponent implements OnInit {
   
   private catalogoService = inject(CatalogoService);
-  private categoriaService = inject(CategoriaService); // ✅ AGREGAR
+  private categoriaService = inject(CategoriaService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService); 
+  private dialog = inject(MatDialog);
 
   // ✅ NUEVA ESTRUCTURA DINÁMICA
   categoriasConIngredientes: CategoriaConIngredientes[] = [];
@@ -145,14 +150,45 @@ export class IngredientesComponent implements OnInit {
   }
 
   crearIngrediente() {
+    console.log('✏️ Intentando crear nuevo ingrediente');
+    
+    // ✅ AGREGADO: Validación de permisos para crear
+    if (!this.authService.hasPermission('catalogo.add_appkioskoingredientes')) {
+      console.log('❌ Sin permisos para crear ingredientes');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a creación');
     this.router.navigate(['/administrador/gestion-ingredientes/crear']);
   }
 
   editarIngrediente(id: number) {
+    console.log('✏️ Intentando editar ingrediente ID:', id);
+    
+    // ✅ AGREGADO: Validación de permisos para editar
+    if (!this.authService.hasPermission('catalogo.change_appkioskoingredientes')) {
+      console.log('❌ Sin permisos para editar ingredientes');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-ingredientes/crear', id]);
   }
 
   eliminarIngrediente(ingrediente: Ingrediente) {
+    console.log('🗑️ Intentando eliminar ingrediente:', ingrediente.nombre);
+    
+    // ✅ AGREGADO: Validación de permisos para eliminar
+    if (!this.authService.hasPermission('catalogo.delete_appkioskoingredientes')) {
+      console.log('❌ Sin permisos para eliminar ingredientes');
+      this.mostrarDialogoSinPermisos();
+      return;
+    }
+
+    console.log('✅ Permisos validados, procediendo con eliminación');
+
     const confirmacion = confirm(
       `¿Estás seguro de que quieres eliminar el ingrediente "${ingrediente.nombre}"?\n\n` +
       `Esta acción no se puede deshacer y puede afectar productos que usen este ingrediente.`
@@ -195,6 +231,15 @@ export class IngredientesComponent implements OnInit {
           }
         });
     }
+  }
+
+  private mostrarDialogoSinPermisos(): void {
+    console.log('🔒 Mostrando diálogo de sin permisos');
+    this.dialog.open(PermissionDeniedDialogComponent, {
+      width: '420px',
+      disableClose: false,
+      panelClass: 'permission-denied-dialog-panel'
+    });
   }
 
   // ✅ HELPERS
