@@ -244,15 +244,6 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     return this.pedidoService.cantidadItems() || 0;
   }
 
-  // ✅ AGREGAR: Método temporal para verificar datos
-  verificarDatos(): void {
-    console.log('🔍 VERIFICACIÓN COMPLETA:');
-    console.log('   - Detalles raw:', this.pedidoService.detalles());
-    console.log('   - Productos carrito:', this.productosCarrito); // ✅ SIN paréntesis
-    console.log('   - Cantidad productos:', this.cantidadProductos);
-    console.log('   - Total pedido:', this.totalPedido);
-    console.log('   - Cantidad items servicio:', this.pedidoService.cantidadItems());
-  }
 
   // ✅ CORREGIR: Método para cargar información de productos
   private cargarInformacionProductos(): void {

@@ -17,10 +17,6 @@
       <span class="carrito-title-label">MENÙ</span>
       <h2 class="carrito-subtitle">Resumen del pedido</h2>
 
-      <!-- ✅ BOTÓN TEMPORAL para debug -->
-      <button (click)="verificarDatos()" style="margin: 10px; padding: 10px; background: blue; color: white;">
-        🔍 Debug Datos
-      </button>
     </div>
 
     <!-- ✅ ESPACIO EN BLANCO para el contenido del carrito -->
@@ -46,11 +42,11 @@
 
             <!-- Si no tiene personalizaciones, mostrar "Personalizar" como opción -->
             <div *ngIf="!tienePersonalizaciones(item)" class="producto-sin-personalizaciones">
-              
-              
+
+
               <!-- ✅ AGREGAR ESTE BOTÓN -->
-              <button 
-                class="btn-personalizar-inline" 
+              <button
+                class="btn-personalizar-inline"
                 (click)="personalizarProducto(item, i)">
                   Personalizar
               </button>
@@ -72,10 +68,10 @@
                   -{{ ing.nombre }}{{ !last ? ', ' : '' }}
                 </span>
               </div>
-              
+
               <!-- ✅ AGREGAR ESTE BOTÓN -->
-              <button 
-                class="btn-modificar-personalizacion" 
+              <button
+                class="btn-modificar-personalizacion"
                 (click)="personalizarProducto(item, i)">
                   Modificar
               </button>
