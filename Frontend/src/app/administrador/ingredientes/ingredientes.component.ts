@@ -13,9 +13,11 @@ import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.com
 import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
 import { CatalogoService } from '../../services/catalogo.service';
 import { CategoriaService, Categoria } from '../../services/categoria.service';
-import { AuthService } from '../../services/auth.service'; 
-import { PermissionDeniedDialogComponent } from '../../shared/permission-denied-dialog/permission-denied-dialog.component'; 
+import { AuthService } from '../../services/auth.service';
+import { PermissionDeniedDialogComponent } from '../../shared/permission-denied-dialog/permission-denied-dialog.component';
 import { Ingrediente } from '../../models/catalogo.model';
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+
 
 // ✅ INTERFAZ PARA ORGANIZAR DATOS
 interface CategoriaConIngredientes {
@@ -42,12 +44,12 @@ interface CategoriaConIngredientes {
   styleUrls: ['./ingredientes.component.scss']
 })
 export class IngredientesComponent implements OnInit {
-  
+
   private catalogoService = inject(CatalogoService);
   private categoriaService = inject(CategoriaService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
-  private authService = inject(AuthService); 
+  private authService = inject(AuthService);
   private dialog = inject(MatDialog);
 
   // ✅ NUEVA ESTRUCTURA DINÁMICA
@@ -69,7 +71,7 @@ export class IngredientesComponent implements OnInit {
     this.categoriaService.getCategorias().subscribe({
       next: (categorias) => {
         console.log(`✅ ${categorias.length} categorías cargadas`);
-        
+
         // Filtrar solo categorías que tienen ingredientes o crear estructura vacía
         this.categoriasConIngredientes = categorias
           .filter(categoria => categoria.ingredientes_count !== undefined)
@@ -77,11 +79,11 @@ export class IngredientesComponent implements OnInit {
             // Ordenar por más ingredientes primero, luego alfabético
             const countA = a.ingredientes_count || 0;
             const countB = b.ingredientes_count || 0;
-            
+
             if (countA !== countB) {
               return countB - countA; // Más ingredientes primero
             }
-            
+
             return a.nombre.localeCompare(b.nombre);
           })
           .map(categoria => ({
@@ -91,7 +93,7 @@ export class IngredientesComponent implements OnInit {
           }));
 
         this.cargandoCategorias = false;
-        
+
         // Cargar ingredientes para cada categoría
         this.cargarTodosLosIngredientes();
       },
@@ -108,7 +110,7 @@ export class IngredientesComponent implements OnInit {
 
   cargarTodosLosIngredientes() {
     console.log('🔄 Cargando ingredientes para todas las categorías...');
-    
+
     this.categoriasConIngredientes.forEach(categoriaItem => {
       this.cargarIngredientesPorCategoria(categoriaItem);
     });
@@ -117,9 +119,9 @@ export class IngredientesComponent implements OnInit {
   cargarIngredientesPorCategoria(categoriaItem: CategoriaConIngredientes) {
     const nombreCategoria = categoriaItem.categoria.nombre.toLowerCase();
     categoriaItem.cargando = true;
-    
+
     console.log(`🔍 Cargando ingredientes para: ${categoriaItem.categoria.nombre}`);
-    
+
     this.catalogoService.getIngredientesPorCategoriaFiltro(nombreCategoria)
       .subscribe({
         next: (ingredientes) => {
@@ -131,12 +133,12 @@ export class IngredientesComponent implements OnInit {
           console.error(`❌ Error al cargar ingredientes de ${categoriaItem.categoria.nombre}:`, error);
           categoriaItem.cargando = false;
           categoriaItem.ingredientes = []; // Asegurar array vacío en caso de error
-          
+
           // Solo mostrar error si no es un 404 (categoría sin ingredientes)
           if (error.status !== 404) {
             this.snackBar.open(
-              `Error al cargar ingredientes de ${categoriaItem.categoria.nombre}`, 
-              'Cerrar', 
+              `Error al cargar ingredientes de ${categoriaItem.categoria.nombre}`,
+              'Cerrar',
               { duration: 3000 }
             );
           }
@@ -151,7 +153,7 @@ export class IngredientesComponent implements OnInit {
 
   crearIngrediente() {
     console.log('✏️ Intentando crear nuevo ingrediente');
-    
+
     // ✅ AGREGADO: Validación de permisos para crear
     if (!this.authService.hasPermission('catalogo.add_appkioskoingredientes')) {
       console.log('❌ Sin permisos para crear ingredientes');
@@ -165,7 +167,7 @@ export class IngredientesComponent implements OnInit {
 
   editarIngrediente(id: number) {
     console.log('✏️ Intentando editar ingrediente ID:', id);
-    
+
     // ✅ AGREGADO: Validación de permisos para editar
     if (!this.authService.hasPermission('catalogo.change_appkioskoingredientes')) {
       console.log('❌ Sin permisos para editar ingredientes');
@@ -177,9 +179,10 @@ export class IngredientesComponent implements OnInit {
     this.router.navigate(['/administrador/gestion-ingredientes/crear', id]);
   }
 
+  // ✅ REEMPLAZAR: Método eliminarIngrediente con diálogo elegante
   eliminarIngrediente(ingrediente: Ingrediente) {
     console.log('🗑️ Intentando eliminar ingrediente:', ingrediente.nombre);
-    
+
     // ✅ AGREGADO: Validación de permisos para eliminar
     if (!this.authService.hasPermission('catalogo.delete_appkioskoingredientes')) {
       console.log('❌ Sin permisos para eliminar ingredientes');
@@ -187,50 +190,72 @@ export class IngredientesComponent implements OnInit {
       return;
     }
 
-    console.log('✅ Permisos validados, procediendo con eliminación');
+    console.log('✅ Permisos validados, mostrando diálogo de confirmación');
 
-    const confirmacion = confirm(
-      `¿Estás seguro de que quieres eliminar el ingrediente "${ingrediente.nombre}"?\n\n` +
-      `Esta acción no se puede deshacer y puede afectar productos que usen este ingrediente.`
-    );
+    // ✅ NUEVO: Abrir diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '450px',
+      disableClose: false,
+      panelClass: 'confirmation-dialog-panel',
+      data: {
+        itemType: `INGREDIENTE "${ingrediente.nombre.toUpperCase()}"`,
+        action: 'delete',
+        context: 'admin' // ✅ Contexto administrativo
+      }
+    });
 
-    if (confirmacion) {
-      console.log('🗑️ Eliminando ingrediente:', ingrediente.nombre);
-      
-      this.catalogoService.eliminarIngrediente(ingrediente.id)
-        .subscribe({
-          next: (response) => {
-            console.log('✅ Ingrediente eliminado:', response);
-            
-            this.snackBar.open(
-              `Ingrediente "${ingrediente.nombre}" eliminado correctamente`, 
-              'Cerrar', 
-              { duration: 3000 }
-            );
-            
-            // Recargar la categoría correspondiente
-            const categoriaItem = this.categoriasConIngredientes.find(
-              item => item.categoria.nombre.toLowerCase() === ingrediente.categoria_producto.toLowerCase()
-            );
-            
-            if (categoriaItem) {
-              this.recargarCategoria(categoriaItem);
-            }
-          },
-          error: (error) => {
-            console.error('❌ Error al eliminar ingrediente:', error);
-            
-            let mensaje = 'Error al eliminar el ingrediente';
-            if (error.error?.error && error.error.error.includes('siendo usado')) {
-              mensaje = error.error.error;
-            }
-            
-            this.snackBar.open(mensaje, 'Cerrar', {
-              duration: 5000
-            });
+    // ✅ NUEVO: Manejar la respuesta del diálogo
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🎯 Respuesta del diálogo de eliminación:', result);
+
+      if (result === true) {
+        // ✅ Usuario confirmó → Eliminar el ingrediente
+        console.log(`✅ Confirmado: Eliminando ingrediente ${ingrediente.nombre}`);
+        this.procederConEliminacion(ingrediente);
+      } else {
+        // ✅ Usuario canceló → No hacer nada
+        console.log(`❌ Cancelado: El ingrediente ${ingrediente.nombre} no será eliminado`);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Método separado para proceder con la eliminación
+  private procederConEliminacion(ingrediente: Ingrediente): void {
+    console.log('🗑️ Eliminando ingrediente:', ingrediente.nombre);
+
+    this.catalogoService.eliminarIngrediente(ingrediente.id)
+      .subscribe({
+        next: (response) => {
+          console.log('✅ Ingrediente eliminado exitosamente:', response);
+
+          this.snackBar.open(
+            `Ingrediente "${ingrediente.nombre}" eliminado correctamente`,
+            'Cerrar',
+            { duration: 3000 }
+          );
+
+          // Recargar la categoría correspondiente
+          const categoriaItem = this.categoriasConIngredientes.find(
+            item => item.categoria.nombre.toLowerCase() === ingrediente.categoria_producto.toLowerCase()
+          );
+
+          if (categoriaItem) {
+            this.recargarCategoria(categoriaItem);
           }
-        });
-    }
+        },
+        error: (error) => {
+          console.error('❌ Error al eliminar ingrediente:', error);
+
+          let mensaje = 'Error al eliminar el ingrediente';
+          if (error.error?.error && error.error.error.includes('siendo usado')) {
+            mensaje = error.error.error;
+          }
+
+          this.snackBar.open(mensaje, 'Cerrar', {
+            duration: 5000
+          });
+        }
+      });
   }
 
   private mostrarDialogoSinPermisos(): void {
@@ -280,7 +305,7 @@ export class IngredientesComponent implements OnInit {
 
   get totalIngredientes(): number {
     return this.categoriasConIngredientes.reduce(
-      (total, item) => total + item.ingredientes.length, 
+      (total, item) => total + item.ingredientes.length,
       0
     );
   }
@@ -300,7 +325,7 @@ export class IngredientesComponent implements OnInit {
       totalIngredientes: this.totalIngredientes,
       categoriasConIngredientes: this.categoriasConIngredientesDisponibles.length,
       categoriasSinIngredientes: this.categoriasSinIngredientes.length,
-      promedioPorCategoria: this.totalCategorias > 0 ? 
+      promedioPorCategoria: this.totalCategorias > 0 ?
         Math.round(this.totalIngredientes / this.totalCategorias) : 0
     };
   }
@@ -324,7 +349,7 @@ export class IngredientesComponent implements OnInit {
   // Helper para obtener color del estado
   getEstadoColor(estadoStock: string | undefined): string {
     if (!estadoStock) return 'primary'; // ✅ Valor por defecto
-    
+
     switch (estadoStock.toLowerCase()) {
       case 'disponible': return 'primary';
       case 'agotado': return 'warn';
@@ -336,7 +361,7 @@ export class IngredientesComponent implements OnInit {
   // Helper para obtener icono del estado
   getEstadoIcon(estadoStock: string | undefined): string {
     if (!estadoStock) return 'help'; // ✅ Valor por defecto
-    
+
     switch (estadoStock.toLowerCase()) {
       case 'disponible': return 'check_circle';
       case 'agotado': return 'cancel';

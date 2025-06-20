@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatDialog } from '@angular/material/dialog'; 
+import { MatDialog } from '@angular/material/dialog';
 import { CategoriaService, Categoria } from '../../services/categoria.service';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
-import { AuthService } from '../../services/auth.service'; 
-import { PermissionDeniedDialogComponent } from '../../shared/permission-denied-dialog/permission-denied-dialog.component'; 
-
+import { AuthService } from '../../services/auth.service';
+import { PermissionDeniedDialogComponent } from '../../shared/permission-denied-dialog/permission-denied-dialog.component';
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 @Component({
   selector: 'app-gestion-categorias',
   standalone: true,
@@ -31,8 +31,8 @@ export class GestionCategoriasComponent implements OnInit {
   constructor(
     private categoriaService: CategoriaService,
     private router: Router,
-    private authService: AuthService, 
-    private dialog: MatDialog 
+    private authService: AuthService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -66,14 +66,14 @@ export class GestionCategoriasComponent implements OnInit {
           // Ordenar por más usadas primero, luego por nombre
           const totalA = (a.productos_count || 0) + (a.ingredientes_count || 0);
           const totalB = (b.productos_count || 0) + (b.ingredientes_count || 0);
-          
+
           if (totalA !== totalB) {
             return totalB - totalA; // Más usadas primero
           }
-          
+
           return a.nombre.localeCompare(b.nombre); // Luego alfabético
         });
-        
+
         this.loading = false;
         console.log(`✅ ${categorias.length} categorías cargadas dinámicamente`);
         console.log('📊 Estadísticas:', this.getEstadisticas());
@@ -88,7 +88,7 @@ export class GestionCategoriasComponent implements OnInit {
 
   irACrearCategoria(): void {
     console.log('✏️ Intentando crear nueva categoría');
-    
+
     if (!this.authService.hasPermission('catalogo.add_appkioskocategorias')) {
       console.log('❌ Sin permisos para crear categorías');
       this.mostrarDialogoSinPermisos();
@@ -101,7 +101,7 @@ export class GestionCategoriasComponent implements OnInit {
 
   editarCategoria(categoria: Categoria): void {
     console.log('✏️ Intentando editar categoría ID:', categoria.id);
-    
+
     if (!this.authService.hasPermission('catalogo.change_appkioskocategorias')) {
       console.log('❌ Sin permisos para editar categorías');
       this.mostrarDialogoSinPermisos();
@@ -121,7 +121,7 @@ export class GestionCategoriasComponent implements OnInit {
     if (!categoria.id) return;
 
     console.log('🗑️ Intentando eliminar categoría:', categoria.nombre);
-    
+
     if (!this.authService.hasPermission('catalogo.delete_appkioskocategorias')) {
       console.log('❌ Sin permisos para eliminar categorías');
       this.mostrarDialogoSinPermisos();
@@ -134,7 +134,7 @@ export class GestionCategoriasComponent implements OnInit {
       const productosText = categoria.productos_count ? `${categoria.productos_count} productos` : '';
       const ingredientesText = categoria.ingredientes_count ? `${categoria.ingredientes_count} ingredientes` : '';
       const relaciones = [productosText, ingredientesText].filter(Boolean).join(' y ');
-      
+
       alert(`❌ No se puede eliminar la categoría "${categoria.nombre}"\n\n` +
             `Motivo: Tiene ${relaciones} asociados.\n\n` +
             `Para eliminar esta categoría, primero debes:\n` +
