@@ -361,6 +361,48 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
+// === BOTONES DE PERSONALIZACIÓN ===
+.btn-personalizar-inline,
+.btn-modificar-personalizacion {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-personalizar-inline {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+}
+
+.btn-modificar-personalizacion {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  color: white;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+  }
+}
+
+// === RESPONSIVE ===
+@media (max-width: 768px) {
+  .btn-personalizar-inline,
+  .btn-modificar-personalizacion {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+}
+
 // ✅ RESPONSIVE (copiado de menu)
 @media (max-width: 768px) {
   .carrito-content {

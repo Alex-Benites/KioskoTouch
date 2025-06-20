@@ -224,4 +224,51 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+
+  personalizarProducto(item: any, index: number): void {
+    // ✅ VALIDAR que sea un producto, no un menú
+    if (!item.producto_id) {
+      console.log('⚠️ No se puede personalizar un menú');
+      alert('Los menús no se pueden personalizar individualmente');
+      return;
+    }
+
+    console.log('🎛️ Personalizando producto desde carrito:', item);
+    
+    // ✅ USAR ÍNDICE REAL del array de productos del carrito
+    const productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
+    const productoReal = productosCarrito[index];
+    
+    if (!productoReal) {
+      console.error('❌ No se encontró el producto en el índice', index);
+      return;
+    }
+
+    // Guardar datos del producto actual para comparación
+    const datosActuales = {
+      producto_id: productoReal.producto_id,
+      personalizacion: productoReal.personalizacion || [],
+      precio_unitario: productoReal.precio_unitario,
+      cantidad: productoReal.cantidad,
+      carritoIndex: index,
+      // ✅ IMPORTANTE: Usar los datos exactos del producto
+      subtotal: productoReal.subtotal
+    };
+
+    // ✅ NAVEGAR correctamente igual que en el menú
+    this.router.navigate(['/cliente/personalizar-producto', productoReal.producto_id], {
+      queryParams: {
+        modo: 'editar',
+        carritoIndex: index,
+        cantidad: productoReal.cantidad,
+        precio: productoReal.precio_unitario,
+        nombre: this.obtenerNombreProducto(productoReal)
+      },
+      state: {
+        datosActuales: datosActuales
+      }
+    });
+  }
+
 }

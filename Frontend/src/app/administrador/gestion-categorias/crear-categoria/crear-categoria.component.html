@@ -142,6 +142,30 @@
       </ul>
     </div>
   </div>
+
+  <!-- ✅ MENSAJE INFORMATIVO -->
+  <div *ngIf="mensaje" class="mensaje-container" [ngClass]="'mensaje-' + tipoMensaje">
+    <div class="mensaje-content">
+      <i class="material-icons mensaje-icon">
+        {{ getMensajeIcon() }}
+      </i>
+      <span class="mensaje-texto">{{ mensaje }}</span>
+      <button class="btn-cerrar-mensaje" (click)="ocultarMensaje()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ✅ ERROR (si existe) -->
+  <div *ngIf="error" class="error-container">
+    <div class="error-card">
+      <i class="material-icons">error</i>
+      <span>{{ error }}</span>
+      <button class="btn-cerrar-error" (click)="error = null">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+  </div>
 </div>
 
 <app-footer-admin [backRoute]="'/administrador/gestion-categorias'"></app-footer-admin>

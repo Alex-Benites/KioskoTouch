@@ -19,6 +19,12 @@ import { CatalogoService } from './catalogo.service';
 export class PedidoService {
   private apiUrl = `${environment.apiUrl}/pedidos`;
 
+  // ✅ AGREGAR clave para localStorage
+  private readonly STORAGE_KEY = 'kiosko-pedido-actual';
+
+  private turnoState = signal<number | null>(null);
+
+
   // ✅ Estado principal del pedido
   private pedidoState = signal<Partial<Pedido>>({
     tipo_entrega: null,
@@ -100,15 +106,84 @@ export class PedidoService {
   private catalogoService = inject(CatalogoService);
   private productosCache: Map<number, any> = new Map();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.cargarEstadoPersistido();
+    this.cargarTurnoDesdeStorage(); 
+  }
 
-  // ✅ Métodos para actualizar el estado
+
+  private guardarEstado(): void {
+    try {
+      const estado = {
+        pedido: this.pedidoState(),
+        detalles: this.detallesState(),
+        personalizaciones: this.personalizacionesState(),
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(estado));
+      console.log('💾 Estado guardado en localStorage');
+    } catch (error) {
+      console.error('❌ Error guardando estado:', error);
+    }
+  }
+
+  private cargarEstadoPersistido(): void {
+    try {
+      const datos = localStorage.getItem(this.STORAGE_KEY);
+      if (datos) {
+        const estado = JSON.parse(datos);
+        
+        // ✅ Verificar que no sea muy antiguo (ej: más de 1 día)
+        const unDiaEnMs = 24 * 60 * 60 * 1000;
+        if (Date.now() - estado.timestamp > unDiaEnMs) {
+          console.log('🧹 Estado muy antiguo, iniciando limpio');
+          this.limpiarEstadoPersistido();
+          return;
+        }
+        
+        // ✅ Restaurar estado
+        this.pedidoState.set(estado.pedido || {
+          tipo_entrega: null,
+          numero_mesa: null,
+          total: 0,
+          valor_descuento: 0,
+          is_facturado: true,
+        });
+        
+        this.detallesState.set(estado.detalles || []);
+        this.personalizacionesState.set(estado.personalizaciones || []);
+        
+        console.log('📋 Estado cargado desde localStorage:', estado);
+      }
+    } catch (error) {
+      console.error('❌ Error cargando estado:', error);
+      this.limpiarEstadoPersistido();
+    }
+  }
+
+  private limpiarEstadoPersistido(): void {
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+      console.log('🧹 localStorage limpiado');
+    } catch (error) {
+      console.error('❌ Error limpiando localStorage:', error);
+    }
+  }
+
+  // ✅ MÉTODO PÚBLICO para limpiar (después de pagar)
+  limpiarCarritoPersistido(): void {
+    this.limpiarPedido(); // Método existente
+    this.limpiarEstadoPersistido(); // Nuevo método
+  }
+
   setTipoEntrega(tipo: TipoEntrega): void {
     this.pedidoState.update(state => ({
       ...state,
       tipo_entrega: tipo,
       numero_mesa: tipo === 'llevar' ? null : state.numero_mesa
     }));
+    this.guardarEstado(); // ✅ AGREGAR
   }
 
   setNumeroMesa(mesa: number): void {
@@ -116,6 +191,7 @@ export class PedidoService {
       ...state,
       numero_mesa: mesa
     }));
+    this.guardarEstado(); // ✅ AGREGAR
   }
 
   setTipoPago(tipoPagoId: number): void {
@@ -222,6 +298,7 @@ export class PedidoService {
       ...state,
       total: this.total()
     }));
+    this.guardarEstado(); // ✅ AGREGAR
   }
 
   // ✅ Remover items
@@ -255,6 +332,7 @@ export class PedidoService {
     });
     this.detallesState.set([]);
     this.personalizacionesState.set([]);
+    this.guardarEstado(); // ✅ AGREGAR
   }
 
   // ✅ Método para obtener datos para el backend
@@ -446,14 +524,81 @@ export class PedidoService {
     }
   }
 
-  // ✅ MÉTODO AUXILIAR para comparar personalizaciones
+  // ✅ MEJORAR la comparación de personalizaciones (línea ~520)
   private personalizacionesIguales(p1?: PersonalizacionIngrediente[], p2?: PersonalizacionIngrediente[]): boolean {
-    if (!p1 && !p2) return true;
-    if (!p1 || !p2) return false;
-    if (p1.length !== p2.length) return false;
+    console.log('🔍 === COMPARANDO PERSONALIZACIONES DETALLADO ===');
+    console.log('p1 (actual):', p1);
+    console.log('p2 (buscada):', p2);
 
-    // Comparación básica - puedes mejorarla según tus necesidades
-    return JSON.stringify(p1.sort()) === JSON.stringify(p2.sort());
+    // ✅ NORMALIZAR: Convertir undefined/null a array vacío
+    const normalize = (arr?: PersonalizacionIngrediente[]): PersonalizacionIngrediente[] => {
+      return arr && Array.isArray(arr) ? arr : [];
+    };
+
+    const p1Norm = normalize(p1);
+    const p2Norm = normalize(p2);
+
+    console.log('🔧 p1 normalizado:', p1Norm);
+    console.log('🔧 p2 normalizado:', p2Norm);
+
+    // ✅ Si ambas están vacías después de normalizar
+    if (p1Norm.length === 0 && p2Norm.length === 0) {
+      console.log('✅ Ambas son vacías (después de normalizar) - SON IGUALES');
+      return true;
+    }
+
+    // ✅ Si tienen diferentes longitudes
+    if (p1Norm.length !== p2Norm.length) {
+      console.log(`❌ Diferentes longitudes: ${p1Norm.length} vs ${p2Norm.length} - NO SON IGUALES`);
+      return false;
+    }
+
+    try {
+      // ✅ Comparación detallada para arrays con contenido
+      const normalizeItem = (personalizaciones: PersonalizacionIngrediente[]) => {
+        return personalizaciones
+          .map(p => ({
+            ingrediente_id: Number(p.ingrediente_id),
+            accion: (p.accion || '').toLowerCase().trim(),
+            precio_aplicado: Number(p.precio_aplicado) || 0
+          }))
+          .sort((a, b) => {
+            if (a.ingrediente_id !== b.ingrediente_id) {
+              return a.ingrediente_id - b.ingrediente_id;
+            }
+            return a.accion.localeCompare(b.accion);
+          });
+      };
+
+      const p1Items = normalizeItem(p1Norm);
+      const p2Items = normalizeItem(p2Norm);
+      
+      const jsonP1 = JSON.stringify(p1Items);
+      const jsonP2 = JSON.stringify(p2Items);
+      const sonIguales = jsonP1 === jsonP2;
+      
+      console.log('🔍 Comparación normalizada:', {
+        p1_normalized: p1Items,
+        p2_normalized: p2Items,
+        json_p1: jsonP1,
+        json_p2: jsonP2,
+        son_iguales: sonIguales
+      });
+      
+      if (sonIguales) {
+        console.log('✅ Personalizaciones idénticas - SON IGUALES');
+      } else {
+        console.log('❌ Personalizaciones diferentes - NO SON IGUALES');
+      }
+      
+      console.log('🔍 === FIN COMPARACIÓN ===');
+      return sonIguales;
+      
+    } catch (error) {
+      console.error('❌ Error comparando personalizaciones:', error);
+      console.log('🔍 === FIN COMPARACIÓN (ERROR) ===');
+      return false;
+    }
   }
 
   // ✅ AGREGAR: Métodos públicos que faltan para el carrito
@@ -554,4 +699,193 @@ export class PedidoService {
       this.eliminarMenuInterno(item.menu_id);
     }
   }
+
+  // ✅ REEMPLAZAR en pedido.service.ts (línea ~734)
+  actualizarProductoEnCarrito(
+    productoId: number, 
+    personalizacionOriginal: PersonalizacionIngrediente[] | undefined,
+    nuevaPersonalizacion: PersonalizacionIngrediente[],
+    nuevoPrecio: number
+  ): boolean {
+    console.log('🔄 === SERVICIO: ACTUALIZANDO PRODUCTO (ÚNICO) ===');
+    console.log('📥 Datos recibidos:', {
+      productoId,
+      personalizacionOriginal,
+      nuevaPersonalizacion,
+      nuevoPrecio,
+      timestamp: Date.now()
+    });
+    
+    const detalles = this.detallesState();
+    let actualizado = false;
+
+    // ✅ BUSCAR Y ACTUALIZAR SOLO EL PRIMER PRODUCTO QUE COINCIDA
+    detalles.forEach((detalle, detalleIndex) => {
+      if (detalle.productos && !actualizado) {
+        const productoIndex = detalle.productos.findIndex(producto => 
+          producto.producto_id === productoId &&
+          this.personalizacionesIguales(producto.personalizacion, personalizacionOriginal)
+        );
+
+        if (productoIndex !== -1) {
+          const producto = detalle.productos[productoIndex];
+          
+          console.log('✅ Producto encontrado para actualizar:', {
+            detalleIndex,
+            productoIndex,
+            producto_id: producto.producto_id,
+            cantidad: producto.cantidad,
+            subtotal_anterior: producto.subtotal,
+            precio_unitario_anterior: producto.subtotal / producto.cantidad,
+            personalizacion_anterior: producto.personalizacion
+          });
+
+          // ✅ ACTUALIZAR CORRECTAMENTE: Primero personalización, luego precio
+          producto.personalizacion = [...nuevaPersonalizacion];
+          
+          // ✅ CLAVE: Actualizar el subtotal basado en el NUEVO precio unitario
+          // nuevoPrecio YA es el precio TOTAL (unitario * cantidad)
+          // Pero necesitamos calcular el precio unitario correcto
+          const nuevoPrecioUnitario = nuevoPrecio / producto.cantidad;
+          producto.subtotal = nuevoPrecio;
+
+          actualizado = true;
+
+          console.log('✅ Producto actualizado exitosamente:', {
+            nuevo_precio_unitario: nuevoPrecioUnitario,
+            nuevo_subtotal: producto.subtotal,
+            nueva_personalizacion: producto.personalizacion,
+            cantidad: producto.cantidad
+          });
+        }
+      }
+    });
+
+    // ✅ GUARDAR CAMBIOS SI SE ACTUALIZÓ
+    if (actualizado) {
+      this.detallesState.set([...detalles]);
+      this.actualizarTotalEnEstado();
+      
+      console.log('✅ SERVICIO: Estado actualizado correctamente');
+      console.log('💾 Total carrito actualizado:', this.total());
+      console.log('🔄 === FIN ACTUALIZACIÓN SERVICIO ===');
+      
+      return true;
+    } else {
+      console.error('❌ SERVICIO: No se encontró producto para actualizar');
+      console.log('🔄 === FIN ACTUALIZACIÓN SERVICIO (FALLÓ) ===');
+      return false;
+    }
+  }
+
+
+  /**
+   * ✅ Establecer número de turno
+   */
+  establecerTurno(numeroTurno: number): void {
+    console.log('🎫 === ESTABLECIENDO TURNO ===');
+    console.log('Número de turno:', numeroTurno);
+    
+    this.turnoState.set(numeroTurno);
+    
+    // ✅ Guardar en localStorage
+    try {
+      localStorage.setItem('kiosko_turno', numeroTurno.toString());
+      console.log('✅ Turno guardado en localStorage');
+    } catch (error) {
+      console.error('❌ Error guardando turno:', error);
+    }
+    
+    console.log('🎫 === FIN ESTABLECER TURNO ===');
+  }
+
+  /**
+   * ✅ Obtener número de turno actual
+   */
+  obtenerTurno(): number | null {
+    const turno = this.turnoState();
+    console.log('🎫 Obteniendo turno actual:', turno);
+    return turno;
+  }
+
+  /**
+   * ✅ Verificar si tiene turno asignado
+   */
+  tieneTurno(): boolean {
+    const turno = this.turnoState();
+    const tiene = turno !== null && turno > 0;
+    console.log('🎫 ¿Tiene turno?', tiene, '(turno:', turno, ')');
+    return tiene;
+  }
+
+  /**
+   * ✅ Limpiar turno
+   */
+  limpiarTurno(): void {
+    console.log('🎫 === LIMPIANDO TURNO ===');
+    
+    this.turnoState.set(null);
+    
+    // ✅ Limpiar de localStorage
+    try {
+      localStorage.removeItem('kiosko_turno');
+      console.log('✅ Turno eliminado de localStorage');
+    } catch (error) {
+      console.error('❌ Error limpiando turno:', error);
+    }
+    
+    console.log('🎫 === FIN LIMPIAR TURNO ===');
+  }
+
+  /**
+   * ✅ Limpiar todo el carrito
+   */
+  limpiarCarrito(): void {
+    console.log('🗑️ === LIMPIANDO CARRITO COMPLETO ===');
+    console.log('Detalles antes:', this.detallesState().length);
+    console.log('Total antes:', this.total());
+    
+    // ✅ Limpiar estados
+    this.detallesState.set([]);
+    this.actualizarTotalEnEstado();
+    
+    // ✅ Limpiar localStorage
+    this.limpiarStorage();
+    
+    // ✅ También limpiar turno si existe
+    this.limpiarTurno();
+    
+    console.log('✅ Carrito completamente limpiado');
+    console.log('Detalles después:', this.detallesState().length);
+    console.log('Total después:', this.total());
+    console.log('🗑️ === FIN LIMPIAR CARRITO ===');
+  }
+
+  /**
+   * ✅ Limpiar solo localStorage
+   */
+  private limpiarStorage(): void {
+    try {
+      localStorage.removeItem('kiosko_pedido_detalles');
+      console.log('✅ localStorage limpiado');
+    } catch (error) {
+      console.error('❌ Error limpiando localStorage:', error);
+    }
+  }
+
+  private cargarTurnoDesdeStorage(): void {
+    try {
+      const turnoGuardado = localStorage.getItem('kiosko_turno');
+      if (turnoGuardado) {
+        const numeroTurno = parseInt(turnoGuardado, 10);
+        if (!isNaN(numeroTurno) && numeroTurno > 0) {
+          this.turnoState.set(numeroTurno);
+          console.log('✅ Turno cargado desde localStorage:', numeroTurno);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error cargando turno desde localStorage:', error);
+    }
+  }
+
 }

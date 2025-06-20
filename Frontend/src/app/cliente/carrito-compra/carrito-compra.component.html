@@ -44,9 +44,20 @@
           <div class="producto-info">
             <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
 
+            <!-- Si no tiene personalizaciones, mostrar "Personalizar" como opción -->
+            <div *ngIf="!tienePersonalizaciones(item)" class="producto-sin-personalizaciones">
+              
+              
+              <!-- ✅ AGREGAR ESTE BOTÓN -->
+              <button 
+                class="btn-personalizar-inline" 
+                (click)="personalizarProducto(item, i)">
+                  Personalizar
+              </button>
+            </div>
+
             <!-- ✅ MOSTRAR personalizaciones si las tiene -->
             <div *ngIf="tienePersonalizaciones(item)" class="producto-personalizaciones">
-              <span class="personalizar-label">Personalizar</span>
 
               <!-- Lista de ingredientes agregados -->
               <div *ngIf="obtenerIngredientesAgregados(item).length > 0" class="ingredientes-agregados">
@@ -61,11 +72,13 @@
                   -{{ ing.nombre }}{{ !last ? ', ' : '' }}
                 </span>
               </div>
-            </div>
-
-            <!-- Si no tiene personalizaciones, mostrar "Personalizar" como opción -->
-            <div *ngIf="!tienePersonalizaciones(item)" class="producto-sin-personalizaciones">
-              <span class="personalizar-label">Personalizar</span>
+              
+              <!-- ✅ AGREGAR ESTE BOTÓN -->
+              <button 
+                class="btn-modificar-personalizacion" 
+                (click)="personalizarProducto(item, i)">
+                  Modificar
+              </button>
             </div>
           </div>
 

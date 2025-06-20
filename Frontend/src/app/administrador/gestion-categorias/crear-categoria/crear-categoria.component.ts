@@ -26,6 +26,10 @@ export class CrearCategoriaComponent implements OnInit {
   loading = false;
   error: string | null = null;
   
+  categoriaActual: Categoria | null = null;
+  // ✅ AGREGAR para mensajes informativos
+  mensaje: string | null = null;
+  tipoMensaje: 'info' | 'warning' | 'success' | 'error' = 'info';
   // Manejo de imagen
   imagenSeleccionada: File | null = null;
   imagenPreview: string | null = null;
@@ -66,6 +70,9 @@ export class CrearCategoriaComponent implements OnInit {
 
     this.categoriaService.getCategoria(this.categoriaId).subscribe({
       next: (categoria) => {
+        // ✅ GUARDAR categoría original para comparación
+        this.categoriaActual = categoria;
+        
         this.categoriaForm.patchValue({
           nombre: categoria.nombre
         });
@@ -76,7 +83,7 @@ export class CrearCategoriaComponent implements OnInit {
         }
 
         this.loading = false;
-        console.log('✅ Categoría cargada para edición');
+        console.log('✅ Categoría cargada para edición:', categoria);
       },
       error: (error) => {
         this.error = error.message;
@@ -136,13 +143,44 @@ export class CrearCategoriaComponent implements OnInit {
       return;
     }
 
+    // Verificar cambios
+    if (this.isEditMode && !this.hayCambios()) {
+      this.mostrarMensaje('No se han realizado cambios en la categoría', 'info');
+      setTimeout(() => this.ocultarMensaje(), 3000);
+      return;
+    }
+
     this.loading = true;
     this.error = null;
+    this.ocultarMensaje();
 
-    const formData = this.categoriaService.crearFormData(
-      this.categoriaForm.value,
-      this.imagenSeleccionada || undefined
-    );
+    // ✅ CREAR FormData más inteligente
+    const formData = new FormData();
+    
+    // Siempre agregar el nombre
+    formData.append('nombre', this.categoriaForm.get('nombre')?.value || '');
+    
+    // ✅ SOLO agregar imagen si se seleccionó una nueva
+    if (this.imagenSeleccionada) {
+      formData.append('imagen', this.imagenSeleccionada);
+      console.log('📸 Agregando nueva imagen al FormData');
+    }
+    // ✅ NO agregar imagen si no se cambió - el backend mantendrá la actual
+
+    // Agregar ID en modo edición
+    if (this.isEditMode && this.categoriaId) {
+      formData.append('id', this.categoriaId.toString());
+    }
+
+    // Log para debug
+    console.log('📋 FormData enviado:');
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: ${value.name} (${value.size} bytes)`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
 
     const operacion = this.isEditMode ? 
       this.categoriaService.actualizarCategoria(this.categoriaId!, formData) :
@@ -153,22 +191,57 @@ export class CrearCategoriaComponent implements OnInit {
 
     operacion.subscribe({
       next: (response) => {
-        if (response.success) {
+        this.loading = false;
+        console.log('📥 Respuesta completa:', response);
+        
+        // ✅ SOLUCIÓN SIMPLE: Si no hay error, es éxito
+        if (response.success !== false && !response.error) {
           const mensaje = this.isEditMode ? 'actualizada' : 'creada';
           console.log(`✅ Categoría ${mensaje} exitosamente`);
-          alert(response.mensaje);
-          this.router.navigate(['/administrador/gestion-categorias']);
+          
+          const textoMensaje = response.mensaje || `Categoría ${mensaje} exitosamente`;
+          this.mostrarMensaje(textoMensaje, 'success');
+          
+          // Redirigir después de 2 segundos
+          setTimeout(() => {
+            this.router.navigate(['/administrador/gestion-categorias']);
+          }, 2000);
         } else {
-          this.error = response.error || 'Error al guardar categoría';
-          this.loading = false;
+          // Solo es error si realmente hay un error
+          this.error = response.error || response.mensaje || 'Error desconocido al guardar categoría';
+          console.error('❌ Error en respuesta:', response);
         }
       },
       error: (error) => {
-        this.error = error.message;
         this.loading = false;
+        this.error = error.message || 'Error de conexión';
         console.error(`❌ Error ${accion} categoría:`, error);
+        
+        if (error.error) {
+          console.error('❌ Detalles del error:', error.error);
+        }
       }
     });
+  }
+
+
+  // ✅ NUEVO MÉTODO: Verificar si hay cambios reales
+  private hayCambios(): boolean {
+    const nombreActual = this.categoriaForm.get('nombre')?.value;
+    const nombreOriginal = this.categoriaActual?.nombre; // Necesitas guardar la categoría original
+    
+    const nombreCambio = nombreActual !== nombreOriginal;
+    const imagenCambio = this.imagenSeleccionada !== null;
+    
+    console.log('🔍 Verificando cambios:', {
+      nombreOriginal,
+      nombreActual,
+      nombreCambio,
+      imagenCambio,
+      hayCambios: nombreCambio || imagenCambio
+    });
+    
+    return nombreCambio || imagenCambio;
   }
 
   // ✅ HELPERS
@@ -214,5 +287,26 @@ export class CrearCategoriaComponent implements OnInit {
     return this.loading ? 
       (this.isEditMode ? 'Actualizando...' : 'Creando...') :
       (this.isEditMode ? 'Actualizar Categoría' : 'Crear Categoría');
+  }
+
+  // ✅ NUEVOS MÉTODOS para manejar mensajes
+  private mostrarMensaje(texto: string, tipo: 'info' | 'warning' | 'success' | 'error'): void {
+    this.mensaje = texto;
+    this.tipoMensaje = tipo;
+    console.log(`💬 Mensaje ${tipo}: ${texto}`);
+  }
+
+  public ocultarMensaje(): void {
+    this.mensaje = null;
+  }
+
+  public getMensajeIcon(): string {
+    switch (this.tipoMensaje) {
+      case 'info': return 'info';
+      case 'success': return 'check_circle';
+      case 'warning': return 'warning';
+      case 'error': return 'error';
+      default: return 'info';
+    }
   }
 }

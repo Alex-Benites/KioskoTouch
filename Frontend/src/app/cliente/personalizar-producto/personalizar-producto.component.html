@@ -93,7 +93,7 @@
           <div class="ingredientes-grid">
             <div
               class="ingrediente-card"
-              *ngFor="let ingrediente of ingredientesDisponibles"
+              *ngFor="let ingrediente of ingredientesDisponibles()"
               [class.seleccionado]="ingrediente.seleccionado">
 
               <!-- Imagen del ingrediente -->
@@ -162,34 +162,61 @@
     </div>
   </main>
 
-  <!-- ✅ Footer "Mi Orden" -->
-  <footer class="order-summary-footer">
-    <h2 class="order-summary-footer__title">Mi Orden</h2>
-    <div class="order-summary-footer__content">
-      <!-- ✅ USAR los signals del PedidoService (igual que en el menú) -->
-      <div *ngIf="pedidoService.cantidadItems() > 0; else carritoVacio">
-        <div class="order-summary-footer__details">
-          <span>Total: ${{ pedidoService.total().toFixed(2) }}</span>
-          <span>Productos: {{ pedidoService.cantidadItems() }}</span>
-        </div>
+  <!-- ✅ Footer "Mi Orden" - SOLO para AGREGAR -->
+  <footer class="order-summary-footer" *ngIf="!modoEdicion">
+    <div class="order-summary-header">
+      <h2>🛒 Mi Orden</h2>
+      <span class="badge-items" *ngIf="pedidoService.cantidadItems() > 0">
+        {{ pedidoService.cantidadItems() }}
+      </span>
+    </div>
+    
+    <div class="order-summary-content">
+      <div class="precio-actual">
+        <span class="precio-label">Este producto:</span>
+        <span class="precio-valor">${{ precioTotalCalculado().toFixed(2) }}</span>
       </div>
-
-      <!-- ✅ TEMPLATE cuando no hay productos -->
-      <ng-template #carritoVacio>
-        <p class="order-summary-footer__empty-message">Tu pedido está vacío</p>
-      </ng-template>
-
-      <div class="order-summary-footer__actions">
-        <button class="primary__button order-summary-footer__button" (click)="cancelarPedido()">
-          Cancelar personalizacion
-        </button>
-        <!-- ✅ CAMBIAR: Reemplazar "Continuar" por "Añadir" -->
-        <button
-          class="primary__button order-summary-footer__button boton-anadir-footer"
-          (click)="agregarAlCarrito()">
-          Añadir
-        </button>
+      
+      <div class="total-pedido" *ngIf="pedidoService.cantidadItems() > 0">
+        <span class="total-label">Total del pedido:</span>
+        <span class="total-valor">${{ (pedidoService.total() + precioTotalCalculado()).toFixed(2) }}</span>
       </div>
     </div>
+
+    <div class="action-buttons">
+      <button class="btn-secundario" (click)="volverAlMenu()">
+        <i class="material-icons">restaurant_menu</i>
+        Seguir Comprando
+      </button>
+      
+      <button class="btn-principal" (click)="confirmarPersonalizacion()" [disabled]="procesandoConfirmacion">
+        <i class="material-icons" *ngIf="!procesandoConfirmacion">add_shopping_cart</i>
+        <i class="material-icons spin" *ngIf="procesandoConfirmacion">refresh</i>
+        <span *ngIf="!procesandoConfirmacion">Añadir ${{ precioTotalCalculado().toFixed(2) }}</span>
+        <span *ngIf="procesandoConfirmacion">Agregando...</span>
+      </button>
+    </div>
   </footer>
+
+  <!-- ✅ Barra de edición - SOLO para EDITAR -->
+  <div class="edit-actions-bar" *ngIf="modoEdicion">
+    <button class="btn-volver" (click)="volverAlCarrito()">
+      <i class="material-icons">arrow_back</i>
+      Volver al Carrito
+    </button>
+    
+    <div class="precio-display">
+      ${{ precioTotalCalculado().toFixed(2) }}
+    </div>
+    
+    <button class="btn-actualizar" (click)="confirmarPersonalizacion()" [disabled]="procesandoConfirmacion">
+      <i class="material-icons" *ngIf="!procesandoConfirmacion">update</i>
+      <i class="material-icons spin" *ngIf="procesandoConfirmacion">refresh</i>
+      <span *ngIf="!procesandoConfirmacion">Actualizar</span>
+      <span *ngIf="procesandoConfirmacion">Actualizando...</span>
+    </button>
+  </div>
+
+
 </div>
+

@@ -59,7 +59,7 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   // ✅ NUEVO: Getter para obtener el turno
   get numeroTurno(): string | null {
-    return this.pedidoService.obtenerTurno();
+    return this.pedidoService.obtenerTurno()?.toString() || null;
   }
 
   // ✅ NUEVO: Verificar si tiene turno

@@ -68,7 +68,7 @@ export class TurnoComponent {
     console.log('📋 Productos en carrito:', cantidadProductos);
 
     // ✅ GUARDAR: Establecer el turno en el servicio
-    this.pedidoService.establecerTurno(this.numeroTurno);
+  this.pedidoService.establecerTurno(parseInt(this.numeroTurno, 10));
 
     // ✅ CONFIRMAR: Mostrar mensaje de confirmación
     console.log(`✅ Turno ${this.numeroTurno} confirmado y guardado`);
