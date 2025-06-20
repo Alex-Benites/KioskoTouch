@@ -6,13 +6,17 @@ import { PublicidadService } from '../../services/publicidad.service';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
 import { Publicidad } from '../../models/marketing.model';
+// ✅ AGREGAR: Imports para el diálogo
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TurnoConfirmationDialogComponent } from '../../shared/turno-confirmation-dialog/turno-confirmation-dialog.component';
 
 @Component({
   selector: 'app-carrito-compra',
   standalone: true,
   imports: [
     CommonModule,
-    PublicidadSectionComponent
+    PublicidadSectionComponent,
+    MatDialogModule // ✅ AGREGAR
   ],
   templateUrl: './carrito-compra.component.html',
   styleUrl: './carrito-compra.component.scss'
@@ -26,6 +30,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   private publicidadService = inject(PublicidadService);
   // ✅ AGREGAR: Inject del CatalogoService
   private catalogoService = inject(CatalogoService);
+  // ✅ AGREGAR: Inject del diálogo
+  private dialog = inject(MatDialog);
 
   // ✅ AGREGAR: Propiedad computed para obtener productos del carrito
   // productosCarrito = computed(() => {
@@ -83,13 +89,64 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('✅ Finalizando pedido...');
+    console.log('✅ Iniciando proceso de finalización...');
     console.log('📋 Productos:', this.cantidadProductos);
     console.log('💰 Total:', this.totalPedido);
 
-    // ✅ TODO: Aquí irá la lógica para finalizar el pedido
-    // Por ahora solo mostrar un alert
-    alert(`¡Pedido finalizado!\nProductos: ${this.cantidadProductos}\nTotal: $${this.totalPedido.toFixed(2)}`);
+    // ✅ NUEVO: Verificar el tipo de entrega
+    const tipoEntrega = this.pedidoService.tipoEntrega();
+    console.log('🏪 Tipo de entrega:', tipoEntrega);
+
+    if (tipoEntrega === 'servir') {
+      // ✅ COMER AQUÍ: Mostrar popup de turno
+      console.log('🍽️ Pedido para comer aquí → Mostrando opción de turno');
+      this.mostrarPopupTurno();
+    } else if (tipoEntrega === 'llevar') {
+      // ✅ PARA LLEVAR: Ir directo al resumen
+      console.log('🥡 Pedido para llevar → Directo al resumen (sin turno)');
+      this.irDirectoAlResumen();
+    } else {
+      // ✅ FALLBACK: Si no hay tipo definido, mostrar popup por defecto
+      console.warn('⚠️ Tipo de entrega no definido, mostrando popup por defecto');
+      this.mostrarPopupTurno();
+    }
+  }
+
+  // ✅ NUEVO: Método privado para mostrar el popup de turno
+  private mostrarPopupTurno(): void {
+    console.log('🎯 Abriendo popup de confirmación de turno...');
+
+    const dialogRef = this.dialog.open(TurnoConfirmationDialogComponent, {
+      width: '450px',
+      disableClose: true,
+      panelClass: 'turno-dialog-panel',
+      hasBackdrop: true,
+      autoFocus: true,
+      restoreFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🎯 Respuesta del diálogo de turno:', result);
+
+      if (result === true) {
+        // ✅ Usuario seleccionó "Sí" → Ir a componente Turno
+        console.log('✅ Usuario quiere tomar turno → Navegando a Turno');
+        this.router.navigate(['/cliente/turno']);
+      } else if (result === false) {
+        // ✅ Usuario seleccionó "No" → Ir directo al resumen
+        console.log('❌ Usuario NO quiere turno → Navegando a Resumen del Pedido');
+        this.router.navigate(['/cliente/resumen-pedido']);
+      } else {
+        // ✅ Diálogo cerrado sin selección (no debería pasar con disableClose)
+        console.log('⚠️ Diálogo cerrado sin selección');
+      }
+    });
+  }
+
+  // ✅ NUEVO: Método para ir directo al resumen (para llevar)
+  private irDirectoAlResumen(): void {
+    console.log('🎯 Navegando directo al resumen del pedido (sin turno)');
+    this.router.navigate(['/cliente/resumen-pedido']);
   }
 
   // ✅ Handler para publicidad (igual que menu)
@@ -235,11 +292,11 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     }
 
     console.log('🎛️ Personalizando producto desde carrito:', item);
-    
+
     // ✅ USAR ÍNDICE REAL del array de productos del carrito
     const productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
     const productoReal = productosCarrito[index];
-    
+
     if (!productoReal) {
       console.error('❌ No se encontró el producto en el índice', index);
       return;
