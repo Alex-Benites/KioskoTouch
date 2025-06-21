@@ -10,25 +10,122 @@
   <main class="pago-content">
     <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
 
+    <!-- ✅ ICONO CON SPINNER PARA TARJETA -->
     <div class="pago-icon-wrapper">
       <img [src]="obtenerImagenTipo()" [alt]="obtenerTitulo()" class="pago-icon">
+      
+      <!-- ✅ SPINNER DE CARGA PARA PAGOS CON TARJETA -->
+      @if (tipoPago === 'tarjeta' && procesandoPago) {
+        <div class="spinner-overlay">
+          <div class="spinner"></div>
+        </div>
+      }
     </div>
 
     <h2 class="pago-title">{{ obtenerTitulo() }}</h2>
 
+    <!-- ✅ INFORMACIÓN DEL PAGO PARA TARJETA -->
+    @if (tipoPago === 'tarjeta') {
+      <div class="info-pago">
+        <!-- Monto Total -->
+        <div class="monto-total">
+          <span class="etiqueta">Monto a pagar:</span>
+          <span class="valor">${{ montoTotal | number:'1.2-2' }}</span>
+        </div>
+        
+        <!-- ✅ ESTADO DEL PAGO -->
+        <div class="estado-pago" [ngClass]="'estado-' + estadoPago.estado">
+          <div class="estado-icono">
+            @switch (estadoPago.estado) {
+              @case ('esperando') { <span>⏳</span> }
+              @case ('procesando') { <span class="icono-girando">🔄</span> }
+              @case ('exitoso') { <span>✅</span> }
+              @case ('error') { <span>❌</span> }
+              @default { <span>💳</span> }
+            }
+          </div>
+          <span class="estado-texto">{{ estadoPago.mensaje }}</span>
+        </div>
+
+        <!-- ✅ DETALLES DE TRANSACCIÓN EXITOSA -->
+        @if (ultimaTransaccion && estadoPago.estado === 'exitoso') {
+          <div class="detalles-transaccion">
+            @if (ultimaTransaccion.autorizacion) {
+              <div class="detalle-item">
+                <span class="etiqueta">Autorización:</span>
+                <span class="valor">{{ ultimaTransaccion.autorizacion }}</span>
+              </div>
+            }
+            @if (ultimaTransaccion.referencia) {
+              <div class="detalle-item">
+                <span class="etiqueta">Referencia:</span>
+                <span class="valor">{{ ultimaTransaccion.referencia }}</span>
+              </div>
+            }
+            @if (ultimaTransaccion.numeroTarjeta) {
+              <div class="detalle-item">
+                <span class="etiqueta">Tarjeta:</span>
+                <span class="valor">{{ ultimaTransaccion.numeroTarjeta }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ✅ INFORMACIÓN DE ORDEN COMPLETADA -->
     @if (tipoPago === 'completado') {
       <div class="orden-info">
         <p class="orden-subtitle">Orden</p>
         <p class="orden-number">#{{ numeroOrden }}</p>
+        
+        <!-- Mostrar detalles de autorización si está disponible -->
+        @if (ultimaTransaccion?.autorizacion) {
+          <div class="autorizacion-info">
+            <p class="autorizacion-label">Autorización:</p>
+            <p class="autorizacion-codigo">{{ ultimaTransaccion?.autorizacion }}</p>
+          </div>
+        }
       </div>
     }
 
+    <!-- ✅ INSTRUCCIONES DINÁMICAS -->
     <p class="pago-instructions">
       {{ obtenerInstrucciones() }}
     </p>
 
-    <button class="pago-button" (click)="continuar()">
-      {{ obtenerTextoBoton() }}
-    </button>
+    <!-- ✅ BOTONES CON ESTADOS -->
+    <div class="botones-container">
+      <button 
+        class="pago-button" 
+        [disabled]="procesandoPago"
+        [ngClass]="{
+          'btn-procesando': procesandoPago,
+          'btn-error': estadoPago.estado === 'error',
+          'btn-exitoso': estadoPago.estado === 'exitoso',
+          'btn-esperando': estadoPago.estado === 'esperando'
+        }"
+        (click)="continuar()">
+        {{ obtenerTextoBoton() }}
+      </button>
+
+      <!-- ✅ BOTÓN CANCELAR PARA PAGOS CON TARJETA -->
+      @if (tipoPago === 'tarjeta' && estadoPago.estado !== 'exitoso') {
+        <button 
+          class="btn-cancelar" 
+          [disabled]="procesandoPago"
+          (click)="cancelarPago()">
+          Cancelar
+        </button>
+      }
+    </div>
+
+    <!-- ✅ INDICADOR DE CONECTIVIDAD (opcional) -->
+    @if (tipoPago === 'tarjeta') {
+      <div class="conectividad-info">
+        <span class="conectividad-icono">📡</span>
+        <span class="conectividad-texto">PinPad conectado</span>
+      </div>
+    }
   </main>
 </div>
