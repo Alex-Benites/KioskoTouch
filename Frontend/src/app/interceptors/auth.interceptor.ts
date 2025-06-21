@@ -8,10 +8,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const isClientRoute = req.url.includes('/cliente');
+  const publicAPIs = [
+    '/cliente',                                   
+    '/api/marketing/publicidades/activas/',       
+    '/api/comun/estados/',                      
+    '/auth/login/'                                 
+  ];
 
-  if (isClientRoute) {
-    return next(req); 
+  const isPublicRoute = publicAPIs.some(api => req.url.includes(api));
+
+  if (isPublicRoute) {
+    return next(req);
   }
 
   const token = authService.getAccessToken();
