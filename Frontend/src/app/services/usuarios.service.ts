@@ -21,11 +21,11 @@ export class UsuariosService {
     return this.http.get(`${this.baseUrl}/empleados/lista/`);
   }
 
-obtenerEmpleado(id: number): Observable<any> {
-  console.log(`🔍 Solicitando empleado con ID: ${id}`);
-  console.log(`🔍 URL completa: ${this.baseUrl}/empleados/${id}/`);
-  return this.http.get<any>(`${this.baseUrl}/empleados/${id}/`);
-}
+  obtenerEmpleado(id: number): Observable<any> {
+    console.log(`🔍 Solicitando empleado con ID: ${id}`);
+    console.log(`🔍 URL completa: ${this.baseUrl}/empleados/${id}/`);
+    return this.http.get<any>(`${this.baseUrl}/empleados/${id}/`);
+  }
 
   actualizarEmpleado(id: number, empleadoData: any): Observable<any> {
   return this.http.put<any>(`${this.baseUrl}/empleados/${id}/`, empleadoData);

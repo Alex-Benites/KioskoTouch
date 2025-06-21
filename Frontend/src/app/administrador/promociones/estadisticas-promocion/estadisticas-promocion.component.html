@@ -1,1 +1,92 @@
-<p>estadisticas-promocion works!</p>
+<app-header-admin></app-header-admin>
+
+<div class="stats-container">
+  <!-- Encabezado de la página -->
+  <div class="page-header">
+    <h2 class="breadcrumb">GESTIÓN DE PROMOCIONES</h2>
+    <h1 class="page-title">Estadísticas de Promociones</h1>
+  </div>
+
+  <!-- Grid principal de estadísticas -->
+  <div class="stats-grid">
+    <!-- Ventas generadas -->
+    <div class="stat-card bar-chart-card">
+      <h3 class="card-title">Ventas generadas por promociones</h3>
+      <div class="bar-chart-container">
+        <div class="y-axis">
+          <span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>10</span><span>0</span>
+        </div>
+        <div class="bars">
+          <div class="bar-item" *ngFor="let promo of ventasPorPromocion">
+            <div class="bar" [style.height.%]="promo.valor" [style.background-color]="promo.color"></div>
+            <span class="bar-label">{{ promo.label }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promociones activas vs inactivas -->
+    <div class="stat-card doughnut-chart-card">
+      <h3 class="card-title">Promociones activas VS inactivas</h3>
+      <div class="doughnut-chart-content">
+        <div class="doughnut-chart"></div>
+        <div class="doughnut-legend">
+          <div class="legend-item" *ngFor="let promo of promocionesActivas">
+            <span class="legend-color" [style.background-color]="promo.color"></span>
+            <span class="legend-label">{{ promo.label }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de línea (placeholder) -->
+    <div class="stat-card line-chart-card">
+      <div class="card-header">
+        <select class="month-filter">
+          <option>Mes</option>
+          <option>Semana</option>
+          <option>Año</option>
+        </select>
+      </div>
+      <div class="line-chart-placeholder">
+        <img src="assets/admin/stats/line-chart-placeholder.svg" alt="Gráfico de línea">
+      </div>
+    </div>
+
+    <!-- Promociones más usadas -->
+    <div class="stat-card h-bar-chart-card">
+      <h3 class="card-title">Promociones más usadas</h3>
+      <div class="h-bar-chart-container">
+        <div class="h-bar-item" *ngFor="let promo of promocionesMasUsadas">
+          <div class="h-bar-info">
+            <span class="h-bar-label">{{ promo.nombre }}</span>
+            <span class="h-bar-sublabel">{{ promo.veces }} veces usada</span>
+          </div>
+          <div class="h-bar-track">
+            <div class="h-bar-fill" [style.width.%]="promo.porcentaje" [style.background-color]="promo.color"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="stat-card kpi-card">
+        <div class="kpi-circle">
+          <span>{{ porcentajeUsuarios }}%</span>
+        </div>
+        <p class="kpi-label">Usuarios que usaron las promociones</p>
+      </div>
+      <div class="stat-card kpi-card">
+        <p class="kpi-label">Ingreso adicionales generados</p>
+        <h2 class="kpi-value">{{ ingresoAdicional | currency:'USD':'symbol':'1.2-2' }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón para volver -->
+  <a class="back-link" (click)="volver()">
+    <i class="material-icons">chevron_left</i>
+    Atrás
+  </a>
+</div>
