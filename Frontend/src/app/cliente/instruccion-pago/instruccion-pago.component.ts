@@ -20,7 +20,12 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
 
   tipoPago: 'tarjeta' | 'efectivo' | 'completado' = 'tarjeta';
   numeroOrden: string = '21';
-  
+  cantidadProductos: number = 0;
+  subtotal: number = 0;
+  iva: number = 0;
+  numeroTurno?: string;
+  datosFacturacion?: any;
+
   // ✅ NUEVAS PROPIEDADES PARA PINPAD
   estadoPago: EstadoPago = { estado: 'esperando', mensaje: 'Listo para procesar pago' };
   montoTotal: number = 0;
@@ -39,7 +44,37 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       this.tipoPago = params['tipo'] || 'tarjeta';
       this.numeroOrden = params['orden'] || this.generarNumeroOrden();
-      this.montoTotal = parseFloat(params['monto']) || 10.50; // Monto por defecto
+      
+      // ✅ OBTENER MONTO REAL DEL RESUMEN
+      this.montoTotal = parseFloat(params['monto']) || 0;
+      this.cantidadProductos = parseInt(params['productos']) || 0;
+      this.subtotal = parseFloat(params['subtotal']) || 0;
+      this.iva = parseFloat(params['iva']) || 0;
+      this.numeroTurno = params['turno'] || undefined;
+      
+      // ✅ OBTENER DATOS DE FACTURACIÓN SI EXISTEN
+      if (params['facturacion']) {
+        try {
+          this.datosFacturacion = JSON.parse(params['facturacion']);
+        } catch (e) {
+          console.warn('⚠️ Error parseando datos de facturación');
+        }
+      }
+
+      console.log('📋 Datos recibidos del resumen:');
+      console.log('   💰 Monto total:', this.montoTotal);
+      console.log('   🛒 Cantidad productos:', this.cantidadProductos);
+      console.log('   💵 Subtotal:', this.subtotal);
+      console.log('   🏛️ IVA:', this.iva);
+      console.log('   🎫 Turno:', this.numeroTurno);
+      console.log('   📄 Facturación:', this.datosFacturacion);
+
+      // ✅ VALIDAR que tenemos monto válido
+      if (this.montoTotal <= 0) {
+        console.error('❌ Monto inválido recibido');
+        this.router.navigate(['/cliente/carrito']);
+        return;
+      }
     });
 
     // ✅ SUSCRIBIRSE AL ESTADO DEL PAGO
@@ -61,6 +96,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       this.verificarConectividad();
     }
   }
+
 
   ngOnDestroy(): void {
     if (this.estadoPagoSubscription) {

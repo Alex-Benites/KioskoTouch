@@ -462,3 +462,57 @@ $line-color: #e0e0e0;
     }
   }
 }
+// ✅ AGREGAR AL FINAL DEL SCSS:
+
+.info-pedido {
+  background: rgba(255,255,255,0.05);
+  padding: 1.2rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+
+  .info-titulo {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
+  }
+
+  .linea-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+
+    .etiqueta {
+      color: rgba(255,255,255,0.8);
+    }
+
+    .valor {
+      color: white;
+      font-weight: 500;
+    }
+  }
+
+  .linea-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    font-size: 1.1rem;
+    font-weight: bold;
+
+    .etiqueta {
+      color: white;
+    }
+
+    .valor {
+      color: #4CAF50;
+      font-size: 1.3rem;
+    }
+  }
+}
