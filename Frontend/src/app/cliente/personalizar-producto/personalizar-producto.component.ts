@@ -35,7 +35,7 @@ export class PersonalizarProductoComponent implements OnInit {
   personalizacionOriginal: PersonalizacionIngrediente[] = [];
   ingredientesSeleccionados: number[] = [];
   ingredientesAEliminar: number[] = [];
-  productoSeleccionado = true; 
+  productoSeleccionado = true;
 
   // ✅ AGREGAR flag para evitar ejecución múltiple
   procesandoConfirmacion = false;
@@ -164,16 +164,16 @@ export class PersonalizarProductoComponent implements OnInit {
 
     this.route.queryParams.subscribe(params => {
       this.modoEdicion = params['modo'] === 'editar';
-      
+
       if (this.modoEdicion) {
         this.carritoIndex = params['carritoIndex'] ? +params['carritoIndex'] : null;
         this.datosActuales = history.state?.datosActuales;
-        
+
         console.log('🔧 Modo edición activado:', {
           carritoIndex: this.carritoIndex,
           datosActuales: this.datosActuales
         });
-        
+
         this.precargarPersonalizaciones();
       }
     });
@@ -218,9 +218,9 @@ export class PersonalizarProductoComponent implements OnInit {
   private precargarPersonalizaciones(): void {
     if (this.datosActuales?.personalizacion) {
       this.personalizacionOriginal = [...this.datosActuales.personalizacion];
-      
+
       console.log('📋 Precargando personalizaciones:', this.personalizacionOriginal);
-      
+
       // ✅ ESPERAR a que se carguen los ingredientes y luego aplicar personalizaciones
       setTimeout(() => {
         this.aplicarPersonalizacionesAIngredientes();
@@ -232,20 +232,20 @@ export class PersonalizarProductoComponent implements OnInit {
   // ✅ REEMPLAZAR método aplicarPersonalizacionesAIngredientes
   private aplicarPersonalizacionesAIngredientes(): void {
     if (this.personalizacionOriginal.length === 0) return;
-    
+
     const ingredientes = this.ingredientesDisponibles();
-    
+
     console.log('🔧 === APLICANDO PERSONALIZACIONES ===');
     console.log('📋 Personalizaciones a aplicar:', this.personalizacionOriginal);
-    
+
     // ✅ CONTAR cuántas veces aparece cada ingrediente con cada acción
     const conteoIngredientes = new Map<number, { agregar: number, quitar: number }>();
-    
+
     this.personalizacionOriginal.forEach(p => {
       if (!conteoIngredientes.has(p.ingrediente_id)) {
         conteoIngredientes.set(p.ingrediente_id, { agregar: 0, quitar: 0 });
       }
-      
+
       const conteo = conteoIngredientes.get(p.ingrediente_id)!;
       if (p.accion === 'agregar') {
         conteo.agregar++;
@@ -253,13 +253,13 @@ export class PersonalizarProductoComponent implements OnInit {
         conteo.quitar++;
       }
     });
-    
+
     console.log('📊 Conteo de ingredientes:', [...conteoIngredientes.entries()].map(([id, conteo]) => ({
       ingrediente_id: id,
       agregar: conteo.agregar,
       quitar: conteo.quitar
     })));
-    
+
     // ✅ APLICAR los conteos a cada ingrediente
     conteoIngredientes.forEach((conteo, ingrediente_id) => {
       const ingrediente = ingredientes.find(ing => ing.id === ingrediente_id);
@@ -269,7 +269,7 @@ export class PersonalizarProductoComponent implements OnInit {
         console.log(`   - Cantidad inicial: ${ingrediente.cantidad}`);
         console.log(`   - Agregar: ${conteo.agregar}`);
         console.log(`   - Quitar: ${conteo.quitar}`);
-        
+
         if (ingrediente.esOriginal) {
           // ✅ INGREDIENTES ORIGINALES
           if (conteo.quitar > 0) {
@@ -293,11 +293,11 @@ export class PersonalizarProductoComponent implements OnInit {
         console.warn(`⚠️ No se encontró ingrediente con ID ${ingrediente_id}`);
       }
     });
-    
+
     // ✅ ACTUALIZAR el signal después de modificar
     this.ingredientesDisponibles.set([...ingredientes]);
-    
-    console.log('✅ Estado final de ingredientes:', 
+
+    console.log('✅ Estado final de ingredientes:',
       this.ingredientesDisponibles().map(ing => ({
         id: ing.id,
         nombre: ing.nombre,
@@ -314,6 +314,11 @@ export class PersonalizarProductoComponent implements OnInit {
 
   // ✅ MODIFICAR el método confirmarPersonalizacion
   confirmarPersonalizacion(): void {
+    if (!this.hayAlMenosUnIngredienteSeleccionado()) {
+      alert('Debes seleccionar al menos un ingrediente para agregar este producto.');
+      return;
+    }
+
     // ✅ PREVENIR ejecución múltiple
     if (this.procesandoConfirmacion) {
       console.log('⚠️ Ya se está procesando la confirmación - IGNORANDO');
@@ -342,7 +347,7 @@ export class PersonalizarProductoComponent implements OnInit {
       console.error('❌ Error en confirmación:', error);
       this.procesandoConfirmacion = false; // ✅ Resetear flag en caso de error
     }
-    
+
     console.log('🔧 === FIN CONFIRMACIÓN ===');
   }
 
@@ -350,7 +355,7 @@ export class PersonalizarProductoComponent implements OnInit {
   // ✅ NUEVO método para actualizar producto existente
   private actualizarProductoEnCarrito(): void {
     console.log('🔄 === INICIANDO ACTUALIZACIÓN ÚNICA ===');
-    
+
     if (!this.datosActuales || this.carritoIndex === null) {
       console.error('❌ Datos insuficientes para actualizar');
       this.procesandoConfirmacion = false;
@@ -387,7 +392,7 @@ export class PersonalizarProductoComponent implements OnInit {
 
     if (resultado !== false) {
       console.log('✅ Actualización exitosa - Navegando al carrito');
-      this.router.navigateByUrl('/cliente/carrito', { 
+      this.router.navigateByUrl('/cliente/carrito', {
         replaceUrl: true
       });
     } else {
@@ -431,7 +436,7 @@ export class PersonalizarProductoComponent implements OnInit {
         });
         console.log(`➖ Quitando ${ingrediente.nombre}`);
       }
-      
+
       // Ingredientes originales con cantidad extra
       else if (ingrediente.esOriginal && ingrediente.cantidad > 1) {
         const cantidadExtra = ingrediente.cantidad - 1;
@@ -448,7 +453,7 @@ export class PersonalizarProductoComponent implements OnInit {
 
     console.log('🔧 Personalizaciones generadas:', personalizaciones);
     console.log('🔧 === FIN GENERACIÓN PERSONALIZACIONES ===');
-    
+
     return personalizaciones;
   }
 
@@ -479,7 +484,7 @@ export class PersonalizarProductoComponent implements OnInit {
   calcularPrecioFinal(): number {
     // ✅ USAR el computed que YA calcula correctamente
     const precioCalculado = this.precioTotalCalculado();
-    
+
     console.log('💰 === CÁLCULO PRECIO FINAL ===');
     console.log('Precio base producto:', this.precioProducto);
     console.log('Cantidad:', this.cantidad());
@@ -487,7 +492,7 @@ export class PersonalizarProductoComponent implements OnInit {
     console.log('Precio unitario con extras:', this.precioUnitarioConIngredientes());
     console.log('PRECIO FINAL TOTAL:', precioCalculado);
     console.log('💰 === FIN CÁLCULO ===');
-    
+
     return precioCalculado;
   }
 
@@ -818,7 +823,7 @@ export class PersonalizarProductoComponent implements OnInit {
     console.log(`   - Es original: ${ingrediente.esOriginal}`);
     console.log(`   - Precio: $${ingrediente.precio || 0}`);
     console.log(`   - Seleccionado: ${ingrediente.seleccionado}`);
-    
+
     console.log('💰 === DEBUG DESPUÉS DE AGREGAR ===');
     console.log('Precio total calculado:', this.precioTotalCalculado());
     console.log('💰 === FIN DEBUG ===');
@@ -874,7 +879,7 @@ export class PersonalizarProductoComponent implements OnInit {
         });
         console.log(`➖ Quitando ${ing.nombre}`);
       }
-      
+
       // ✅ INGREDIENTES ORIGINALES CON CANTIDAD EXTRA
       else if (ing.esOriginal && ing.cantidad > 1) {
         const cantidadExtra = ing.cantidad - 1;
@@ -891,7 +896,11 @@ export class PersonalizarProductoComponent implements OnInit {
 
     console.log('🔧 Personalizaciones generadas:', personalizaciones);
     console.log('🔧 === FIN GENERACIÓN ===');
-    
+
     return personalizaciones;
+  }
+
+  public hayAlMenosUnIngredienteSeleccionado(): boolean {
+    return this.ingredientesDisponibles().some(ing => ing.cantidad > 0);
   }
 }

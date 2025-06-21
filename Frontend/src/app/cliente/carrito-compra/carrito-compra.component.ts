@@ -34,6 +34,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   private catalogoService = inject(CatalogoService);
   // ✅ AGREGAR: Inject del diálogo
   private dialog = inject(MatDialog);
+    // Lista de ingredientes cargados
+  ingredientes: any[] = [];
 
   // ✅ AGREGAR: Propiedad computed para obtener productos del carrito
   // productosCarrito = computed(() => {
@@ -65,6 +67,7 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
 
     // ✅ CARGAR información de productos
     this.cargarInformacionProductos();
+    this.cargarIngredientes(); // <-- Cargar ingredientes al iniciar
 
     console.log('🛒 CarritoCompraComponent inicializado');
     console.log('📋 Detalles del pedido (raw):', this.pedidoService.detalles());
@@ -290,6 +293,30 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   }
 
 
+  // Cargar ingredientes desde el servicio
+  private cargarIngredientes(): void {
+    this.catalogoService.getIngredientes().subscribe({
+      next: (ingredientes) => {
+        this.ingredientes = ingredientes;
+        console.log('🧅 Ingredientes cargados:', this.ingredientes);
+      },
+      error: (error) => {
+        console.error('❌ Error cargando ingredientes:', error);
+        this.ingredientes = [];
+      }
+    });
+  }
+
+  // Obtener ingrediente por ID real
+  obtenerIngredientePorId(ingredienteId: number): any {
+    const ingrediente = this.ingredientes.find(i => Number(i.id) === Number(ingredienteId));
+    if (!ingrediente) {
+      console.warn(`⚠️ Ingrediente con id ${ingredienteId} no encontrado en el array de ingredientes`, this.ingredientes);
+      return { nombre: `ingrediente desconocido (${ingredienteId})` };
+    }
+    return ingrediente;
+  }
+
   personalizarProducto(item: any, index: number): void {
     // ✅ VALIDAR que sea un producto, no un menú
     if (!item.producto_id) {
@@ -336,5 +363,5 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   }
 
 
-  
+
 }
