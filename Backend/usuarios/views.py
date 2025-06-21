@@ -1127,3 +1127,49 @@ def get_empleados_para_establecimiento(request):
         return Response({
             'error': f'Error al obtener empleados: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cambiar_password(request):
+    """
+    Cambiar contraseña del usuario autenticado
+    """
+    try:
+        data = request.data
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        
+        if not current_password or not new_password:
+            return Response({
+                'error': 'La contraseña actual y nueva son obligatorias'
+            }, status=400)
+        
+        # Verificar contraseña actual
+        user = request.user
+        if not user.check_password(current_password):
+            return Response({
+                'error': 'La contraseña actual es incorrecta'
+            }, status=400)
+        
+        # Validar nueva contraseña
+        if len(new_password) < 8:
+            return Response({
+                'error': 'La nueva contraseña debe tener al menos 8 caracteres'
+            }, status=400)
+        
+        # Cambiar contraseña
+        user.set_password(new_password)
+        user.save()
+        
+        print(f"✅ Contraseña cambiada para usuario: {user.username}")
+        
+        return Response({
+            'success': True,
+            'mensaje': 'Contraseña actualizada correctamente'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error cambiando contraseña: {str(e)}")
+        return Response({
+            'error': f'Error interno: {str(e)}'
+        }, status=500)

@@ -80,8 +80,8 @@ logout() {
     this.router.navigate(['/administrador/home']);
   }
 
-  goToProfile() {
-    console.log('📝 Ir al perfil del usuario:', this.currentUser?.username);
+  goToProfile(): void {
+    this.router.navigate(['/administrador/perfil']);
   }
 
   showUserInfo() {

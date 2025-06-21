@@ -16,6 +16,9 @@ urlpatterns = [
     # Password reset API endpoints
     path('auth/password-reset/', views.password_reset_request, name='password_reset_api'),
     path('auth/password-reset-confirm/<str:uidb64>/<str:token>/', views.password_reset_confirm, name='password_reset_confirm_api'),
+    
+    # URLs para cambiar contraseña desde panel de administración
+    path('cambiar-password/', views.cambiar_password, name='cambiar_password'),
 
     # URLs para grupos y roles
     path('grupos/', views.get_grupos_disponibles, name='grupos_disponibles'),

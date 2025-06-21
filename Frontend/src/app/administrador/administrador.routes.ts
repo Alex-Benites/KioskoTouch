@@ -61,6 +61,7 @@ import { EditarEliminarKioskoTouchComponent } from './kiosko-touch/editar-elimin
 // 🏷️ Componentes de categorías
 import { GestionCategoriasComponent } from './gestion-categorias/gestion-categorias.component';
 import { CrearCategoriaComponent } from './gestion-categorias/crear-categoria/crear-categoria.component';
+import { PerfilUsuarioComponent } from './perfil-usuario/perfil-usuario.component';
 
 export const administradorRoutes: Routes = [
   // 🔓 Rutas públicas
@@ -314,6 +315,11 @@ export const administradorRoutes: Routes = [
     path: 'gestion-categorias/crear/:id',
     component: CrearCategoriaComponent,
     canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])] 
+  },
+  {
+  path: 'perfil',
+  component: PerfilUsuarioComponent,
+  canActivate: [authGuard]
   },
 
   // ❌ Página de no autorizado

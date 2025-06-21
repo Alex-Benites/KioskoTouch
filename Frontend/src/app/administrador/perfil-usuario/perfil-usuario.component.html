@@ -1,0 +1,201 @@
+<app-header-admin></app-header-admin>
+
+<div class="perfil-container">
+  <div class="page-header">
+    <h1>Mi Perfil</h1>
+    <p>Información personal y cambio de contraseña</p>
+  </div>
+
+  <div class="content-grid">
+    
+    <!-- ✅ INFORMACIÓN PERSONAL (Solo lectura) -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person</mat-icon>
+          Información Personal
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="info-grid">
+          
+          <!-- Usuario del sistema -->
+          <div class="info-item">
+            <label>Usuario</label>
+            <span>{{ currentUser?.username || 'No disponible' }}</span>
+          </div>
+          
+          <!-- Email -->
+          <div class="info-item">
+            <label>Email</label>
+            <span>{{ currentUser?.email || 'No disponible' }}</span>
+          </div>
+          
+          <!-- Nombre completo del empleado -->
+          @if (empleado) {
+            <div class="info-item">
+              <label>Nombre completo</label>
+              <span>{{ nombreCompleto }}</span>
+            </div>
+          }
+                    
+          <!-- Cédula -->
+          @if (empleado && empleado.cedula) {
+            <div class="info-item">
+              <label>Cédula</label>
+              <span>{{ empleado.cedula }}</span>
+            </div>
+          }
+          
+          <!-- Teléfono -->
+          @if (empleado && empleado.telefono) {
+            <div class="info-item">
+              <label>Teléfono</label>
+              <span>{{ empleado.telefono }}</span>
+            </div>
+          }
+          
+          <!-- Sexo -->
+          @if (empleado && empleado.sexo) {
+            <div class="info-item">
+              <label>Sexo</label>
+              <span>{{ sexoEmpleado }}</span>
+            </div>
+          }
+          
+          <!-- Rol -->
+          <div class="info-item">
+            <label>Rol</label>
+            <span class="rol-badge">{{ rolUsuario }}</span>
+          </div>
+          
+          <!-- Permisos administrativos -->
+          @if (currentUser?.is_staff || currentUser?.is_superuser) {
+            <div class="info-item">
+              <label>Permisos especiales</label>
+              <div class="badges-container">
+                @if (currentUser?.is_staff) {
+                  <span class="permission-badge staff">Staff</span>
+                }
+                @if (currentUser?.is_superuser) {
+                  <span class="permission-badge superuser">Superusuario</span>
+                }
+              </div>
+            </div>
+          }
+          
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ✅ CAMBIO DE CONTRASEÑA -->
+    <mat-card class="password-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>lock</mat-icon>
+          Cambiar Contraseña
+        </mat-card-title>
+        <mat-card-subtitle>
+          Para tu seguridad, cambia tu contraseña regularmente
+        </mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+          
+          <!-- Contraseña actual -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña actual</mat-label>
+            <input 
+              matInput 
+              formControlName="currentPassword"
+              [type]="hideCurrentPassword ? 'password' : 'text'"
+              autocomplete="current-password">
+            <mat-icon 
+              matSuffix 
+              (click)="hideCurrentPassword = !hideCurrentPassword"
+              class="password-toggle">
+              {{ hideCurrentPassword ? 'visibility' : 'visibility_off' }}
+            </mat-icon>
+            @if (currentPassword?.hasError('required')) {
+              <mat-error>La contraseña actual es obligatoria</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Nueva contraseña -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nueva contraseña</mat-label>
+            <input 
+              matInput 
+              formControlName="newPassword"
+              [type]="hideNewPassword ? 'password' : 'text'"
+              autocomplete="new-password">
+            <mat-icon 
+              matSuffix 
+              (click)="hideNewPassword = !hideNewPassword"
+              class="password-toggle">
+              {{ hideNewPassword ? 'visibility' : 'visibility_off' }}
+            </mat-icon>
+            <mat-hint>Mínimo 8 caracteres</mat-hint>
+            @if (newPassword?.hasError('required')) {
+              <mat-error>La nueva contraseña es obligatoria</mat-error>
+            }
+            @if (newPassword?.hasError('minlength')) {
+              <mat-error>La contraseña debe tener al menos 8 caracteres</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Confirmar contraseña -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Confirmar nueva contraseña</mat-label>
+            <input 
+              matInput 
+              formControlName="confirmPassword"
+              [type]="hideConfirmPassword ? 'password' : 'text'"
+              autocomplete="new-password">
+            <mat-icon 
+              matSuffix 
+              (click)="hideConfirmPassword = !hideConfirmPassword"
+              class="password-toggle">
+              {{ hideConfirmPassword ? 'visibility' : 'visibility_off' }}
+            </mat-icon>
+            @if (confirmPassword?.hasError('required')) {
+              <mat-error>Confirma tu nueva contraseña</mat-error>
+            }
+            @if (confirmPassword?.hasError('mismatch')) {
+              <mat-error>Las contraseñas no coinciden</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Botones -->
+          <div class="form-actions">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              type="submit"
+              [disabled]="passwordForm.invalid || loading">
+              @if (loading) {
+                <mat-icon>hourglass_empty</mat-icon>
+              } @else {
+                <mat-icon>save</mat-icon>
+              }
+              {{ loading ? 'Cambiando...' : 'Cambiar Contraseña' }}
+            </button>
+            
+            <button 
+              mat-button 
+              type="button" 
+              (click)="passwordForm.reset()"
+              [disabled]="loading">
+              <mat-icon>clear</mat-icon>
+              Limpiar
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/home'"></app-footer-admin>

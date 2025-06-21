@@ -35,5 +35,9 @@ export class UsuariosService {
   return this.http.delete<any>(`${this.baseUrl}/empleados/${id}/eliminar/`);
   }
 
+  cambiarPassword(passwordData: {current_password: string, new_password: string}): Observable<any> {
+    return this.http.post(`${this.baseUrl}/cambiar-password/`, passwordData);
+  }
+
 
 }

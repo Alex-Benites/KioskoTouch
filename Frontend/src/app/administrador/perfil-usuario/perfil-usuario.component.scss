@@ -1,0 +1,307 @@
+.perfil-container {
+  padding: 2rem 4rem;
+  background-color: #f5f5f5;
+  min-height: calc(100vh - 140px);
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+}
+
+.page-header {
+  margin-bottom: 2rem;
+  text-align: center;
+  
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+  }
+  
+  p {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
+  }
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 2.5rem;
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.info-card,
+.password-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  // ✅ AÑADIDO: Para que el border-radius de la tarjeta contenga al header
+  overflow: hidden;
+  
+  mat-card-header {
+    background: linear-gradient(135deg, #DD453A 0%, #e96b62 100%);
+    color: white;
+    // ✅ CAMBIADO: Sin márgenes para que ocupe el ancho de la tarjeta
+    margin: 0;
+    padding: 1.5rem 2rem;
+    // ✅ CAMBIADO: El header ya no necesita su propio radius
+    border-radius: 0;
+    
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0;
+      
+      mat-icon {
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+    
+    mat-card-subtitle {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  
+  label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  span {
+    font-size: 1.1rem;
+    color: #333;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+}
+
+.rol-badge {
+  display: inline-block !important;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%) !important;
+  color: white !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  text-align: center;
+  border: none !important;
+  width: fit-content;
+}
+
+.badges-container {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.permission-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  
+  &.staff {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: white;
+  }
+  
+  &.superuser {
+    background: linear-gradient(135deg, #7a28cb 0%, #5d1f99 100%);
+    color: white;
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.password-toggle {
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: #DD453A;
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  
+  button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    
+    &[color="primary"] {
+      background: linear-gradient(135deg, #DD453A 0%, #e96b62 100%);
+      color: white;
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #c53929 0%, #d85a51 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(221, 69, 58, 0.3);
+      }
+      
+      &:disabled {
+        background: #ccc;
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+    }
+    
+    mat-icon {
+      font-size: 1.2rem;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+.back-section {
+  text-align: center;
+  margin-top: 2rem;
+  
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    color: #666;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: #DD453A;
+      background: rgba(221, 69, 58, 0.05);
+    }
+    
+    mat-icon {
+      font-size: 1.2rem;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
+}
+
+::ng-deep {
+  // ✅ AÑADIDO: Quitar padding por defecto de la tarjeta y añadirlo al contenido
+  .perfil-container .mat-mdc-card {
+    padding: 0 !important;
+  }
+  .perfil-container .mat-mdc-card-content {
+    padding: 2rem;
+  }
+
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #fff;
+    }
+    
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(221, 69, 58, 0.05);
+    }
+    
+    &.mat-focused {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: #DD453A !important;
+      }
+      
+      .mat-mdc-form-field-label {
+        color: #DD453A !important;
+      }
+    }
+  }
+  
+  .success-snackbar {
+    background: #4caf50 !important;
+    color: white !important;
+  }
+  
+  .error-snackbar {
+    background: #f44336 !important;
+    color: white !important;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-grid {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.info-card,
+.password-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+}
