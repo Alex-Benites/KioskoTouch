@@ -74,7 +74,7 @@ export class CatalogoService {
   // Actualizar el método getFullImageUrl:
   getFullImageUrl(imagenUrl: string | undefined): string {
     if (!imagenUrl) {
-      return 'assets/placeholder-ingrediente.png';
+      return '';
     }
 
     // Si ya es una URL completa, devolverla tal como está

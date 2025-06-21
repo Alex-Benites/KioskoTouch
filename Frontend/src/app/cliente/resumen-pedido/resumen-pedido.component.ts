@@ -131,17 +131,15 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   }
 
   // ✅ Obtener imagen del producto
-  obtenerImagenProducto(item: any): string {
+  obtenerImagenProducto(item: any): string | null {
     const id = item.producto_id || item.menu_id;
     const productoInfo = this.productosInfo.get(id);
 
     if (productoInfo && productoInfo.imagen_url) {
-      return productoInfo.imagen_url.startsWith('http')
-        ? productoInfo.imagen_url
-        : `http://localhost:8000${productoInfo.imagen_url}`;
+      return this.catalogoService.getFullImageUrl(productoInfo.imagen_url);
     }
 
-    return 'assets/cliente/default-product.png';
+    return null;
   }
 
   // ✅ Verificar si tiene personalizaciones
