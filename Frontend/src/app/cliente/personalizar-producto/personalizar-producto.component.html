@@ -88,7 +88,7 @@
         <div *ngIf="ingredientesCargados() && tieneIngredientesPersonalizables()" class="ingredientes-section">
           <h3 class="section-title">🥗 Personaliza tus ingredientes</h3>
           <p class="section-subtitle">Agrega o quita ingredientes según tu preferencia</p>
-          
+
           <!-- Grid de ingredientes -->
           <div class="ingredientes-grid">
             <div
@@ -117,18 +117,18 @@
                     </span>
                     <!-- Mostrar cantidad extra cuando es mayor a 1 -->
                     <span *ngIf="ingrediente.cantidad > 1" class="incluido-con-extra">
-                      Incluido + {{ ingrediente.cantidad - 1 }} extra 
+                      Incluido + {{ ingrediente.cantidad - 1 }} extra
                       <span class="costo-extra">(+${{ ((ingrediente.cantidad - 1) * (ingrediente.precio || 0)).toFixed(2) }})</span>
                     </span>
                   </span>
-                  
+
                   <!-- ✅ Para ingredientes NO incluidos -->
                   <span *ngIf="!ingrediente.esOriginal" class="precio-adicional">
                     <span *ngIf="ingrediente.cantidad === 0" class="no-seleccionado">
                       +${{ (ingrediente.precio || 0).toFixed(2) }} c/u
                     </span>
                     <span *ngIf="ingrediente.cantidad > 0" class="seleccionado-adicional">
-                      {{ ingrediente.cantidad }} x ${{ (ingrediente.precio || 0).toFixed(2) }} = 
+                      {{ ingrediente.cantidad }} x ${{ (ingrediente.precio || 0).toFixed(2) }} =
                       <span class="total-ingrediente">+${{ (ingrediente.cantidad * (ingrediente.precio || 0)).toFixed(2) }}</span>
                     </span>
                   </span>
@@ -138,18 +138,18 @@
               <!-- ✅ NUEVO: Controles de cantidad -->
               <div class="ingrediente-controles">
                 <!-- Botón disminuir -->
-                <button 
+                <button
                   class="control-btn disminuir"
                   (click)="disminuirIngrediente(ingrediente)"
                   [disabled]="ingrediente.cantidad <= 0">
                   -
                 </button>
-                
+
                 <!-- Cantidad actual -->
                 <span class="cantidad-ingrediente">{{ ingrediente.cantidad }}</span>
-                
+
                 <!-- Botón aumentar -->
-                <button 
+                <button
                   class="control-btn aumentar"
                   (click)="aumentarIngrediente(ingrediente)">
                   +
@@ -170,13 +170,13 @@
         {{ pedidoService.cantidadItems() }}
       </span>
     </div>
-    
+
     <div class="order-summary-content">
       <div class="precio-actual">
         <span class="precio-label">Este producto:</span>
         <span class="precio-valor">${{ precioTotalCalculado().toFixed(2) }}</span>
       </div>
-      
+
       <div class="total-pedido" *ngIf="pedidoService.cantidadItems() > 0">
         <span class="total-label">Total del pedido:</span>
         <span class="total-valor">${{ (pedidoService.total() + precioTotalCalculado()).toFixed(2) }}</span>
@@ -188,8 +188,10 @@
         <i class="material-icons">restaurant_menu</i>
         Seguir Comprando
       </button>
-      
-      <button class="btn-principal" (click)="confirmarPersonalizacion()" [disabled]="procesandoConfirmacion">
+
+      <button class="btn-principal"
+        (click)="confirmarPersonalizacion()"
+        [disabled]="procesandoConfirmacion || !hayAlMenosUnIngredienteSeleccionado()">
         <i class="material-icons" *ngIf="!procesandoConfirmacion">add_shopping_cart</i>
         <i class="material-icons spin" *ngIf="procesandoConfirmacion">refresh</i>
         <span *ngIf="!procesandoConfirmacion">Añadir ${{ precioTotalCalculado().toFixed(2) }}</span>
@@ -204,12 +206,14 @@
       <i class="material-icons">arrow_back</i>
       Volver al Carrito
     </button>
-    
+
     <div class="precio-display">
       ${{ precioTotalCalculado().toFixed(2) }}
     </div>
-    
-    <button class="btn-actualizar" (click)="confirmarPersonalizacion()" [disabled]="procesandoConfirmacion">
+
+    <button class="btn-actualizar"
+        (click)="confirmarPersonalizacion()"
+        [disabled]="procesandoConfirmacion || !hayAlMenosUnIngredienteSeleccionado()">
       <i class="material-icons" *ngIf="!procesandoConfirmacion">update</i>
       <i class="material-icons spin" *ngIf="procesandoConfirmacion">refresh</i>
       <span *ngIf="!procesandoConfirmacion">Actualizar</span>

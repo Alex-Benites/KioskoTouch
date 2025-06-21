@@ -40,31 +40,28 @@
           <div class="producto-info">
             <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
 
-            <!-- Si no tiene personalizaciones, mostrar "Personalizar" como opción -->
-            <div *ngIf="!tienePersonalizaciones(item)" class="producto-sin-personalizaciones">
-
-              <!-- ✅ AGREGAR ESTE BOTÓN -->
-              <button
-                class="btn-personalizar-inline"
-                (click)="personalizarProducto(item, i)">
-                  Personalizar
-              </button>
-            </div>
-
-            <!-- ✅ MOSTRAR personalizaciones si las tiene -->
-            <div *ngIf="tienePersonalizaciones(item)" class="producto-personalizaciones">
-
-              <!-- ✅ AGREGAR ESTE BOTÓN -->
-              <button
-                class="btn-modificar-personalizacion"
-                (click)="personalizarProducto(item, i)">
-                  Personalizar
-              </button>
+            <!-- Mostrar personalizaciones debajo del nombre -->
+            <div class="producto-personalizaciones" *ngIf="item.personalizacion && item.personalizacion.length > 0">
+              <ng-container *ngFor="let ingr of item.personalizacion">
+                <span
+                  class="personalizacion"
+                  [ngClass]="{
+                    'personalizacion-agregado': ingr.accion === 'agregar',
+                    'personalizacion-removido': ingr.accion === 'quitar'
+                  }">
+                  {{ ingr.accion === 'agregar' ? 'extra' : 'sin' }} {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}
+                </span>
+              </ng-container>
             </div>
           </div>
 
-          <!-- Controles de cantidad -->
+          <!-- Controles y botón Personalizar -->
           <div class="producto-controles">
+            <button
+              class="btn-personalizar-inline"
+              (click)="personalizarProducto(item, i)">
+                Personalizar
+            </button>
             <button
               class="control-btn disminuir"
               (click)="disminuirCantidad(i)"

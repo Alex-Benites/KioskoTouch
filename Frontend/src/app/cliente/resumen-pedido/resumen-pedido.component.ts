@@ -255,26 +255,40 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ NUEVO: Validar datos de facturación si están habilitados
+    // ✅ VALIDAR datos de facturación si están habilitados
     if (!this.validarDatosFacturacion()) {
       return;
     }
 
     console.log('✅ Confirmando pedido...');
     console.log('💳 Método de pago:', this.metodoPagoSeleccionado);
+    console.log('💰 Total a cobrar:', this.totalPedido);
 
-    // ✅ NUEVO: Incluir datos de facturación si están completos
+    // ✅ PREPARAR queryParams con el MONTO REAL del carrito
     const queryParams: any = {
       tipo: this.metodoPagoSeleccionado,
+      monto: this.totalPedido.toFixed(2), // ✅ MONTO REAL DEL CARRITO
       orden: this.generarNumeroOrden(),
-      total: this.totalPedido
+      productos: this.cantidadItems,
+      subtotal: this.calcularSubtotal().toFixed(2),
+      iva: this.calcularIVA().toFixed(2)
     };
 
+    // ✅ AGREGAR datos de turno si existe
+    if (this.tieneTurno) {
+      queryParams.turno = this.numeroTurno;
+      console.log('🎫 Incluye turno:', this.numeroTurno);
+    }
+
+    // ✅ AGREGAR datos de facturación si están completos
     if (this.mostrarDatosFacturacion) {
       queryParams.facturacion = JSON.stringify(this.datosFacturacion);
       console.log('📄 Datos de facturación:', this.datosFacturacion);
     }
 
+    console.log('📋 Enviando a InstruccionPago con parámetros:', queryParams);
+
+    // ✅ NAVEGAR a instrucción de pago CON TODOS LOS DATOS
     this.router.navigate(['/cliente/instruccion-pago'], {
       queryParams
     });
