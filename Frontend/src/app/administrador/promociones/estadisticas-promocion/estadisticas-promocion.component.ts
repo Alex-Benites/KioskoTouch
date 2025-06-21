@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
+import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 
 @Component({
   selector: 'app-estadisticas-promocion',
@@ -10,7 +11,8 @@ import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.
     CommonModule,
     RouterLink,
     HeaderAdminComponent,
-    CurrencyPipe
+    CurrencyPipe,
+    FooterAdminComponent
   ],
   templateUrl: './estadisticas-promocion.component.html',
   styleUrl: './estadisticas-promocion.component.scss'
