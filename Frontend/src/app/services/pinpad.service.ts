@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 import { throwError } from 'rxjs';
@@ -45,34 +45,25 @@ export class PinpadService {
 
   public estadoPago$ = this.estadoPagoSubject.asObservable();
 
-  private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json'
-    })
-  };
-
   constructor(private http: HttpClient) { }
 
-  /**
-   * ✅ PROCESAR PAGO CON TARJETA
-   */
   procesarPago(monto: number): Observable<PagoResponse> {
     this.actualizarEstado('procesando', 'Procesando pago con tarjeta...');
 
     const request: PagoRequest = {
-      tipoTransaccion: 1, // 1 = Venta
+      tipoTransaccion: 1,
       redAdquirente: "001",
       montoTotal: this.formatearMonto(monto),
-      baseImponible: this.formatearMonto(monto * 0.893), // 89.3% base imponible
+      baseImponible: this.formatearMonto(monto * 0.893),
       base0: "000000000000",
-      iva: this.formatearMonto(monto * 0.107), // 10.7% IVA
+      iva: this.formatearMonto(monto * 0.107),
       servicio: "000000000000",
       propina: "000000000000"
     };
 
-    return this.http.post<PagoResponse>(`${this.apiUrl}/pagar`, request, this.httpOptions)
+    return this.http.post<PagoResponse>(`${this.apiUrl}/pagar`, request)
       .pipe(
-        timeout(120000), // 2 minutos timeout
+        timeout(120000),
         catchError(error => {
           this.actualizarEstado('error', `Error de comunicación: ${error.message}`);
           return throwError(error);
@@ -80,15 +71,12 @@ export class PinpadService {
       );
   }
 
-  /**
-   * ✅ CONSULTAR TARJETA (sin cobrar)
-   */
   consultarTarjeta(): Observable<PagoResponse> {
     this.actualizarEstado('procesando', 'Consultando tarjeta...');
 
-    return this.http.post<PagoResponse>(`${this.apiUrl}/consultar-tarjeta`, {}, this.httpOptions)
+    return this.http.post<PagoResponse>(`${this.apiUrl}/consultar-tarjeta`, {})
       .pipe(
-        timeout(60000), // 1 minuto timeout
+        timeout(60000),
         catchError(error => {
           this.actualizarEstado('error', `Error consultando tarjeta: ${error.message}`);
           return throwError(error);
@@ -96,20 +84,17 @@ export class PinpadService {
       );
   }
 
-  /**
-   * ✅ ANULAR TRANSACCIÓN
-   */
   anularTransaccion(referencia: string, autorizacion: string, monto: number): Observable<PagoResponse> {
     this.actualizarEstado('procesando', 'Anulando transacción...');
 
     const request = {
-      tipoTransaccion: 3, // 3 = Anulación
+      tipoTransaccion: 3,
       referencia: referencia,
       autorizacion: autorizacion,
       montoTotal: this.formatearMonto(monto)
     };
 
-    return this.http.post<PagoResponse>(`${this.apiUrl}/anular`, request, this.httpOptions)
+    return this.http.post<PagoResponse>(`${this.apiUrl}/anular`, request)
       .pipe(
         timeout(60000),
         catchError(error => {
@@ -119,9 +104,6 @@ export class PinpadService {
       );
   }
 
-  /**
-   * ✅ VERIFICAR CONECTIVIDAD
-   */
   verificarConectividad(): Observable<string> {
     return this.http.get(`${this.apiUrl}/health`, { responseType: 'text' })
       .pipe(
@@ -132,32 +114,19 @@ export class PinpadService {
       );
   }
 
-  /**
-   * ✅ FORMATEAR MONTO A FORMATO DATAFAST
-   * Convierte 10.50 a "000000001050"
-   */
   private formatearMonto(monto: number): string {
     const centavos = Math.round(monto * 100);
     return centavos.toString().padStart(12, '0');
   }
 
-  /**
-   * ✅ ACTUALIZAR ESTADO DEL PAGO
-   */
   private actualizarEstado(estado: EstadoPago['estado'], mensaje: string, respuesta?: PagoResponse): void {
     this.estadoPagoSubject.next({ estado, mensaje, respuesta });
   }
 
-  /**
-   * ✅ OBTENER ESTADO ACTUAL
-   */
   obtenerEstadoActual(): EstadoPago {
     return this.estadoPagoSubject.value;
   }
 
-  /**
-   * ✅ REINICIAR ESTADO
-   */
   reiniciarEstado(): void {
     this.actualizarEstado('esperando', 'Listo para procesar pago');
   }
