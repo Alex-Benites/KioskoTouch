@@ -955,7 +955,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
                     'categoria': categoria_safe,
                     'imagen_url': imagen_url,
                     'seleccionado': info_producto['seleccionado'],
-                    'es_original': info_producto['seleccionado'],
+                    'es_base': info_producto['es_base'],
                     'cantidad': info_producto['cantidad']
                 })
 

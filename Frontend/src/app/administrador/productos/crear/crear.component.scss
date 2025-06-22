@@ -135,307 +135,663 @@ mat-error {
   font-size: 0.75em;
 }
 
-
+// ✅ SECCIÓN DE INGREDIENTES MEJORADA
 .ingredientes-section {
   margin-top: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   h2 {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     color: #333;
     font-size: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 0.5rem;
   }
 }
 
 .ingredientes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 1rem;
 }
 
 .ingrediente-card {
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 0.75rem;
+  position: relative;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 1rem;
+  background: white;
   transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 
   &:hover {
     border-color: #007bff;
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    transform: translateY(-2px);
   }
 
-  .ingrediente-checkbox {
-    width: 100%;
+  // ✅ CHECKBOX DE INGREDIENTE BASE MEJORADO
+  .ingrediente-base-checkbox {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    
+    .mat-mdc-checkbox {
+      transform: scale(0.85);
+      
+      .mdc-checkbox__background {
+        border-color: #ff9800 !important;
+        border-width: 2px !important;
+      }
+      
+      &.mat-mdc-checkbox-checked .mdc-checkbox__background {
+        background-color: #4CAF50 !important;
+        border-color: #4CAF50 !important;
+      }
+    }
+    
+    .base-label {
+      font-size: 9px;
+      font-weight: bold;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+      line-height: 1;
+      
+      &.active {
+        color: #4CAF50;
+      }
+    }
+  }
+  
+  // ✅ CONTENIDO DEL INGREDIENTE MEJORADO
+  .ingrediente-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-right: 60px; // Espacio para el checkbox
+  }
+  
+  .ingrediente-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
 
-    ::ng-deep .mat-checkbox-layout {
+    img {
       width: 100%;
-      white-space: normal;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+  }
+
+  .ingrediente-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0; // Para permitir text-overflow
+  }
+
+  .ingrediente-nombre {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.3;
+    margin-bottom: 2px;
+    word-wrap: break-word;
+  }
+
+  .ingrediente-precio {
+    font-size: 12px;
+    color: #28a745;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    
+    &.tachado {
+      text-decoration: line-through;
+      opacity: 0.6;
+      color: #6c757d;
+    }
+  }
+  
+  // ✅ ESTADO DEL INGREDIENTE MEJORADO
+  .ingrediente-estado {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+    width: fit-content;
+    letter-spacing: 0.3px;
+    
+    &.es-base {
+      background-color: rgba(76, 175, 80, 0.15);
+      color: #4CAF50;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    &.es-opcional {
+      background-color: rgba(108, 117, 125, 0.15);
+      color: #6c757d;
+      border: 1px solid rgba(108, 117, 125, 0.3);
+    }
+  }
+  
+  // ✅ CONTROLES DE CANTIDAD MEJORADOS
+  .cantidad-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+  
+  .cantidad-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &.cantidad-btn-minus {
+      background: #dc3545;
+      color: white;
+      
+      &:hover:not(:disabled) {
+        background: #c82333;
+        transform: scale(1.1);
+      }
+      
+      &:disabled {
+        background: #e9ecef;
+        color: #6c757d;
+        cursor: not-allowed;
+      }
+    }
+    
+    &.cantidad-btn-plus {
+      background: #28a745;
+      color: white;
+      
+      &:hover {
+        background: #218838;
+        transform: scale(1.1);
+      }
+    }
+  }
+  
+  .cantidad-display {
+    font-size: 16px;
+    font-weight: bold;
+    color: #495057;
+    min-width: 24px;
+    text-align: center;
+    padding: 4px 8px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+  }
+  
+  // ✅ ESTADOS VISUALES DE LA TARJETA MEJORADOS
+  &.selected {
+    border-color: #007bff;
+    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.25);
+    
+    .ingrediente-image img {
+      transform: scale(1.05);
+    }
+    
+    .cantidad-controls {
+      background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+      border-color: #007bff;
+    }
+    
+    // Estado especial cuando es base Y está seleccionado
+    &:has(.ingrediente-base-checkbox .mat-mdc-checkbox-checked) {
+      border-color: #4CAF50;
+      box-shadow: 0 4px 16px rgba(76, 175, 80, 0.25);
+      
+      .ingrediente-content {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, transparent 100%);
+        border-radius: 8px;
+        padding: 8px;
+        margin: -4px -8px 8px -8px;
+      }
+      
+      .cantidad-controls {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, #f8f9fa 100%);
+        border-color: #4CAF50;
+      }
     }
   }
 }
 
-.ingrediente-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+// ✅ MENSAJE CUANDO NO HAY INGREDIENTES
+.no-ingredientes {
   text-align: center;
-}
-
-.ingrediente-image {
-  width: 50px;          /* ← Reducido de 60px a 50px */
-  height: 50px;         /* ← Reducido de 60px a 50px */
-  border-radius: 50%;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
-  border: 2px solid #f0f0f0;
-  flex-shrink: 0;       /* ← Evita que se deforme */
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    max-width: 50px;     /* ← Fuerza el tamaño máximo */
-    max-height: 50px;    /* ← Fuerza el tamaño máximo */
+  padding: 3rem 2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+  
+  p {
+    color: #6c757d;
+    font-size: 16px;
+    margin: 0;
+    font-style: italic;
   }
 }
 
-.ingrediente-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.ingrediente-nombre {
-  font-weight: 500;
-  color: #333;
-  font-size: 0.85rem;   /* ← Reducido ligeramente */
-  line-height: 1.2;
-}
-
-.ingrediente-precio {
-  font-size: 0.75rem;   /* ← Reducido de 0.8rem */
-  color: #28a745;
-  font-weight: 600;
-}
-
-.no-ingredientes {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-  font-style: italic;
-}
-
-/* Estilos para la sección de tamaños */
-
+// ✅ SECCIÓN DE TAMAÑOS EMBELLECIDA
 .tamanos-section {
-  margin: 20px 0;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
 }
 
-.tamanos-section h2 {
-  color: #333;
-  margin-bottom: 16px;
-  font-weight: 500;
-  font-size: 1.2rem;
+.tamanos-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  
+  h2 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.8rem;
+    font-weight: 600;
+  }
+  
+  .tamanos-description {
+    color: #666;
+    font-size: 1rem;
+    margin: 0;
+    font-style: italic;
+  }
 }
 
-.tamanos-toggle {
-  margin-bottom: 20px;
+.tamanos-toggle-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: #007bff;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+  }
+  
+  .tamanos-toggle-checkbox {
+    .mat-mdc-checkbox {
+      .mdc-checkbox__background {
+        border-color: #007bff !important;
+      }
+      
+      &.mat-mdc-checkbox-checked .mdc-checkbox__background {
+        background-color: #007bff !important;
+        border-color: #007bff !important;
+      }
+    }
+    
+    .toggle-text {
+      font-weight: 500;
+      color: #495057;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.tamanos-content {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tamanos-info-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #fef9e7 100%);
+  border: 1px solid #ffeaa7;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  
+  .info-icon {
+    color: #856404;
+    font-size: 24px;
+  }
+  
+  .info-text {
+    flex: 1;
+    
+    p {
+      margin: 0.25rem 0;
+      color: #856404;
+      font-size: 0.9rem;
+      
+      strong {
+        font-weight: 600;
+      }
+    }
+  }
 }
 
 .tamanos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .tamano-card {
   background: white;
-  border-radius: 6px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.tamano-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.tamano-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.tamano-nombre {
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 8px;
-  font-size: 1rem;
-}
-
-.tamano-precio-field {
-  width: 100%;
-}
-
-.precio-deshabilitado {
-  opacity: 0.7;
-
-  input {
-    color: #999;
-    background-color: #f5f5f5;
-  }
-
-  ::placeholder {
-    color: #ccc;
-  }
-}
-
-
-// ✅ NUEVOS ESTILOS PARA CONTROLES DE CANTIDAD
-.cantidad-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 4px;
-}
-
-.cantidad-btn {
-  width: 32px;
-  height: 32px;
-  border: 2px solid #ddd;
-  background: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #333;
-
-  &:hover:not(:disabled) {
-    border-color: #007bff;
-    background: #f8f9fa;
-    transform: scale(1.05);
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.95);
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    background: #f5f5f5;
-    color: #999;
-  }
-}
-
-.cantidad-btn-minus {
-  border-color: #dc3545;
-  color: #dc3545;
-
-  &:hover:not(:disabled) {
-    border-color: #c82333;
-    background: #f8d7da;
-  }
-}
-
-.cantidad-btn-plus {
-  border-color: #28a745;
-  color: #28a745;
-
-  &:hover:not(:disabled) {
-    border-color: #218838;
-    background: #d4edda;
-  }
-}
-
-.cantidad-display {
-  min-width: 30px;
-  text-align: center;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 4px 8px;
-}
-
-// ✅ ACTUALIZAR ESTILOS DE INGREDIENTE CARD
-.ingrediente-card {
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 12px;
-  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 16px;
+  padding: 1.5rem;
   transition: all 0.3s ease;
-  cursor: pointer;
-
-  &:hover {
-    border-color: #007bff;
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #d32f2f;
   }
+  
+  &:hover {
+    border-color: #776c6c;
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+    transform: translateY(-3px);
+  }
+}
 
-  &.selected {
-    border-color: #28a745;
-    background: #f8fff9;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+.tamano-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  
 
-    .cantidad-display {
-      background: #28a745;
-      color: white;
-      border-color: #28a745;
+  .tamano-info {
+    flex: 1;
+    
+    .tamano-nombre {
+      display: block;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.2;
+    }
+    
+    .tamano-codigo {
+      display: block;
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 500;
+    }
+  }
+  
+  .tamano-status {
+    .status-icon {
+      &.valid {
+        color: #28a745;
+      }
+      
+      &.pending {
+        color: #ffc107;
+      }
     }
   }
 }
 
-.ingrediente-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.ingrediente-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-
-  img {
+.tamano-precio-container {
+  .tamano-precio-field {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    margin-bottom: 1rem;
+    
+    .precio-input {
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    
+    .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 0.5rem;
+    }
+  }
+  
+  .precio-indicator {
+    text-align: center;
+    padding: 0.8rem;
+    border-radius: 10px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    
+    &.has-price {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border-color: #28a745;
+    }
+    
+    .precio-valor {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #28a745;
+    }
+    
+    .precio-placeholder {
+      font-size: 0.9rem;
+      color: #6c757d;
+      font-style: italic;
+    }
   }
 }
 
-.ingrediente-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.tamanos-resumen {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #dee2e6;
+  
+  h3 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  .resumen-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    
+    .resumen-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: white;
+      border-radius: 20px;
+      border: 1px solid #dee2e6;
+      
+      .resumen-tamano {
+        font-weight: 500;
+        color: #495057;
+      }
+      
+      .resumen-precio {
+        font-weight: bold;
+        color: #28a745;
+      }
+    }
+  }
 }
 
-.ingrediente-nombre {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  line-height: 1.2;
+// ✅ RESPONSIVE MEJORADO
+@media (max-width: 768px) {
+  .ingredientes-section {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+  
+  .ingredientes-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+  
+  .ingrediente-card {
+    padding: 0.8rem;
+    
+    .ingrediente-base-checkbox {
+      top: 8px;
+      right: 8px;
+      padding: 3px;
+      
+      .mat-mdc-checkbox {
+        transform: scale(0.75);
+      }
+      
+      .base-label {
+        font-size: 8px;
+      }
+    }
+    
+    .ingrediente-content {
+      padding-right: 50px;
+      gap: 10px;
+    }
+    
+    .ingrediente-image {
+      width: 45px;
+      height: 45px;
+    }
+    
+    .ingrediente-nombre {
+      font-size: 13px;
+    }
+  }
 }
 
-.ingrediente-precio {
-  font-size: 12px;
-  color: #28a745;
-  font-weight: 600;
+@media (max-width: 480px) {
+  .ingredientes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ingrediente-card {
+    .ingrediente-content {
+      padding-right: 45px;
+    }
+    
+    .ingrediente-base-checkbox {
+      top: 6px;
+      right: 6px;
+      
+      .mat-mdc-checkbox {
+        transform: scale(0.7);
+      }
+      
+      .base-label {
+        font-size: 7px;
+      }
+    }
+  }
+}
+
+// ✅ RESPONSIVE PARA TAMAÑOS
+@media (max-width: 768px) {
+  .tamanos-section {
+    padding: 1.5rem;
+  }
+  
+  .tamanos-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .tamano-card {
+    padding: 1rem;
+  }
+  
+  .tamanos-toggle-container {
+    padding: 1rem;
+    
+    .toggle-text {
+      font-size: 1rem;
+    }
+  }
+  
+  .tamanos-info-card {
+    padding: 1rem;
+    
+    .info-text p {
+      font-size: 0.85rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .tamanos-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .tamanos-toggle-container .toggle-text {
+    font-size: 0.9rem;
+  }
+  
+  .resumen-grid {
+    flex-direction: column;
+    
+    .resumen-item {
+      justify-content: space-between;
+    }
+  }
 }
 

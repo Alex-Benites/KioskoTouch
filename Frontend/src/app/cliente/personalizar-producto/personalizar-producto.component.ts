@@ -14,6 +14,7 @@ interface IngredientePersonalizacion {
   esOriginal: boolean; // Si venía originalmente en el producto
   precio?: number; // Por si algunos ingredientes tienen costo adicional
   cantidad: number;
+  cantidadBase?: number;
 }
 
 @Component({
@@ -85,21 +86,41 @@ export class PersonalizarProductoComponent implements OnInit {
   // ✅ REEMPLAZAR el computed precioTotalCalculado (línea ~82)
   precioTotalCalculado = computed(() => {
     const precioBase = this.precioProducto;
-    const ingredientes = this.ingredientesDisponibles(); // ✅ USAR ()
+    const ingredientes = this.ingredientesDisponibles();
 
     const costoIngredientesExtra = ingredientes.reduce((total: number, ing) => {
       if (ing.precio && ing.precio > 0) {
         if (ing.esOriginal) {
-          const cantidadExtra = Math.max(0, ing.cantidad - 1);
+          // ✅ INGREDIENTES BASE: Solo sumar cantidades EXTRA (por encima de la cantidad base)
+          const cantidadBase = ing.cantidadBase || 0;
+          const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           const costoEste = cantidadExtra * (ing.precio || 0);
+          
+          // ✅ AGREGAR LOGS DE DEBUG:
+          console.log(`🔍 DEBUG ${ing.nombre}:`);
+          console.log(`   - Cantidad actual: ${ing.cantidad}`);
+          console.log(`   - Cantidad base: ${cantidadBase}`);
+          console.log(`   - Cantidad extra: ${cantidadExtra}`);
+          console.log(`   - Costo este ingrediente: $${costoEste}`);
+          
           if (cantidadExtra > 0) {
-            console.log(`🧀 ${ing.nombre} (original extra): +$${costoEste}`);
+            console.log(`🧀 ${ing.nombre} (base + ${cantidadExtra} extra): +$${costoEste}`);
           }
           return total + costoEste;
         } else {
-          const costoEste = ing.cantidad * (ing.precio || 0);
-          if (ing.cantidad > 0) {
-            console.log(`🥬 ${ing.nombre} (agregado): +$${costoEste}`);
+          // ✅ INGREDIENTES OPCIONALES: Solo sumar cantidad EXTRA si estaba incluido
+          const cantidadBase = ing.cantidadBase || 0;  // ✅ Usar cantidadBase corregida
+          const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
+          const costoEste = cantidadExtra * (ing.precio || 0);
+          
+          console.log(`🔍 DEBUG ${ing.nombre}:`);
+          console.log(`   - Cantidad actual: ${ing.cantidad}`);
+          console.log(`   - Cantidad base: ${cantidadBase}`);
+          console.log(`   - Cantidad extra: ${cantidadExtra}`);
+          console.log(`   - Costo este ingrediente: $${costoEste}`);
+          
+          if (cantidadExtra > 0) {
+            console.log(`🥬 ${ing.nombre} (${cantidadBase} incluido + ${cantidadExtra} extra): +$${costoEste}`);
           }
           return total + costoEste;
         }
@@ -110,9 +131,10 @@ export class PersonalizarProductoComponent implements OnInit {
     const precioUnitario = precioBase + costoIngredientesExtra;
     const precioTotal = precioUnitario * this.cantidad();
 
-    console.log('💰 === CÁLCULO SIGNAL ===');
-    console.log('Ingredientes:', ingredientes.length);
-    console.log('Costo extra:', costoIngredientesExtra);
+    console.log('💰 === CÁLCULO CORREGIDO ===');
+    console.log('Precio base:', precioBase);
+    console.log('Ingredientes extras:', costoIngredientesExtra);
+    console.log('Precio unitario:', precioUnitario);
     console.log('PRECIO TOTAL:', precioTotal);
     console.log('💰 === FIN CÁLCULO ===');
 
@@ -126,10 +148,15 @@ export class PersonalizarProductoComponent implements OnInit {
     const costoIngredientesExtra = this.ingredientesDisponibles().reduce((total: number, ing) => {
       if (ing.precio && ing.precio > 0) {
         if (ing.esOriginal) {
-          const cantidadExtra = Math.max(0, ing.cantidad - 1);
+          // ✅ INGREDIENTES BASE: Solo cantidades extra
+          const cantidadBase = ing.cantidadBase || 0;
+          const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           return total + (cantidadExtra * (ing.precio || 0));
         } else {
-          return total + (ing.cantidad * (ing.precio || 0));
+          // ✅ INGREDIENTES OPCIONALES: Solo cantidades extra
+          const cantidadBase = ing.cantidadBase || 0;
+          const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
+          return total + (cantidadExtra * (ing.precio || 0));
         }
       }
       return total;
@@ -143,16 +170,20 @@ export class PersonalizarProductoComponent implements OnInit {
     return this.ingredientesDisponibles().reduce((total: number, ing) => {
       if (ing.precio && ing.precio > 0) {
         if (ing.esOriginal) {
-          const cantidadExtra = Math.max(0, ing.cantidad - 1);
+          // ✅ INGREDIENTES BASE: Solo cantidades extra
+          const cantidadBase = ing.cantidadBase || 0;
+          const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           return total + (cantidadExtra * (ing.precio || 0));
         } else {
-          return total + (ing.cantidad * (ing.precio || 0));
+          // ✅ INGREDIENTES OPCIONALES: Solo cantidades extra
+          const cantidadBase = ing.cantidadBase || 0;
+          const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
+          return total + (cantidadExtra * (ing.precio || 0));
         }
       }
       return total;
     }, 0);
   });
-
 
   // ✅ Datos adicionales del producto
   productoDatos: any = null;
@@ -601,20 +632,28 @@ export class PersonalizarProductoComponent implements OnInit {
                 }
               }
 
-              console.log(`🖼️ Ingrediente: ${ing.nombre} - Es original: ${ing.es_original} - Precio: $${ing.precio}`);
+              console.log(`🖼️ Ingrediente: ${ing.nombre} - Es base: ${ing.es_base} - Precio: $${ing.precio}`);
 
-                return {
-                  id: ing.id,
-                  nombre: ing.nombre,
-                  imagenUrl: imagenUrl,
-                  seleccionado: ing.es_original,
-                  esOriginal: ing.es_original,
-                  precio: Number(ing.precio) || 0,
-                  cantidad: ing.es_original ? 1 : 0
-                };
+              return {
+                id: ing.id,
+                nombre: ing.nombre,
+                imagenUrl: imagenUrl,
+                seleccionado: ing.seleccionado,          // ✅ USAR seleccionado del backend
+                esOriginal: ing.es_base,                 // ✅ USAR es_base para saber si es ingrediente base
+                precio: Number(ing.precio) || 0,
+                cantidad: ing.seleccionado ? (ing.cantidad || 1) : 0,  // ✅ USAR cantidad real del backend
+                cantidadBase: ing.seleccionado ? (ing.cantidad || 1) : 0  
+              };
             }));
 
-            console.log(`🎉 ${this.ingredientesDisponibles.length} ingredientes reales cargados`);
+            console.log(`🎉 ${this.ingredientesDisponibles().length} ingredientes reales cargados`);
+            
+            // ✅ AGREGAR: Log detallado del estado final
+            console.log('📋 Estado final de ingredientes cargados:');
+            this.ingredientesDisponibles().forEach(ing => {
+              console.log(`  • ${ing.nombre}: esOriginal=${ing.esOriginal}, cantidad=${ing.cantidad}, precio=${ing.precio}`);
+            });
+            
           } else {
             console.log('ℹ️ Este producto no tiene ingredientes personalizables');
             this.ingredientesDisponibles.set([]);
@@ -829,24 +868,38 @@ export class PersonalizarProductoComponent implements OnInit {
     console.log('💰 === FIN DEBUG ===');
   }
 
+
   disminuirIngrediente(ingrediente: IngredientePersonalizacion): void {
-    if (ingrediente.cantidad > 0) {
-      ingrediente.cantidad--;
-      ingrediente.seleccionado = ingrediente.cantidad > 0;
-
-      // ✅ ACTUALIZAR signal
-      this.ingredientesDisponibles.update(ingredients => [...ingredients]);
-
-      console.log(`➖ ${ingrediente.nombre}: cantidad = ${ingrediente.cantidad}`);
-      console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
+    // ✅ NUEVA LÓGICA: Ingredientes base no pueden bajar de 1
+    if (ingrediente.esOriginal) {
+      // ✅ INGREDIENTES BASE: Mínimo 1
+      if (ingrediente.cantidad > 1) {
+        ingrediente.cantidad--;
+        console.log(`➖ ${ingrediente.nombre} (BASE): cantidad = ${ingrediente.cantidad} (mínimo 1)`);
+      } else {
+        console.log(`⚠️ ${ingrediente.nombre} es ingrediente BASE - No se puede quitar completamente`);
+        return; // No hacer nada si ya está en 1
+      }
+    } else {
+      // ✅ INGREDIENTES OPCIONALES: Pueden llegar a 0
+      if (ingrediente.cantidad > 0) {
+        ingrediente.cantidad--;
+        ingrediente.seleccionado = ingrediente.cantidad > 0;
+        console.log(`➖ ${ingrediente.nombre} (OPCIONAL): cantidad = ${ingrediente.cantidad}`);
+      }
     }
+
+    // ✅ ACTUALIZAR signal
+    this.ingredientesDisponibles.update(ingredients => [...ingredients]);
+    
+    console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
   }
 
 
 
   private obtenerPersonalizacionesParaPedido(): PersonalizacionIngrediente[] {
     const personalizaciones: PersonalizacionIngrediente[] = [];
-    const ingredientes = this.ingredientesDisponibles(); // ✅ USAR ()
+    const ingredientes = this.ingredientesDisponibles();
 
     console.log('🔧 === GENERANDO PERSONALIZACIONES PARA PEDIDO ===');
     console.log('📋 Estado de ingredientes:', ingredientes.map(ing => ({
@@ -854,43 +907,68 @@ export class PersonalizarProductoComponent implements OnInit {
       nombre: ing.nombre,
       esOriginal: ing.esOriginal,
       cantidad: ing.cantidad,
+      cantidadBase: ing.cantidadBase,
       seleccionado: ing.seleccionado,
       precio: ing.precio
     })));
 
     ingredientes.forEach(ing => {
-      // ✅ INGREDIENTES NO ORIGINALES AGREGADOS
-      if (!ing.esOriginal && ing.cantidad > 0) {
-        for (let i = 0; i < ing.cantidad; i++) {
+      if (ing.esOriginal) {
+        // ✅ INGREDIENTES BASE (ORIGINALES)
+        if (ing.cantidad === 0) {
+          // Ingrediente base removido completamente
           personalizaciones.push({
             ingrediente_id: ing.id,
-            accion: 'agregar',
-            precio_aplicado: ing.precio || 0
+            accion: 'quitar',
+            precio_aplicado: 0
           });
+          console.log(`➖ Quitando ${ing.nombre} (ingrediente base)`);
+        } else if (ing.cantidad > (ing.cantidadBase || 1)) {
+          // Ingrediente base con cantidad extra
+          const cantidadBase = ing.cantidadBase || 1;
+          const cantidadExtra = ing.cantidad - cantidadBase;
+          for (let i = 0; i < cantidadExtra; i++) {
+            personalizaciones.push({
+              ingrediente_id: ing.id,
+              accion: 'agregar',
+              precio_aplicado: ing.precio || 0
+            });
+          }
+          console.log(`➕ Extra ${cantidadExtra}x ${ing.nombre} (ingrediente base) (+$${(ing.precio || 0).toFixed(2)} c/u)`);
         }
-        console.log(`➕ Agregando ${ing.cantidad}x ${ing.nombre} (+$${(ing.precio || 0).toFixed(2)} c/u)`);
-      }
-        // ✅ INGREDIENTES ORIGINALES REMOVIDOS
-      else if (ing.esOriginal && ing.cantidad === 0) {
-        personalizaciones.push({
-          ingrediente_id: ing.id,
-          accion: 'quitar',
-          precio_aplicado: 0
-        });
-        console.log(`➖ Quitando ${ing.nombre}`);
-      }
-
-      // ✅ INGREDIENTES ORIGINALES CON CANTIDAD EXTRA
-      else if (ing.esOriginal && ing.cantidad > 1) {
-        const cantidadExtra = ing.cantidad - 1;
-        for (let i = 0; i < cantidadExtra; i++) {
-          personalizaciones.push({
-            ingrediente_id: ing.id,
-            accion: 'agregar',
-            precio_aplicado: ing.precio || 0
-          });
+        // Si cantidad === cantidadBase, no se agrega nada (está como viene por defecto)
+      } else {
+        // ✅ INGREDIENTES NO ORIGINALES (OPCIONALES)
+        const cantidadBase = ing.cantidadBase || 0; // Cantidad incluida en el producto
+        
+        if (ing.cantidad === 0 && cantidadBase > 0) {
+          // Ingrediente incluido que fue removido
+          for (let i = 0; i < cantidadBase; i++) {
+            personalizaciones.push({
+              ingrediente_id: ing.id,
+              accion: 'quitar',
+              precio_aplicado: 0
+            });
+          }
+          console.log(`➖ Quitando ${cantidadBase}x ${ing.nombre} (incluido en producto)`);
+        } else if (ing.cantidad > cantidadBase) {
+          // Solo agregar la cantidad EXTRA por encima de lo incluido
+          const cantidadExtra = ing.cantidad - cantidadBase;
+          for (let i = 0; i < cantidadExtra; i++) {
+            personalizaciones.push({
+              ingrediente_id: ing.id,
+              accion: 'agregar',
+              precio_aplicado: ing.precio || 0
+            });
+          }
+          
+          if (cantidadBase > 0) {
+            console.log(`➕ Extra ${cantidadExtra}x ${ing.nombre} (${cantidadBase} incluido + ${cantidadExtra} extra) (+$${(ing.precio || 0).toFixed(2)} c/u)`);
+          } else {
+            console.log(`➕ Agregando ${cantidadExtra}x ${ing.nombre} (nuevo ingrediente) (+$${(ing.precio || 0).toFixed(2)} c/u)`);
+          }
         }
-        console.log(`➕ Extra ${cantidadExtra}x ${ing.nombre} (+$${(ing.precio || 0).toFixed(2)} c/u)`);
+        // Si cantidad === cantidadBase, no se agrega nada (está como viene incluido)
       }
     });
 
@@ -903,4 +981,21 @@ export class PersonalizarProductoComponent implements OnInit {
   public hayAlMenosUnIngredienteSeleccionado(): boolean {
     return this.ingredientesDisponibles().some(ing => ing.cantidad > 0);
   }
+
+  obtenerTooltipDisminuir(ingrediente: IngredientePersonalizacion): string {
+    if (ingrediente.esOriginal) {
+      if (ingrediente.cantidad <= 1) {
+        return `${ingrediente.nombre} es un ingrediente base y no se puede quitar completamente`;
+      } else {
+        return `Disminuir cantidad de ${ingrediente.nombre} (mínimo 1)`;
+      }
+    } else {
+      if (ingrediente.cantidad <= 0) {
+        return `${ingrediente.nombre} ya está en cantidad 0`;
+      } else {
+        return `Disminuir cantidad de ${ingrediente.nombre}`;
+      }
+    }
+  }
+
 }

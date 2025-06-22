@@ -105,5 +105,62 @@ public class PagoResponse {
     public boolean isExitoso() { return exitoso; }
     public void setExitoso(boolean exitoso) { this.exitoso = exitoso; }
     
-    // ✅ Y todos los demás getters/setters...
+    // ✅ REEMPLAZAR la línea 109: "// ✅ Y todos los demás getters/setters..." con:
+    
+    public String getHora() { return hora; }
+    public void setHora(String hora) { this.hora = hora; }
+    
+    public String getFecha() { return fecha; }
+    public void setFecha(String fecha) { this.fecha = fecha; }
+    
+    public String getTid() { return tid; }
+    public void setTid(String tid) { this.tid = tid; }
+    
+    public String getMid() { return mid; }
+    public void setMid(String mid) { this.mid = mid; }
+    
+    public Integer getRedAdquirente() { return redAdquirente; }
+    public void setRedAdquirente(Integer redAdquirente) { this.redAdquirente = redAdquirente; }
+    
+    public String getCodigoAdquirente() { return codigoAdquirente; }
+    public void setCodigoAdquirente(String codigoAdquirente) { this.codigoAdquirente = codigoAdquirente; }
+    
+    public String getNombreAdquirente() { return nombreAdquirente; }
+    public void setNombreAdquirente(String nombreAdquirente) { this.nombreAdquirente = nombreAdquirente; }
+    
+    public String getNumeroTarjetaEncriptado() { return numeroTarjetaEncriptado; }
+    public void setNumeroTarjetaEncriptado(String numeroTarjetaEncriptado) { this.numeroTarjetaEncriptado = numeroTarjetaEncriptado; }
+    
+    public String getFechaVencimiento() { return fechaVencimiento; }
+    public void setFechaVencimiento(String fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }
+    
+    public String getAplicacionEMV() { return aplicacionEMV; }
+    public void setAplicacionEMV(String aplicacionEMV) { this.aplicacionEMV = aplicacionEMV; }
+    
+    public String getAid() { return aid; }
+    public void setAid(String aid) { this.aid = aid; }
+    
+    public String getCriptograma() { return criptograma; }
+    public void setCriptograma(String criptograma) { this.criptograma = criptograma; }
+    
+    public String getPin() { return pin; }
+    public void setPin(String pin) { this.pin = pin; }
+    
+    public String getArqc() { return arqc; }
+    public void setArqc(String arqc) { this.arqc = arqc; }
+    
+    public String getTvr() { return tvr; }
+    public void setTvr(String tvr) { this.tvr = tvr; }
+    
+    public String getTsi() { return tsi; }
+    public void setTsi(String tsi) { this.tsi = tsi; }
+    
+    public String getInteres() { return interes; }
+    public void setInteres(String interes) { this.interes = interes; }
+    
+    public String getPublicidad() { return publicidad; }
+    public void setPublicidad(String publicidad) { this.publicidad = publicidad; }
+    
+    public String getMontoFijo() { return montoFijo; }
+    public void setMontoFijo(String montoFijo) { this.montoFijo = montoFijo; }
 }

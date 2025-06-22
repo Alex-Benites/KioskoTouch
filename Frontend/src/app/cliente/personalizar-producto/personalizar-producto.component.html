@@ -92,9 +92,9 @@
           <!-- Grid de ingredientes -->
           <div class="ingredientes-grid">
             <div
-              class="ingrediente-card"
-              *ngFor="let ingrediente of ingredientesDisponibles()"
-              [class.seleccionado]="ingrediente.seleccionado">
+                class="ingrediente-card"
+                *ngFor="let ingrediente of ingredientesDisponibles()"
+                [class.seleccionado]="ingrediente.cantidad > 0">
 
               <!-- Imagen del ingrediente -->
               <div class="ingrediente-imagen">
@@ -137,21 +137,23 @@
 
               <!-- ✅ NUEVO: Controles de cantidad -->
               <div class="ingrediente-controles">
-                <!-- Botón disminuir -->
+                <!-- Botón disminuir con lógica mejorada -->
                 <button
                   class="control-btn disminuir"
                   (click)="disminuirIngrediente(ingrediente)"
-                  [disabled]="ingrediente.cantidad <= 0">
+                  [disabled]="(ingrediente.esOriginal && ingrediente.cantidad <= 1) || (!ingrediente.esOriginal && ingrediente.cantidad <= 0)"
+                  [title]="obtenerTooltipDisminuir(ingrediente)">
                   -
                 </button>
 
                 <!-- Cantidad actual -->
                 <span class="cantidad-ingrediente">{{ ingrediente.cantidad }}</span>
 
-                <!-- Botón aumentar -->
+                <!-- Botón aumentar (sin cambios) -->
                 <button
                   class="control-btn aumentar"
-                  (click)="aumentarIngrediente(ingrediente)">
+                  (click)="aumentarIngrediente(ingrediente)"
+                  title="Agregar más {{ ingrediente.nombre }}">
                   +
                 </button>
               </div>

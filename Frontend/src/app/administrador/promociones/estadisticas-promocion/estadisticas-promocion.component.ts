@@ -9,7 +9,7 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
+    //RouterLink,
     HeaderAdminComponent,
     CurrencyPipe,
     FooterAdminComponent

@@ -1285,3 +1285,92 @@ $font-family-base: 'Lato', sans-serif;
     }
   }
 }
+
+// ✅ AGREGAR: Estilos para ingredientes base
+.ingrediente-card {
+  // ... estilos existentes ...
+  
+  // ✅ NUEVO: Indicador visual para ingredientes base
+  &.ingrediente-base {
+    border-left: 4px solid #4CAF50;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, transparent 100%);
+    
+    .ingrediente-nombre::after {
+      content: " (BASE)";
+      font-size: 0.7em;
+      color: #4CAF50;
+      font-weight: bold;
+      background: rgba(76, 175, 80, 0.1);
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+  }
+  
+  // ✅ Estilos para ingredientes opcionales
+  &.ingrediente-opcional {
+    border-left: 4px solid #9E9E9E;
+    
+    .ingrediente-nombre::after {
+      content: " (OPCIONAL)";
+      font-size: 0.7em;
+      color: #9E9E9E;
+      font-weight: bold;
+      background: rgba(158, 158, 158, 0.1);
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+  }
+}
+
+.ingrediente-controles {
+  // ... estilos existentes ...
+  
+  .control-btn {
+    // ... estilos existentes ...
+    
+    &.disminuir {
+      &:disabled {
+        background-color: #f5f5f5 !important;
+        color: #ccc !important;
+        cursor: not-allowed !important;
+        
+        // ✅ NUEVO: Estilo especial para ingredientes base
+        &[title*="ingrediente base"] {
+          background-color: rgba(76, 175, 80, 0.1) !important;
+          color: rgba(76, 175, 80, 0.5) !important;
+          border-color: rgba(76, 175, 80, 0.3) !important;
+        }
+      }
+    }
+  }
+}
+
+// ✅ NUEVO: Indicador visual en el precio para ingredientes base
+.precio-incluido {
+  .incluido-normal {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+  }
+  
+  .sin-ingrediente {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    
+    // ✅ OCULTAR este estado para ingredientes base
+    .ingrediente-base & {
+      display: none;
+    }
+  }
+}

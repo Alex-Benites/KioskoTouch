@@ -85,84 +85,174 @@
     </div>
 
     <!-- Nueva sección de tamaños -->
+    <!-- ✅ SECCIÓN DE TAMAÑOS EMBELLECIDA -->
     <div class="tamanos-section">
-      <h2>Opciones de Tamaño</h2>
+      <div class="tamanos-header">
+        <h2>Opciones de Tamaño</h2>
+        <p class="tamanos-description">Configure diferentes tamaños con precios personalizados</p>
+      </div>
 
-      <div class="tamanos-toggle">
-        <mat-checkbox formControlName="aplicaTamanos">
-          Este producto tiene diferentes tamaños con precios distintos
+      <div class="tamanos-toggle-container">
+        <mat-checkbox formControlName="aplicaTamanos" 
+                      class="tamanos-toggle-checkbox"
+                      color="primary">
+          <span class="toggle-text">Este producto tiene diferentes tamaños con precios distintos</span>
         </mat-checkbox>
       </div>
 
       @if (productoForm.get('aplicaTamanos')?.value) {
-      <div class="tamanos-grid">
-        @for (tamano of tamanos; track tamano.id) {
-        <div class="tamano-card">
-          <div class="tamano-info">
-            <span class="tamano-nombre">{{ tamano.nombre }}</span>
-            <mat-form-field appearance="outline" class="tamano-precio-field">
-              <mat-label>Precio {{ tamano.nombre }}</mat-label>
-              <input matInput type="number" [formControlName]="'precio_' + tamano.codigo.toLowerCase()"
-                     placeholder="0.00" step="0.01">
-              <span matPrefix>$</span>
-            </mat-form-field>
+      <div class="tamanos-content">
+        <div class="tamanos-info-card">
+          <mat-icon class="info-icon">info</mat-icon>
+          <div class="info-text">
+            <p><strong>Importante:</strong> Al habilitar tamaños, el precio base queda deshabilitado.</p>
+            <p>Defina un precio específico para cada tamaño disponible.</p>
           </div>
         </div>
-        }
-      </div>
-      }
-    </div>
 
-    <!-- Sección de Ingredientes -->
-    <div class="ingredientes-section">
-      <h2>Ingredientes Disponibles</h2>
-      @if (ingredientesDisponibles.length > 0) {
-      <div class="ingredientes-grid">
-        @for (ingrediente of ingredientesDisponibles; track ingrediente.id) {
-        <div class="ingrediente-card"
-             [class.selected]="ingrediente.cantidad > 0">
-
-          <!-- ✅ QUITAR CHECKBOX Y AGREGAR INFORMACIÓN DEL INGREDIENTE -->
-          <div class="ingrediente-content">
-            <div class="ingrediente-image">
-              <img [src]="getFullImageUrl(ingrediente.imagen_url)"
-                   [alt]="ingrediente.nombre"
-                   onerror="this.src='assets/images/no-ingredient.png'">
+        <div class="tamanos-grid">
+          @for (tamano of tamanos; track tamano.id) {
+          <div class="tamano-card">
+            <div class="tamano-header">
+              
+              <div class="tamano-info">
+                <span class="tamano-nombre">{{ tamano.nombre }}</span>
+                <span class="tamano-codigo">{{ tamano.codigo }}</span>
+              </div>
+              <div class="tamano-status">
+                @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value > 0) {
+                  <mat-icon class="status-icon valid">check_circle</mat-icon>
+                } @else {
+                  <mat-icon class="status-icon pending">schedule</mat-icon>
+                }
+              </div>
             </div>
-            <div class="ingrediente-info">
-              <span class="ingrediente-nombre">{{ ingrediente.nombre }}</span>
-              @if (ingrediente.precio_adicional > 0) {
-              <span class="ingrediente-precio">+${{ ingrediente.precio_adicional }}</span>
+            
+            <div class="tamano-precio-container">
+              <mat-form-field appearance="outline" class="tamano-precio-field">
+                <mat-label>Precio {{ tamano.nombre }}</mat-label>
+                <input matInput 
+                       type="number" 
+                       [formControlName]="'precio_' + tamano.codigo.toLowerCase()"
+                       placeholder="0.00" 
+                       step="0.01"
+                       min="0"
+                       (input)="onPrecioTamanoChange($event, tamano)"
+                       class="precio-input">
+                <span matPrefix>$</span>
+                <mat-hint>Precio para tamaño {{ tamano.nombre }}</mat-hint>
+                @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('min')) {
+                  <mat-error>El precio no puede ser negativo</mat-error>
+                }
+                @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('required')) {
+                  <mat-error>Este campo es requerido</mat-error>
+                }
+              </mat-form-field>
+              
+              <!-- Indicador visual del precio -->
+              <div class="precio-indicator" 
+                   [class.has-price]="productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value > 0">
+                @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value > 0) {
+                  <span class="precio-valor">${{ productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value | number:'1.2-2' }}</span>
+                } @else {
+                  <span class="precio-placeholder">Sin precio</span>
+                }
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- Resumen de precios -->
+        <div class="tamanos-resumen">
+          <h3>Resumen de Precios</h3>
+          <div class="resumen-grid">
+            @for (tamano of tamanos; track tamano.id) {
+              @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value > 0) {
+                <div class="resumen-item">
+                  <span class="resumen-tamano">{{ tamano.nombre }}</span>
+                  <span class="resumen-precio">${{ productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value | number:'1.2-2' }}</span>
+                </div>
               }
-            </div>
-          </div>
-
-          <!-- ✅ NUEVO: Contador de cantidad -->
-          <div class="cantidad-controls">
-            <button type="button"
-                    class="cantidad-btn cantidad-btn-minus"
-                    [disabled]="ingrediente.cantidad <= 0"
-                    (click)="disminuirCantidad(ingrediente)">
-              -
-            </button>
-
-            <span class="cantidad-display">{{ ingrediente.cantidad || 0 }}</span>
-
-            <button type="button"
-                    class="cantidad-btn cantidad-btn-plus"
-                    (click)="aumentarCantidad(ingrediente)">
-              +
-            </button>
+            }
           </div>
         </div>
-        }
-      </div>
-      } @else {
-      <div class="no-ingredientes">
-        <p>Esta categoría no tiene ingredientes disponibles</p>
       </div>
       }
     </div>
+
+  <!-- Sección de Ingredientes -->
+  <div class="ingredientes-section">
+    <h2>Ingredientes Disponibles</h2>
+    @if (ingredientesDisponibles.length > 0) {
+    <div class="ingredientes-grid">
+      @for (ingrediente of ingredientesDisponibles; track ingrediente.id) {
+      <div class="ingrediente-card"
+          [class.selected]="ingrediente.cantidad > 0">
+
+        <!-- ✅ CORREGIDO: Checkbox de es_base con ngModelOptions standalone -->
+        <div class="ingrediente-base-checkbox">
+          <mat-checkbox 
+            [(ngModel)]="ingrediente.es_base"
+            [ngModelOptions]="{standalone: true}"
+            (change)="onEsBaseChange(ingrediente, $event)"
+            color="primary"
+            [disabled]="ingrediente.cantidad === 0"
+            title="{{ ingrediente.es_base ? 'Ingrediente base (incluido en precio)' : 'Ingrediente opcional' }}">
+          </mat-checkbox>
+          <span class="base-label" [class.active]="ingrediente.es_base">BASE</span>
+        </div>
+
+        <!-- ✅ CONTENIDO DEL INGREDIENTE (SIN referencias a "extra") -->
+        <div class="ingrediente-content">
+          <div class="ingrediente-image">
+            <img [src]="getFullImageUrl(ingrediente.imagen_url)"
+                [alt]="ingrediente.nombre"
+                onerror="this.src='assets/images/no-ingredient.png'">
+          </div>
+          <div class="ingrediente-info">
+            <span class="ingrediente-nombre">{{ ingrediente.nombre }}</span>
+            @if (ingrediente.precio_adicional > 0) {
+            <span class="ingrediente-precio" 
+                  [class.tachado]="ingrediente.es_base">
+              +${{ ingrediente.precio_adicional }}
+            </span>
+            }
+            <!-- ✅ NUEVO: Solo mostrar si es base o no (sin "Extra") -->
+            <span class="ingrediente-estado" 
+                  [class.es-base]="ingrediente.es_base"
+                  [class.es-opcional]="!ingrediente.es_base">
+              {{ ingrediente.es_base ? 'Incluido' : 'Opcional' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- ✅ CONTROLES DE CANTIDAD EXISTENTES -->
+        <div class="cantidad-controls">
+          <button type="button"
+                  class="cantidad-btn cantidad-btn-minus"
+                  [disabled]="ingrediente.cantidad <= 0"
+                  (click)="disminuirCantidad(ingrediente)">
+            -
+          </button>
+
+          <span class="cantidad-display">{{ ingrediente.cantidad || 0 }}</span>
+
+          <button type="button"
+                  class="cantidad-btn cantidad-btn-plus"
+                  (click)="aumentarCantidad(ingrediente)">
+            +
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="no-ingredientes">
+      <p>Esta categoría no tiene ingredientes disponibles</p>
+    </div>
+    }
+  </div>
 
     <div class="form-actions">
       <button type="submit" class="primary__button" [disabled]="!productoForm.valid">{{ isEditMode ? 'Actualizar Producto' : 'Crear Producto' }}</button>

@@ -16,6 +16,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Tamano, ProductoTamano } from '../../../models/tamano.model';  // Agregar ProductoTamano aquí
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { FormsModule } from '@angular/forms'; 
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-crear-producto',
@@ -23,13 +25,15 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
     MatCheckboxModule,
     HeaderAdminComponent,
-    FooterAdminComponent
+    FooterAdminComponent,
+    MatIconModule,
   ],
   templateUrl: './crear.component.html',
   styleUrls: ['./crear.component.scss']
@@ -255,7 +259,15 @@ export class CrearComponent implements OnInit {
     }
     
     ingrediente.cantidad++;
+    
+    // ✅ SIMPLIFICADO: Si es el primer ingrediente agregado, marcar como NO base por defecto
+    if (ingrediente.cantidad === 1 && ingrediente.es_base === undefined) {
+      ingrediente.es_base = false;
+      console.log(`🆕 Nuevo ingrediente agregado - Marcado como OPCIONAL por defecto: ${ingrediente.nombre}`);
+    }
+    
     console.log('📊 Nueva cantidad:', ingrediente.cantidad);
+    console.log('🏷️ Es base:', ingrediente.es_base);
     
     // Actualizar lista de ingredientes seleccionados
     this.actualizarIngredientesSeleccionados();
@@ -290,10 +302,9 @@ export class CrearComponent implements OnInit {
         nombre: ingrediente.nombre,
         descripcion: ingrediente.descripcion,
         imagen_url: ingrediente.imagen_url,
-        cantidad: ingrediente.cantidad, // ✅ AGREGAR CANTIDAD
+        cantidad: ingrediente.cantidad,
         seleccionado: true,
-        es_base: ingrediente.es_base || false,
-        permite_extra: ingrediente.permite_extra || false,
+        es_base: ingrediente.es_base || false, // ✅ SOLO es_base
         stock: ingrediente.stock || 0,
         stock_minimo: ingrediente.stock_minimo || 5,
         unidad_medida: ingrediente.unidad_medida || 'unidades',
@@ -302,8 +313,10 @@ export class CrearComponent implements OnInit {
         estado_stock: ingrediente.estado_stock || 'DISPONIBLE'
       }));
 
-    console.log('📋 Ingredientes seleccionados actualizados:', 
-      this.ingredientesSeleccionados.map(ing => `${ing.nombre}: ${ing.cantidad}`));
+    console.log('📋 Ingredientes seleccionados actualizados:');
+    this.ingredientesSeleccionados.forEach(ing => {
+      console.log(`  • ${ing.nombre}: cantidad=${ing.cantidad}, es_base=${ing.es_base}`);
+    });
   }
 
 
@@ -324,9 +337,10 @@ export class CrearComponent implements OnInit {
           ...ing,
           cantidad: 0, 
           seleccionado: false,
-          es_base: ing.es_base || false,
-          permite_extra: ing.permite_extra || false
+          es_base: false // ✅ SOLO es_base, sin permite_extra
         }));
+        
+        console.log('🔄 Ingredientes inicializados con es_base=false por defecto');
       },
       error: (error) => {
         console.error('❌ Error al cargar ingredientes:', error);
@@ -344,7 +358,6 @@ export class CrearComponent implements OnInit {
   private cargarIngredientesYMarcarSeleccionados(categoria: string, ingredientesSeleccionados: any[]): void {
     console.log('🥗 [EDICIÓN] Cargando ingredientes para categoría:', categoria);
 
-    // ✅ NUEVO: Usar el mismo método de normalización
     const categoriaIngredientes = this.normalizarNombreCategoria(categoria);
     
     console.log('🔗 [EDICIÓN] Usando categoría normalizada:', categoriaIngredientes);
@@ -360,8 +373,7 @@ export class CrearComponent implements OnInit {
             ...ingrediente,
             cantidad: cantidad,
             seleccionado: cantidad > 0,
-            es_base: ingrediente.es_base || false,
-            permite_extra: ingrediente.permite_extra || false
+            es_base: ingredienteSeleccionado?.es_base || false // ✅ SOLO es_base
           };
         });
 
@@ -516,6 +528,19 @@ export class CrearComponent implements OnInit {
       console.log('❌ Formulario no válido, mostrando alerta');
       alert('⚠️ Por favor completa todos los campos requeridos');
     }
+
+      if (!this.productoForm.valid) {
+      console.error('❌ Formulario inválido');
+      this.marcarCamposComoTocados();
+      return;
+  }
+  
+  // ✅ NUEVA VALIDACIÓN: Verificar precios de tamaños
+  if (!this.validarPreciosTamanos()) {
+    alert('⚠️ Por favor complete todos los precios de tamaños');
+    return;
+  }
+
   }
 
   // ✅ NUEVO: Método para mostrar diálogo de confirmación
@@ -576,13 +601,15 @@ export class CrearComponent implements OnInit {
     // ❌ ANTES: formData.append('ingredientes', JSON.stringify(ingredientesIds));
     
     // ✅ NUEVO: Enviar ingredientes con cantidades
-    const ingredientesConCantidad = this.ingredientesSeleccionados.map(ing => ({
+    const ingredientesConCantidadYBase = this.ingredientesSeleccionados.map(ing => ({
       id: ing.id,
-      cantidad: ing.cantidad || 1
+      cantidad: ing.cantidad || 1,
+      es_base: ing.es_base || false // ✅ AGREGAR es_base
     }));
     
-    console.log('🥗 Ingredientes con cantidad a enviar:', ingredientesConCantidad);
-    formData.append('ingredientes', JSON.stringify(ingredientesConCantidad));
+    console.log('🥗 Ingredientes con cantidad y es_base a enviar:', ingredientesConCantidadYBase);
+    formData.append('ingredientes', JSON.stringify(ingredientesConCantidadYBase));
+  
 
     // Tamaños
     formData.append('aplica_tamanos', aplicaTamanos ? 'true' : 'false');
@@ -927,5 +954,98 @@ export class CrearComponent implements OnInit {
   }
 
 
+  onEsBaseChange(ingrediente: any, event: any): void {
+    const esBase = event.checked;
+    console.log(`🔄 Cambiando es_base para ${ingrediente.nombre}:`, esBase);
+    
+    // Actualizar el valor
+    ingrediente.es_base = esBase;
+    
+    // Si el ingrediente no está seleccionado pero se marca como base, agregarlo automáticamente
+    if (esBase && ingrediente.cantidad === 0) {
+      console.log(`✅ Marcado como base, agregando automáticamente: ${ingrediente.nombre}`);
+      this.aumentarCantidad(ingrediente);
+    }
+    
+    // Actualizar la lista de ingredientes seleccionados
+    this.actualizarIngredientesSeleccionados();
+    
+    console.log(`📋 Estado final de ${ingrediente.nombre}:`, {
+      es_base: ingrediente.es_base,
+      cantidad: ingrediente.cantidad,
+      incluido: ingrediente.cantidad > 0
+    });
+  }
+
+
+  onPrecioTamanoChange(event: any, tamano: any): void {
+    const valor = parseFloat(event.target.value);
+    const controlName = 'precio_' + tamano.codigo.toLowerCase();
+    
+    // Validar que no sea negativo
+    if (valor < 0) {
+      console.warn(`⚠️ Precio negativo detectado para ${tamano.nombre}: ${valor}`);
+      this.productoForm.get(controlName)?.setErrors({ 'min': true });
+      return;
+    }
+    
+    // Limpiar errores si el valor es válido
+    if (valor >= 0) {
+      const control = this.productoForm.get(controlName);
+      if (control?.hasError('min')) {
+        control.updateValueAndValidity();
+      }
+    }
+    
+    console.log(`💰 Precio actualizado para ${tamano.nombre}: $${valor}`);
+  }
+  
+
+  private initializeForm(): void {
+    this.productoForm = this.fb.group({ // ✅ Usar fb en lugar de formBuilder
+      nombre: ['', [Validators.required, Validators.minLength(3)]],
+      descripcion: ['', [Validators.required, Validators.minLength(10)]],
+      categoria: ['', Validators.required],
+      precio: [{ value: '', disabled: false }, [Validators.required, Validators.min(0.01)]],
+      disponibilidad: ['', Validators.required],
+      aplicaTamanos: [false]
+    });
+
+    // ✅ AGREGAR: Controles dinámicos para tamaños
+    this.tamanos.forEach(tamano => {
+      const controlName = 'precio_' + tamano.codigo.toLowerCase();
+      this.productoForm.addControl(controlName, 
+        this.fb.control('', [ // ✅ Usar fb en lugar de formBuilder
+          Validators.min(0),
+          Validators.pattern(/^\d+(\.\d{1,2})?$/)
+        ])
+      );
+    });
+  }
+
+  // ✅ NUEVO: Validar que todos los precios de tamaños estén completos
+  private validarPreciosTamanos(): boolean {
+    if (!this.productoForm.get('aplicaTamanos')?.value) {
+      return true; // No aplica validación si no usa tamaños
+    }
+    
+    let todosCompletos = true;
+    this.tamanos.forEach(tamano => {
+      const controlName = 'precio_' + tamano.codigo.toLowerCase();
+      const valor = this.productoForm.get(controlName)?.value;
+      if (!valor || valor <= 0) {
+        todosCompletos = false;
+        console.warn(`⚠️ Precio faltante para tamaño ${tamano.nombre}`);
+      }
+    });
+    
+    return todosCompletos;
+  }
+
+  private marcarCamposComoTocados(): void {
+    Object.keys(this.productoForm.controls).forEach(key => {
+      this.productoForm.get(key)?.markAsTouched();
+    });
+  }
 
 }
