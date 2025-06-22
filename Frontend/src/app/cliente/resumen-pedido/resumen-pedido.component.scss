@@ -175,6 +175,25 @@ $border-color: #e0e0e0;
       }
     }
   }
+
+  // ✅ AGREGAR: Estilos para estado de carga del IVA
+  .total-valor {
+    &.loading {
+      color: #999;
+      font-style: italic;
+      animation: pulse 1.5s infinite;
+    }
+  }
+}
+
+// ✅ ANIMACIÓN DE CARGA
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 // ✅ MODIFICAR: Métodos de pago alineados a la izquierda

@@ -8,6 +8,7 @@ import { PublicidadSectionComponent } from '../../shared/publicidad-section/publ
 // ✅ AGREGAR: Imports para el diálogo
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import { Subscription } from 'rxjs'; // ✅ AGREGAR
 
 @Component({
   selector: 'app-resumen-pedido',
@@ -46,6 +47,11 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     correo: ''
   };
 
+  // ✅ AGREGAR: Variables para IVA dinámico
+  ivaActual: number = 15.00; // Valor por defecto
+  ivaSubscription?: Subscription;
+  cargandoIva = true;
+
   // ✅ Getters para el template
   get productosCarrito(): any[] {
     return this.pedidoService.obtenerProductosParaCarrito();
@@ -73,9 +79,16 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     return this.pedidoService.tieneTurno();
   }
 
+  // ✅ AGREGAR: Método para obtener el texto del IVA
+  getTextoIva(): string {
+    if (this.cargandoIva) return 'Cargando...';
+    return `IVA ${this.ivaActual}%`;
+  }
+
   ngOnInit(): void {
     this.renderer.addClass(document.body, 'fondo-home');
     this.cargarInformacionProductos();
+    this.cargarIvaActual(); // ✅ AGREGAR: Cargar IVA dinámico
 
     console.log('📋 ResumenPedidoComponent inicializado');
     console.log('📋 Productos del pedido:', this.productosCarrito);
@@ -86,6 +99,10 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.renderer.removeClass(document.body, 'fondo-home');
+    // ✅ AGREGAR: Limpiar suscripción
+    if (this.ivaSubscription) {
+      this.ivaSubscription.unsubscribe();
+    }
   }
 
   // ✅ Cargar información de productos
@@ -180,12 +197,19 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   // ✅ AGREGAR: Calcular subtotal
   calcularSubtotal(): number {
-    return this.totalPedido / 1.15; // Quitar el 15% de IVA
+    if (this.cargandoIva) return 0;
+
+    // Calcular subtotal quitando el IVA dinámico
+    const factorIva = 1 + (this.ivaActual / 100); // Ej: 1 + (15/100) = 1.15
+    return this.totalPedido / factorIva;
   }
 
   // ✅ AGREGAR: Calcular IVA
   calcularIVA(): number {
-    return this.calcularSubtotal() * 0.15;
+    if (this.cargandoIva) return 0;
+
+    const subtotal = this.calcularSubtotal();
+    return subtotal * (this.ivaActual / 100);
   }
 
   // ✅ AGREGAR: Seleccionar método de pago
@@ -330,5 +354,29 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     }
 
     return true;
+  }
+
+  // ✅ NUEVO: Método para cargar el IVA actual
+  cargarIvaActual(): void {
+    this.cargandoIva = true;
+
+    this.ivaSubscription = this.catalogoService.getIvaActual().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.ivaActual = response.data.porcentaje_iva;
+          console.log(`✅ IVA dinámico cargado: ${this.ivaActual}%`);
+        } else {
+          console.warn('⚠️ No se encontró IVA activo, usando 15% por defecto');
+          this.ivaActual = 15.00;
+        }
+        this.cargandoIva = false;
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar IVA:', error);
+        console.warn('⚠️ Error cargando IVA, usando 15% por defecto');
+        this.ivaActual = 15.00;
+        this.cargandoIva = false;
+      }
+    });
   }
 }

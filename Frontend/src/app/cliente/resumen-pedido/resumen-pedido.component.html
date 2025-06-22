@@ -52,20 +52,34 @@
       <div class="separador"></div>
 
       <!-- Totales -->
+      <!-- ✅ SECCIÓN DE TOTALES ACTUALIZADA -->
       <div class="totales-section">
-        <div class="total-item">
-          <span class="total-label">Subtotal</span>
-          <span class="total-valor">${{ calcularSubtotal() | number:'1.2-2' }}</span>
-        </div>
+        <div class="totales-container">
 
-        <div class="total-item">
-          <span class="total-label">IVA 15%</span>
-          <span class="total-valor">${{ calcularIVA() | number:'1.2-2' }}</span>
-        </div>
+          <div class="total-item">
+            <span class="total-label">Subtotal</span>
+            @if (cargandoIva) {
+              <span class="total-valor loading">Calculando...</span>
+            } @else {
+              <span class="total-valor">${{ calcularSubtotal() | number:'1.2-2' }}</span>
+            }
+          </div>
 
-        <div class="total-item total-final">
-          <span class="total-label">Total</span>
-          <span class="total-valor">${{ totalPedido | number:'1.2-2' }}</span>
+          <div class="total-item">
+            <!-- ✅ MOSTRAR solo la parte entera del IVA -->
+            <span class="total-label">IVA {{ ivaActual | number:'1.0-0' }}%</span>
+            @if (cargandoIva) {
+              <span class="total-valor loading">Calculando...</span>
+            } @else {
+              <span class="total-valor">${{ calcularIVA() | number:'1.2-2' }}</span>
+            }
+          </div>
+
+          <div class="total-item total-final">
+            <span class="total-label">Total</span>
+            <span class="total-valor">${{ totalPedido | number:'1.2-2' }}</span>
+          </div>
+
         </div>
       </div>
     </div>
