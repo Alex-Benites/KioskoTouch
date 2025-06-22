@@ -180,8 +180,7 @@ ng serve
 
 👨‍💻 **[Nehemias Lindao](https://github.com/NLindao2004)** | 📧 nlindao@espol.edu.ec
 
-👨‍💻 **[Nombre 3](https://github.com/usuario3)**   
-📧 email3@ejemplo.com 
+👨‍💻 **[Alex Benites](https://github.com/Alex-Benites)** | 📧 albesegu@espol.edu.ec 
 
 👨‍💻 **[Nombre 4](https://github.com/usuario4)**   
 📧 email4@ejemplo.com 
