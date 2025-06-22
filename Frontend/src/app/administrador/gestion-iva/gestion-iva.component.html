@@ -1,0 +1,166 @@
+<app-header-admin></app-header-admin>
+
+<div class="iva-container">
+  <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
+  <h1 class="form-main-title">Configuración de IVA</h1>
+
+  <div class="iva-content">
+
+    <!-- ✅ CARD DE INFORMACIÓN ACTUAL -->
+    <mat-card class="iva-info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>info</mat-icon>
+          IVA Actual del Sistema
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loading) {
+          <div class="loading-state">
+            <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+            <p>Cargando configuración...</p>
+          </div>
+        } @else if (ivaActual) {
+          <div class="iva-actual-display">
+            <div class="iva-percentage">
+              <span class="percentage-number">{{ ivaActual.porcentaje_iva }}%</span>
+              <span class="percentage-label">IVA Vigente</span>
+            </div>
+            <div class="iva-status">
+              <mat-icon class="status-active">check_circle</mat-icon>
+              <span>Activo</span>
+            </div>
+          </div>
+        } @else {
+          <div class="no-iva-state">
+            <mat-icon class="warning-icon">warning</mat-icon>
+            <p>No hay configuración de IVA definida</p>
+            <small>Configure el IVA para el cálculo correcto de precios</small>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ✅ FORMULARIO DE CONFIGURACIÓN -->
+    <mat-card class="iva-form-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
+          {{ isEditMode ? 'Actualizar IVA' : 'Configurar IVA' }}
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ isEditMode ? 'Modifique el porcentaje de IVA actual' : 'Establezca el porcentaje de IVA inicial' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="ivaForm" (ngSubmit)="onSubmit()" class="iva-form">
+
+          <div class="form-field-container">
+            <mat-form-field appearance="outline" class="iva-field">
+              <mat-label>Porcentaje de IVA</mat-label>
+              <input
+                matInput
+                type="number"
+                formControlName="porcentaje_iva"
+                placeholder="Ej: 15 o 15.00"
+                step="0.01"
+                min="0"
+                max="99.99"
+                class="iva-input">
+              <span matSuffix>%</span>
+              <!-- ✅ MEJORAR: Hint más claro -->
+              <mat-hint>Ingrese el porcentaje (puede ser entero: 15, o decimal: 15.00)</mat-hint>
+              @if (porcentajeError) {
+                <mat-error>{{ porcentajeError }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- ✅ PREVIEW DEL CÁLCULO -->
+          @if (ivaForm.get('porcentaje_iva')?.value && ivaForm.get('porcentaje_iva')?.valid) {
+            <div class="calculation-preview">
+              <h3>Vista Previa del Cálculo</h3>
+              <div class="preview-example">
+                <div class="example-row">
+                  <span>Subtotal:</span>
+                  <span>$100.00</span>
+                </div>
+                <div class="example-row iva-row">
+                  <span>IVA ({{ ivaForm.get('porcentaje_iva')?.value }}%):</span>
+                  <span>+${{ (100 * (ivaForm.get('porcentaje_iva')?.value / 100)).toFixed(2) }}</span>
+                </div>
+                <div class="example-row total-row">
+                  <span><strong>Total:</strong></span>
+                  <span><strong>${{ (100 + (100 * (ivaForm.get('porcentaje_iva')?.value / 100))).toFixed(2) }}</strong></span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- ✅ BOTONES DE ACCIÓN -->
+          <div class="form-actions">
+            <button
+              type="button"
+              mat-stroked-button
+              color="warn"
+              (click)="resetearFormulario()"
+              [disabled]="loading">
+              <mat-icon>refresh</mat-icon>
+              Resetear
+            </button>
+
+            <button
+              type="submit"
+              mat-raised-button
+              color="primary"
+              [disabled]="!ivaForm.valid || loading"
+              class="submit-button">
+              @if (loading) {
+                <ng-container>
+                  <mat-icon class="loading-spinner">hourglass_empty</mat-icon>
+                  Guardando...
+                </ng-container>
+              } @else {
+                <ng-container>
+                  <mat-icon>{{ isEditMode ? 'update' : 'save' }}</mat-icon>
+                  {{ isEditMode ? 'Actualizar IVA' : 'Crear IVA' }}
+                </ng-container>
+              }
+            </button>
+          </div>
+
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ✅ INFORMACIÓN ADICIONAL -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>help</mat-icon>
+          Información Importante
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-list">
+          <div class="info-item">
+            <mat-icon class="info-bullet">fiber_manual_record</mat-icon>
+            <span>El IVA se aplicará automáticamente a todos los productos del sistema</span>
+          </div>
+          <div class="info-item">
+            <mat-icon class="info-bullet">fiber_manual_record</mat-icon>
+            <span>Solo puede haber una configuración de IVA activa a la vez</span>
+          </div>
+          <div class="info-item">
+            <mat-icon class="info-bullet">fiber_manual_record</mat-icon>
+            <span>Los cambios se aplicarán inmediatamente en el sistema</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+</div>
+
+<app-footer-admin [backRoute]="'/administrador/gestion-productos'"></app-footer-admin>

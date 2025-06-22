@@ -64,7 +64,7 @@ class AppkioskoImagen(models.Model):
     def __str__(self):
         return f"Imagen {self.id} - {self.get_categoria_imagen_display()}"
 
-# ✅ MODIFICAR: Versión simple del modelo IVA
+# ✅ MEJORAR: Versión inteligente del modelo IVA
 class AppkioskoIva(models.Model):
     porcentaje_iva = models.DecimalField(
         max_digits=5,
@@ -97,3 +97,46 @@ class AppkioskoIva(models.Model):
         """Obtener el porcentaje del IVA actual"""
         iva_actual = cls.objects.filter(activo=True).first()
         return iva_actual.porcentaje_iva if iva_actual else 15.00
+
+    @classmethod
+    def activar_o_crear_iva(cls, porcentaje):
+        """
+        ✅ NUEVO: Activar IVA existente o crear uno nuevo
+        """
+        try:
+            from django.db import transaction
+
+            with transaction.atomic():
+                # Buscar si ya existe un IVA con ese porcentaje
+                iva_existente = cls.objects.filter(porcentaje_iva=porcentaje).first()
+
+                if iva_existente:
+                    # ✅ REUTILIZAR: Activar el IVA existente
+                    print(f"🔄 Reactivando IVA existente de {porcentaje}%")
+
+                    # Desactivar todos los demás
+                    cls.objects.filter(activo=True).update(activo=False)
+
+                    # Activar el existente
+                    iva_existente.activo = True
+                    iva_existente.save()
+
+                    return iva_existente, False  # False = no creado, reactivado
+                else:
+                    # ✅ CREAR: Nuevo IVA con porcentaje diferente
+                    print(f"🆕 Creando nuevo IVA de {porcentaje}%")
+
+                    # Desactivar todos los demás
+                    cls.objects.filter(activo=True).update(activo=False)
+
+                    # Crear nuevo IVA
+                    nuevo_iva = cls.objects.create(
+                        porcentaje_iva=porcentaje,
+                        activo=True
+                    )
+
+                    return nuevo_iva, True  # True = creado nuevo
+
+        except Exception as e:
+            print(f"❌ Error en activar_o_crear_iva: {e}")
+            raise e

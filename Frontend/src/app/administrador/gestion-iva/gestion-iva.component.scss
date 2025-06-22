@@ -1,0 +1,285 @@
+.iva-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 140px);
+
+  .breadcrumb-title {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .form-main-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+}
+
+.iva-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+// ✅ CARD DE INFORMACIÓN ACTUAL
+.iva-info-card {
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+
+    .loading-icon {
+      font-size: 48px;
+      color: #ff9800;
+      margin-bottom: 10px;
+      animation: pulse 1.5s infinite;
+    }
+  }
+
+  .iva-actual-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .iva-percentage {
+      display: flex;
+      flex-direction: column;
+
+      .percentage-number {
+        font-size: 36px;
+        font-weight: 700;
+        color: #4caf50;
+      }
+
+      .percentage-label {
+        font-size: 14px;
+        color: #666;
+      }
+    }
+
+    .iva-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .status-active {
+        color: #4caf50;
+        font-size: 24px;
+      }
+
+      span {
+        color: #4caf50;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .no-iva-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+
+    .warning-icon {
+      font-size: 48px;
+      color: #ff9800;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    small {
+      color: #666;
+    }
+  }
+}
+
+// ✅ FORMULARIO
+.iva-form-card {
+  @media (min-width: 768px) {
+    grid-column: span 2;
+  }
+
+  @media (min-width: 1024px) {
+    grid-column: span 1;
+  }
+}
+
+.iva-form {
+  .form-field-container {
+    margin-bottom: 24px;
+  }
+
+  .iva-field {
+    width: 100%;
+
+    .iva-input {
+      font-size: 18px;
+      font-weight: 600;
+    }
+  }
+
+  .calculation-preview {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 4px solid #2196f3;
+
+    h3 {
+      margin-bottom: 16px;
+      color: #333;
+      font-size: 16px;
+    }
+
+    .preview-example {
+      .example-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #e0e0e0;
+
+        &.iva-row {
+          color: #2196f3;
+          font-weight: 600;
+        }
+
+        &.total-row {
+          border-bottom: none;
+          border-top: 2px solid #333;
+          margin-top: 8px;
+          padding-top: 12px;
+          font-size: 18px;
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 24px;
+
+    button {
+      flex: 1;
+      padding: 12px 24px;
+
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+
+    .submit-button {
+      background-color: #4caf50 !important;
+
+      &:disabled {
+        background-color: #cccccc !important;
+      }
+    }
+
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+// ✅ INFORMACIÓN ADICIONAL
+.info-card {
+  @media (min-width: 1024px) {
+    grid-column: span 1;
+  }
+
+  .info-list {
+    .info-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+
+      .info-bullet {
+        color: #2196f3;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
+      span {
+        line-height: 1.5;
+        color: #555;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// ✅ ANIMACIONES
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// ✅ SNACKBAR STYLES
+::ng-deep .success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+::ng-deep .error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+// ✅ RESPONSIVE
+@media (max-width: 767px) {
+  .iva-content {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}

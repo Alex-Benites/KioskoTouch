@@ -284,4 +284,17 @@ export class CatalogoService {
       })
     );
   }
+
+  // ✅ CORREGIR: Métodos para gestionar IVA (usar apiUrl, no baseUrl)
+  getIvaActual(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/comun/iva/actual/`);
+  }
+
+  crearIva(datosIva: { porcentaje_iva: number }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/comun/iva/crear/`, datosIva);
+  }
+
+  actualizarIva(datosIva: { porcentaje_iva: number }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/comun/iva/actualizar/`, datosIva);
+  }
 }

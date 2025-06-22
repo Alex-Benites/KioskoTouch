@@ -63,6 +63,9 @@ import { GestionCategoriasComponent } from './gestion-categorias/gestion-categor
 import { CrearCategoriaComponent } from './gestion-categorias/crear-categoria/crear-categoria.component';
 import { PerfilUsuarioComponent } from './perfil-usuario/perfil-usuario.component';
 
+// ✅ AGREGAR: Componente de IVA
+import { GestionIvaComponent } from './gestion-iva/gestion-iva.component';
+
 export const administradorRoutes: Routes = [
   // 🔓 Rutas públicas
   {
@@ -157,12 +160,12 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-ingredientes/crear',
     component: CrearIngredienteComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])] 
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])]
   },
   {
     path: 'gestion-ingredientes/crear/:id',
     component: CrearIngredienteComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])] 
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskoingredientes'])]
   },
 
   // 🍽️ GESTIÓN DE MENÚS
@@ -309,17 +312,25 @@ export const administradorRoutes: Routes = [
   {
     path: 'gestion-categorias/crear',
     component: CrearCategoriaComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])] 
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])]
   },
   {
     path: 'gestion-categorias/crear/:id',
     component: CrearCategoriaComponent,
-    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])] 
+    canActivate: [authGuard, permissionGuard(['catalogo.view_appkioskocategorias'])]
   },
+
+  // ✅ AGREGAR: GESTIÓN DE IVA
   {
-  path: 'perfil',
-  component: PerfilUsuarioComponent,
-  canActivate: [authGuard]
+    path: 'gestion-iva',
+    component: GestionIvaComponent,
+    canActivate: [authGuard, permissionGuard(['comun.view_appkioskoiva'])]
+  },
+
+  {
+    path: 'perfil',
+    component: PerfilUsuarioComponent,
+    canActivate: [authGuard]
   },
 
   // ❌ Página de no autorizado
