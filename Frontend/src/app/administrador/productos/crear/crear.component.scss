@@ -795,3 +795,57 @@ mat-error {
   }
 }
 
+// Estilo para mensaje de error de imagen
+.image-error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #ffeaea;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
+  font-size: 0.875rem;
+  
+  .error-icon {
+    color: #dc3545;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Mejorar estilos de campos con errores
+.form-field {
+  &.ng-invalid.ng-touched {
+    .mat-mdc-form-field-outline {
+      color: #dc3545 !important;
+    }
+  }
+}
+
+// Estilo para precio deshabilitado
+.precio-deshabilitado {
+  opacity: 0.6;
+  
+  .mat-mdc-form-field-outline {
+    color: #6c757d !important;
+  }
+}
+
+// Animación suave para mostrar errores
+.mat-mdc-form-field-error {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -13,17 +13,32 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Nombre del producto</mat-label>
           <input matInput formControlName="nombre" placeholder="Ej: Hamburguesa Clásica">
-          @if (productoForm.get('nombre')?.hasError('required')) {
-          <mat-error *ngIf="nombreError">{{ nombreError }}</mat-error>
+          <!-- ✅ NUEVO: Mensaje de error mejorado -->
+          @if (productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched) {
+            <mat-error>
+              @if (productoForm.get('nombre')?.hasError('required')) {
+                El nombre del producto es obligatorio
+              }
+              @if (productoForm.get('nombre')?.hasError('minlength')) {
+                El nombre debe tener al menos 3 caracteres
+              }
+            </mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Descripción del producto</mat-label>
-          <textarea matInput formControlName="descripcion" placeholder="Ej: Deliciosa carne con queso cheddar..."
-            rows="3"></textarea>
-          @if (productoForm.get('descripcion')?.hasError('required')) {
-          <mat-error *ngIf="descripcionError">{{ descripcionError }}</mat-error>
+          <textarea matInput formControlName="descripcion" placeholder="Ej: Deliciosa carne con queso cheddar..." rows="3"></textarea>
+          <!-- ✅ NUEVO: Mensaje de error mejorado -->
+          @if (productoForm.get('descripcion')?.invalid && productoForm.get('descripcion')?.touched) {
+            <mat-error>
+              @if (productoForm.get('descripcion')?.hasError('required')) {
+                La descripción del producto es obligatoria
+              }
+              @if (productoForm.get('descripcion')?.hasError('minlength')) {
+                La descripción debe tener al menos 10 caracteres
+              }
+            </mat-error>
           }
         </mat-form-field>
 
@@ -34,18 +49,32 @@
             <mat-option [value]="cat.id">{{cat.nombre}}</mat-option>
             }
           </mat-select>
-          @if (productoForm.get('categoria')?.hasError('required')) {
-          <mat-error *ngIf="categoriaError">{{ categoriaError }}</mat-error>
+          <!-- ✅ NUEVO: Mensaje de error mejorado -->
+          @if (productoForm.get('categoria')?.invalid && productoForm.get('categoria')?.touched) {
+            <mat-error>
+              Debes seleccionar una categoría para el producto
+            </mat-error>
           }
         </mat-form-field>
-
-        <!-- Modificar el campo de precio para mostrar un estado diferente cuando está deshabilitado -->
 
         <mat-form-field appearance="outline" class="form-field"
                        [class.precio-deshabilitado]="productoForm.get('aplicaTamanos')?.value">
           <mat-label>{{ productoForm.get('aplicaTamanos')?.value ? 'Precio base (deshabilitado)' : 'Precio del producto' }}</mat-label>
-          <input matInput type="number" formControlName="precio" placeholder="Ej: 9.99">
-          <mat-error *ngIf="precioError">{{ precioError }}</mat-error>
+          <input matInput type="number" formControlName="precio" placeholder="Ej: 9.99" step="0.01" min="0">
+          <!-- ✅ NUEVO: Mensajes de error mejorados -->
+          @if (productoForm.get('precio')?.invalid && productoForm.get('precio')?.touched && !productoForm.get('aplicaTamanos')?.value) {
+            <mat-error>
+              @if (productoForm.get('precio')?.hasError('required')) {
+                El precio del producto es obligatorio
+              }
+              @if (productoForm.get('precio')?.hasError('min')) {
+                El precio debe ser mayor a $0.00
+              }
+              @if (productoForm.get('precio')?.hasError('pattern')) {
+                Ingresa un precio válido (ej: 9.99)
+              }
+            </mat-error>
+          }
           <mat-hint *ngIf="productoForm.get('aplicaTamanos')?.value">
             Los precios se definirán por tamaño
           </mat-hint>
@@ -58,8 +87,11 @@
             <mat-option [value]="disp.id">{{disp.nombre}}</mat-option>
             }
           </mat-select>
-          @if (productoForm.get('disponibilidad')?.hasError('required')) {
-          <mat-error *ngIf="disponibilidadError">{{ disponibilidadError }}</mat-error>
+          <!-- ✅ NUEVO: Mensaje de error mejorado -->
+          @if (productoForm.get('disponibilidad')?.invalid && productoForm.get('disponibilidad')?.touched) {
+            <mat-error>
+              Debes seleccionar el estado de disponibilidad
+            </mat-error>
           }
         </mat-form-field>
       </div>
@@ -76,6 +108,15 @@
           <img [src]="imagePreview" alt="Vista previa de la imagen" class="image-preview">
           }
         </div>
+        
+        <!-- ✅ NUEVO: Mensaje de error para imagen -->
+        @if (!imagePreview && mostrarErroresFormulario && !isEditMode) {
+          <div class="image-error-message">
+            <mat-icon class="error-icon">error</mat-icon>
+            <span>Es necesario seleccionar una imagen para el producto</span>
+          </div>
+        }
+        
         @if (imagePreview) {
         <button (click)="eliminarImagen()" class="primary__button delete-image-button" type="button">
           Quitar Imagen
@@ -141,11 +182,20 @@
                        class="precio-input">
                 <span matPrefix>$</span>
                 <mat-hint>Precio para tamaño {{ tamano.nombre }}</mat-hint>
-                @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('min')) {
-                  <mat-error>El precio no puede ser negativo</mat-error>
-                }
-                @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('required')) {
-                  <mat-error>Este campo es requerido</mat-error>
+                
+                <!-- ✅ NUEVOS: Mensajes de error mejorados -->
+                @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.invalid && productoForm.get('precio_' + tamano.codigo.toLowerCase())?.touched) {
+                  <mat-error>
+                    @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('min')) {
+                      El precio no puede ser negativo
+                    }
+                    @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('pattern')) {
+                      Ingresa un precio válido (ej: 9.99)
+                    }
+                    @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('required')) {
+                      Este precio es requerido
+                    }
+                  </mat-error>
                 }
               </mat-form-field>
 
@@ -255,7 +305,9 @@
   </div>
 
     <div class="form-actions">
-      <button type="submit" class="primary__button" [disabled]="!productoForm.valid">{{ isEditMode ? 'Actualizar Producto' : 'Crear Producto' }}</button>
+      <button type="submit" class="primary__button">
+        {{ isEditMode ? 'Actualizar Producto' : 'Crear Producto' }}
+      </button>    
     </div>
   </form>
 </div>

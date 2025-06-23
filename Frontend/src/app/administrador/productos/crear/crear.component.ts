@@ -61,7 +61,7 @@ export class CrearComponent implements OnInit {
 
   // Nuevas propiedades para tamaños
   tamanos: Tamano[] = [];
-
+  mostrarErroresFormulario = false;
   constructor() {
     this.productoForm = this.fb.group({
       nombre: ['', Validators.required],
@@ -495,11 +495,16 @@ export class CrearComponent implements OnInit {
 
   onSubmit(): void {
     console.log('🔄 Iniciando onSubmit, modo edición:', this.isEditMode);
+    
+    // ✅ NUEVO: Marcar que se debe mostrar errores
+    this.mostrarErroresFormulario = true;
+    
+    // ✅ NUEVO: Marcar todos los campos como touched para mostrar errores
+    this.marcarTodosLosCamposComoTocados();
 
     // Obtener valor de categoría incluso si está deshabilitado
     let categoriaValue;
     if (this.isEditMode) {
-      // En modo edición, obtener el valor original guardado
       categoriaValue = this.productoForm.get('categoria')?.value;
       console.log('📝 Categoría en edición:', categoriaValue);
     } else {
@@ -525,22 +530,74 @@ export class CrearComponent implements OnInit {
     if (formValid) {
       this.mostrarDialogConfirmacion(categoriaValue);
     } else {
-      console.log('❌ Formulario no válido, mostrando alerta');
-      alert('⚠️ Por favor completa todos los campos requeridos');
+      console.log('❌ Formulario no válido');
+      // ✅ NUEVO: Mostrar errores específicos en lugar de alerta genérica
+      this.mostrarErroresEspecificos();
+    }
+  }
+
+
+  // ✅ NUEVO: Método para marcar todos los campos como touched
+  private marcarTodosLosCamposComoTocados(): void {
+    Object.keys(this.productoForm.controls).forEach(key => {
+      const control = this.productoForm.get(key);
+      control?.markAsTouched();
+      control?.markAsDirty();
+    });
+  }
+
+  // ✅ NUEVO: Método para mostrar errores específicos
+  private mostrarErroresEspecificos(): void {
+    const errores: string[] = [];
+
+    // Verificar cada campo requerido
+    if (this.productoForm.get('nombre')?.invalid) {
+      errores.push('• Nombre del producto');
+    }
+    
+    if (this.productoForm.get('descripcion')?.invalid) {
+      errores.push('• Descripción del producto');
+    }
+    
+    if (this.productoForm.get('categoria')?.invalid) {
+      errores.push('• Categoría');
+    }
+    
+    // Solo validar precio si no aplica tamaños
+    if (!this.productoForm.get('aplicaTamanos')?.value && this.productoForm.get('precio')?.invalid) {
+      errores.push('• Precio del producto');
+    }
+    
+    if (this.productoForm.get('disponibilidad')?.invalid) {
+      errores.push('• Estado de disponibilidad');
+    }
+    
+    // Validar imagen en modo creación
+    if (!this.isEditMode && !this.selectedFile) {
+      errores.push('• Imagen del producto');
+    }
+    
+    // Validar precios por tamaño si aplica
+    if (this.productoForm.get('aplicaTamanos')?.value) {
+      let faltanPrecios = false;
+      this.tamanos.forEach(tamano => {
+        const controlName = 'precio_' + tamano.codigo.toLowerCase();
+        const precio = this.productoForm.get(controlName)?.value;
+        if (!precio || parseFloat(precio) <= 0) {
+          faltanPrecios = true;
+        }
+      });
+      
+      if (faltanPrecios) {
+        errores.push('• Precios por tamaño (al menos uno)');
+      }
     }
 
-      if (!this.productoForm.valid) {
-      console.error('❌ Formulario inválido');
-      this.marcarCamposComoTocados();
-      return;
-  }
-  
-  // ✅ NUEVA VALIDACIÓN: Verificar precios de tamaños
-  if (!this.validarPreciosTamanos()) {
-    alert('⚠️ Por favor complete todos los precios de tamaños');
-    return;
-  }
-
+    // Mostrar mensaje específico
+    if (errores.length > 0) {
+      const mensaje = `⚠️ Campos faltantes por completar:\n\n${errores.join('\n')}\n\nPor favor completa estos campos para continuar.`;
+      alert(mensaje);
+    }
   }
 
   // ✅ NUEVO: Método para mostrar diálogo de confirmación
@@ -777,11 +834,6 @@ export class CrearComponent implements OnInit {
 
   // ✅ AGREGAR: Método para validar formulario en modo creación
   private validarFormulario(): boolean {
-    // Marcar todos los campos como tocados para mostrar errores
-    Object.keys(this.productoForm.controls).forEach(key => {
-      this.productoForm.get(key)?.markAsTouched();
-    });
-
     // Validaciones básicas del formulario
     if (this.productoForm.invalid) {
       console.log('❌ Formulario inválido');
@@ -794,12 +846,12 @@ export class CrearComponent implements OnInit {
       return false;
     }
 
-    // Validar ingredientes (opcional dependiendo de la categoría)
+    // Validar ingredientes para categorías que los requieren
     const categoria = this.categorias.find(cat => cat.id === this.productoForm.get('categoria')?.value);
-    if (categoria && ['Hamburguesa', 'Pizzas', 'Ensalada'].includes(categoria.nombre)) {
+    if (categoria && this.categoriaDeberiaTenerIngredientes(categoria.nombre)) {
       if (this.ingredientesSeleccionados.length === 0) {
         console.log('❌ Ingredientes requeridos para esta categoría');
-        alert('⚠️ Debes seleccionar al menos un ingrediente para esta categoría');
+        alert(`⚠️ La categoría "${categoria.nombre}" requiere al menos un ingrediente.\n\nPor favor selecciona los ingredientes necesarios.`);
         return false;
       }
     }
@@ -829,6 +881,7 @@ export class CrearComponent implements OnInit {
     return true;
   }
 
+  
   private validarFormularioParaEdicion(): boolean {
     console.log('🔍 Validando formulario para edición...');
 
