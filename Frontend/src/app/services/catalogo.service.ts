@@ -5,6 +5,8 @@ import { map, catchError } from 'rxjs/operators'; // ✅ AGREGAR map y catchErro
 import { Producto, Categoria, Estado, Menu, Ingrediente } from '../models/catalogo.model';
 import { environment } from '../../environments/environment';
 import { Tamano } from '../models/tamano.model';
+// ✅ AGREGAR: Importar los nuevos modelos
+import { PedidoRequest, PedidoResponse } from '../models/pedido-request.models';
 
 @Injectable({
   providedIn: 'root'
@@ -296,5 +298,15 @@ export class CatalogoService {
 
   actualizarIva(datosIva: { porcentaje_iva: number }): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/comun/iva/actualizar/`, datosIva);
+  }
+
+  // ✅ NUEVO: Método para crear pedido completo
+  crearPedido(pedidoData: PedidoRequest): Observable<PedidoResponse> {
+    return this.http.post<PedidoResponse>(`${this.apiUrl}/ventas/pedidos/crear/`, pedidoData);
+  }
+
+  // ✅ NUEVO: Método para obtener pedido por ID
+  obtenerPedido(pedidoId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/ventas/pedidos/${pedidoId}/`);
   }
 }

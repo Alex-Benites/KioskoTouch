@@ -159,7 +159,7 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
 
   private configurarGraficoBarras(data: EstadisticasPromociones): void {
     const ventas = data.ventas_por_promocion;
-    
+
     this.barChartData = {
       labels: ventas.map(item => item.promocion__nombre),
       datasets: [

@@ -9,6 +9,13 @@ import { PublicidadSectionComponent } from '../../shared/publicidad-section/publ
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import { Subscription } from 'rxjs'; // ✅ AGREGAR
+// ✅ AGREGAR: Importar los nuevos modelos
+import {
+  PedidoRequest,
+  ProductoPedidoRequest,
+  PersonalizacionRequest,
+  DatosFacturacion,
+} from '../../models/pedido-request.models';
 
 @Component({
   selector: 'app-resumen-pedido',
@@ -17,13 +24,12 @@ import { Subscription } from 'rxjs'; // ✅ AGREGAR
     CommonModule,
     FormsModule,
     PublicidadSectionComponent,
-    MatDialogModule // ✅ AGREGAR
+    MatDialogModule, // ✅ AGREGAR
   ],
   templateUrl: './resumen-pedido.component.html',
-  styleUrl: './resumen-pedido.component.scss'
+  styleUrl: './resumen-pedido.component.scss',
 })
 export class ResumenPedidoComponent implements OnInit, OnDestroy {
-
   // ✅ Inject de servicios existentes
   private router = inject(Router);
   private renderer = inject(Renderer2);
@@ -44,13 +50,16 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     nombreCompleto: '',
     cedula: '',
     telefono: '',
-    correo: ''
+    correo: '',
   };
 
   // ✅ AGREGAR: Variables para IVA dinámico
-  ivaActual: number = 15.00; // Valor por defecto
+  ivaActual: number = 15.0; // Valor por defecto
   ivaSubscription?: Subscription;
   cargandoIva = true;
+
+  // ✅ AGREGAR: Estado de guardado
+  guardandoPedido = false;
 
   // ✅ Getters para el template
   get productosCarrito(): any[] {
@@ -108,11 +117,15 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   // ✅ Cargar información de productos
   private cargarInformacionProductos(): void {
     const productos = this.productosCarrito;
-    const idsUnicos = [...new Set(productos.map(p => p.producto_id || p.menu_id).filter(id => id))];
+    const idsUnicos = [
+      ...new Set(
+        productos.map((p) => p.producto_id || p.menu_id).filter((id) => id)
+      ),
+    ];
 
     console.log('📥 Cargando información de productos:', idsUnicos);
 
-    idsUnicos.forEach(id => {
+    idsUnicos.forEach((id) => {
       const numeroId = Number(id);
 
       if (numeroId && !this.productosInfo.has(numeroId)) {
@@ -120,16 +133,19 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
         this.catalogoService.obtenerProductoPorId(numeroId).subscribe({
           next: (producto) => {
-            console.log(`✅ Información cargada para producto ${numeroId}:`, producto);
+            console.log(
+              `✅ Información cargada para producto ${numeroId}:`,
+              producto
+            );
             this.productosInfo.set(numeroId, producto);
           },
           error: (error) => {
             console.error(`❌ Error cargando producto ${numeroId}:`, error);
             this.productosInfo.set(numeroId, {
               nombre: `Producto ${numeroId}`,
-              imagen_url: null
+              imagen_url: null,
             });
-          }
+          },
         });
       }
     });
@@ -195,21 +211,30 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     console.log('📢 Publicidad cambiada:', publicidad);
   }
 
-  // ✅ AGREGAR: Calcular subtotal
+  // ✅ ARREGLAR: Método calcularSubtotal
   calcularSubtotal(): number {
     if (this.cargandoIva) return 0;
 
-    // Calcular subtotal quitando el IVA dinámico
-    const factorIva = 1 + (this.ivaActual / 100); // Ej: 1 + (15/100) = 1.15
-    return this.totalPedido / factorIva;
+    // ✅ CORRECTO: El subtotal es la suma de subtotales de productos SIN IVA
+    // Los precios de productos ya están sin IVA en la base de datos
+    return this.productosCarrito.reduce((total, item) => {
+      return total + (item.precio_unitario * item.cantidad);
+    }, 0);
   }
 
-  // ✅ AGREGAR: Calcular IVA
+  // ✅ ARREGLAR: Método calcularIVA basado en subtotal correcto
   calcularIVA(): number {
     if (this.cargandoIva) return 0;
 
     const subtotal = this.calcularSubtotal();
     return subtotal * (this.ivaActual / 100);
+  }
+
+  // ✅ NUEVO: Método para calcular total
+  calcularTotal(): number {
+    const subtotal = this.calcularSubtotal();
+    const iva = this.calcularIVA();
+    return subtotal + iva;
   }
 
   // ✅ AGREGAR: Seleccionar método de pago
@@ -235,12 +260,12 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       data: {
         itemType: 'PEDIDO COMPLETO',
         action: 'delete',
-        context: 'pedido' // ✅ Contexto específico para pedido
-      }
+        context: 'pedido', // ✅ Contexto específico para pedido
+      },
     });
 
     // ✅ NUEVO: Manejar la respuesta del diálogo
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       console.log('🎯 Respuesta del diálogo de cancelación:', result);
 
       if (result === true) {
@@ -255,7 +280,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
         // ✅ Regresar al menú principal
         this.router.navigate(['/cliente/menu']);
-
       } else {
         // ✅ Usuario canceló → No hacer nada
         console.log('❌ Cancelado: El pedido permanece activo');
@@ -279,48 +303,203 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ VALIDAR datos de facturación si están habilitados
     if (!this.validarDatosFacturacion()) {
       return;
     }
 
-    console.log('✅ Confirmando pedido...');
-    console.log('💳 Método de pago:', this.metodoPagoSeleccionado);
-    console.log('💰 Total a cobrar:', this.totalPedido);
+    console.log('✅ Iniciando proceso de guardado del pedido...');
+    this.guardarPedidoEnBaseDatos();
+  }
 
-    // ✅ PREPARAR queryParams con el MONTO REAL del carrito
-    const queryParams: any = {
-      tipo: this.metodoPagoSeleccionado,
-      monto: this.totalPedido.toFixed(2), // ✅ MONTO REAL DEL CARRITO
-      orden: this.generarNumeroOrden(),
-      productos: this.cantidadItems,
-      subtotal: this.calcularSubtotal().toFixed(2),
-      iva: this.calcularIVA().toFixed(2)
+  // ✅ NUEVO: Método principal para guardar el pedido
+  private guardarPedidoEnBaseDatos(): void {
+    this.guardandoPedido = true;
+
+    // 1. Preparar la estructura de datos
+    const pedidoData = this.prepararDatosPedido();
+
+    console.log('📤 Enviando pedido al backend:', pedidoData);
+
+    // 2. Enviar al backend
+    this.catalogoService.crearPedido(pedidoData).subscribe({
+      next: (response) => {
+        console.log('✅ Pedido guardado exitosamente:', response);
+        this.manejarPedidoExitoso(response);
+      },
+      error: (error) => {
+        console.error('❌ Error al guardar pedido:', error);
+        this.manejarErrorPedido(error);
+      },
+      complete: () => {
+        this.guardandoPedido = false;
+      },
+    });
+  }
+
+  // ✅ NUEVO: Preparar estructura de datos para enviar
+  private prepararDatosPedido(): PedidoRequest {
+    // Obtener datos básicos
+    const tipoEntrega = this.pedidoService.tipoEntrega() || 'servir';
+    const numeroMesa = this.obtenerNumeroMesa();
+
+    // Preparar productos con personalizaciones
+    const productos = this.prepararProductosPedido();
+
+    // ✅ USAR LOS MÉTODOS CORREGIDOS
+    const subtotal = Math.round(this.calcularSubtotal() * 100) / 100;
+    const ivaValor = Math.round(this.calcularIVA() * 100) / 100;
+    const total = Math.round(this.calcularTotal() * 100) / 100;
+
+    const pedidoData: PedidoRequest = {
+      numero_mesa: numeroMesa,
+      tipo_entrega: tipoEntrega,
+      tipo_pago: this.metodoPagoSeleccionado as 'efectivo' | 'tarjeta',
+      productos: productos,
+      subtotal: subtotal,
+      iva_porcentaje: Math.round(this.ivaActual * 100) / 100,
+      iva_valor: ivaValor,
+      total: total,
     };
 
-    // ✅ AGREGAR datos de turno si existe
-    if (this.tieneTurno) {
-      queryParams.turno = this.numeroTurno;
-      console.log('🎫 Incluye turno:', this.numeroTurno);
+    console.log('💰 VALORES CALCULADOS CORREGIDOS:');
+    console.log(`   - Subtotal: ${subtotal} (suma de productos sin IVA)`);
+    console.log(`   - IVA (${this.ivaActual}%): ${ivaValor}`);
+    console.log(`   - Total: ${total} (subtotal + IVA)`);
+    console.log(`   - Total del pedido service: ${this.totalPedido}`);
+
+    // Agregar turno si existe
+    if (this.tieneTurno && this.numeroTurno) {
+      pedidoData.turno = parseInt(this.numeroTurno);
     }
 
-    // ✅ AGREGAR datos de facturación si están completos
-    if (this.mostrarDatosFacturacion) {
-      queryParams.facturacion = JSON.stringify(this.datosFacturacion);
-      console.log('📄 Datos de facturación:', this.datosFacturacion);
+    // Agregar datos de facturación si están completos
+    if (
+      this.mostrarDatosFacturacion &&
+      this.datosFacturacion.nombreCompleto.trim()
+    ) {
+      pedidoData.datos_facturacion = {
+        nombre_completo: this.datosFacturacion.nombreCompleto.trim(),
+        cedula: this.datosFacturacion.cedula.trim(),
+        telefono: this.datosFacturacion.telefono.trim(),
+        correo: this.datosFacturacion.correo.trim(),
+      };
     }
 
-    console.log('📋 Enviando a InstruccionPago con parámetros:', queryParams);
+    return pedidoData;
+  }
 
-    // ✅ NAVEGAR a instrucción de pago CON TODOS LOS DATOS
-    this.router.navigate(['/cliente/instruccion-pago'], {
-      queryParams
+  // ✅ NUEVO: Preparar productos con sus personalizaciones
+  private prepararProductosPedido(): ProductoPedidoRequest[] {
+    return this.productosCarrito.map((item) => {
+      // ✅ CORREGIR: No multiplicar por 100 aquí
+      const subtotalProducto = Math.round((item.precio_unitario * item.cantidad) * 100) / 100;
+
+      // Preparar personalizaciones del producto
+      const personalizaciones: PersonalizacionRequest[] = [];
+
+      if (item.personalizacion && Array.isArray(item.personalizacion)) {
+        item.personalizacion.forEach((p: any) => {
+          personalizaciones.push({
+            ingrediente_id: p.ingrediente_id,
+            accion: p.accion,
+            precio_aplicado: p.precio_aplicado || 0,
+          });
+        });
+      }
+
+      return {
+        producto_id: item.producto_id,
+        cantidad: item.cantidad,
+        precio_unitario: Math.round(item.precio_unitario * 100) / 100,
+        subtotal: subtotalProducto, // ✅ Ya está redondeado correctamente
+        personalizaciones: personalizaciones,
+      };
     });
+  }
+
+  // ✅ NUEVO: Obtener número de mesa
+  private obtenerNumeroMesa(): number {
+    // Obtener de localStorage o usar valor por defecto
+    const mesa = localStorage.getItem('numeroMesa');
+    return mesa ? parseInt(mesa) : 1;
+  }
+
+  // ✅ NUEVO: Manejar respuesta exitosa
+  private manejarPedidoExitoso(response: any): void {
+    if (response.success && response.data) {
+      console.log('🎉 Pedido creado con ID:', response.data.pedido_id);
+
+      // Limpiar carrito
+      this.pedidoService.limpiarCarrito();
+
+      // ✅ USAR LOS VALORES CALCULADOS CORRECTOS (no this.totalPedido)
+      const subtotalCalculado = this.calcularSubtotal();
+      const ivaCalculado = this.calcularIVA();
+      const totalCalculado = this.calcularTotal();
+
+      // Preparar parámetros para navegación
+      const queryParams: any = {
+        tipo: this.metodoPagoSeleccionado,
+        monto: totalCalculado.toFixed(2), // ✅ USAR totalCalculado
+        orden: response.data.numero_pedido || this.generarNumeroOrden(),
+        productos: this.cantidadItems,
+        subtotal: subtotalCalculado.toFixed(2), // ✅ USAR subtotalCalculado
+        iva: ivaCalculado.toFixed(2), // ✅ USAR ivaCalculado
+        pedido_id: response.data.pedido_id,
+      };
+
+      console.log('💰 VALORES PARA NAVEGACIÓN:');
+      console.log(`   - Subtotal: ${subtotalCalculado.toFixed(2)}`);
+      console.log(`   - IVA: ${ivaCalculado.toFixed(2)}`);
+      console.log(`   - Total: ${totalCalculado.toFixed(2)}`);
+      console.log(`   - Total PedidoService (incorrecto): ${this.totalPedido}`);
+
+      // Agregar datos de turno si existe
+      if (this.tieneTurno) {
+        queryParams.turno = this.numeroTurno;
+      }
+
+      // Agregar datos de facturación si están completos
+      if (this.mostrarDatosFacturacion) {
+        queryParams.facturacion = JSON.stringify(this.datosFacturacion);
+        if (response.data.factura_id) {
+          queryParams.factura_id = response.data.factura_id;
+        }
+      }
+
+      console.log(
+        '🚀 Navegando a instrucción de pago con datos del pedido guardado'
+      );
+
+      // Navegar a instrucción de pago
+      this.router.navigate(['/cliente/instrucción-pago'], {
+        queryParams,
+      });
+    } else {
+      throw new Error(response.message || 'Error desconocido al crear pedido');
+    }
+  }
+
+  // ✅ NUEVO: Manejar errores
+  private manejarErrorPedido(error: any): void {
+    let mensajeError =
+      'Error al procesar el pedido. Por favor intenta nuevamente.';
+
+    if (error.error && error.error.message) {
+      mensajeError = error.error.message;
+    } else if (error.message) {
+      mensajeError = error.message;
+    }
+
+    alert(mensajeError);
+    console.error('❌ Error detallado:', error);
   }
 
   // ✅ AGREGAR: Generar número de orden
   private generarNumeroOrden(): string {
-    return Math.floor(Math.random() * 1000 + 1).toString().padStart(3, '0');
+    return Math.floor(Math.random() * 1000 + 1)
+      .toString()
+      .padStart(3, '0');
   }
 
   // ✅ Método para debug
@@ -341,7 +520,12 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
     const { nombreCompleto, cedula, telefono, correo } = this.datosFacturacion;
 
-    if (!nombreCompleto.trim() || !cedula.trim() || !telefono.trim() || !correo.trim()) {
+    if (
+      !nombreCompleto.trim() ||
+      !cedula.trim() ||
+      !telefono.trim() ||
+      !correo.trim()
+    ) {
       alert('Por favor completa todos los campos de facturación');
       return false;
     }
@@ -367,16 +551,16 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
           console.log(`✅ IVA dinámico cargado: ${this.ivaActual}%`);
         } else {
           console.warn('⚠️ No se encontró IVA activo, usando 15% por defecto');
-          this.ivaActual = 15.00;
+          this.ivaActual = 15.0;
         }
         this.cargandoIva = false;
       },
       error: (error) => {
         console.error('❌ Error al cargar IVA:', error);
         console.warn('⚠️ Error cargando IVA, usando 15% por defecto');
-        this.ivaActual = 15.00;
+        this.ivaActual = 15.0;
         this.cargandoIva = false;
-      }
+      },
     });
   }
 }

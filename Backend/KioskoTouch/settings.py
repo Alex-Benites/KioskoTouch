@@ -28,7 +28,7 @@ if DEBUG:
            'ENGINE': 'django.db.backends.mysql',
            'NAME': 'kioskoGo_db',
            'USER': 'root',
-           'PASSWORD': 'root', 
+           'PASSWORD': 'root',
            'HOST': 'localhost',
            'PORT': '3306',
        }
