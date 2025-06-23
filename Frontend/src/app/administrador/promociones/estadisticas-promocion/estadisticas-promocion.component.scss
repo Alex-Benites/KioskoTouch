@@ -268,3 +268,123 @@ $promo-color-4: #5c3c4c; // Marrón oscuro (ajustado)
     font-size: 1.5rem;
   }
 }
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  p {
+    margin-top: 1rem;
+    color: #666;
+    font-size: 1.1rem;
+  }
+}
+
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+  
+  .error-content {
+    text-align: center;
+    max-width: 400px;
+    
+    .error-icon {
+      font-size: 4rem;
+      color: #dc3545;
+      margin-bottom: 1rem;
+    }
+    
+    h3 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    
+    p {
+      margin-bottom: 2rem;
+      color: #666;
+    }
+    
+    .btn-retry {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background: #0056b3;
+      }
+      
+      .material-icons {
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 2rem;
+  
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background: #545b62;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.chart-container {
+  height: 300px;
+  position: relative;
+  
+  canvas {
+    max-height: 100% !important;
+  }
+}
+
+.bar-chart-card .chart-container {
+  height: 350px;
+}
+
+.doughnut-chart-card .chart-container {
+  height: 280px;
+}
+
+.h-bar-chart-card .chart-container {
+  height: 320px;
+}

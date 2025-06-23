@@ -6,64 +6,78 @@
     <h1 class="page-title">Estadísticas de Promociones</h1>
   </div>
 
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando estadísticas...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="hasError && !isLoading" class="error-container">
+    <div class="error-content">
+      <span class="material-icons error-icon">error_outline</span>
+      <h3>Error al cargar estadísticas</h3>
+      <p>{{ errorMessage }}</p>
+      <button class="btn-retry" (click)="reintentarCarga()">
+        <span class="material-icons">refresh</span>
+        Reintentar
+      </button>
+    </div>
+  </div>
+
   <!-- Grid principal de estadísticas -->
-  <div class="stats-grid">
+  <div *ngIf="!isLoading && !hasError" class="stats-grid">
     <!-- Ventas generadas -->
     <div class="stat-card bar-chart-card">
       <h3 class="card-title">Ventas generadas por promociones</h3>
-      <div class="bar-chart-container">
-        <div class="y-axis">
-          <span>60</span><span>50</span><span>40</span><span>30</span><span>20</span><span>10</span><span>0</span>
-        </div>
-        <div class="bars">
-          <div class="bar-item" *ngFor="let promo of ventasPorPromocion">
-            <div class="bar" [style.height.%]="promo.valor" [style.background-color]="promo.color"></div>
-            <span class="bar-label">{{ promo.label }}</span>
-          </div>
-        </div>
+      <div class="chart-container">
+        <canvas 
+          baseChart
+          [data]="barChartData"
+          [options]="barChartOptions"
+          [type]="barChartType">
+        </canvas>
       </div>
     </div>
 
     <!-- Promociones activas vs inactivas -->
     <div class="stat-card doughnut-chart-card">
       <h3 class="card-title">Promociones activas VS inactivas</h3>
-      <div class="doughnut-chart-content">
-        <div class="doughnut-chart"></div>
-        <div class="doughnut-legend">
-          <div class="legend-item" *ngFor="let promo of promocionesActivas">
-            <span class="legend-color" [style.background-color]="promo.color"></span>
-            <span class="legend-label">{{ promo.label }}</span>
-          </div>
-        </div>
+      <div class="chart-container">
+        <canvas 
+          baseChart
+          [data]="doughnutChartData"
+          [options]="doughnutChartOptions"
+          [type]="doughnutChartType">
+        </canvas>
       </div>
     </div>
 
     <!-- Gráfico de línea (placeholder) -->
     <div class="stat-card line-chart-card">
       <div class="card-header">
+        <h3 class="card-title">Tendencia mensual</h3>
         <select class="month-filter">
-          <option>Mes</option>
-          <option>Semana</option>
-          <option>Año</option>
+          <option>Últimos 3 meses</option>
+          <option>Últimos 6 meses</option>
+          <option>Último año</option>
         </select>
       </div>
       <div class="line-chart-placeholder">
+        <p>Gráfico de tendencia próximamente</p>
       </div>
     </div>
 
     <!-- Promociones más usadas -->
     <div class="stat-card h-bar-chart-card">
       <h3 class="card-title">Promociones más usadas</h3>
-      <div class="h-bar-chart-container">
-        <div class="h-bar-item" *ngFor="let promo of promocionesMasUsadas">
-          <div class="h-bar-info">
-            <span class="h-bar-label">{{ promo.nombre }}</span>
-            <span class="h-bar-sublabel">{{ promo.veces }} veces usada</span>
-          </div>
-          <div class="h-bar-track">
-            <div class="h-bar-fill" [style.width.%]="promo.porcentaje" [style.background-color]="promo.color"></div>
-          </div>
-        </div>
+      <div class="chart-container">
+        <canvas 
+          baseChart
+          [data]="horizontalBarChartData"
+          [options]="horizontalBarChartOptions"
+          [type]="horizontalBarChartType">
+        </canvas>
       </div>
     </div>
 
@@ -71,16 +85,20 @@
     <div class="kpi-grid">
       <div class="stat-card kpi-card">
         <div class="kpi-circle">
-          <span>{{ porcentajeUsuarios }}%</span>
+          <span class="kpi-percentage">{{ porcentajeUsuarios }}%</span>
         </div>
         <p class="kpi-label">Usuarios que usaron las promociones</p>
       </div>
       <div class="stat-card kpi-card">
-        <p class="kpi-label">Ingreso adicionales generados</p>
-        <h2 class="kpi-value">{{ ingresoAdicional | currency:'USD':'symbol':'1.2-2' }}</h2>
+        <div class="kpi-value">
+          <span class="currency">$</span>
+          <span class="amount">{{ ingresoAdicional | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+        <p class="kpi-label">Descuentos aplicados</p>
       </div>
     </div>
   </div>
+
 
 </div>
 

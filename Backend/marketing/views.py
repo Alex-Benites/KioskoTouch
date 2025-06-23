@@ -7,7 +7,11 @@ from django.conf import settings
 import os
 from urllib.parse import urlparse, unquote
 from django.core.files.storage import default_storage
-
+from django.utils import timezone
+from datetime import timedelta
+from .models import AppkioskoPromociones, AppkioskoPromocionproductos, AppkioskoPromocionmenu
+from ventas.models import AppkioskoPedidos, AppkioskoDetallepedido
+from django.db.models import Sum, Q
 from .models import AppkioskoPublicidades, AppkioskoVideo, AppkioskoPromociones
 from comun.models import AppkioskoImagen, AppkioskoEstados
 from .serializers import (
@@ -581,3 +585,125 @@ def get_publicidades_activas_publicas(request):
             'error': 'Error al obtener publicidades activas',
             'detail': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def estadisticas_promociones(request):
+    """Obtener estadísticas completas de promociones"""
+    
+    fecha_limite = timezone.now() - timedelta(days=90)
+    
+    # 1. Ventas por promoción (productos y menús)
+    ventas_promocion = []
+    promociones = AppkioskoPromociones.objects.all()
+    
+    for promocion in promociones:
+        # Productos asociados a esta promoción
+        productos_promocion = AppkioskoPromocionproductos.objects.filter(
+            promocion=promocion
+        ).values_list('producto_id', flat=True)
+        
+        # Menús asociados a esta promoción
+        menus_promocion = AppkioskoPromocionmenu.objects.filter(
+            promocion=promocion
+        ).values_list('menu_id', flat=True)
+        
+        # Pedidos con productos promocionados
+        pedidos_productos = AppkioskoPedidos.objects.filter(
+            created_at__gte=fecha_limite,
+            valor_descuento__gt=0,
+            appkioskodetallepedido__producto_id__in=productos_promocion
+        ).distinct() if productos_promocion else AppkioskoPedidos.objects.none()
+        
+        # Pedidos con menús promocionados
+        pedidos_menus = AppkioskoPedidos.objects.filter(
+            created_at__gte=fecha_limite,
+            valor_descuento__gt=0,
+            appkioskodetallepedido__menu_id__in=menus_promocion
+        ).distinct() if menus_promocion else AppkioskoPedidos.objects.none()
+        
+        # Unir ambos querysets
+        total_ventas = len(set(list(pedidos_productos.values_list('id', flat=True)) + 
+                             list(pedidos_menus.values_list('id', flat=True))))
+        
+        if total_ventas > 0:
+            total_ingresos = sum([
+                pedidos_productos.aggregate(total=Sum('total'))['total'] or 0,
+                pedidos_menus.aggregate(total=Sum('total'))['total'] or 0
+            ])
+            
+            ventas_promocion.append({
+                'promocion__nombre': promocion.nombre,
+                'total_ventas': total_ventas,
+                'total_ingresos': float(total_ingresos)
+            })
+    
+    # 2. Promociones activas vs inactivas (basado en fechas)
+    ahora = timezone.now()
+    promociones_activas = AppkioskoPromociones.objects.filter(
+        fecha_inicio_promo__lte=ahora,
+        fecha_fin_promo__gte=ahora
+    ).count()
+    
+    promociones_inactivas = AppkioskoPromociones.objects.filter(
+        Q(fecha_fin_promo__lt=ahora) | Q(fecha_inicio_promo__gt=ahora)
+    ).count()
+    
+    # 3. Promociones más usadas
+    promociones_mas_usadas = []
+    for promocion in promociones:
+        productos_promocion = AppkioskoPromocionproductos.objects.filter(
+            promocion=promocion
+        ).values_list('producto_id', flat=True)
+        
+        menus_promocion = AppkioskoPromocionmenu.objects.filter(
+            promocion=promocion
+        ).values_list('menu_id', flat=True)
+        
+        # Contar usos
+        usos_productos = AppkioskoPedidos.objects.filter(
+            created_at__gte=fecha_limite,
+            valor_descuento__gt=0,
+            appkioskodetallepedido__producto_id__in=productos_promocion
+        ).distinct().count() if productos_promocion else 0
+        
+        usos_menus = AppkioskoPedidos.objects.filter(
+            created_at__gte=fecha_limite,
+            valor_descuento__gt=0,
+            appkioskodetallepedido__menu_id__in=menus_promocion
+        ).distinct().count() if menus_promocion else 0
+        
+        veces_usada = usos_productos + usos_menus
+        
+        if veces_usada > 0:
+            promociones_mas_usadas.append({
+                'promocion__nombre': promocion.nombre,
+                'veces_usada': veces_usada
+            })
+    
+    promociones_mas_usadas = sorted(promociones_mas_usadas, key=lambda x: x['veces_usada'], reverse=True)[:4]
+    
+    # 4. KPIs
+    total_pedidos = AppkioskoPedidos.objects.filter(
+        created_at__gte=fecha_limite
+    ).count()
+    
+    pedidos_con_promocion = AppkioskoPedidos.objects.filter(
+        created_at__gte=fecha_limite,
+        valor_descuento__gt=0
+    ).count()
+    
+    porcentaje_usuarios_promocion = (pedidos_con_promocion / total_pedidos * 100) if total_pedidos > 0 else 0
+    
+    ingresos_adicionales = AppkioskoPedidos.objects.filter(
+        created_at__gte=fecha_limite,
+        valor_descuento__gt=0
+    ).aggregate(total=Sum('valor_descuento'))['total'] or 0
+
+    return Response({
+        'ventas_por_promocion': ventas_promocion,
+        'promociones_activas': promociones_activas,
+        'promociones_inactivas': promociones_inactivas,
+        'promociones_mas_usadas': promociones_mas_usadas,
+        'porcentaje_usuarios_promocion': round(porcentaje_usuarios_promocion, 1),
+        'ingresos_adicionales': float(ingresos_adicionales)
+    })

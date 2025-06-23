@@ -26,4 +26,7 @@ urlpatterns = [
 
     # Tamaños de promociones
     path('tamanos/', get_tamanos_promociones, name='tamanos-promociones-list'),
+
+    # Estadísticas de promociones
+    path('estadisticas/', views.estadisticas_promociones, name='estadisticas-promociones'),
 ]
