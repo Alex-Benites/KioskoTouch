@@ -25,7 +25,7 @@ export class EstadisticasPromocionComponent {
     { label: 'P1', valor: 42, color: '#f08a5d' },
     { label: 'P2', valor: 58, color: '#e54f6d' },
     { label: 'P3', valor: 75, color: '#7a28cb' },
-    { label: 'P4', valor: 92, color: '#5c3c4c' }
+  { label: 'P4', valor: 92, color: '#5c3c4c' }
   ];
 
   promocionesActivas = [
