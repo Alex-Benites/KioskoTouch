@@ -32,7 +32,7 @@ class DatosFacturacionSerializer(serializers.Serializer):
 
 # ✅ SERIALIZER principal para crear pedido
 class CrearPedidoSerializer(serializers.Serializer):
-    numero_mesa = serializers.IntegerField(min_value=1)
+    numero_mesa = serializers.IntegerField(min_value=0)  # ✅ CAMBIAR: Permitir 0
     tipo_entrega = serializers.ChoiceField(choices=['servir', 'llevar'])
     tipo_pago = serializers.ChoiceField(choices=['efectivo', 'tarjeta'])
     productos = ProductoPedidoSerializer(many=True)

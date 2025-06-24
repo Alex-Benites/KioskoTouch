@@ -122,26 +122,30 @@ def crear_pedido_principal(datos_validados, tipo_pago):
     # Generar número de pedido único
     numero_pedido = generar_numero_pedido()
 
+    # ✅ MANEJAR MESA CORRECTAMENTE
+    numero_mesa = datos_validados['numero_mesa']
+    if numero_mesa == 0:
+        numero_mesa = None  # Para llevar no tiene mesa
+
     # Datos básicos del pedido
     pedido_data = {
         'invoice_number': numero_pedido,
         'tipo_entrega': datos_validados['tipo_entrega'],
         'total': datos_validados['total'],
-        'numero_mesa': datos_validados['numero_mesa'],
+        'numero_mesa': numero_mesa,  # ✅ Puede ser None para llevar
         'tipo_pago_id': tipo_pago.id,
         'is_facturado': 1 if datos_validados.get('datos_facturacion') else 0,
-        'estado_id': 1,  # Estado inicial (ej: "Pendiente")
+        'estado_id': 1,
         'created_at': datetime.now(),
         'updated_at': datetime.now()
     }
 
-    # Agregar turno si existe
-    if datos_validados.get('turno'):
-        # Aquí puedes agregar lógica para manejar turnos si tienes esa tabla
-        pass
+    print(f"🏠 CREANDO PEDIDO CON MESA: {numero_mesa}")
+    print(f"   - Tipo entrega: {datos_validados['tipo_entrega']}")
+    print(f"   - Turno (si aplica): {datos_validados.get('turno', 'N/A')}")
 
     pedido = AppkioskoPedidos.objects.create(**pedido_data)
-    print(f"✅ Pedido #{numero_pedido} creado con ID: {pedido.id}")
+    print(f"✅ Pedido #{numero_pedido} creado con mesa: {pedido.numero_mesa}")
 
     return pedido
 

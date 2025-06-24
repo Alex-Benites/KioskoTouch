@@ -77,7 +77,11 @@
 
           <div class="total-item total-final">
             <span class="total-label">Total</span>
-            <span class="total-valor">${{ totalPedido | number:'1.2-2' }}</span>
+            @if (cargandoIva) {
+              <span class="total-valor loading">Calculando...</span>
+            } @else {
+              <span class="total-valor">${{ calcularTotal() | number:'1.2-2' }}</span>
+            }
           </div>
 
         </div>

@@ -218,7 +218,7 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     // ✅ CORRECTO: El subtotal es la suma de subtotales de productos SIN IVA
     // Los precios de productos ya están sin IVA en la base de datos
     return this.productosCarrito.reduce((total, item) => {
-      return total + (item.precio_unitario * item.cantidad);
+      return total + item.precio_unitario * item.cantidad;
     }, 0);
   }
 
@@ -392,7 +392,8 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   private prepararProductosPedido(): ProductoPedidoRequest[] {
     return this.productosCarrito.map((item) => {
       // ✅ CORREGIR: No multiplicar por 100 aquí
-      const subtotalProducto = Math.round((item.precio_unitario * item.cantidad) * 100) / 100;
+      const subtotalProducto =
+        Math.round(item.precio_unitario * item.cantidad * 100) / 100;
 
       // Preparar personalizaciones del producto
       const personalizaciones: PersonalizacionRequest[] = [];
@@ -419,9 +420,35 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   // ✅ NUEVO: Obtener número de mesa
   private obtenerNumeroMesa(): number {
-    // Obtener de localStorage o usar valor por defecto
-    const mesa = localStorage.getItem('numeroMesa');
-    return mesa ? parseInt(mesa) : 1;
+    const tipoEntrega = this.pedidoService.tipoEntrega() || 'servir';
+
+    console.log('🏠 OBTENIENDO NÚMERO DE MESA:');
+    console.log(`   - Tipo de entrega: ${tipoEntrega}`);
+
+    if (tipoEntrega === 'llevar') {
+      // ✅ PARA LLEVAR: No necesita mesa
+      console.log('   - Para llevar: mesa = 0 (no aplica)');
+      return 0;
+    }
+
+    if (tipoEntrega === 'servir') {
+      // ✅ PARA SERVIR: Verificar si tiene turno
+      const turno = this.pedidoService.obtenerTurno();
+
+      if (turno && turno > 0) {
+        // ✅ TIENE TURNO: Usar el número de turno como mesa
+        console.log(`   - Para servir CON turno: mesa = ${turno}`);
+        return turno;
+      } else {
+        // ✅ SIN TURNO: También usar 0 (NULL en BD)
+        console.log('   - Para servir SIN turno: mesa = 0 (NULL en BD)');
+        return 0;
+      }
+    }
+
+    // ✅ FALLBACK: También 0
+    console.log('   - Fallback: mesa = 0');
+    return 0;
   }
 
   // ✅ NUEVO: Manejar respuesta exitosa
