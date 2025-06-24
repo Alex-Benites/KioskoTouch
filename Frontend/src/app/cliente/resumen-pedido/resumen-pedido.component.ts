@@ -158,28 +158,42 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Obtener nombre del producto
+  // ✅ Obtener nombre del producto o menú
   obtenerNombreProducto(item: any): string {
-    const id = item.producto_id || item.menu_id;
-    const productoInfo = this.productosInfo.get(id);
-
-    if (productoInfo && productoInfo.nombre) {
-      return productoInfo.nombre;
+    if (item.tipo === 'menu') {
+      const id = item.menu_id;
+      const menuInfo = this.menusInfo.get(id);
+      if (menuInfo && menuInfo.nombre) {
+        return menuInfo.nombre;
+      }
+      return `Menú ${id}`;
+    } else {
+      const id = item.producto_id;
+      const productoInfo = this.productosInfo.get(id);
+      if (productoInfo && productoInfo.nombre) {
+        return productoInfo.nombre;
+      }
+      return `Producto ${id}`;
     }
-
-    return `Producto ${id}`;
   }
 
-  // ✅ Obtener imagen del producto
+  // ✅ Obtener imagen del producto o menú
   obtenerImagenProducto(item: any): string | null {
-    const id = item.producto_id || item.menu_id;
-    const productoInfo = this.productosInfo.get(id);
-
-    if (productoInfo && productoInfo.imagen_url) {
-      return this.catalogoService.getFullImageUrl(productoInfo.imagen_url);
+    if (item.tipo === 'menu') {
+      const id = item.menu_id;
+      const menuInfo = this.menusInfo.get(id);
+      if (menuInfo && menuInfo.imagen_url) {
+        return this.catalogoService.getFullImageUrl(menuInfo.imagen_url);
+      }
+      return null;
+    } else {
+      const id = item.producto_id;
+      const productoInfo = this.productosInfo.get(id);
+      if (productoInfo && productoInfo.imagen_url) {
+        return this.catalogoService.getFullImageUrl(productoInfo.imagen_url);
+      }
+      return null;
     }
-
-    return null;
   }
 
   // ✅ Verificar si tiene personalizaciones
@@ -278,15 +292,10 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       if (result === true) {
         // ✅ Usuario confirmó → Cancelar pedido completo
         console.log('✅ Confirmado: Cancelando pedido completo...');
+        console.log('🏠 Regresando al home...');
 
-        // ✅ LIMPIAR completamente el carrito
-        this.pedidoService.limpiarCarrito();
-
-        console.log('🗑️ Carrito limpiado completamente');
-        console.log('🏠 Regresando al menú principal...');
-
-        // ✅ Regresar al menú principal
-        this.router.navigate(['/cliente/menu']);
+        // ✅ Regresar al home
+        this.router.navigate(['/cliente/home']);
       } else {
         // ✅ Usuario canceló → No hacer nada
         console.log('❌ Cancelado: El pedido permanece activo');

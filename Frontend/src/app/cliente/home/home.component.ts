@@ -1,5 +1,6 @@
-import { Component} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { PedidoService } from '../../services/pedido.service';
 
 @Component({
   selector: 'app-home',
@@ -7,11 +8,14 @@ import { Router } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
+export class HomeComponent implements OnInit {
+  constructor(private router: Router, private pedidoService: PedidoService) {}
 
-export class HomeComponent{
-  constructor(private router: Router) {}
+  ngOnInit(): void {
+    this.pedidoService.limpiarPedido();
+  }
 
   irAlMenu() {
-    this.router.navigate(['/cliente/tipo-pedido']); // Cambia la ruta según la que tengas configurada
+    this.router.navigate(['/cliente/tipo-pedido']);
   }
 }

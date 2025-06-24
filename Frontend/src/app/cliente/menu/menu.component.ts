@@ -299,9 +299,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ REEMPLAZAR: Método limpiarPedido con diálogo elegante
-  limpiarPedido(): void {
-    console.log('🗑️ Solicitando confirmación para cancelar pedido desde menú...');
+  cancelarPedido(): void {
+    console.log('🗑️ Solicitando confirmación para cancelar pedido completo...');
 
     // ✅ NUEVO: Abrir diálogo de confirmación
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
@@ -311,35 +310,24 @@ export class MenuComponent implements OnInit, OnDestroy {
       data: {
         itemType: 'PEDIDO COMPLETO',
         action: 'delete',
-        context: 'menu' // ✅ Contexto específico para menú
-      }
+        context: 'pedido', // ✅ Contexto específico para pedido
+      },
     });
 
     // ✅ NUEVO: Manejar la respuesta del diálogo
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('🎯 Respuesta del diálogo de cancelación desde menú:', result);
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log('🎯 Respuesta del diálogo de cancelación:', result);
 
       if (result === true) {
         // ✅ Usuario confirmó → Cancelar pedido completo
-        console.log('✅ Confirmado: Cancelando pedido desde menú...');
+        console.log('✅ Confirmado: Cancelando pedido completo...');
+        console.log('🏠 Regresando al home...');
 
-        // ✅ LIMPIAR completamente el pedido
-        this.pedidoService.limpiarPedido();
-
-        console.log('🗑️ Pedido limpiado completamente desde menú');
-        console.log('🏠 Permaneciendo en el menú...');
-
-        // ✅ OPCIONAL: Volver a la primera categoría
-        const primeraCategoria = this.categorias()[0];
-        if (primeraCategoria && this.categoriaSeleccionada() !== primeraCategoria.id) {
-          console.log('📂 Volviendo a la primera categoría...');
-          this.seleccionarCategoria(primeraCategoria);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
+        // ✅ Regresar al home
+        this.router.navigate(['/cliente/home']);
       } else {
         // ✅ Usuario canceló → No hacer nada
-        console.log('❌ Cancelado: El pedido permanece activo en el menú');
+        console.log('❌ Cancelado: El pedido permanece activo');
       }
     });
   }

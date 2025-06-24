@@ -870,17 +870,21 @@ export class PersonalizarProductoComponent implements OnInit {
 
 
   disminuirIngrediente(ingrediente: IngredientePersonalizacion): void {
-    // Permitir que los ingredientes base lleguen a 0 (pueden ser quitados)
+  if (ingrediente.esOriginal) {
+    if (ingrediente.cantidad > 1) {
+      ingrediente.cantidad--;
+      ingrediente.seleccionado = ingrediente.cantidad > 0;
+    }
+  } else {
     if (ingrediente.cantidad > 0) {
       ingrediente.cantidad--;
       ingrediente.seleccionado = ingrediente.cantidad > 0;
-      console.log(`➖ ${ingrediente.nombre}: cantidad = ${ingrediente.cantidad}`);
     }
-
-    // Actualizar signal
-    this.ingredientesDisponibles.update(ingredients => [...ingredients]);
-    console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
   }
+  this.ingredientesDisponibles.update(ingredients => [...ingredients]);
+  console.log(`➖ ${ingrediente.nombre}: cantidad = ${ingrediente.cantidad}`);
+  console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
+}
 
 
 

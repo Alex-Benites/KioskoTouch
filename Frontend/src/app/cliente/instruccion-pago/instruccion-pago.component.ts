@@ -5,6 +5,7 @@ import { PublicidadSectionComponent } from '../../shared/publicidad-section/publ
 import { Publicidad } from '../../models/marketing.model';
 import { PinpadService, EstadoPago, PagoResponse } from '../../services/pinpad.service';
 import { Subscription } from 'rxjs';
+import { PedidoService } from '../../services/pedido.service';
 
 @Component({
   selector: 'app-instruccion-pago',
@@ -37,7 +38,8 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private pinpadService: PinpadService // ✅ INYECTAR SERVICIO
+    private pinpadService: PinpadService, // ✅ INYECTAR SERVICIO
+    private pedidoService: PedidoService // INYECTAR SERVICIO DE PEDIDO
   ) {}
 
   ngOnInit(): void {
@@ -210,9 +212,10 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
    * ✅ COMPLETAR PAGO EXITOSO
    */
   private completarPago(): void {
+    this.pedidoService.limpiarPedido();
     setTimeout(() => {
       this.router.navigate(['/cliente/home']);
-    }, 2000); // Mostrar mensaje de éxito por 2 segundos (puedes ajustar el tiempo si lo deseas)
+    }, 2000);
   }
 
   private generarNumeroOrden(): string {
