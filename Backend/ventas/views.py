@@ -122,30 +122,56 @@ def crear_pedido_principal(datos_validados, tipo_pago):
     # Generar número de pedido único
     numero_pedido = generar_numero_pedido()
 
-    # ✅ MANEJAR MESA CORRECTAMENTE
-    numero_mesa = datos_validados['numero_mesa']
+    # ✅ MANEJAR MESA/TURNO CORRECTAMENTE
+    numero_mesa = datos_validados['numero_mesa']  # Este puede ser mesa o turno
     if numero_mesa == 0:
         numero_mesa = None  # Para llevar no tiene mesa
+
+    # ✅ OBTENER ESTADO INICIAL DINÁMICAMENTE
+    from comun.models import AppkioskoEstados
+    try:
+        # Buscar estado activo (priorizar "Pendiente" o similar)
+        estado_inicial = AppkioskoEstados.objects.filter(
+            is_active=True
+        ).order_by('id').first()
+
+        if not estado_inicial:
+            # Si no hay estados activos, crear uno básico
+            estado_inicial = AppkioskoEstados.objects.create(
+                nombre='Pendiente',
+                descripcion='Pedido recibido',
+                is_active=True,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            print("⚠️ Se creó estado inicial automáticamente")
+
+        estado_id = estado_inicial.id
+        print(f"✅ Estado inicial asignado: {estado_inicial.nombre} (ID: {estado_id})")
+
+    except Exception as e:
+        print(f"❌ Error obteniendo estado: {e}")
+        raise ValueError("No se pudo asignar un estado inicial al pedido")
 
     # Datos básicos del pedido
     pedido_data = {
         'invoice_number': numero_pedido,
         'tipo_entrega': datos_validados['tipo_entrega'],
         'total': datos_validados['total'],
-        'numero_mesa': numero_mesa,  # ✅ Puede ser None para llevar
+        'numero_mesa': numero_mesa,  # ✅ AQUÍ GUARDAS EL TURNO
         'tipo_pago_id': tipo_pago.id,
         'is_facturado': 1 if datos_validados.get('datos_facturacion') else 0,
-        'estado_id': 1,
+        'estado_id': estado_id,
         'created_at': datetime.now(),
         'updated_at': datetime.now()
     }
 
-    print(f"🏠 CREANDO PEDIDO CON MESA: {numero_mesa}")
+    print(f"🏠 CREANDO PEDIDO CON MESA/TURNO: {numero_mesa}")
     print(f"   - Tipo entrega: {datos_validados['tipo_entrega']}")
-    print(f"   - Turno (si aplica): {datos_validados.get('turno', 'N/A')}")
+    print(f"   - Estado ID: {estado_id}")
 
     pedido = AppkioskoPedidos.objects.create(**pedido_data)
-    print(f"✅ Pedido #{numero_pedido} creado con mesa: {pedido.numero_mesa}")
+    print(f"✅ Pedido #{numero_pedido} creado con mesa/turno: {pedido.numero_mesa}")
 
     return pedido
 
