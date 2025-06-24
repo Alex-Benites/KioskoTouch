@@ -141,7 +141,7 @@
                 <button
                   class="control-btn disminuir"
                   (click)="disminuirIngrediente(ingrediente)"
-                  [disabled]="(ingrediente.esOriginal && ingrediente.cantidad <= 1) || (!ingrediente.esOriginal && ingrediente.cantidad <= 0)"
+                  [disabled]="ingrediente.cantidad <= 0"
                   [title]="obtenerTooltipDisminuir(ingrediente)">
                   -
                 </button>

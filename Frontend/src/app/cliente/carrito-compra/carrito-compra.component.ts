@@ -60,6 +60,7 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   }
 
   private productosInfo: Map<number, any> = new Map();
+  private menusInfo: Map<number, any> = new Map();
 
   ngOnInit(): void {
     // ✅ Aplicar mismo fondo que menu
@@ -163,27 +164,39 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
 
   // ✅ NUEVO: Obtener imagen del producto
   obtenerImagenProducto(item: any): string | null {
-    const id = item.producto_id || item.menu_id;
-    const productoInfo = this.productosInfo.get(id);
-
-    if (productoInfo && productoInfo.imagen_url) {
-      console.log(`🖼️ Obteniendo imagen para producto ID ${id}:`, productoInfo.imagen_url);
-      return this.catalogoService.getFullImageUrl(productoInfo.imagen_url);
+    if (item.tipo === 'menu') {
+      const id = item.menu_id;
+      const menuInfo = this.menusInfo.get(id);
+      if (menuInfo && menuInfo.imagen_url) {
+        return this.catalogoService.getFullImageUrl(menuInfo.imagen_url);
+      }
+      return null;
+    } else {
+      const id = item.producto_id;
+      const productoInfo = this.productosInfo.get(id);
+      if (productoInfo && productoInfo.imagen_url) {
+        return this.catalogoService.getFullImageUrl(productoInfo.imagen_url);
+      }
+      return null;
     }
-
-    return null;
   }
 
-  // ✅ NUEVO: Obtener nombre del producto
   obtenerNombreProducto(item: any): string {
-    const id = item.producto_id || item.menu_id;
-    const productoInfo = this.productosInfo.get(id);
-
-    if (productoInfo && productoInfo.nombre) {
-      return productoInfo.nombre;
+    if (item.tipo === 'menu') {
+      const id = item.menu_id;
+      const menuInfo = this.menusInfo.get(id);
+      if (menuInfo && menuInfo.nombre) {
+        return menuInfo.nombre;
+      }
+      return `Menú ${id}`;
+    } else {
+      const id = item.producto_id;
+      const productoInfo = this.productosInfo.get(id);
+      if (productoInfo && productoInfo.nombre) {
+        return productoInfo.nombre;
+      }
+      return `Producto ${id}`;
     }
-
-    return `Producto ${id}`; // Fallback
   }
 
   // ✅ NUEVO: Verificar si tiene personalizaciones
@@ -263,26 +276,40 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   }
 
 
-  // ✅ CORREGIR: Método para cargar información de productos
   private cargarInformacionProductos(): void {
-    const productos = this.productosCarrito;  // ✅ Sin paréntesis si es getter
-    const idsUnicos = [...new Set(productos.map(p => p.producto_id || p.menu_id).filter(id => id))];
+    const productos = this.productosCarrito;
+    const idsProductos = [...new Set(productos.filter(p => p.tipo === 'producto').map(p => p.producto_id).filter(id => id))];
+    const idsMenus = [...new Set(productos.filter(p => p.tipo === 'menu').map(p => p.menu_id).filter(id => id))];
 
-    console.log('📥 Cargando información de productos:', idsUnicos);
-
-    idsUnicos.forEach(id => {
+    // Cargar productos
+    idsProductos.forEach(id => {
       const numeroId = Number(id);
-
       if (numeroId && !this.productosInfo.has(numeroId)) {
         this.catalogoService.obtenerProductoPorId(numeroId).subscribe({
           next: (producto) => {
-            console.log(`✅ Información cargada para producto ${numeroId}:`, producto);
             this.productosInfo.set(numeroId, producto);
           },
           error: (error) => {
-            console.error(`❌ Error cargando producto ${numeroId}:`, error);
             this.productosInfo.set(numeroId, {
               nombre: `Producto ${numeroId}`,
+              imagen_url: null
+            });
+          }
+        });
+      }
+    });
+
+    // Cargar menús
+    idsMenus.forEach(id => {
+      const numeroId = Number(id);
+      if (numeroId && !this.menusInfo.has(numeroId)) {
+        this.catalogoService.obtenerMenuPorId(numeroId).subscribe({
+          next: (menu) => {
+            this.menusInfo.set(numeroId, menu);
+          },
+          error: (error) => {
+            this.menusInfo.set(numeroId, {
+              nombre: `Menú ${numeroId}`,
               imagen_url: null
             });
           }

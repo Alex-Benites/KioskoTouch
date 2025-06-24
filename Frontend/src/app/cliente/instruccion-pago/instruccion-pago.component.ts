@@ -31,7 +31,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   montoTotal: number = 0;
   procesandoPago: boolean = false;
   ultimaTransaccion?: PagoResponse;
-  
+
   private estadoPagoSubscription?: Subscription;
 
   constructor(
@@ -44,14 +44,14 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       this.tipoPago = params['tipo'] || 'tarjeta';
       this.numeroOrden = params['orden'] || this.generarNumeroOrden();
-      
+
       // ✅ OBTENER MONTO REAL DEL RESUMEN
       this.montoTotal = parseFloat(params['monto']) || 0;
       this.cantidadProductos = parseInt(params['productos']) || 0;
       this.subtotal = parseFloat(params['subtotal']) || 0;
       this.iva = parseFloat(params['iva']) || 0;
       this.numeroTurno = params['turno'] || undefined;
-      
+
       // ✅ OBTENER DATOS DE FACTURACIÓN SI EXISTEN
       if (params['facturacion']) {
         try {
@@ -82,7 +82,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       estado => {
         this.estadoPago = estado;
         this.procesandoPago = estado.estado === 'procesando';
-        
+
         // ✅ MANEJAR RESPUESTA EXITOSA
         if (estado.estado === 'exitoso' && estado.respuesta) {
           this.ultimaTransaccion = estado.respuesta;
@@ -211,14 +211,8 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
    */
   private completarPago(): void {
     setTimeout(() => {
-      this.router.navigate(['/cliente/instruccion-pago'], {
-        queryParams: { 
-          tipo: 'completado', 
-          orden: this.numeroOrden,
-          autorizacion: this.ultimaTransaccion?.autorizacion
-        }
-      });
-    }, 2000); // Mostrar mensaje de éxito por 2 segundos
+      this.router.navigate(['/cliente/home']);
+    }, 2000); // Mostrar mensaje de éxito por 2 segundos (puedes ajustar el tiempo si lo deseas)
   }
 
   private generarNumeroOrden(): string {
@@ -233,16 +227,16 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       case 'tarjeta':
         this.manejarPagoTarjeta();
         break;
-      
+
       case 'efectivo':
         this.router.navigate(['/cliente/instruccion-pago'], {
-          queryParams: { 
-            tipo: 'completado', 
+          queryParams: {
+            tipo: 'completado',
             orden: this.generarNumeroOrden()
           }
         });
         break;
-      
+
       case 'completado':
         this.router.navigate(['/cliente/home']);
         break;
@@ -257,11 +251,11 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       case 'esperando':
         this.procesarPagoTarjeta();
         break;
-      
+
       case 'exitoso':
         this.completarPago();
         break;
-      
+
       case 'error':
         this.pinpadService.reiniciarEstado();
         break;

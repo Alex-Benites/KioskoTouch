@@ -40,6 +40,7 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   // ✅ Propiedades para el template
   private productosInfo: Map<number, any> = new Map();
+  private menusInfo: Map<number, any> = new Map();
 
   // ✅ Propiedades existentes
   metodoPagoSeleccionado: 'tarjeta' | 'efectivo' | null = null;
@@ -117,35 +118,41 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   // ✅ Cargar información de productos
   private cargarInformacionProductos(): void {
     const productos = this.productosCarrito;
-    const idsUnicos = [
-      ...new Set(
-        productos.map((p) => p.producto_id || p.menu_id).filter((id) => id)
-      ),
-    ];
+    const idsProductos = [...new Set(productos.filter(p => p.tipo === 'producto').map(p => p.producto_id).filter(id => id))];
+    const idsMenus = [...new Set(productos.filter(p => p.tipo === 'menu').map(p => p.menu_id).filter(id => id))];
 
-    console.log('📥 Cargando información de productos:', idsUnicos);
-
-    idsUnicos.forEach((id) => {
+    // Cargar productos
+    idsProductos.forEach(id => {
       const numeroId = Number(id);
-
       if (numeroId && !this.productosInfo.has(numeroId)) {
-        console.log(`🔍 Cargando producto ID: ${numeroId}`);
-
         this.catalogoService.obtenerProductoPorId(numeroId).subscribe({
           next: (producto) => {
-            console.log(
-              `✅ Información cargada para producto ${numeroId}:`,
-              producto
-            );
             this.productosInfo.set(numeroId, producto);
           },
           error: (error) => {
-            console.error(`❌ Error cargando producto ${numeroId}:`, error);
             this.productosInfo.set(numeroId, {
               nombre: `Producto ${numeroId}`,
-              imagen_url: null,
+              imagen_url: null
             });
+          }
+        });
+      }
+    });
+
+    // Cargar menús
+    idsMenus.forEach(id => {
+      const numeroId = Number(id);
+      if (numeroId && !this.menusInfo.has(numeroId)) {
+        this.catalogoService.obtenerMenuPorId(numeroId).subscribe({
+          next: (menu) => {
+            this.menusInfo.set(numeroId, menu);
           },
+          error: (error) => {
+            this.menusInfo.set(numeroId, {
+              nombre: `Menú ${numeroId}`,
+              imagen_url: null
+            });
+          }
         });
       }
     });
@@ -303,7 +310,8 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.validarDatosFacturacion()) {
+    // Solo valida datos de facturación si el checkbox está marcado
+    if (this.mostrarDatosFacturacion && !this.validarDatosFacturacion()) {
       return;
     }
 
@@ -541,10 +549,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   // ✅ AGREGAR: Método para validar datos de facturación
   validarDatosFacturacion(): boolean {
-    if (!this.mostrarDatosFacturacion) {
-      return true; // Si no requiere facturación, es válido
-    }
-
     const { nombreCompleto, cedula, telefono, correo } = this.datosFacturacion;
 
     if (
