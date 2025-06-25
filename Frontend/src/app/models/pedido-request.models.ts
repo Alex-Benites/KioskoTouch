@@ -20,12 +20,13 @@ export interface PedidoRequest {
 }
 
 export interface ProductoPedidoRequest {
-  producto_id: number;
+  // ✅ CAMBIO: Hacer campos opcionales
+  producto_id?: number;
+  menu_id?: number;
+
   cantidad: number;
   precio_unitario: number;
   subtotal: number;
-
-  // Personalizaciones de ingredientes
   personalizaciones: PersonalizacionRequest[];
 }
 

@@ -132,13 +132,27 @@ export class CatalogoService {
     return this.http.post<Menu>(url, MenuData);
   }
 
+  // ✅ ACTUALIZAR: Tu método existente getMenus()
   getMenus(): Observable<Menu[]> {
     const url = `${this.apiUrl}/catalogo/menus/`;
     return this.http.get<Menu[]>(url);
   }
 
-  getMenuImagen(menuId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/catalogo/menus/${menuId}/imagen/`);
+  // ✅ AGREGAR: Nuevo método específico para menús activos
+  getMenusActivos(): Observable<any> {
+    const url = `${this.apiUrl}/catalogo/menus/activos/`;
+    console.log('🍽️ [SERVICE] Solicitando menús activos');
+
+    return this.http.get<any>(url).pipe(
+      map((response: any) => {
+        console.log('✅ [SERVICE] Menús activos recibidos:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ [SERVICE] Error al obtener menús activos:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   obtenerMenuPorId(id: number): Observable<any> {
@@ -154,8 +168,15 @@ export class CatalogoService {
     return this.http.delete<any>(url);
   }
 
+  // ✅ ACTUALIZAR: Tu método obtenerMenus() para usar menús activos
   obtenerMenus(): Observable<Menu[]> {
-    return this.getMenus();
+    // Cambiar para usar el endpoint de menús activos
+    return this.getMenusActivos().pipe(
+      map((response: any) => {
+        // El backend devuelve { menus: [...], total: number }
+        return response.menus || response || [];
+      })
+    );
   }
 
   verificarMenuExiste(id: number): Observable<boolean> {
@@ -308,5 +329,22 @@ export class CatalogoService {
   // ✅ NUEVO: Método para obtener pedido por ID
   obtenerPedido(pedidoId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/ventas/pedidos/${pedidoId}/`);
+  }
+
+  // ✅ AGREGAR: Método faltante para obtener imagen de menús
+  getMenuImagen(menuId: number): Observable<any> {
+    const url = `${this.apiUrl}/catalogo/menus/${menuId}/imagen/`;
+    console.log('🖼️ [SERVICE] Solicitando imagen para menú ID:', menuId);
+
+    return this.http.get<any>(url).pipe(
+      map((response: any) => {
+        console.log('✅ [SERVICE] Imagen de menú recibida:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ [SERVICE] Error al obtener imagen del menú:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }

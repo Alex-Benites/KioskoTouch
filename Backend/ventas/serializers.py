@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from decimal import Decimal, ROUND_HALF_UP
 from comun.models import AppkioskoIva
-from catalogo.models import AppkioskoProductos, AppkioskoIngredientes
+from catalogo.models import AppkioskoProductos, AppkioskoIngredientes, AppkioskoMenus
 from .models import (
     AppkioskoPedidos,
     AppkioskoDetallepedido,
@@ -17,11 +17,55 @@ class PersonalizacionIngredienteSerializer(serializers.Serializer):
 
 # ✅ SERIALIZER para productos del pedido
 class ProductoPedidoSerializer(serializers.Serializer):
-    producto_id = serializers.IntegerField()
+    # ✅ CAMBIO: Hacer campos opcionales
+    producto_id = serializers.IntegerField(required=False, allow_null=True)
+    menu_id = serializers.IntegerField(required=False, allow_null=True)
+
     cantidad = serializers.IntegerField(min_value=1)
     precio_unitario = serializers.DecimalField(max_digits=10, decimal_places=2)
     subtotal = serializers.DecimalField(max_digits=10, decimal_places=2)
     personalizaciones = PersonalizacionIngredienteSerializer(many=True, required=False)
+
+    def validate(self, data):
+        """✅ NUEVO: Validar que tenga producto_id O menu_id"""
+        producto_id = data.get('producto_id')
+        menu_id = data.get('menu_id')
+
+        # Debe tener uno de los dos, pero no ambos
+        if not producto_id and not menu_id:
+            raise serializers.ValidationError(
+                "Debe especificar 'producto_id' o 'menu_id'"
+            )
+
+        if producto_id and menu_id:
+            raise serializers.ValidationError(
+                "No puede especificar 'producto_id' y 'menu_id' al mismo tiempo"
+            )
+
+        # ✅ AGREGAR: Validar que existan en la BD
+        if producto_id:
+            try:
+                producto = AppkioskoProductos.objects.select_related('estado').get(id=producto_id)
+
+                # ✅ VERIFICAR: Que el producto esté activo
+                if producto.estado and producto.estado.is_active != 1:
+                    raise serializers.ValidationError(f"El producto '{producto.nombre}' no está disponible")
+
+            except AppkioskoProductos.DoesNotExist:
+                raise serializers.ValidationError(f"Producto con ID {producto_id} no existe")
+
+        if menu_id:
+            try:
+                menu = AppkioskoMenus.objects.select_related('estado').get(id=menu_id)
+
+                # ✅ VERIFICAR: Que el menú esté activo usando el campo booleano
+                if not menu.esta_activo:
+                    raise serializers.ValidationError(f"El menú '{menu.nombre}' no está disponible")
+
+            except AppkioskoMenus.DoesNotExist:
+                raise serializers.ValidationError(f"Menú con ID {menu_id} no existe")
+
+        return data
 
 # ✅ SERIALIZER para datos de facturación
 class DatosFacturacionSerializer(serializers.Serializer):

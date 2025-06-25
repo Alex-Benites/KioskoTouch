@@ -178,32 +178,78 @@ def crear_pedido_principal(datos_validados, tipo_pago):
 
 def crear_detalles_pedido(pedido, productos_data):
     """
-    ✅ CREAR: Detalles del pedido en appkiosko_detallepedido
+    ✅ ACTUALIZAR: Crear detalles para productos Y menús
     """
+    from catalogo.models import AppkioskoProductos, AppkioskoMenus  # ✅ IMPORTAR ambos
+
     for producto_data in productos_data:
-        print(f"🍔 Procesando producto ID: {producto_data['producto_id']}")
+        producto_id = producto_data.get('producto_id')
+        menu_id = producto_data.get('menu_id')
 
-        # Verificar que el producto existe
-        try:
-            producto = AppkioskoProductos.objects.get(id=producto_data['producto_id'])
-        except AppkioskoProductos.DoesNotExist:
-            raise ValueError(f"Producto con ID {producto_data['producto_id']} no existe")
+        if producto_id:
+            # ✅ PROCESAR PRODUCTO INDIVIDUAL (código existente)
+            print(f"🍔 Procesando producto ID: {producto_id}")
 
-        # Crear detalle del pedido
-        detalle = AppkioskoDetallepedido.objects.create(
-            pedido_id=pedido.id,
-            producto_id=producto.id,
-            cantidad=producto_data['cantidad'],
-            precio_unitario=producto_data['precio_unitario'],
-            subtotal=producto_data['subtotal'],
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        )
+            try:
+                producto = AppkioskoProductos.objects.select_related('estado').get(id=producto_id)
 
-        # Procesar personalizaciones de ingredientes
-        personalizaciones = producto_data.get('personalizaciones', [])
-        if personalizaciones:
-            procesar_personalizaciones(detalle, personalizaciones)
+                # ✅ VERIFICAR: Que el producto esté activo antes de procesarlo
+                if producto.estado and producto.estado.is_active != 1:
+                    raise ValueError(f"El producto '{producto.nombre}' no está disponible")
+
+            except AppkioskoProductos.DoesNotExist:
+                raise ValueError(f"Producto con ID {producto_id} no existe")
+
+            # Crear detalle del pedido
+            detalle = AppkioskoDetallepedido.objects.create(
+                pedido_id=pedido.id,
+                producto_id=producto.id,
+                menu_id=None,  # ✅ NULL para productos individuales
+                cantidad=producto_data['cantidad'],
+                precio_unitario=producto_data['precio_unitario'],
+                subtotal=producto_data['subtotal'],
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+
+            # Procesar personalizaciones (solo para productos)
+            personalizaciones = producto_data.get('personalizaciones', [])
+            if personalizaciones:
+                procesar_personalizaciones(detalle, personalizaciones)
+
+        elif menu_id:
+            # ✅ PROCESAR MENÚ/COMBO
+            print(f"🍽️ Procesando menú ID: {menu_id}")
+
+            try:
+                menu = AppkioskoMenus.objects.select_related('estado').get(id=menu_id)
+
+                # ✅ VERIFICAR: Que el menú esté activo antes de procesarlo
+                if not menu.esta_activo:
+                    raise ValueError(f"El menú '{menu.nombre}' no está disponible")
+
+            except AppkioskoMenus.DoesNotExist:
+                raise ValueError(f"Menú con ID {menu_id} no existe")
+
+            # Crear detalle del pedido
+            detalle = AppkioskoDetallepedido.objects.create(
+                pedido_id=pedido.id,
+                producto_id=None,  # ✅ NULL para menús
+                menu_id=menu.id,   # ✅ ID del menú
+                cantidad=producto_data['cantidad'],
+                precio_unitario=producto_data['precio_unitario'],
+                subtotal=producto_data['subtotal'],
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+
+            # ✅ MENÚS: No tienen personalizaciones de ingredientes
+            print(f"  ✅ Menú '{menu.nombre}' agregado sin personalizaciones")
+
+        else:
+            raise ValueError("Debe especificar producto_id o menu_id")
+
+        print(f"  ✅ Detalle de pedido creado: ID {detalle.id}")
 
 
 def procesar_personalizaciones(detalle_pedido, personalizaciones):

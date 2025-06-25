@@ -405,17 +405,16 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     return pedidoData;
   }
 
-  // ✅ NUEVO: Preparar productos con sus personalizaciones
+  // ✅ MODIFICAR: Método prepararProductosPedido
   private prepararProductosPedido(): ProductoPedidoRequest[] {
     return this.productosCarrito.map((item) => {
-      // ✅ CORREGIR: No multiplicar por 100 aquí
-      const subtotalProducto =
-        Math.round(item.precio_unitario * item.cantidad * 100) / 100;
+      const subtotalProducto = Math.round(item.precio_unitario * item.cantidad * 100) / 100;
 
-      // Preparar personalizaciones del producto
+      // Preparar personalizaciones (solo para productos, no para menús)
       const personalizaciones: PersonalizacionRequest[] = [];
 
-      if (item.personalizacion && Array.isArray(item.personalizacion)) {
+      // ✅ NUEVO: Solo agregar personalizaciones para productos individuales
+      if (item.tipo === 'producto' && item.personalizacion && Array.isArray(item.personalizacion)) {
         item.personalizacion.forEach((p: any) => {
           personalizaciones.push({
             ingrediente_id: p.ingrediente_id,
@@ -425,12 +424,31 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
         });
       }
 
-      return {
-        producto_id: item.producto_id,
+      // ✅ NUEVO: Estructura base
+      const productoBase = {
         cantidad: item.cantidad,
         precio_unitario: Math.round(item.precio_unitario * 100) / 100,
-        subtotal: subtotalProducto, // ✅ Ya está redondeado correctamente
+        subtotal: subtotalProducto,
         personalizaciones: personalizaciones,
+      };
+
+      // ✅ NUEVO: Agregar producto_id O menu_id según el tipo
+      if (item.tipo === 'producto') {
+        return {
+          ...productoBase,
+          producto_id: item.producto_id,
+        };
+      } else if (item.tipo === 'menu') {
+        return {
+          ...productoBase,
+          menu_id: item.menu_id,
+        };
+      }
+
+      // ✅ FALLBACK: Asumir producto si no está especificado
+      return {
+        ...productoBase,
+        producto_id: item.producto_id,
       };
     });
   }
