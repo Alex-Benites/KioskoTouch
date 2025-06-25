@@ -347,7 +347,13 @@ class ProductoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 class MenuListCreateAPIView(generics.ListCreateAPIView):
     """Vista para listar y crear menús con productos"""
-    queryset = AppkioskoMenus.objects.select_related('estado').all()
+    # ✅ CAMBIAR: Filtrar solo menús activos
+    def get_queryset(self):
+        """Obtener solo menús activos"""
+        return AppkioskoMenus.objects.filter(
+            estado__is_active=1
+        ).select_related('estado').order_by('nombre')
+
     serializer_class = MenuSerializer
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [AllowAny]
@@ -691,7 +697,7 @@ class IngredientesPorCategoriaView(generics.ListAPIView):
 
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
- 
+
             response_data = {
                 'ingredientes': serializer.data,
                 'total': len(serializer.data),
@@ -737,14 +743,14 @@ def obtener_ingredientes_por_producto(request, producto_id):
             except AttributeError as e:
                 print(f"⚠️ Error accediendo a categoría del producto: {e}")
                 categoria_producto = None
-        
+
         if not categoria_producto:
             print(f"⚠️ Producto sin categoría asignada")
             # Para productos sin categoría, verificar si tiene ingredientes asignados directamente
             ingredientes_directos = AppkioskoProductosIngredientes.objects.filter(
                 producto_id=producto_id
             )
-            
+
             if ingredientes_directos.exists():
                 print("✅ Producto sin categoría pero con ingredientes asignados directamente")
                 # Continuar con la lógica para obtener esos ingredientes específicos
@@ -772,27 +778,27 @@ def obtener_ingredientes_por_producto(request, producto_id):
                 # Obtener todas las categorías activas de la DB
                 categorias_activas = AppkioskoCategorias.objects.filter(activo=True).values_list('nombre', flat=True)
                 categorias_activas_lower = {cat.lower() for cat in categorias_activas}
-                
+
                 print(f"📊 Categorías activas en DB: {categorias_activas_lower}")
-                
+
                 # Si la categoría del producto no está en las activas, buscar similar
                 if categoria_producto not in categorias_activas_lower:
                     print(f"⚠️ Categoría '{categoria_producto}' no encontrada en categorías activas")
-                    
+
                     # Buscar categoría similar
                     for cat_activa in categorias_activas_lower:
                         cat_producto_clean = categoria_producto.rstrip('s')
                         cat_activa_clean = cat_activa.rstrip('s')
-                        
+
                         if (cat_producto_clean == cat_activa_clean or
-                            categoria_producto in cat_activa or 
+                            categoria_producto in cat_activa or
                             cat_activa in categoria_producto):
                             categoria_normalizada = cat_activa
                             print(f"🔄 Categoría similar encontrada: '{categoria_producto}' → '{categoria_normalizada}'")
                             break
                 else:
                     categoria_normalizada = categoria_producto
-                    
+
             except Exception as e:
                 print(f"⚠️ Error procesando categorías: {e}")
                 categoria_normalizada = categoria_producto
@@ -804,7 +810,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
         ingredientes_producto_info = {}
         try:
             relaciones = AppkioskoProductosIngredientes.objects.filter(producto_id=producto_id)
-            
+
             for relacion in relaciones:
                 ingredientes_producto_info[relacion.ingrediente_id] = {
                     'seleccionado': True,
@@ -812,7 +818,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
                     'es_base': getattr(relacion, 'es_base', False),
                     'permite_extra': getattr(relacion, 'permite_extra', False)
                 }
-            
+
             ingredientes_producto_ids = set(ingredientes_producto_info.keys())
             print(f"🔍 IDs de ingredientes del producto: {ingredientes_producto_ids}")
         except Exception as e:
@@ -832,18 +838,18 @@ def obtener_ingredientes_por_producto(request, producto_id):
                         categoria_producto__iexact=categoria_busqueda
                     )
                     print(f"🔎 Ingredientes encontrados con búsqueda exacta: {ingredientes_categoria.count()}")
-                    
+
                     # Si no encuentra, buscar con variaciones dinámicas
                     if not ingredientes_categoria.exists():
                         variaciones_categoria = set()
                         variaciones_categoria.add(categoria_busqueda)
-                        
+
                         # Agregar variaciones plural/singular
                         if categoria_busqueda.endswith('s'):
                             variaciones_categoria.add(categoria_busqueda[:-1])
                         else:
                             variaciones_categoria.add(categoria_busqueda + 's')
-                        
+
                         # Buscar en todas las variaciones
                         for variacion in variaciones_categoria:
                             ingredientes_categoria = AppkioskoIngredientes.objects.filter(
@@ -875,12 +881,12 @@ def obtener_ingredientes_por_producto(request, producto_id):
         if not ingredientes_categoria.exists():
             print(f"❌ No se encontraron ingredientes para la categoría '{categoria_busqueda}'")
             print("📋 Verificando si el producto tiene ingredientes asignados directamente...")
-            
+
             # Verificar si el producto tiene ingredientes asignados directamente
             ingredientes_directos = AppkioskoProductosIngredientes.objects.filter(
                 producto_id=producto_id
             )
-            
+
             if ingredientes_directos.exists():
                 print("✅ Producto tiene ingredientes asignados directamente")
                 # Obtener solo los ingredientes específicamente asignados al producto
@@ -888,7 +894,7 @@ def obtener_ingredientes_por_producto(request, producto_id):
                 ingredientes_categoria = AppkioskoIngredientes.objects.filter(
                     id__in=ingredientes_ids
                 ).order_by('nombre')
-                
+
                 print(f"🎯 Mostrando {ingredientes_categoria.count()} ingredientes específicos del producto")
             else:
                 print("❌ Producto sin ingredientes - mostrando lista vacía")
@@ -993,3 +999,51 @@ def obtener_ingredientes_por_producto(request, producto_id):
         return Response({
             'error': 'Error interno del servidor'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ✅ AGREGAR: Nueva vista para obtener menús activos para el cliente
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_menus_activos(request):
+    """Obtener todos los menús activos disponibles para pedidos"""
+    try:
+        print("🍽️ Obteniendo menús activos...")
+
+        # Filtrar menús activos usando el campo booleano
+        menus_activos = AppkioskoMenus.objects.filter(
+            estado__is_active=1,
+            estado__is_eliminated=0
+        ).select_related('estado').order_by('nombre')
+
+        print(f"   Menús activos encontrados: {menus_activos.count()}")
+
+        resultado = []
+        for menu in menus_activos:
+            # Buscar imagen del menú
+            try:
+                imagen = AppkioskoImagen.objects.get(
+                    categoria_imagen='menus',
+                    entidad_relacionada_id=menu.id
+                )
+                imagen_url = imagen.ruta
+            except AppkioskoImagen.DoesNotExist:
+                imagen_url = None
+
+            resultado.append({
+                'id': menu.id,
+                'nombre': menu.nombre,
+                'descripcion': menu.descripcion,
+                'precio': float(menu.precio),
+                'tipo_menu': menu.tipo_menu,
+                'imagen_url': imagen_url,
+                'estado': menu.get_estado_nombre(),
+                'created_at': menu.created_at
+            })
+
+        return Response({
+            'menus': resultado,
+            'total': len(resultado)
+        })
+
+    except Exception as e:
+        print(f"❌ Error obteniendo menús activos: {str(e)}")
+        return Response({'error': str(e)}, status=400)

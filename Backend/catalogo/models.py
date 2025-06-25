@@ -18,13 +18,13 @@ class AppkioskoCategorias(models.Model):
 class AppkioskoIngredientes(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    
+
     # ✅ OPCIÓN RECOMENDADA: Hacer el campo libre (sin choices)
     categoria_producto = models.CharField(
         max_length=50,
         help_text="Categoría del producto para el cual aplica este ingrediente"
     )
-    
+
     precio_adicional = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     # ✅ AGREGAR CAMPO DE STOCK
     stock = models.IntegerField(
@@ -43,8 +43,8 @@ class AppkioskoIngredientes(models.Model):
     )
 
     imagen = models.ImageField(
-        upload_to='ingredientes/', 
-        null=True, 
+        upload_to='ingredientes/',
+        null=True,
         blank=True,
         help_text="Imagen del ingrediente"
     )
@@ -112,12 +112,12 @@ class AppkioskoProductos(models.Model):
     aplica_tamanos = models.BooleanField(default=False)
 
     ingredientes = models.ManyToManyField(
-        AppkioskoIngredientes, 
+        AppkioskoIngredientes,
         through='AppkioskoProductosIngredientes',
         blank=True,
         related_name='productos'
     )
-    
+
     # Nueva relación con tamaños
     tamanos = models.ManyToManyField(
         AppkioskoTamanos,
@@ -153,14 +153,45 @@ class AppkioskoMenus(models.Model):
     def __str__(self):
         return self.nombre
 
+    # ✅ CORRECCIÓN: Usar el campo booleano en lugar del ID
+    @property
+    def esta_activo(self):
+        """Retorna True si el menú está activo"""
+        if not self.estado:
+            return False
+
+        # ✅ USAR: Campo booleano is_active en lugar del ID
+        return self.estado.is_active == 1
+
+    # ✅ ALTERNATIVA: Si quieres ser más explícito sobre los nombres
+    @property
+    def esta_disponible(self):
+        """Retorna True si el menú está disponible para pedidos"""
+        if not self.estado:
+            return False
+
+        # Verificar por nombre del estado (más legible)
+        return self.estado.nombre.lower() in ['activado', 'activo', 'disponible']
+
+    # ✅ AGREGAR: Método para obtener productos del menú
+    def get_productos(self):
+        """Retorna los productos que componen este menú"""
+        from .models import AppkioskoMenuproductos  # Import local para evitar circular
+        return AppkioskoMenuproductos.objects.filter(menu=self).select_related('producto', 'tamano')
+
+    # ✅ AGREGAR: Método para obtener el nombre del estado
+    def get_estado_nombre(self):
+        """Retorna el nombre del estado actual"""
+        return self.estado.nombre if self.estado else "Sin estado"
+
 class AppkioskoMenuproductos(models.Model):
     producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True)
     menu = models.ForeignKey(AppkioskoMenus, on_delete=models.CASCADE, blank=True, null=True)
     cantidad = models.IntegerField()
     tamano = models.ForeignKey(
-        AppkioskoTamanos, 
-        on_delete=models.CASCADE, 
-        blank=True, 
+        AppkioskoTamanos,
+        on_delete=models.CASCADE,
+        blank=True,
         null=True,
         help_text="Tamaño específico del producto en este menú (opcional)"
     )

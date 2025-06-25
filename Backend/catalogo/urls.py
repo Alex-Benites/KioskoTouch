@@ -47,4 +47,7 @@ urlpatterns = [
 
     # ✅ NUEVA URL para ingredientes por producto
     path('productos/<int:producto_id>/ingredientes/', views.obtener_ingredientes_por_producto, name='ingredientes-por-producto'),
+
+    # ✅ AGREGAR: URL para menús activos
+    path('menus/activos/', views.get_menus_activos, name='menus-activos'),
 ]
