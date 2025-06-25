@@ -217,8 +217,8 @@ $border-color: #e0e0e0;
       background-color: white;
       border: 2px solid $border-color;
       border-radius: 15px;
-      padding: 15px 20px; // ✅ CAMBIO: Menos padding vertical, más horizontal
-      min-width: 490px; // ✅ CAMBIO: Ancho mínimo en lugar de fijo
+      padding: 15px 10px; // ✅ CAMBIO: Menos padding vertical, más horizontal
+      min-width: 310px; // ✅ CAMBIO: Ancho mínimo en lugar de fijo
       width: auto; // ✅ CAMBIO: Ancho automático
       display: flex;
       flex-direction: row; // ✅ CAMBIO: de column a row (horizontal)

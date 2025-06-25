@@ -252,7 +252,7 @@ $font-family-base: 'Lato', sans-serif;
   position: relative;
   background: white;
   border-radius: 12px;
-  padding: 15px;
+  padding: 0px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -260,7 +260,7 @@ $font-family-base: 'Lato', sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   border: 3px solid transparent;
   min-width: 0; // ✅ PREVENIR overflow de contenido
   overflow: hidden; // ✅ EVITAR que el contenido se desborde
@@ -281,7 +281,7 @@ $font-family-base: 'Lato', sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 0px;
     overflow: hidden; // ✅ EVITAR que la imagen se desborde
 
     img {
@@ -299,25 +299,31 @@ $font-family-base: 'Lato', sans-serif;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 2px;
+    gap: 8px;
     overflow: hidden; // ✅ EVITAR overflow del texto
 
     .ingrediente-nombre {
-      font-size: 35px; // ✅ REDUCIR un poco el tamaño (era 40px, muy grande)
+      font-size: 20px !important;
+      margin: 0%;
+      padding: 6px 4px !important;
       font-weight: 600;
       color: #333;
-      margin: 0;
+      //margin: 0;
       line-height: 1.2;
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
       width: 100%; // ✅ ASEGURAR que tome todo el ancho
+      display: block !important;
     }
 
     .ingrediente-precio {
       font-size: 14px; // ✅ AJUSTAR precio (era 20px)
       font-weight: 500;
-      margin: 0;
+      margin-top: 0;
+      margin-bottom: 0;
+      margin-left: 0;
+      margin-right: 0;
       line-height: 1;
 
       .precio-incluido {
@@ -366,7 +372,8 @@ $font-family-base: 'Lato', sans-serif;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 1px;
+    margin-bottom: 0px;
     padding: 8px;
     width: 100%; // ✅ ASEGURAR que tome todo el ancho
     overflow: hidden; // ✅ EVITAR overflow
@@ -414,10 +421,52 @@ $font-family-base: 'Lato', sans-serif;
     font-weight: bold;
   }
 
+  // En personalizar-producto.component.scss - AGREGAR:
+
+  .ingrediente-precio {
+    //margin: 0px !important;
+    //padding: 1px;
+    .sin-ingrediente {
+      color: #dc3545;
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    .incluido-normal {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .incluido-con-extra {
+      color: #28a745;
+      font-weight: 600;
+
+      .costo-extra {
+        color: #fd7e14;
+        font-weight: bold;
+      }
+    }
+
+    .no-seleccionado {
+      color: #6c757d;
+    }
+
+    .seleccionado-adicional {
+      color: #007bff;
+      font-weight: 600;
+
+      .total-ingrediente {
+        color: #fd7e14;
+        font-weight: bold;
+      }
+    }
+  }
+
+  // ✅ También actualizar el estilo de las cards cuando tienen cantidad 0
   &.sin-ingrediente {
     border-color: #dc3545;
     background-color: #fff5f5;
-    
+
     .ingrediente-imagen img {
       opacity: 0.5;
       filter: grayscale(50%);
@@ -427,7 +476,7 @@ $font-family-base: 'Lato', sans-serif;
   &.ingrediente-base {
     border-left: 4px solid #4CAF50;
     background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, transparent 100%);
-    
+
     .ingrediente-nombre::after {
       content: " (BASE)";
       font-size: 0.7em;
@@ -442,7 +491,7 @@ $font-family-base: 'Lato', sans-serif;
 
   &.ingrediente-opcional {
     border-left: 4px solid #9E9E9E;
-    
+
     .ingrediente-nombre::after {
       content: " (OPCIONAL)";
       font-size: 0.7em;
@@ -468,7 +517,310 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
-// ✅ Mensaje sin ingredientes
+// ✅ Footer "Mi Orden" (mantener igual)
+.order-summary-footer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+
+  &__title {
+    background-color: $kiosko-red;
+    color: white;
+    font-size: clamp(1.5rem, 3vw, 1.8rem);
+    font-weight: 600;
+    margin: 0;
+    padding: 15px 30px;
+    text-align: center;
+  }
+
+  &__content {
+    background-color: $kiosko-background-light;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  &__empty-message, &__details {
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: #333333;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  &__details {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+    justify-content: center;
+  }
+
+  &__button {
+    flex: 1;
+    background-color: $kiosko-red;
+    border-radius: 8px;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: color.scale($kiosko-red, $lightness: -7%);
+    }
+
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.primary__button {
+  background-color: $kiosko-red;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: color.scale($kiosko-red, $lightness: -7%);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+// ✅ Responsive design
+@media (max-width: 1024px) {
+  .producto-detalle {
+    flex-direction: column;
+    gap: 30px;
+    align-items: center;
+  }
+
+  .producto-imagen {
+    flex: none;
+
+    .imagen-principal {
+      max-width: 400px;
+      height: 300px;
+    }
+  }
+
+  .producto-info {
+    padding-left: 0;
+    text-align: center;
+    max-width: 600px;
+
+    .producto-nombre {
+      font-size: 2.5rem;
+    }
+
+    .precio-cantidad-horizontal {
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .precio-seccion {
+      text-align: center;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .personalizacion-content {
+    padding: 20px;
+  }
+
+  .producto-detalle {
+    max-width: 100%;
+  }
+
+  .producto-imagen {
+    .imagen-principal {
+      max-width: 300px;
+      height: 250px;
+    }
+  }
+
+  .producto-info {
+    max-width: 100%;
+
+    .producto-nombre {
+      font-size: 2rem;
+    }
+
+    .precio-cantidad-horizontal {
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .precio-seccion {
+      .precio-unitario {
+        font-size: 1.8rem;
+      }
+    }
+
+    .cantidad-accion-container {
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .boton-anadir-principal {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-header {
+    img {
+      max-width: 120px;
+    }
+  }
+
+  .order-summary-footer {
+    &__title {
+      font-size: 1.2rem;
+      padding: 10px 12px;
+    }
+
+    &__content {
+      padding: 12px;
+      gap: 10px;
+    }
+
+    &__actions {
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: none;
+    }
+  }
+}
+
+// ✅ ACTUALIZAR: Responsive para la cuadrícula
+@media (max-width: 1200px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+
+  .ingrediente-card {
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 30px;
+      }
+
+      .ingrediente-precio {
+        font-size: 9px;
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+
+  .ingrediente-card {
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 10px;
+      }
+
+      .ingrediente-precio {
+        font-size: 8px;
+      }
+    }
+
+    .ingrediente-check {
+      width: 18px;
+      height: 18px;
+      top: 4px;
+      right: 4px;
+
+      svg {
+        width: 10px;
+        height: 10px;
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .ingrediente-card {
+    padding: 12px;
+
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 11px;
+      }
+
+      .ingrediente-precio {
+        font-size: 9px;
+      }
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .ingredientes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .ingrediente-card {
+    padding: 10px;
+
+    .ingrediente-info {
+      .ingrediente-nombre {
+        font-size: 10px;
+      }
+
+      .ingrediente-precio {
+        font-size: 8px;
+      }
+    }
+  }
+}
+
+
+// En personalizar-producto.component.scss - AGREGAR:
+
 .sin-ingredientes-message {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border: 2px dashed #adb5bd;
@@ -476,19 +828,19 @@ $font-family-base: 'Lato', sans-serif;
   padding: 24px;
   text-align: center;
   margin: 20px 0;
-  
+
   .message-icon {
     font-size: 2.5rem;
     margin-bottom: 12px;
   }
-  
+
   .message-text {
     font-size: 1.1rem;
     font-weight: 600;
     color: #495057;
     margin-bottom: 8px;
   }
-  
+
   .message-subtext {
     font-size: 0.95rem;
     color: #6c757d;
@@ -756,9 +1108,135 @@ $font-family-base: 'Lato', sans-serif;
     transform: translateY(0);
   }
 
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    transform: none;
+  .edit-actions-bar {
+    padding: 12px 15px;
+
+    .btn-volver, .btn-actualizar {
+      padding: 16px;
+      font-size: 15px;
+    }
+
+    .precio-display {
+      font-size: 1.2rem;
+      padding: 10px;
+    }
   }
+}
+
+// ✅ AGREGAR: Estilos para ingredientes base
+.ingrediente-card {
+  // ... estilos existentes ...
+    margin-top: 0px;
+    margin-bottom: 0;
+    margin-right: 0;
+    margin-left: 0;
+  // ✅ NUEVO: Indicador visual para ingredientes base
+  &.ingrediente-base {
+    border-left: 4px solid #4CAF50;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, transparent 100%);
+
+    .ingrediente-nombre::after {
+      content: " (BASE)";
+      font-size: 0.7em;
+      color: #4CAF50;
+      font-weight: bold;
+      background: rgba(76, 175, 80, 0.1);
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+  }
+
+  // ✅ Estilos para ingredientes opcionales
+  &.ingrediente-opcional {
+    border-left: 4px solid #9E9E9E;
+
+    .ingrediente-nombre::after {
+      content: " (OPCIONAL)";
+      font-size: 0.7em;
+      color: #9E9E9E;
+      font-weight: bold;
+      background: rgba(158, 158, 158, 0.1);
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+  }
+}
+
+.ingrediente-controles {
+  // ... estilos existentes ...
+
+  .control-btn {
+    // ... estilos existentes ...
+
+    &.disminuir {
+      &:disabled {
+        background-color: #f5f5f5 !important;
+        color: #ccc !important;
+        cursor: not-allowed !important;
+
+        // ✅ NUEVO: Estilo especial para ingredientes base
+        &[title*="ingrediente base"] {
+          background-color: rgba(76, 175, 80, 0.1) !important;
+          color: rgba(76, 175, 80, 0.5) !important;
+          border-color: rgba(76, 175, 80, 0.3) !important;
+        }
+      }
+    }
+  }
+}
+
+// ✅ NUEVO: Indicador visual en el precio para ingredientes base
+.precio-incluido {
+  .incluido-normal {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+  }
+
+  .sin-ingrediente {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+
+    // ✅ OCULTAR este estado para ingredientes base
+    .ingrediente-base & {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+    .ingrediente-card[_ngcontent-ng-c3830124622] .ingrediente-info[_ngcontent-ng-c3830124622] .ingrediente-precio[_ngcontent-ng-c3830124622] {
+        font-size: 9px;
+        margin: 4px !important;
+    }
+}
+
+.ingrediente-card[_ngcontent-ng-c3830124622] .ingrediente-info[_ngcontent-ng-c3830124622] {
+    width: 100%;
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    overflow: hidden;
+}
+
+
+@media (max-width: 1200px) {
+    .ingrediente-card[_ngcontent-ng-c3830124622] .ingrediente-info[_ngcontent-ng-c3830124622] .ingrediente-nombre[_ngcontent-ng-c3830124622] {
+        font-size: 30px;
+        margin-top: -3px;
+    }
 }
