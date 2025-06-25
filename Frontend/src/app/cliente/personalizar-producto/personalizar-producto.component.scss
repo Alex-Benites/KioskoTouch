@@ -307,7 +307,7 @@ $font-family-base: 'Lato', sans-serif;
     gap: 2px;
 
     .ingrediente-nombre {
-      font-size: 12px;
+      font-size: 20px; // ✅ AQUÍ: Tamaño del nombre del ingrediente
       font-weight: 600;
       color: #333;
       margin: 0;

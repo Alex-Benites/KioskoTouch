@@ -66,14 +66,24 @@ $font-family-base: 'Lato', sans-serif;
 // ✅ ESPACIO PARA EL CONTENIDO DEL CARRITO
 .carrito-body {
   flex-grow: 1;
-  //background-color: white;
   border-radius: 12px;
   padding: 30px;
-  //box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   min-height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+  // ✅ CUANDO TIENE PRODUCTOS: desde arriba
+  &.con-productos {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  // ✅ CUANDO ESTÁ VACÍO: centrado
+  &.vacio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .placeholder-content {
     font-size: 1.2rem;
@@ -166,6 +176,8 @@ $font-family-base: 'Lato', sans-serif;
   flex-direction: column;
   gap: 15px;
   width: 100%;
+  margin: 0; // ✅ Sin margen superior
+  padding: 0; // ✅ Sin padding superior
 }
 
 .producto-item {

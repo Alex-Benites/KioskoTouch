@@ -20,7 +20,7 @@
     </div>
 
     <!-- ✅ ESPACIO EN BLANCO para el contenido del carrito -->
-    <div class="carrito-body">
+    <div class="carrito-body" [ngClass]="{'con-productos': productosCarrito.length > 0, 'vacio': productosCarrito.length === 0}">
       <!-- ✅ MOSTRAR lista de productos si hay items -->
       <div *ngIf="productosCarrito.length > 0; else carritoVacio" class="productos-lista">
         <!-- ✅ CORREGIR: Iterar sobre el computed -->
