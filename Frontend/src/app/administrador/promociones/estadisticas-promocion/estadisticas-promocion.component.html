@@ -4,7 +4,6 @@
   <!-- Encabezado de la página -->
   <div class="page-header">
     <h1 class="page-title">Estadísticas de Promociones</h1>
-    <p class="page-subtitle">Datos de los últimos 3 meses</p>
   </div>
 
   <!-- Loading State -->
@@ -49,7 +48,7 @@
 
     <!-- Promociones activas vs inactivas -->
     <div class="stat-card doughnut-chart-card">
-      <h3 class="card-title">Promociones activas VS inactivas</h3>
+      <h3 class="card-title">Promociones Activas VS Inactivas</h3>
       <div class="chart-container">
         <canvas 
           baseChart
@@ -62,7 +61,7 @@
 
     <!-- Tabla de pedidos por mes -->
     <div class="stat-card table-card">
-      <h3 class="card-title">Pedidos por mes (últimos 6 meses)</h3>
+      <h3 class="card-title">Pedidos por mes</h3>
       <div class="table-container">
         <table class="pedidos-table" *ngIf="pedidosPorMes.length > 0; else noDataTable">
           <thead>
@@ -114,7 +113,6 @@
       
       <div class="stat-card kpi-card">
         <div class="kpi-value">
-          <span class="currency">$</span>
           <span class="amount">{{ totalDescuentos | currency:'USD':'symbol':'1.2-2' }}</span>
         </div>
         <p class="kpi-label">Total descuentos aplicados</p>

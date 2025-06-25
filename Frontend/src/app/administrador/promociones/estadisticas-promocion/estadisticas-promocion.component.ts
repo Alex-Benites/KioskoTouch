@@ -159,7 +159,7 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
 
   // Colores para los gráficos
   private readonly colores = [
-    '#f08a5d', '#e54f6d', '#7a28cb', '#5c3c4c', '#3498db'
+    '#AC2125', '#8B1A1D', '#C9282C', '#D63031', '#E74C3C'
   ];
 
   constructor() {

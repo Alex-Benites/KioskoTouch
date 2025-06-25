@@ -8,16 +8,20 @@ $border-color: #e0e0e0;
 $shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 $radius: 16px;
 
-// Colores de gráficos
-$promo-color-1: #f08a5d; // Naranja
-$promo-color-2: #e54f6d; // Rojo
-$promo-color-3: #7a28cb; // Morado
-$promo-color-4: #5c3c4c; // Marrón oscuro
-$promo-color-5: #3498db; // Azul
+// ✅ NUEVO COLOR PRINCIPAL PARA PROMOCIONES
+$promo-main-color: #AC2125;
+$promo-gradient: linear-gradient(135deg, #AC2125 0%, #8B1A1D 100%);
+$promo-gradient-light: linear-gradient(135deg, #AC2125 0%, #C9282C 100%);
+
+// Colores de gráficos actualizados con el color principal
+$promo-color-1: #AC2125; // Color principal
+$promo-color-2: #8B1A1D; // Variación más oscura
+$promo-color-3: #C9282C; // Variación más clara
+$promo-color-4: #D63031; // Rojo complementario
+$promo-color-5: #E74C3C; // Rojo más suave
 
 .stats-container {
   padding: 2rem;
-  max-width: 1400px;
   margin: 0 auto;
   background-color: $background-color;
   min-height: calc(100vh - 200px);
@@ -31,12 +35,9 @@ $promo-color-5: #3498db; // Azul
   .page-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: $text-color-dark;
+    // ✅ CAMBIO: TÍTULO EN NEGRO
+    color: #000000;
     margin: 0 0 0.5rem 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
   
   .page-subtitle {
@@ -59,7 +60,8 @@ $promo-color-5: #3498db; // Azul
     width: 50px;
     height: 50px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
+    // ✅ CAMBIO: SPINNER CON COLOR PRINCIPAL
+    border-top: 4px solid $promo-main-color;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1.5rem;
@@ -139,12 +141,13 @@ $promo-color-5: #3498db; // Azul
     }
     
     .btn-retry {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      // ✅ CAMBIO: BOTÓN CON NUEVO GRADIENTE
+      background: $promo-gradient;
       color: white;
       
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 8px 25px rgba(172, 33, 37, 0.3);
       }
     }
     
@@ -315,12 +318,13 @@ $promo-color-5: #3498db; // Azul
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    // ✅ CAMBIO: CÍRCULO CON NUEVO GRADIENTE
+    background: $promo-gradient;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1.5rem auto;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 25px rgba(172, 33, 37, 0.3);
     
     .kpi-percentage {
       color: white;
@@ -329,18 +333,12 @@ $promo-color-5: #3498db; // Azul
     }
   }
   
+  // ✅ CAMBIO: UNIFICAR ESTILO PARA TODAS LAS CARDS NUMÉRICAS
   .kpi-value {
     margin-bottom: 1.5rem;
     
-    .currency {
-      font-size: 1.4rem;
-      color: #28a745;
-      font-weight: 700;
-      margin-right: 0.2rem;
-    }
-    
     .amount {
-      font-size: 2.2rem;
+      font-size: 2.5rem;
       font-weight: 900;
       color: $text-color-dark;
     }
