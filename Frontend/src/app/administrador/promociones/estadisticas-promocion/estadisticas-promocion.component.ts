@@ -157,10 +157,18 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
   // Tabla de pedidos por mes
   pedidosPorMes: PedidoPorMes[] = [];
 
-  // Colores para los gráficos
-  private readonly colores = [
-    '#AC2125', '#8B1A1D', '#C9282C', '#D63031', '#E74C3C'
-  ];
+  // ✅ COLOR ÚNICO PARA TODAS LAS ESTADÍSTICAS
+  private readonly colorPrincipal = '#D63031';
+  private readonly colorInactivo = '#9E9E9E';
+
+  // Generar gradientes para las barras
+  private crearGradiente(ctx: CanvasRenderingContext2D, chartArea: any): CanvasGradient {
+    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+    gradient.addColorStop(0, '#B71C1C');
+    gradient.addColorStop(0.5, this.colorPrincipal);
+    gradient.addColorStop(1, '#E57373');
+    return gradient;
+  }
 
   constructor() {
     // Registrar componentes de Chart.js
@@ -249,14 +257,19 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
       return;
     }
     
+    // ✅ USAR SOLO EL COLOR PRINCIPAL PARA TODAS LAS BARRAS
+    const coloresArray = Array(ventas.length).fill(this.colorPrincipal);
+    
     this.barChartData = {
       labels: ventas.map(item => item.promocion__nombre),
       datasets: [
         {
           data: ventas.map(item => item.total_ventas),
-          backgroundColor: this.colores.slice(0, ventas.length),
-          borderColor: this.colores.slice(0, ventas.length),
-          borderWidth: 1
+          backgroundColor: coloresArray,
+          borderColor: coloresArray,
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
         }
       ]
     };
@@ -268,14 +281,15 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     
     console.log('🍩 Configurando gráfico doughnut - Activas:', activas, 'Inactivas:', inactivas);
     
+    // ✅ USAR COLOR PRINCIPAL PARA ACTIVAS Y GRIS PARA INACTIVAS
     this.doughnutChartData = {
       labels: ['Activas', 'Inactivas'],
       datasets: [
         {
           data: [activas, inactivas],
-          backgroundColor: ['#28a745', '#dc3545'],
-          borderColor: ['#28a745', '#dc3545'],
-          borderWidth: 2
+          backgroundColor: [this.colorPrincipal, this.colorInactivo],
+          borderColor: [this.colorPrincipal, this.colorInactivo],
+          borderWidth: 3
         }
       ]
     };
@@ -299,14 +313,19 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // ✅ USAR SOLO EL COLOR PRINCIPAL PARA TODAS LAS BARRAS
+    const coloresArray = Array(promociones.length).fill(this.colorPrincipal);
+
     this.horizontalBarChartData = {
       labels: promociones.map(item => item.promocion__nombre),
       datasets: [
         {
           data: promociones.map(item => item.veces_usada),
-          backgroundColor: this.colores.slice(0, promociones.length),
-          borderColor: this.colores.slice(0, promociones.length),
-          borderWidth: 1
+          backgroundColor: coloresArray,
+          borderColor: coloresArray,
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
         }
       ]
     };

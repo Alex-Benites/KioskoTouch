@@ -8,17 +8,14 @@ $border-color: #e0e0e0;
 $shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 $radius: 16px;
 
-// ✅ NUEVO COLOR PRINCIPAL PARA PROMOCIONES
-$promo-main-color: #AC2125;
-$promo-gradient: linear-gradient(135deg, #AC2125 0%, #8B1A1D 100%);
-$promo-gradient-light: linear-gradient(135deg, #AC2125 0%, #C9282C 100%);
+// ✅ NUEVO COLOR ÚNICO PARA PROMOCIONES
+$promo-main-color: #D63031;
+$promo-gradient: linear-gradient(135deg, #D63031 0%, #B71C1C 50%, #D63031 100%);
+$promo-gradient-light: linear-gradient(45deg, #D63031 0%, #E57373 50%, #D63031 100%);
+$promo-gradient-bars: linear-gradient(180deg, #D63031 0%, #B71C1C 100%);
 
-// Colores de gráficos actualizados con el color principal
-$promo-color-1: #AC2125; // Color principal
-$promo-color-2: #8B1A1D; // Variación más oscura
-$promo-color-3: #C9282C; // Variación más clara
-$promo-color-4: #D63031; // Rojo complementario
-$promo-color-5: #E74C3C; // Rojo más suave
+// Color gris para inactivos
+$inactive-color: #9E9E9E;
 
 .stats-container {
   padding: 2rem;
@@ -35,7 +32,6 @@ $promo-color-5: #E74C3C; // Rojo más suave
   .page-title {
     font-size: 2.5rem;
     font-weight: 700;
-    // ✅ CAMBIO: TÍTULO EN NEGRO
     color: #000000;
     margin: 0 0 0.5rem 0;
   }
@@ -60,7 +56,6 @@ $promo-color-5: #E74C3C; // Rojo más suave
     width: 50px;
     height: 50px;
     border: 4px solid #f3f3f3;
-    // ✅ CAMBIO: SPINNER CON COLOR PRINCIPAL
     border-top: 4px solid $promo-main-color;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -141,13 +136,12 @@ $promo-color-5: #E74C3C; // Rojo más suave
     }
     
     .btn-retry {
-      // ✅ CAMBIO: BOTÓN CON NUEVO GRADIENTE
       background: $promo-gradient;
       color: white;
       
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(172, 33, 37, 0.3);
+        box-shadow: 0 8px 25px rgba(214, 48, 49, 0.3);
       }
     }
     
@@ -308,23 +302,29 @@ $promo-color-5: #E74C3C; // Rojo más suave
   }
 }
 
-// KPI Cards
+// ✅ KPI CARDS COMPLETAMENTE CENTRALIZADAS
 .kpi-card {
+  // Convertir toda la card en un contenedor flex centrado
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 2.5rem 1.5rem;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  min-height: 200px; // Altura mínima para mantener consistencia
   
+  // ✅ CARD CON CÍRCULO (usuarios que usaron promociones)
   .kpi-circle {
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    // ✅ CAMBIO: CÍRCULO CON NUEVO GRADIENTE
     background: $promo-gradient;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem auto;
-    box-shadow: 0 8px 25px rgba(172, 33, 37, 0.3);
+    margin: 0 0 1.5rem 0; // Eliminar margin auto
+    box-shadow: 0 8px 25px rgba(214, 48, 49, 0.3);
     
     .kpi-percentage {
       color: white;
@@ -333,24 +333,38 @@ $promo-color-5: #E74C3C; // Rojo más suave
     }
   }
   
-  // ✅ CAMBIO: UNIFICAR ESTILO PARA TODAS LAS CARDS NUMÉRICAS
+  // ✅ CARDS CENTRALIZADAS (descuentos, pedidos sistema, pedidos período)
   .kpi-value {
-    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0 1.5rem 0; // Eliminar margin bottom automático
     
     .amount {
       font-size: 2.5rem;
       font-weight: 900;
       color: $text-color-dark;
+      text-align: center;
+      margin: 0; // Eliminar cualquier margin del elemento
+      line-height: 1; // Ajustar line-height para mejor centrado
     }
   }
   
   .kpi-number {
-    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0 1.5rem 0; // Eliminar margin bottom automático
     
     .big-number {
       font-size: 2.5rem;
       font-weight: 900;
       color: $text-color-dark;
+      text-align: center;
+      margin: 0; // Eliminar cualquier margin del elemento
+      line-height: 1; // Ajustar line-height para mejor centrado
     }
   }
   
@@ -358,8 +372,9 @@ $promo-color-5: #E74C3C; // Rojo más suave
     color: $text-color-light;
     font-size: 1rem;
     font-weight: 500;
-    margin: 0;
+    margin: 0; // Eliminar todo el margin
     line-height: 1.4;
+    text-align: center;
   }
 }
 
@@ -442,10 +457,12 @@ $promo-color-5: #E74C3C; // Rojo más suave
   
   .kpi-card {
     padding: 2rem 1rem;
+    min-height: 180px; // Altura mínima ajustada para móvil
     
     .kpi-circle {
       width: 80px;
       height: 80px;
+      margin: 0 0 1rem 0; // Margin reducido
       
       .kpi-percentage {
         font-size: 1.2rem;
@@ -454,6 +471,10 @@ $promo-color-5: #E74C3C; // Rojo más suave
     
     .kpi-value .amount, .kpi-number .big-number {
       font-size: 1.8rem;
+    }
+    
+    .kpi-value, .kpi-number {
+      margin: 0 0 1rem 0; // Margin reducido
     }
   }
   
@@ -494,6 +515,10 @@ $promo-color-5: #E74C3C; // Rojo más suave
   
   .stat-card {
     padding: 1rem;
+  }
+  
+  .kpi-card {
+    min-height: 160px; // Altura mínima más pequeña
   }
   
   .error-container .error-content {

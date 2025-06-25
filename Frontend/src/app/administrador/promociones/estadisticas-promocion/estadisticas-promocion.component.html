@@ -7,132 +7,146 @@
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Cargando estadísticas...</p>
-  </div>
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando estadísticas...</p>
+    </div>
+  }
 
   <!-- Error State -->
-  <div *ngIf="hasError && !isLoading" class="error-container">
-    <div class="error-content">
-      <span class="material-icons error-icon">error_outline</span>
-      <h3>Error al cargar estadísticas</h3>
-      <p>{{ errorMessage }}</p>
-      <div class="error-actions">
-        <button class="btn-retry" (click)="reintentarCarga()">
-          <span class="material-icons">refresh</span>
-          Reintentar
-        </button>
-        <button class="btn-back" (click)="volver()">
-          <span class="material-icons">arrow_back</span>
-          Volver
-        </button>
+  @if (hasError && !isLoading) {
+    <div class="error-container">
+      <div class="error-content">
+        <span class="material-icons error-icon">error_outline</span>
+        <h3>Error al cargar estadísticas</h3>
+        <p>{{ errorMessage }}</p>
+        <div class="error-actions">
+          <button class="btn-retry" (click)="reintentarCarga()">
+            <span class="material-icons">refresh</span>
+            Reintentar
+          </button>
+          <button class="btn-back" (click)="volver()">
+            <span class="material-icons">arrow_back</span>
+            Volver
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  }
 
   <!-- Grid principal de estadísticas -->
-  <div *ngIf="!isLoading && !hasError" class="stats-grid">
-    <!-- Ventas generadas -->
-    <div class="stat-card bar-chart-card">
-      <h3 class="card-title">Ventas generadas por promociones</h3>
-      <div class="chart-container">
-        <canvas 
-          baseChart
-          [data]="barChartData"
-          [options]="barChartOptions"
-          [type]="barChartType">
-        </canvas>
+  @if (!isLoading && !hasError) {
+    <div class="stats-grid">
+      <!-- Ventas generadas -->
+      <div class="stat-card bar-chart-card">
+        <h3 class="card-title">Ventas generadas por promociones</h3>
+        <div class="chart-container">
+          <canvas 
+            baseChart
+            [data]="barChartData"
+            [options]="barChartOptions"
+            [type]="barChartType">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Promociones activas vs inactivas -->
+      <div class="stat-card doughnut-chart-card">
+        <h3 class="card-title">Promociones Activas VS Inactivas</h3>
+        <div class="chart-container">
+          <canvas 
+            baseChart
+            [data]="doughnutChartData"
+            [options]="doughnutChartOptions"
+            [type]="doughnutChartType">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Tabla de pedidos por mes -->
+      <div class="stat-card table-card">
+        <h3 class="card-title">Pedidos por mes</h3>
+        <div class="table-container">
+          @if (pedidosPorMes.length > 0) {
+            <table class="pedidos-table">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Total Pedidos</th>
+                  <th>Con Promoción</th>
+                  <th>% Promoción</th>
+                  <th>Ingresos</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (mes of pedidosPorMes; track mes.mes) {
+                  <tr>
+                    <td>{{ mes.mes_nombre }}</td>
+                    <td>{{ mes.total_pedidos }}</td>
+                    <td>{{ mes.pedidos_con_promocion }}</td>
+                    <td>{{ mes.porcentaje_promocion }}%</td>
+                    <td>{{ mes.ingresos_totales | currency:'USD':'symbol':'1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="no-data">No hay datos de pedidos en los últimos 6 meses</p>
+          }
+        </div>
+      </div>
+
+      <!-- Promociones más usadas -->
+      <div class="stat-card h-bar-chart-card">
+        <h3 class="card-title">Promociones más usadas</h3>
+        <div class="chart-container">
+          <canvas 
+            baseChart
+            [data]="horizontalBarChartData"
+            [options]="horizontalBarChartOptions"
+            [type]="horizontalBarChartType">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- KPIs Ampliados -->
+      <div class="kpi-grid">
+        <!-- KPI con círculo: Usuarios que usaron promociones -->
+        <div class="stat-card kpi-card">
+          <div class="kpi-circle">
+            <span class="kpi-percentage">{{ porcentajeUsuarios }}%</span>
+          </div>
+          <p class="kpi-label">Usuarios que usaron promociones</p>
+        </div>
+        
+        <!-- KPI centralizado: Total descuentos aplicados -->
+        <div class="stat-card kpi-card">
+          <div class="kpi-value">
+            <span class="amount">{{ totalDescuentos | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+          <p class="kpi-label">Total descuentos aplicados</p>
+        </div>
+        
+        <!-- KPI centralizado: Total pedidos en el sistema -->
+        <div class="stat-card kpi-card">
+          <div class="kpi-number">
+            <span class="big-number">{{ totalPedidosSistema }}</span>
+          </div>
+          <p class="kpi-label">Total pedidos en el sistema</p>
+        </div>
+        
+        <!-- KPI centralizado: Pedidos últimos 3 meses -->
+        <div class="stat-card kpi-card">
+          <div class="kpi-number">
+            <span class="big-number">{{ totalPedidosPeriodo }}</span>
+          </div>
+          <p class="kpi-label">Pedidos últimos 3 meses</p>
+        </div>
       </div>
     </div>
 
-    <!-- Promociones activas vs inactivas -->
-    <div class="stat-card doughnut-chart-card">
-      <h3 class="card-title">Promociones Activas VS Inactivas</h3>
-      <div class="chart-container">
-        <canvas 
-          baseChart
-          [data]="doughnutChartData"
-          [options]="doughnutChartOptions"
-          [type]="doughnutChartType">
-        </canvas>
-      </div>
-    </div>
-
-    <!-- Tabla de pedidos por mes -->
-    <div class="stat-card table-card">
-      <h3 class="card-title">Pedidos por mes</h3>
-      <div class="table-container">
-        <table class="pedidos-table" *ngIf="pedidosPorMes.length > 0; else noDataTable">
-          <thead>
-            <tr>
-              <th>Mes</th>
-              <th>Total Pedidos</th>
-              <th>Con Promoción</th>
-              <th>% Promoción</th>
-              <th>Ingresos</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let mes of pedidosPorMes">
-              <td>{{ mes.mes_nombre }}</td>
-              <td>{{ mes.total_pedidos }}</td>
-              <td>{{ mes.pedidos_con_promocion }}</td>
-              <td>{{ mes.porcentaje_promocion }}%</td>
-              <td>{{ mes.ingresos_totales | currency:'USD':'symbol':'1.2-2' }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <ng-template #noDataTable>
-          <p class="no-data">No hay datos de pedidos en los últimos 6 meses</p>
-        </ng-template>
-      </div>
-    </div>
-
-    <!-- Promociones más usadas -->
-    <div class="stat-card h-bar-chart-card">
-      <h3 class="card-title">Promociones más usadas</h3>
-      <div class="chart-container">
-        <canvas 
-          baseChart
-          [data]="horizontalBarChartData"
-          [options]="horizontalBarChartOptions"
-          [type]="horizontalBarChartType">
-        </canvas>
-      </div>
-    </div>
-
-    <!-- KPIs Ampliados -->
-    <div class="kpi-grid">
-      <div class="stat-card kpi-card">
-        <div class="kpi-circle">
-          <span class="kpi-percentage">{{ porcentajeUsuarios }}%</span>
-        </div>
-        <p class="kpi-label">Usuarios que usaron promociones</p>
-      </div>
-      
-      <div class="stat-card kpi-card">
-        <div class="kpi-value">
-          <span class="amount">{{ totalDescuentos | currency:'USD':'symbol':'1.2-2' }}</span>
-        </div>
-        <p class="kpi-label">Total descuentos aplicados</p>
-      </div>
-      
-      <div class="stat-card kpi-card">
-        <div class="kpi-number">
-          <span class="big-number">{{ totalPedidosSistema }}</span>
-        </div>
-        <p class="kpi-label">Total pedidos en el sistema</p>
-      </div>
-      
-      <div class="stat-card kpi-card">
-        <div class="kpi-number">
-          <span class="big-number">{{ totalPedidosPeriodo }}</span>
-        </div>
-        <p class="kpi-label">Pedidos últimos 3 meses</p>
-      </div>
-    </div>
-  </div>
+  }
 
 </div>
 
