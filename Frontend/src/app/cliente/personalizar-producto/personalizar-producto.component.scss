@@ -43,26 +43,26 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
-// ✅ NUEVO: Contenido principal de personalización
+// ✅ Contenido principal de personalización
 .personalizacion-content {
   flex-grow: 1;
   padding: 30px;
   background-color: $kiosko-background-light;
 }
 
-// ✅ NUEVO: Contenedor centrado SOLO para el producto
+// ✅ Contenedor centrado SOLO para el producto
 .producto-container-centrado {
   display: flex;
   justify-content: center;
   margin-bottom: 40px;
 }
 
-// ✅ NUEVO: Detalle del producto (imagen + info)
+// ✅ Detalle del producto (imagen + info)
 .producto-detalle {
   display: flex;
   gap: 40px;
   align-items: flex-start;
-  max-width: 1200px; // ✅ Limitar ancho máximo
+  max-width: 1200px;
 }
 
 .producto-imagen {
@@ -104,20 +104,18 @@ $font-family-base: 'Lato', sans-serif;
     max-width: 600px;
   }
 
-  // ✅ MODIFICAR: Layout horizontal precio + cantidad/botón
   .precio-cantidad-horizontal {
     display: flex;
-    align-items: flex-start; // ✅ CAMBIAR: de 'center' a 'flex-start'
+    align-items: flex-start;
     justify-content: space-between;
     gap: 30px;
   }
 
-  // ✅ MODIFICAR: Sección del precio (lado izquierdo)
   .precio-seccion {
     flex: 0 0 auto;
     display: flex;
-    align-items: center; // ✅ NUEVO: centrar verticalmente el precio
-    height: 40px; // ✅ NUEVO: altura fija para alineación
+    align-items: center;
+    height: 40px;
 
     .precio-unitario {
       font-size: 2rem;
@@ -126,16 +124,14 @@ $font-family-base: 'Lato', sans-serif;
     }
   }
 
-  // ✅ MODIFICAR: Contenedor para cantidad y botón
   .cantidad-accion-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
     align-items: center;
-    justify-content: flex-start; // ✅ NUEVO: alinear desde arriba
+    justify-content: flex-start;
   }
 
-  // ✅ MANTENER: Control de cantidad (pero ahora dentro del contenedor)
   .cantidad-control {
     display: flex;
     align-items: center;
@@ -198,7 +194,6 @@ $font-family-base: 'Lato', sans-serif;
     }
   }
 
-  // ✅ MANTENER: Botón añadir (pero ahora dentro del contenedor)
   .boton-anadir-principal {
     background-color: $kiosko-red;
     color: white;
@@ -220,11 +215,9 @@ $font-family-base: 'Lato', sans-serif;
       transform: translateY(0);
     }
   }
-
-  // ✅ ELIMINAR: .precio-cantidad-seccion, .precio-total
 }
 
-// ✅ MODIFICAR: Sección de ingredientes
+// ✅ Sección de ingredientes
 .ingredientes-seccion {
   margin-top: 0;
 
@@ -244,30 +237,33 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
-// ✅ NUEVO: Cuadrícula de ingredientes
+// ✅ Cuadrícula de ingredientes - CAMBIAR A 4 COLUMNAS FIJAS
 .ingredientes-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr); // ✅ CAMBIO: Era 5, ahora 4
   gap: 20px;
   padding: 0;
   max-width: 100%;
+  overflow: hidden; // ✅ EVITAR desbordamiento
 }
 
-// ✅ NUEVO: Tarjeta de ingrediente
+// ✅ Tarjeta de ingrediente - AJUSTAR para 4 columnas
 .ingrediente-card {
   position: relative;
   background: white;
   border-radius: 12px;
-  padding: 15px; // ✅ REDUCIR: de 20px a 15px para dar espacio al texto
+  padding: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   aspect-ratio: 1;
   display: flex;
-  flex-direction: column; // ✅ CAMBIAR: a columna para apilar imagen + info
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   border: 3px solid transparent;
+  min-width: 0; // ✅ PREVENIR overflow de contenido
+  overflow: hidden; // ✅ EVITAR que el contenido se desborde
 
   &:hover {
     transform: translateY(-2px);
@@ -279,14 +275,14 @@ $font-family-base: 'Lato', sans-serif;
     background-color: #fff5f4;
   }
 
-  // ✅ MODIFICAR: Imagen del ingrediente (más pequeña)
   .ingrediente-imagen {
     width: 100%;
-    height: 60%; // ✅ CAMBIAR: ocupar 60% del espacio
+    height: 60%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px; // ✅ NUEVO: espacio entre imagen e info
+    margin-bottom: 8px;
+    overflow: hidden; // ✅ EVITAR que la imagen se desborde
 
     img {
       max-width: 100%;
@@ -296,7 +292,6 @@ $font-family-base: 'Lato', sans-serif;
     }
   }
 
-  // ✅ NUEVO: Información del ingrediente
   .ingrediente-info {
     width: 100%;
     text-align: center;
@@ -305,9 +300,10 @@ $font-family-base: 'Lato', sans-serif;
     flex-direction: column;
     justify-content: center;
     gap: 2px;
+    overflow: hidden; // ✅ EVITAR overflow del texto
 
     .ingrediente-nombre {
-      font-size: 20px; // ✅ AQUÍ: Tamaño del nombre del ingrediente
+      font-size: 35px; // ✅ REDUCIR un poco el tamaño (era 40px, muy grande)
       font-weight: 600;
       color: #333;
       margin: 0;
@@ -315,36 +311,34 @@ $font-family-base: 'Lato', sans-serif;
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
+      width: 100%; // ✅ ASEGURAR que tome todo el ancho
     }
 
     .ingrediente-precio {
-      font-size: 10px;
+      font-size: 14px; // ✅ AJUSTAR precio (era 20px)
       font-weight: 500;
       margin: 0;
       line-height: 1;
 
-      // ✅ NUEVO: Estilo para ingredientes incluidos (verde)
       .precio-incluido {
-        color: #28a745; // Verde
+        color: #28a745;
         font-weight: 600;
-        font-size: 10px;
+        font-size: 14px; // ✅ MANTENER consistencia
       }
 
-      // ✅ NUEVO: Estilo para ingredientes con costo adicional (rojo)
       .precio-adicional {
-        color: $kiosko-red; // Rojo del kiosco
+        color: $kiosko-red;
         font-weight: 600;
-        font-size: 10px;
+        font-size: 14px; // ✅ MANTENER consistencia
       }
     }
   }
 
-  // ✅ MANTENER: Check mark en la esquina superior derecha
   .ingrediente-check {
     position: absolute;
-    top: 6px; // ✅ AJUSTAR: un poco más abajo
+    top: 6px;
     right: 6px;
-    width: 20px; // ✅ REDUCIR: de 24px a 20px
+    width: 20px;
     height: 20px;
     background-color: $kiosko-red;
     border-radius: 50%;
@@ -361,13 +355,11 @@ $font-family-base: 'Lato', sans-serif;
     }
 
     svg {
-      width: 12px; // ✅ REDUCIR: de 14px a 12px
+      width: 12px;
       height: 12px;
       color: white;
     }
   }
-
-  // En personalizar-producto.component.scss - AGREGAR:
 
   .ingrediente-controles {
     display: flex;
@@ -376,6 +368,8 @@ $font-family-base: 'Lato', sans-serif;
     gap: 8px;
     margin-top: 8px;
     padding: 8px;
+    width: 100%; // ✅ ASEGURAR que tome todo el ancho
+    overflow: hidden; // ✅ EVITAR overflow
 
     .control-btn {
       width: 32px;
@@ -391,6 +385,7 @@ $font-family-base: 'Lato', sans-serif;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
+      flex-shrink: 0; // ✅ EVITAR que se compriman
 
       &:hover:not(:disabled) {
         background: #007bff;
@@ -409,6 +404,7 @@ $font-family-base: 'Lato', sans-serif;
       font-weight: bold;
       font-size: 16px;
       color: #333;
+      flex-shrink: 0; // ✅ EVITAR que se comprima
     }
   }
 
@@ -418,46 +414,6 @@ $font-family-base: 'Lato', sans-serif;
     font-weight: bold;
   }
 
-  // En personalizar-producto.component.scss - AGREGAR:
-
-  .ingrediente-precio {
-    .sin-ingrediente {
-      color: #dc3545;
-      font-weight: 600;
-      font-style: italic;
-    }
-    
-    .incluido-normal {
-      color: #28a745;
-      font-weight: 600;
-    }
-    
-    .incluido-con-extra {
-      color: #28a745;
-      font-weight: 600;
-      
-      .costo-extra {
-        color: #fd7e14;
-        font-weight: bold;
-      }
-    }
-    
-    .no-seleccionado {
-      color: #6c757d;
-    }
-    
-    .seleccionado-adicional {
-      color: #007bff;
-      font-weight: 600;
-      
-      .total-ingrediente {
-        color: #fd7e14;
-        font-weight: bold;
-      }
-    }
-  }
-
-  // ✅ También actualizar el estilo de las cards cuando tienen cantidad 0
   &.sin-ingrediente {
     border-color: #dc3545;
     background-color: #fff5f5;
@@ -467,9 +423,40 @@ $font-family-base: 'Lato', sans-serif;
       filter: grayscale(50%);
     }
   }
+
+  &.ingrediente-base {
+    border-left: 4px solid #4CAF50;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, transparent 100%);
+    
+    .ingrediente-nombre::after {
+      content: " (BASE)";
+      font-size: 0.7em;
+      color: #4CAF50;
+      font-weight: bold;
+      background: rgba(76, 175, 80, 0.1);
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+  }
+
+  &.ingrediente-opcional {
+    border-left: 4px solid #9E9E9E;
+    
+    .ingrediente-nombre::after {
+      content: " (OPCIONAL)";
+      font-size: 0.7em;
+      color: #9E9E9E;
+      font-weight: bold;
+      background: rgba(158, 158, 158, 0.1);
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+  }
 }
 
-// ✅ NUEVO: Loading de ingredientes
+// ✅ Loading de ingredientes
 .ingredientes-loading {
   padding: 40px;
   text-align: center;
@@ -481,310 +468,7 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
-// ✅ Footer "Mi Orden" (mantener igual)
-.order-summary-footer {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-
-  &__title {
-    background-color: $kiosko-red;
-    color: white;
-    font-size: clamp(1.5rem, 3vw, 1.8rem);
-    font-weight: 600;
-    margin: 0;
-    padding: 15px 30px;
-    text-align: center;
-  }
-
-  &__content {
-    background-color: $kiosko-background-light;
-    padding: 20px 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
-
-  &__empty-message, &__details {
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    color: #333333;
-    text-align: center;
-    margin-bottom: 5px;
-  }
-
-  &__details {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  &__actions {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-    max-width: 400px;
-    justify-content: center;
-  }
-
-  &__button {
-    flex: 1;
-    background-color: $kiosko-red;
-    border-radius: 8px;
-    color: white;
-    border: none;
-    padding: 15px 20px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-
-    &:hover:not(:disabled) {
-      background-color: color.scale($kiosko-red, $lightness: -7%);
-    }
-
-    &:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-  }
-}
-
-.primary__button {
-  background-color: $kiosko-red;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 15px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover:not(:disabled) {
-    background-color: color.scale($kiosko-red, $lightness: -7%);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    transform: none;
-  }
-}
-
-// ✅ Responsive design
-@media (max-width: 1024px) {
-  .producto-detalle {
-    flex-direction: column;
-    gap: 30px;
-    align-items: center;
-  }
-
-  .producto-imagen {
-    flex: none;
-
-    .imagen-principal {
-      max-width: 400px;
-      height: 300px;
-    }
-  }
-
-  .producto-info {
-    padding-left: 0;
-    text-align: center;
-    max-width: 600px;
-
-    .producto-nombre {
-      font-size: 2.5rem;
-    }
-
-    .precio-cantidad-horizontal {
-      justify-content: center;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .precio-seccion {
-      text-align: center;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .personalizacion-content {
-    padding: 20px;
-  }
-
-  .producto-detalle {
-    max-width: 100%;
-  }
-
-  .producto-imagen {
-    .imagen-principal {
-      max-width: 300px;
-      height: 250px;
-    }
-  }
-
-  .producto-info {
-    max-width: 100%;
-
-    .producto-nombre {
-      font-size: 2rem;
-    }
-
-    .precio-cantidad-horizontal {
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .precio-seccion {
-      .precio-unitario {
-        font-size: 1.8rem;
-      }
-    }
-
-    .cantidad-accion-container {
-      width: 100%;
-      max-width: 300px;
-    }
-
-    .boton-anadir-principal {
-      width: 100%;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .menu-header {
-    img {
-      max-width: 120px;
-    }
-  }
-
-  .order-summary-footer {
-    &__title {
-      font-size: 1.2rem;
-      padding: 10px 12px;
-    }
-
-    &__content {
-      padding: 12px;
-      gap: 10px;
-    }
-
-    &__actions {
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-      max-width: none;
-    }
-  }
-}
-
-// ✅ ACTUALIZAR: Responsive para la cuadrícula
-@media (max-width: 1200px) {
-  .ingredientes-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-  }
-
-  .ingrediente-card {
-    .ingrediente-info {
-      .ingrediente-nombre {
-        font-size: 11px;
-      }
-
-      .ingrediente-precio {
-        font-size: 9px;
-      }
-    }
-  }
-}
-
-@media (max-width: 900px) {
-  .ingredientes-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-  }
-
-  .ingrediente-card {
-    .ingrediente-info {
-      .ingrediente-nombre {
-        font-size: 10px;
-      }
-
-      .ingrediente-precio {
-        font-size: 8px;
-      }
-    }
-
-    .ingrediente-check {
-      width: 18px;
-      height: 18px;
-      top: 4px;
-      right: 4px;
-
-      svg {
-        width: 10px;
-        height: 10px;
-      }
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .ingredientes-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .ingrediente-card {
-    padding: 12px;
-
-    .ingrediente-info {
-      .ingrediente-nombre {
-        font-size: 11px;
-      }
-
-      .ingrediente-precio {
-        font-size: 9px;
-      }
-    }
-  }
-}
-
-@media (max-width: 400px) {
-  .ingredientes-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .ingrediente-card {
-    padding: 10px;
-
-    .ingrediente-info {
-      .ingrediente-nombre {
-        font-size: 10px;
-      }
-
-      .ingrediente-precio {
-        font-size: 8px;
-      }
-    }
-  }
-}
-
-
-// En personalizar-producto.component.scss - AGREGAR:
-
+// ✅ Mensaje sin ingredientes
 .sin-ingredientes-message {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border: 2px dashed #adb5bd;
@@ -812,8 +496,7 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
-
-// ✅ Footer "Mi Orden" - SOLO para AGREGAR
+// ✅ Footer "Mi Orden"
 .order-summary-footer {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-top: 3px solid $kiosko-red;
@@ -853,7 +536,6 @@ $font-family-base: 'Lato', sans-serif;
       justify-content: center;
       font-size: 14px;
       font-weight: 600;
-      animation: pulse 2s infinite;
     }
   }
 
@@ -896,7 +578,6 @@ $font-family-base: 'Lato', sans-serif;
         font-size: 1.4rem;
         color: $kiosko-red;
         font-weight: 800;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
     }
   }
@@ -921,35 +602,14 @@ $font-family-base: 'Lato', sans-serif;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      position: relative;
-      overflow: hidden;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
-      }
 
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
-
-        &::before {
-          left: 100%;
-        }
       }
 
       &:active {
         transform: translateY(0);
-      }
-
-      i {
-        font-size: 18px;
       }
     }
 
@@ -968,29 +628,12 @@ $font-family-base: 'Lato', sans-serif;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      position: relative;
-      overflow: hidden;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        transition: left 0.5s;
-      }
 
       &:hover:not(:disabled) {
         transform: translateY(-3px);
         box-shadow: 0 8px 25px rgba($kiosko-red, 0.4);
-
-        &::before {
-          left: 100%;
-        }
       }
 
       &:active:not(:disabled) {
@@ -1002,24 +645,12 @@ $font-family-base: 'Lato', sans-serif;
         cursor: not-allowed;
         transform: none;
         box-shadow: none;
-
-        &::before {
-          display: none;
-        }
-      }
-
-      i {
-        font-size: 20px;
-
-        &.spin {
-          animation: spin 1s linear infinite;
-        }
       }
     }
   }
 }
 
-// ✅ Barra de edición - SOLO para EDITAR
+// ✅ Barra de edición
 .edit-actions-bar {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-top: 3px solid $kiosko-red;
@@ -1046,35 +677,14 @@ $font-family-base: 'Lato', sans-serif;
     display: flex;
     align-items: center;
     gap: 8px;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
 
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
-
-      &::before {
-        left: 100%;
-      }
     }
 
     &:active {
       transform: translateY(0);
-    }
-
-    i {
-      font-size: 18px;
     }
   }
 
@@ -1086,22 +696,8 @@ $font-family-base: 'Lato', sans-serif;
     font-size: 1.5rem;
     font-weight: 800;
     color: #1565c0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     min-width: 120px;
     text-align: center;
-    position: relative;
-    overflow: hidden;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-      animation: shimmer 2s infinite;
-    }
   }
 
   .btn-actualizar {
@@ -1117,31 +713,14 @@ $font-family-base: 'Lato', sans-serif;
     display: flex;
     align-items: center;
     gap: 10px;
-    position: relative;
-    overflow: hidden;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     min-width: 160px;
     justify-content: center;
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transition: left 0.5s;
-    }
-
     &:hover:not(:disabled) {
       transform: translateY(-3px);
       box-shadow: 0 8px 25px rgba($kiosko-red, 0.4);
-
-      &::before {
-        left: 100%;
-      }
     }
 
     &:active:not(:disabled) {
@@ -1153,224 +732,33 @@ $font-family-base: 'Lato', sans-serif;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
-
-      &::before {
-        display: none;
-      }
-    }
-
-    i {
-      font-size: 20px;
-
-      &.spin {
-        animation: spin 1s linear infinite;
-      }
     }
   }
 }
 
-// ✅ Animaciones
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
+.primary__button {
+  background-color: $kiosko-red;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-// ✅ Responsive para las barras de acción
-@media (max-width: 768px) {
-  .order-summary-footer {
-    padding: 15px 20px;
-
-    .order-summary-header h2 {
-      font-size: 1.3rem;
-    }
-
-    .action-buttons {
-      flex-direction: column;
-      gap: 10px;
-
-      .btn-secundario, .btn-principal {
-        width: 100%;
-        padding: 18px;
-        font-size: 16px;
-      }
-    }
+  &:hover:not(:disabled) {
+    background-color: color.scale($kiosko-red, $lightness: -7%);
+    transform: translateY(-1px);
   }
 
-  .edit-actions-bar {
-    padding: 15px 20px;
-    flex-direction: column;
-    gap: 15px;
-
-    .btn-volver, .btn-actualizar {
-      width: 100%;
-      justify-content: center;
-      padding: 18px;
-    }
-
-    .precio-display {
-      order: 1;
-      width: 100%;
-      font-size: 1.3rem;
-      padding: 12px;
-    }
-
-    .btn-volver {
-      order: 2;
-    }
-
-    .btn-actualizar {
-      order: 3;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .order-summary-footer {
-    padding: 12px 15px;
-
-    .order-summary-content {
-      .precio-actual, .total-pedido {
-        font-size: 0.9rem;
-      }
-
-      .precio-valor, .total-valor {
-        font-size: 1.1rem;
-      }
-    }
-
-    .action-buttons {
-      .btn-secundario, .btn-principal {
-        padding: 16px;
-        font-size: 15px;
-      }
-    }
+  &:active {
+    transform: translateY(0);
   }
 
-  .edit-actions-bar {
-    padding: 12px 15px;
-
-    .btn-volver, .btn-actualizar {
-      padding: 16px;
-      font-size: 15px;
-    }
-
-    .precio-display {
-      font-size: 1.2rem;
-      padding: 10px;
-    }
-  }
-}
-
-// ✅ AGREGAR: Estilos para ingredientes base
-.ingrediente-card {
-  // ... estilos existentes ...
-  
-  // ✅ NUEVO: Indicador visual para ingredientes base
-  &.ingrediente-base {
-    border-left: 4px solid #4CAF50;
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, transparent 100%);
-    
-    .ingrediente-nombre::after {
-      content: " (BASE)";
-      font-size: 0.7em;
-      color: #4CAF50;
-      font-weight: bold;
-      background: rgba(76, 175, 80, 0.1);
-      padding: 2px 4px;
-      border-radius: 4px;
-      margin-left: 4px;
-    }
-  }
-  
-  // ✅ Estilos para ingredientes opcionales
-  &.ingrediente-opcional {
-    border-left: 4px solid #9E9E9E;
-    
-    .ingrediente-nombre::after {
-      content: " (OPCIONAL)";
-      font-size: 0.7em;
-      color: #9E9E9E;
-      font-weight: bold;
-      background: rgba(158, 158, 158, 0.1);
-      padding: 2px 4px;
-      border-radius: 4px;
-      margin-left: 4px;
-    }
-  }
-}
-
-.ingrediente-controles {
-  // ... estilos existentes ...
-  
-  .control-btn {
-    // ... estilos existentes ...
-    
-    &.disminuir {
-      &:disabled {
-        background-color: #f5f5f5 !important;
-        color: #ccc !important;
-        cursor: not-allowed !important;
-        
-        // ✅ NUEVO: Estilo especial para ingredientes base
-        &[title*="ingrediente base"] {
-          background-color: rgba(76, 175, 80, 0.1) !important;
-          color: rgba(76, 175, 80, 0.5) !important;
-          border-color: rgba(76, 175, 80, 0.3) !important;
-        }
-      }
-    }
-  }
-}
-
-// ✅ NUEVO: Indicador visual en el precio para ingredientes base
-.precio-incluido {
-  .incluido-normal {
-    background: rgba(76, 175, 80, 0.1);
-    color: #4CAF50;
-    padding: 2px 6px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: bold;
-    border: 1px solid rgba(76, 175, 80, 0.3);
-  }
-  
-  .sin-ingrediente {
-    background: rgba(244, 67, 54, 0.1);
-    color: #f44336;
-    padding: 2px 6px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: bold;
-    border: 1px solid rgba(244, 67, 54, 0.3);
-    
-    // ✅ OCULTAR este estado para ingredientes base
-    .ingrediente-base & {
-      display: none;
-    }
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
   }
 }
