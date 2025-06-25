@@ -124,11 +124,14 @@ class AppkioskoPedidoProductoIngredientes(models.Model):
     ingrediente = models.ForeignKey(AppkioskoIngredientes, on_delete=models.CASCADE, blank=True, null=True)
     accion = models.CharField(max_length=20)
     precio_aplicado = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    cantidad = models.IntegerField(default=1)  # ✅ AGREGAR ESTE CAMPO
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
         managed = True
         db_table = 'appkiosko_pedido_producto_ingredientes'
-        unique_together = (('pedido', 'producto', 'ingrediente', 'accion'),)
-        verbose_name = 'Personalización de Pedido'
-        verbose_name_plural = 'Personalizaciones de Pedido'
+        # ✅ MANTENER CONSTRAINTA ÚNICA (sin cantidad)
+        unique_together = ['pedido', 'producto', 'ingrediente', 'accion']
+
+    def __str__(self):
+        return f"{self.pedido.invoice_number} - {self.producto.nombre} - {self.ingrediente.nombre} ({self.accion})"

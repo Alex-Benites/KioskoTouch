@@ -178,22 +178,22 @@ def crear_pedido_principal(datos_validados, tipo_pago):
 
 def crear_detalles_pedido(pedido, productos_data):
     """
-    ✅ ACTUALIZAR: Crear detalles para productos Y menús
+    ✅ ACTUALIZAR: Crear detalles para productos Y menús + ingredientes
     """
-    from catalogo.models import AppkioskoProductos, AppkioskoMenus  # ✅ IMPORTAR ambos
+    from catalogo.models import AppkioskoProductos, AppkioskoMenus
+    from .models import AppkioskoPedidoProductoIngredientes  # ✅ IMPORTAR
 
     for producto_data in productos_data:
         producto_id = producto_data.get('producto_id')
         menu_id = producto_data.get('menu_id')
 
         if producto_id:
-            # ✅ PROCESAR PRODUCTO INDIVIDUAL (código existente)
+            # ✅ PROCESAR PRODUCTO INDIVIDUAL
             print(f"🍔 Procesando producto ID: {producto_id}")
 
             try:
                 producto = AppkioskoProductos.objects.select_related('estado').get(id=producto_id)
 
-                # ✅ VERIFICAR: Que el producto esté activo antes de procesarlo
                 if producto.estado and producto.estado.is_active != 1:
                     raise ValueError(f"El producto '{producto.nombre}' no está disponible")
 
@@ -204,7 +204,7 @@ def crear_detalles_pedido(pedido, productos_data):
             detalle = AppkioskoDetallepedido.objects.create(
                 pedido_id=pedido.id,
                 producto_id=producto.id,
-                menu_id=None,  # ✅ NULL para productos individuales
+                menu_id=None,
                 cantidad=producto_data['cantidad'],
                 precio_unitario=producto_data['precio_unitario'],
                 subtotal=producto_data['subtotal'],
@@ -212,19 +212,16 @@ def crear_detalles_pedido(pedido, productos_data):
                 updated_at=datetime.now()
             )
 
-            # Procesar personalizaciones (solo para productos)
-            personalizaciones = producto_data.get('personalizaciones', [])
-            if personalizaciones:
-                procesar_personalizaciones(detalle, personalizaciones)
+            # ✅ NUEVO: Procesar ALL ingredientes (base + personalizados)
+            procesar_todos_los_ingredientes(pedido, producto, producto_data)
 
         elif menu_id:
-            # ✅ PROCESAR MENÚ/COMBO
+            # ✅ PROCESAR MENÚ/COMBO (sin personalizaciones)
             print(f"🍽️ Procesando menú ID: {menu_id}")
 
             try:
                 menu = AppkioskoMenus.objects.select_related('estado').get(id=menu_id)
 
-                # ✅ VERIFICAR: Que el menú esté activo antes de procesarlo
                 if not menu.esta_activo:
                     raise ValueError(f"El menú '{menu.nombre}' no está disponible")
 
@@ -234,8 +231,8 @@ def crear_detalles_pedido(pedido, productos_data):
             # Crear detalle del pedido
             detalle = AppkioskoDetallepedido.objects.create(
                 pedido_id=pedido.id,
-                producto_id=None,  # ✅ NULL para menús
-                menu_id=menu.id,   # ✅ ID del menú
+                producto_id=None,
+                menu_id=menu.id,
                 cantidad=producto_data['cantidad'],
                 precio_unitario=producto_data['precio_unitario'],
                 subtotal=producto_data['subtotal'],
@@ -243,14 +240,14 @@ def crear_detalles_pedido(pedido, productos_data):
                 updated_at=datetime.now()
             )
 
-            # ✅ MENÚS: No tienen personalizaciones de ingredientes
-            print(f"  ✅ Menú '{menu.nombre}' agregado sin personalizaciones")
+            print(f"  ✅ Menú '{menu.nombre}' agregado (sin ingredientes personalizables)")
 
         else:
             raise ValueError("Debe especificar producto_id o menu_id")
 
         print(f"  ✅ Detalle de pedido creado: ID {detalle.id}")
 
+'''
 
 def procesar_personalizaciones(detalle_pedido, personalizaciones):
     """
@@ -279,7 +276,7 @@ def procesar_personalizaciones(detalle_pedido, personalizaciones):
         import json
         detalle_pedido.menu_id = json.dumps(personalizaciones_info)
         detalle_pedido.save()
-
+'''
 
 def crear_factura(pedido, datos_facturacion):
     """
@@ -313,6 +310,160 @@ def generar_numero_pedido():
     secuencial = random.randint(100, 999)  # Por simplicidad, usar random
 
     return f"{fecha_parte}-{hora_parte}-{secuencial}"
+
+
+def procesar_todos_los_ingredientes(pedido, producto, producto_data):
+    """
+    ✅ CORREGIDA: Procesar ingredientes con cantidad FINAL correcta
+    """
+    from catalogo.models import AppkioskoProductosIngredientes
+    from .models import AppkioskoPedidoProductoIngredientes
+
+    print(f"🥗 Procesando ingredientes para producto: {producto.nombre}")
+
+    # 1. OBTENER TODOS LOS INGREDIENTES DEL PRODUCTO CON SUS CANTIDADES BASE
+    ingredientes_producto = AppkioskoProductosIngredientes.objects.filter(
+        producto=producto
+    ).select_related('ingrediente')
+
+    print(f"   📋 Ingredientes del producto encontrados: {ingredientes_producto.count()}")
+
+    # 2. OBTENER PERSONALIZACIONES DEL CLIENTE Y CALCULAR CANTIDADES FINALES
+    personalizaciones = producto_data.get('personalizaciones', [])
+    cambios_ingredientes = {}
+
+    # Agrupar cambios por ingrediente
+    for p in personalizaciones:
+        ingrediente_id = p['ingrediente_id']
+        accion = p['accion']
+        precio_aplicado = p['precio_aplicado']
+
+        if ingrediente_id not in cambios_ingredientes:
+            cambios_ingredientes[ingrediente_id] = {
+                'cantidad_agregada': 0,
+                'cantidad_quitada': 0,
+                'precio_por_unidad': precio_aplicado
+            }
+
+        if accion == 'agregar':
+            cambios_ingredientes[ingrediente_id]['cantidad_agregada'] += 1
+        elif accion == 'quitar':
+            cambios_ingredientes[ingrediente_id]['cantidad_quitada'] += 1
+
+    print(f"   🔧 Cambios de ingredientes: {len(cambios_ingredientes)}")
+
+    # Log detallado de cambios
+    for ing_id, cambios in cambios_ingredientes.items():
+        print(f"     - Ingrediente {ing_id}: +{cambios['cantidad_agregada']} -{cambios['cantidad_quitada']}")
+
+    # 3. PROCESAR TODOS LOS INGREDIENTES DEL PRODUCTO
+    for ingrediente_producto in ingredientes_producto:
+        ingrediente_id = ingrediente_producto.ingrediente.id
+        ingrediente_nombre = ingrediente_producto.ingrediente.nombre
+        es_base = ingrediente_producto.es_base
+
+        # ✅ OBTENER CANTIDAD BASE del producto (puede ser > 1)
+        cantidad_base = getattr(ingrediente_producto, 'cantidad', 1)  # Por defecto 1
+
+        print(f"\n   🔄 Procesando: {ingrediente_nombre} (ID:{ingrediente_id}, base:{es_base})")
+        print(f"     📦 Cantidad base en producto: {cantidad_base}")
+
+        # Calcular cantidad final
+        cambios = cambios_ingredientes.get(ingrediente_id, {
+            'cantidad_agregada': 0,
+            'cantidad_quitada': 0,
+            'precio_por_unidad': 0
+        })
+
+        cantidad_final = cantidad_base + cambios['cantidad_agregada'] - cambios['cantidad_quitada']
+
+        print(f"     🧮 Cálculo: {cantidad_base} + {cambios['cantidad_agregada']} - {cambios['cantidad_quitada']} = {cantidad_final}")
+
+        if cantidad_final < 0:
+            cantidad_final = 0  # No puede ser negativo
+            print(f"     ⚠️ Cantidad ajustada a 0 (no puede ser negativa)")
+
+        # ✅ GUARDAR RESULTADO FINAL
+        if cantidad_final == 0:
+            # Ingrediente completamente eliminado
+            print(f"     ❌ Ingrediente ELIMINADO completamente: {ingrediente_nombre}")
+
+            AppkioskoPedidoProductoIngredientes.objects.create(
+                pedido=pedido,
+                producto=producto,
+                ingrediente=ingrediente_producto.ingrediente,
+                accion='eliminar_completo',
+                precio_aplicado=0.00,
+                cantidad=0,  # ✅ CANTIDAD 0 = ELIMINADO
+                created_at=datetime.now()
+            )
+
+        elif cantidad_final == cantidad_base:
+            # Cantidad normal (sin cambios)
+            print(f"     ✅ Cantidad NORMAL: {ingrediente_nombre} x{cantidad_final}")
+
+            accion_tipo = 'incluir_base' if es_base else 'incluir_adicional'
+            AppkioskoPedidoProductoIngredientes.objects.create(
+                pedido=pedido,
+                producto=producto,
+                ingrediente=ingrediente_producto.ingrediente,
+                accion=accion_tipo,
+                precio_aplicado=0.00,
+                cantidad=cantidad_final,  # ✅ CANTIDAD ORIGINAL
+                created_at=datetime.now()
+            )
+
+        else:
+            # Cantidad modificada (mayor o menor que la base)
+            if cantidad_final > cantidad_base:
+                print(f"     ➕ Cantidad AUMENTADA: {ingrediente_nombre} x{cantidad_final} (era {cantidad_base})")
+                accion_tipo = 'cantidad_aumentada'
+                precio_extra = cambios['precio_por_unidad'] * cambios['cantidad_agregada']
+            else:
+                print(f"     ➖ Cantidad REDUCIDA: {ingrediente_nombre} x{cantidad_final} (era {cantidad_base})")
+                accion_tipo = 'cantidad_reducida'
+                precio_extra = 0.00
+
+            AppkioskoPedidoProductoIngredientes.objects.create(
+                pedido=pedido,
+                producto=producto,
+                ingrediente=ingrediente_producto.ingrediente,
+                accion=accion_tipo,
+                precio_aplicado=precio_extra,
+                cantidad=cantidad_final,  # ✅ CANTIDAD FINAL REAL
+                created_at=datetime.now()
+            )
+
+        # Remover de cambios procesados
+        if ingrediente_id in cambios_ingredientes:
+            del cambios_ingredientes[ingrediente_id]
+
+    # 4. PROCESAR INGREDIENTES COMPLETAMENTE NUEVOS (no estaban en el producto original)
+    for ingrediente_id, cambios in cambios_ingredientes.items():
+        if cambios['cantidad_agregada'] > 0:
+            try:
+                ingrediente = AppkioskoIngredientes.objects.get(id=ingrediente_id)
+                cantidad_nueva = cambios['cantidad_agregada']
+                precio_total = cambios['precio_por_unidad'] * cantidad_nueva
+
+                print(f"\n   🆕 Ingrediente COMPLETAMENTE NUEVO: {ingrediente.nombre} x{cantidad_nueva}")
+
+                AppkioskoPedidoProductoIngredientes.objects.create(
+                    pedido=pedido,
+                    producto=producto,
+                    ingrediente=ingrediente,
+                    accion='agregar_nuevo',
+                    precio_aplicado=cambios['precio_por_unidad'],
+                    cantidad=cantidad_nueva,  # ✅ CANTIDAD TOTAL NUEVA
+                    created_at=datetime.now()
+                )
+
+                print(f"     ✅ Guardado: {ingrediente.nombre} x{cantidad_nueva} (+${precio_total})")
+
+            except AppkioskoIngredientes.DoesNotExist:
+                print(f"   ⚠️ Ingrediente ID {ingrediente_id} no encontrado, omitiendo...")
+
+    print(f"\n   ✅ Procesamiento completado para {producto.nombre}")
 
 
 # ✅ ENDPOINT ADICIONAL: Obtener pedido por ID
