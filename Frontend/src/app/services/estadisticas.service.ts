@@ -10,18 +10,33 @@ export interface EstadisticasPromociones {
   promociones_inactivas: number;
   promociones_mas_usadas: PromocionMasUsada[];
   porcentaje_usuarios_promocion: number;
-  ingresos_adicionales: number;
+  total_descuentos_aplicados: number;
+  total_pedidos_sistema: number;
+  total_pedidos_periodo: number;
+  pedidos_por_mes: PedidoPorMes[];
 }
 
 export interface VentaPromocion {
   promocion__nombre: string;
   total_ventas: number;
   total_ingresos: number;
+  tiene_productos: boolean;
+  tiene_menus: boolean;
 }
 
 export interface PromocionMasUsada {
   promocion__nombre: string;
   veces_usada: number;
+}
+
+export interface PedidoPorMes {
+  mes: string;
+  mes_nombre: string;
+  total_pedidos: number;
+  pedidos_con_promocion: number;
+  ingresos_totales: number;
+  descuentos_aplicados: number;
+  porcentaje_promocion: number;
 }
 
 export interface ApiError {

@@ -60,18 +60,33 @@
       </div>
     </div>
 
-    <!-- Gráfico de línea (placeholder) -->
-    <div class="stat-card line-chart-card">
-      <div class="card-header">
-        <h3 class="card-title">Tendencia mensual</h3>
-        <select class="month-filter">
-          <option>Últimos 3 meses</option>
-          <option>Últimos 6 meses</option>
-          <option>Último año</option>
-        </select>
-      </div>
-      <div class="line-chart-placeholder">
-        <p>📈 Gráfico de tendencia próximamente</p>
+    <!-- Tabla de pedidos por mes -->
+    <div class="stat-card table-card">
+      <h3 class="card-title">Pedidos por mes (últimos 6 meses)</h3>
+      <div class="table-container">
+        <table class="pedidos-table" *ngIf="pedidosPorMes.length > 0; else noDataTable">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Total Pedidos</th>
+              <th>Con Promoción</th>
+              <th>% Promoción</th>
+              <th>Ingresos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mes of pedidosPorMes">
+              <td>{{ mes.mes_nombre }}</td>
+              <td>{{ mes.total_pedidos }}</td>
+              <td>{{ mes.pedidos_con_promocion }}</td>
+              <td>{{ mes.porcentaje_promocion }}%</td>
+              <td>{{ mes.ingresos_totales | currency:'USD':'symbol':'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noDataTable>
+          <p class="no-data">No hay datos de pedidos en los últimos 6 meses</p>
+        </ng-template>
       </div>
     </div>
 
@@ -88,20 +103,35 @@
       </div>
     </div>
 
-    <!-- KPIs -->
+    <!-- KPIs Ampliados -->
     <div class="kpi-grid">
       <div class="stat-card kpi-card">
         <div class="kpi-circle">
           <span class="kpi-percentage">{{ porcentajeUsuarios }}%</span>
         </div>
-        <p class="kpi-label">Usuarios que usaron las promociones</p>
+        <p class="kpi-label">Usuarios que usaron promociones</p>
       </div>
+      
       <div class="stat-card kpi-card">
         <div class="kpi-value">
           <span class="currency">$</span>
-          <span class="amount">{{ ingresoAdicional | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="amount">{{ totalDescuentos | currency:'USD':'symbol':'1.2-2' }}</span>
         </div>
-        <p class="kpi-label">Descuentos aplicados</p>
+        <p class="kpi-label">Total descuentos aplicados</p>
+      </div>
+      
+      <div class="stat-card kpi-card">
+        <div class="kpi-number">
+          <span class="big-number">{{ totalPedidosSistema }}</span>
+        </div>
+        <p class="kpi-label">Total pedidos en el sistema</p>
+      </div>
+      
+      <div class="stat-card kpi-card">
+        <div class="kpi-number">
+          <span class="big-number">{{ totalPedidosPeriodo }}</span>
+        </div>
+        <p class="kpi-label">Pedidos últimos 3 meses</p>
       </div>
     </div>
   </div>

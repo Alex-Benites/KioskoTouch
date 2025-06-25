@@ -4,11 +4,53 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
-import { EstadisticasService, EstadisticasPromociones, ApiError } from '../../../services/estadisticas.service';
+import { EstadisticasService } from '../../../services/estadisticas.service';
 
 // Importar ng2-charts
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, ChartConfiguration, ChartData, ChartType, registerables } from 'chart.js';
+
+// Interfaces locales
+interface EstadisticasPromociones {
+  ventas_por_promocion: VentaPromocion[];
+  promociones_activas: number;
+  promociones_inactivas: number;
+  promociones_mas_usadas: PromocionMasUsada[];
+  porcentaje_usuarios_promocion: number;
+  total_descuentos_aplicados: number;
+  total_pedidos_sistema: number;
+  total_pedidos_periodo: number;
+  pedidos_por_mes: PedidoPorMes[];
+}
+
+interface VentaPromocion {
+  promocion__nombre: string;
+  total_ventas: number;
+  total_ingresos: number;
+  tiene_productos: boolean;
+  tiene_menus: boolean;
+}
+
+interface PromocionMasUsada {
+  promocion__nombre: string;
+  veces_usada: number;
+}
+
+interface PedidoPorMes {
+  mes: string;
+  mes_nombre: string;
+  total_pedidos: number;
+  pedidos_con_promocion: number;
+  ingresos_totales: number;
+  descuentos_aplicados: number;
+  porcentaje_promocion: number;
+}
+
+interface ApiError {
+  message: string;
+  status: number;
+  errors?: Array<{ field: string; message: string }>;
+}
 
 @Component({
   selector: 'app-estadisticas-promocion',
@@ -108,7 +150,12 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
 
   // KPIs
   porcentajeUsuarios = 0;
-  ingresoAdicional = 0;
+  totalDescuentos = 0;
+  totalPedidosSistema = 0;
+  totalPedidosPeriodo = 0;
+  
+  // Tabla de pedidos por mes
+  pedidosPorMes: PedidoPorMes[] = [];
 
   // Colores para los gráficos
   private readonly colores = [
@@ -164,7 +211,6 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     this.errorMessage = mensaje;
     this.isLoading = false;
     
-    // ✅ NO CARGAR DATOS POR DEFECTO - Mostrar el error
     console.log('🚫 No se cargarán datos por defecto. Mostrando error al usuario.');
   }
 
@@ -176,8 +222,9 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
       this.configurarGraficoDoughnut(data);
       this.configurarGraficoBarrasHorizontales(data);
       this.configurarKPIs(data);
+      this.configurarTablaMensual(data);
       
-      console.log('✅ Todos los gráficos configurados correctamente');
+      console.log('✅ Todos los gráficos y tablas configurados correctamente');
     } catch (error) {
       console.error('❌ Error procesando datos:', error);
       this.mostrarError('Error al procesar los datos recibidos');
@@ -267,9 +314,21 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
 
   private configurarKPIs(data: EstadisticasPromociones): void {
     this.porcentajeUsuarios = Math.round(data.porcentaje_usuarios_promocion || 0);
-    this.ingresoAdicional = data.ingresos_adicionales || 0;
+    this.totalDescuentos = data.total_descuentos_aplicados || 0;
+    this.totalPedidosSistema = data.total_pedidos_sistema || 0;
+    this.totalPedidosPeriodo = data.total_pedidos_periodo || 0;
     
-    console.log('📈 KPIs configurados - Porcentaje usuarios:', this.porcentajeUsuarios, 'Ingresos adicionales:', this.ingresoAdicional);
+    console.log('📈 KPIs configurados:', {
+      porcentajeUsuarios: this.porcentajeUsuarios,
+      totalDescuentos: this.totalDescuentos,
+      totalPedidosSistema: this.totalPedidosSistema,
+      totalPedidosPeriodo: this.totalPedidosPeriodo
+    });
+  }
+
+  private configurarTablaMensual(data: EstadisticasPromociones): void {
+    this.pedidosPorMes = data.pedidos_por_mes || [];
+    console.log('📅 Tabla mensual configurada:', this.pedidosPorMes.length, 'meses');
   }
 
   reintentarCarga(): void {

@@ -17,6 +17,7 @@ $promo-color-5: #3498db; // Azul
 
 .stats-container {
   padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
   background-color: $background-color;
   min-height: calc(100vh - 200px);
@@ -170,7 +171,8 @@ $promo-color-5: #3498db; // Azul
   @media (min-width: 1200px) {
     grid-template-areas: 
       "bar-chart bar-chart doughnut-chart"
-      "h-bar-chart line-chart kpi-grid";
+      "table-card table-card h-bar-chart"
+      "kpi-grid kpi-grid kpi-grid";
     grid-template-columns: 1fr 1fr 1fr;
   }
 }
@@ -210,8 +212,12 @@ $promo-color-5: #3498db; // Azul
   grid-area: doughnut-chart; 
 }
 
-.line-chart-card { 
-  grid-area: line-chart; 
+.table-card { 
+  grid-area: table-card; 
+  
+  @media (min-width: 1200px) {
+    grid-column: span 2;
+  }
 }
 
 .h-bar-chart-card { 
@@ -221,11 +227,12 @@ $promo-color-5: #3498db; // Azul
 .kpi-grid { 
   grid-area: kpi-grid; 
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   
-  @media (min-width: 768px) {
-    grid-template-columns: 1fr 1fr;
+  @media (min-width: 1200px) {
+    grid-column: span 3;
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -255,47 +262,46 @@ $promo-color-5: #3498db; // Azul
   height: 320px;
 }
 
-// Line chart placeholder
-.line-chart-card {
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
+// Tabla de pedidos por mes
+.table-card {
+  .table-container {
+    overflow-x: auto;
     
-    .card-title {
-      margin: 0;
-      text-align: left;
-    }
-    
-    .month-filter {
-      padding: 0.5rem 1rem;
-      border: 2px solid $border-color;
-      border-radius: 8px;
-      background: $card-background;
-      color: $text-color-dark;
+    .pedidos-table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 0.9rem;
-      cursor: pointer;
-      transition: border-color 0.2s;
       
-      &:focus {
-        outline: none;
-        border-color: #667eea;
+      th, td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid $border-color;
+      }
+      
+      th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: $text-color-dark;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      td {
+        color: $text-color-light;
+      }
+      
+      tr:hover {
+        background: #f8f9fa;
       }
     }
-  }
-  
-  .line-chart-placeholder {
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 8px;
-    color: $text-color-light;
-    font-size: 1.1rem;
-    font-weight: 500;
-    border: 2px dashed $border-color;
+    
+    .no-data {
+      text-align: center;
+      color: $text-color-light;
+      padding: 2rem;
+      font-style: italic;
+    }
   }
 }
 
@@ -335,6 +341,16 @@ $promo-color-5: #3498db; // Azul
     
     .amount {
       font-size: 2.2rem;
+      font-weight: 900;
+      color: $text-color-dark;
+    }
+  }
+  
+  .kpi-number {
+    margin-bottom: 1.5rem;
+    
+    .big-number {
+      font-size: 2.5rem;
       font-weight: 900;
       color: $text-color-dark;
     }
@@ -388,8 +404,13 @@ $promo-color-5: #3498db; // Azul
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   }
   
-  .bar-chart-card {
+  .bar-chart-card, .table-card {
     grid-column: span 1;
+  }
+  
+  .kpi-grid {
+    grid-column: span 1;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
 
@@ -433,7 +454,7 @@ $promo-color-5: #3498db; // Azul
       }
     }
     
-    .kpi-value .amount {
+    .kpi-value .amount, .kpi-number .big-number {
       font-size: 1.8rem;
     }
   }
@@ -449,6 +470,16 @@ $promo-color-5: #3498db; // Azul
   
   .doughnut-chart-card .chart-container {
     height: 220px;
+  }
+  
+  .table-container {
+    .pedidos-table {
+      font-size: 0.8rem;
+      
+      th, td {
+        padding: 0.5rem;
+      }
+    }
   }
 }
 
