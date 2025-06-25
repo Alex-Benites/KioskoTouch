@@ -9,9 +9,8 @@ import os
 def serve_angular_app(request):
     """Servir la aplicación Angular desde static files"""
     try:
-        # ✅ MEJORAR: Más específico con las exclusiones
-        excluded_paths = ['/static/', '/media/', '/admin/', '/api/']
-        if any(request.path.startswith(path) for path in excluded_paths):
+        # NO servir Angular para rutas que empiecen con static/, media/, o admin/
+        if request.path.startswith('/static/') or request.path.startswith('/media/') or request.path.startswith('/admin/'):
             raise Http404("Not found")
 
         # Buscar index.html en staticfiles
@@ -29,18 +28,14 @@ def serve_angular_app(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    # ✅ IMPORTANTE: APIs PRIMERO (orden importa)
+    path('', include('main.urls')),
     path('api/usuarios/', include('usuarios.urls')),
     path('api/catalogo/', include('catalogo.urls')),
     path('api/comun/', include('comun.urls')),
-    path('api/ventas/', include('ventas.urls')),  # ← Esta debe estar antes del catch-all
+    path('api/ventas/', include('ventas.urls')), 
     path('api/marketing/', include('marketing.urls')),
     path('api/establecimientos/', include('establecimientos.urls')),
     path('api/categoria/', include('categoria.urls')),
-
-    # Main app al final de las APIs
-    path('', include('main.urls')),
 ]
 
 # AGREGAR MEDIA/STATIC ANTES del catch-all
@@ -53,8 +48,7 @@ else:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# ✅ CATCH-ALL MÁS ESPECÍFICO AL FINAL
+# CATCH-ALL AL FINAL (después de media/static)
 urlpatterns += [
-    # Solo capturar rutas que NO empiecen con api/
-    re_path(r'^(?!api/).*$', serve_angular_app, name='angular_app'),
+    re_path(r'^.*$', serve_angular_app, name='angular_app'),
 ]
