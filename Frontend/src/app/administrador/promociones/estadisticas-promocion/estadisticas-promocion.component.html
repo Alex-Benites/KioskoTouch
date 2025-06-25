@@ -4,6 +4,7 @@
   <!-- Encabezado de la página -->
   <div class="page-header">
     <h1 class="page-title">Estadísticas de Promociones</h1>
+    <p class="page-subtitle">Datos de los últimos 3 meses</p>
   </div>
 
   <!-- Loading State -->
@@ -18,10 +19,16 @@
       <span class="material-icons error-icon">error_outline</span>
       <h3>Error al cargar estadísticas</h3>
       <p>{{ errorMessage }}</p>
-      <button class="btn-retry" (click)="reintentarCarga()">
-        <span class="material-icons">refresh</span>
-        Reintentar
-      </button>
+      <div class="error-actions">
+        <button class="btn-retry" (click)="reintentarCarga()">
+          <span class="material-icons">refresh</span>
+          Reintentar
+        </button>
+        <button class="btn-back" (click)="volver()">
+          <span class="material-icons">arrow_back</span>
+          Volver
+        </button>
+      </div>
     </div>
   </div>
 
@@ -64,7 +71,7 @@
         </select>
       </div>
       <div class="line-chart-placeholder">
-        <p>Gráfico de tendencia próximamente</p>
+        <p>📈 Gráfico de tendencia próximamente</p>
       </div>
     </div>
 
@@ -98,7 +105,6 @@
       </div>
     </div>
   </div>
-
 
 </div>
 

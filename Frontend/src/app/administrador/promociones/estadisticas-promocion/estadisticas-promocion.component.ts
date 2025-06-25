@@ -18,7 +18,7 @@ import { Chart, ChartConfiguration, ChartData, ChartType, registerables } from '
     HeaderAdminComponent,
     CurrencyPipe,
     FooterAdminComponent,
-    BaseChartDirective // Agregar para los gráficos
+    BaseChartDirective
   ],
   templateUrl: './estadisticas-promocion.component.html',
   styleUrl: './estadisticas-promocion.component.scss'
@@ -131,35 +131,77 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
   cargarEstadisticas(): void {
     this.isLoading = true;
     this.hasError = false;
+    this.errorMessage = '';
+
+    console.log('🔄 Cargando estadísticas desde el backend...');
 
     const sub = this.estadisticasService.getEstadisticasPromociones().subscribe({
       next: (data: EstadisticasPromociones) => {
-        console.log('📊 Estadísticas recibidas:', data);
+        console.log('📊 Estadísticas recibidas del backend:', data);
+        
+        // ✅ VALIDAR QUE LLEGUEN DATOS
+        if (!data || typeof data !== 'object') {
+          console.error('❌ Datos inválidos recibidos del backend:', data);
+          this.mostrarError('Los datos recibidos del backend son inválidos');
+          return;
+        }
+
         this.procesarDatos(data);
         this.isLoading = false;
+        console.log('✅ Estadísticas procesadas correctamente');
       },
       error: (error: ApiError) => {
         console.error('❌ Error al cargar estadísticas:', error);
-        this.hasError = true;
-        this.errorMessage = error.message;
-        this.isLoading = false;
-        this.cargarDatosPorDefecto();
+        this.mostrarError(error.message || 'Error al conectar con el servidor');
       }
     });
 
     this.subscription.add(sub);
   }
 
+  private mostrarError(mensaje: string): void {
+    this.hasError = true;
+    this.errorMessage = mensaje;
+    this.isLoading = false;
+    
+    // ✅ NO CARGAR DATOS POR DEFECTO - Mostrar el error
+    console.log('🚫 No se cargarán datos por defecto. Mostrando error al usuario.');
+  }
+
   private procesarDatos(data: EstadisticasPromociones): void {
-    this.configurarGraficoBarras(data);
-    this.configurarGraficoDoughnut(data);
-    this.configurarGraficoBarrasHorizontales(data);
-    this.configurarKPIs(data);
+    console.log('🔄 Procesando datos recibidos...');
+    
+    try {
+      this.configurarGraficoBarras(data);
+      this.configurarGraficoDoughnut(data);
+      this.configurarGraficoBarrasHorizontales(data);
+      this.configurarKPIs(data);
+      
+      console.log('✅ Todos los gráficos configurados correctamente');
+    } catch (error) {
+      console.error('❌ Error procesando datos:', error);
+      this.mostrarError('Error al procesar los datos recibidos');
+    }
   }
 
   private configurarGraficoBarras(data: EstadisticasPromociones): void {
-    const ventas = data.ventas_por_promocion;
-
+    const ventas = data.ventas_por_promocion || [];
+    console.log('📊 Configurando gráfico de barras con:', ventas);
+    
+    if (ventas.length === 0) {
+      console.log('⚠️ No hay datos de ventas por promoción');
+      this.barChartData = {
+        labels: ['Sin datos'],
+        datasets: [{
+          data: [0],
+          backgroundColor: ['#e0e0e0'],
+          borderColor: ['#e0e0e0'],
+          borderWidth: 1
+        }]
+      };
+      return;
+    }
+    
     this.barChartData = {
       labels: ventas.map(item => item.promocion__nombre),
       datasets: [
@@ -174,11 +216,16 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
   }
 
   private configurarGraficoDoughnut(data: EstadisticasPromociones): void {
+    const activas = data.promociones_activas || 0;
+    const inactivas = data.promociones_inactivas || 0;
+    
+    console.log('🍩 Configurando gráfico doughnut - Activas:', activas, 'Inactivas:', inactivas);
+    
     this.doughnutChartData = {
       labels: ['Activas', 'Inactivas'],
       datasets: [
         {
-          data: [data.promociones_activas, data.promociones_inactivas],
+          data: [activas, inactivas],
           backgroundColor: ['#28a745', '#dc3545'],
           borderColor: ['#28a745', '#dc3545'],
           borderWidth: 2
@@ -188,7 +235,22 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
   }
 
   private configurarGraficoBarrasHorizontales(data: EstadisticasPromociones): void {
-    const promociones = data.promociones_mas_usadas;
+    const promociones = data.promociones_mas_usadas || [];
+    console.log('📊 Configurando gráfico horizontal con:', promociones);
+
+    if (promociones.length === 0) {
+      console.log('⚠️ No hay datos de promociones más usadas');
+      this.horizontalBarChartData = {
+        labels: ['Sin datos'],
+        datasets: [{
+          data: [0],
+          backgroundColor: ['#e0e0e0'],
+          borderColor: ['#e0e0e0'],
+          borderWidth: 1
+        }]
+      };
+      return;
+    }
 
     this.horizontalBarChartData = {
       labels: promociones.map(item => item.promocion__nombre),
@@ -204,52 +266,14 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
   }
 
   private configurarKPIs(data: EstadisticasPromociones): void {
-    this.porcentajeUsuarios = Math.round(data.porcentaje_usuarios_promocion);
-    this.ingresoAdicional = data.ingresos_adicionales;
-  }
-
-  private cargarDatosPorDefecto(): void {
-    this.barChartData = {
-      labels: ['Promo 1', 'Promo 2', 'Promo 3', 'Promo 4', 'Promo 5'],
-      datasets: [
-        {
-          data: [28, 15, 20, 35, 22],
-          backgroundColor: this.colores,
-          borderColor: this.colores,
-          borderWidth: 1
-        }
-      ]
-    };
-
-    this.doughnutChartData = {
-      labels: ['Activas', 'Inactivas'],
-      datasets: [
-        {
-          data: [5, 0],
-          backgroundColor: ['#28a745', '#dc3545'],
-          borderColor: ['#28a745', '#dc3545'],
-          borderWidth: 2
-        }
-      ]
-    };
-
-    this.horizontalBarChartData = {
-      labels: ['Promo 4', 'Promo 1', 'Promo 5', 'Promo 3'],
-      datasets: [
-        {
-          data: [35, 28, 22, 20],
-          backgroundColor: ['#5c3c4c', '#f08a5d', '#3498db', '#7a28cb'],
-          borderColor: ['#5c3c4c', '#f08a5d', '#3498db', '#7a28cb'],
-          borderWidth: 1
-        }
-      ]
-    };
-
-    this.porcentajeUsuarios = 75;
-    this.ingresoAdicional = 2847.50;
+    this.porcentajeUsuarios = Math.round(data.porcentaje_usuarios_promocion || 0);
+    this.ingresoAdicional = data.ingresos_adicionales || 0;
+    
+    console.log('📈 KPIs configurados - Porcentaje usuarios:', this.porcentajeUsuarios, 'Ingresos adicionales:', this.ingresoAdicional);
   }
 
   reintentarCarga(): void {
+    console.log('🔄 Reintentando cargar estadísticas...');
     this.cargarEstadisticas();
   }
 
