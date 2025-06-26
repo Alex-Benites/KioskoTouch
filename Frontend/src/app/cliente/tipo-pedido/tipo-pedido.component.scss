@@ -4,10 +4,11 @@
   padding: 0;
 }
 
+// ===== ESTILOS MEJORADOS =====
 .container {
-  width: 100vw;
-  height: 100vh;
-  background-color: #e5e5e5; // Fondo gris claro
+  width: 100%;          // ✅ MEJOR que 720px
+  height: 100vh;        // ✅ MEJOR que 1280px (100% del viewport)
+  background-color: #e5e5e5;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,62 +16,44 @@
   overflow: hidden;
 }
 
-/* Header */
+// ===== HEADER =====
 .header {
+  margin-top: 8vh;      // ✅ Ya está bien con vh
   width: 100%;
-  padding: 40px 20px 20px 20px;
+  padding: 30px 20px;
   text-align: center;
 }
 
 .header__logo {
-  max-width: 100%;
+  width: 300px;         // ✅ Este puede quedar fijo o usar vw
   height: auto;
-  width: 350px; /* ← Ajusta el tamaño según necesites */
   object-fit: contain;
-
-  @media (max-width: 768px) {
-    width: 280px;
-  }
-
-  @media (max-width: 480px) {
-    width: 220px;
-  }
 }
 
-/* Main Content */
+// ===== MAIN CONTENT =====
 .main-content {
-  flex: 1;
+  flex: 1;              // ✅ Esto ya es relativo, perfecto
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 20px;
+  padding: 40px 30px;
 }
 
 .options__container {
   display: flex;
-  gap: 40px;
+  gap: 50px;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-
-  @media (max-width: 768px) {
-    gap: 30px;
-  }
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    gap: 25px;
-  }
 }
 
-/* Opciones - Tarjetas MÁS LARGAS */
+// ===== OPCIONES - TARJETAS =====
 .opcion {
   background-color: white;
   border-radius: 20px;
-  padding: 50px 20px 35px 20px; /* ← Aumentar padding vertical */
+  padding: 40px 20px 30px 20px;
   width: 280px;
-  height: 480px; /* ← Extra largas */
+  height: 450px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -92,12 +75,6 @@
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(197, 48, 48, 0.2);
   }
-
-  @media (max-width: 480px) {
-    width: 250px;
-    height: 420px;
-    padding: 40px 15px 30px 15px;
-  }
 }
 
 .opcion__image-container {
@@ -108,9 +85,9 @@
   width: 100%;
   background-color: #d0d0d0;
   border-radius: 15px;
-  padding: 40px; /* ← Aumentar padding de la imagen */
-  margin-bottom: 35px; /* ← Aumentar espacio inferior */
-  min-height: 250px; /* ← Contenedor de imagen más alto */
+  padding: 30px;
+  margin-bottom: 25px;
+  min-height: 220px;
 }
 
 .opcion__image {
@@ -123,28 +100,25 @@
 
 .opcion__content {
   text-align: center;
-  margin-bottom: 20px; /* ← Aumentar espacio inferior */
+  margin-bottom: 15px;
 }
 
 .opcion__title {
-  font-size: 1.5rem; /* ← Aumentar tamaño de fuente */
+  font-size: 32px;
   font-weight: 700;
   color: #333;
   margin: 0;
-
-  @media (max-width: 480px) {
-    font-size: 1.3rem;
-  }
+  line-height: 1.2;
 }
 
 .opcion__radio {
-  display: none; // Ocultar el radio button nativo
+  display: none;
 }
 
-/* Footer */
+// ===== FOOTER =====
 .footer {
   width: 100%;
-  padding: 30px 20px 40px 20px;
+  padding: 30px 20px 50px 20px;
   display: flex;
   justify-content: center;
 }
@@ -154,8 +128,8 @@
   color: white;
   border: none;
   border-radius: 50px;
-  padding: 18px 50px;
-  font-size: 1.5rem;
+  padding: 20px 60px;
+  font-size: 24px;
   font-weight: 700;
   font-family: 'Arial', sans-serif;
   cursor: pointer;
@@ -163,7 +137,7 @@
   box-shadow: 0 4px 15px rgba(197, 48, 48, 0.3);
   text-transform: uppercase;
   letter-spacing: 1px;
-  min-width: 200px;
+  min-width: 220px;
 
   &:hover:not(:disabled) {
     background-color: #a02622;
@@ -177,15 +151,9 @@
     box-shadow: none;
     transform: none;
   }
-
-  @media (max-width: 480px) {
-    padding: 15px 40px;
-    font-size: 1.3rem;
-    min-width: 180px;
-  }
 }
 
-/* Animaciones adicionales */
+// ===== ANIMACIONES =====
 @keyframes fadeIn {
   from {
     opacity: 0;

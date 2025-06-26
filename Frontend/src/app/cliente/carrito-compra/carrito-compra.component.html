@@ -24,84 +24,93 @@
       <!-- ✅ MOSTRAR lista de productos si hay items -->
       <div *ngIf="productosCarrito.length > 0; else carritoVacio" class="productos-lista">
         <!-- ✅ CORREGIR: Iterar sobre el computed -->
+        <!-- ✅ Solo cambiar el contenido del producto-item: -->
         <div
           *ngFor="let item of productosCarrito; let i = index"
           class="producto-item">
 
-          <!-- Barra roja lateral -->
-          <div class="producto-barra-lateral"></div>
+          <!-- ✅ PARTE 1: IMAGEN + NOMBRE (IZQUIERDA) -->
+          <div class="producto-seccion-izquierda">
+            <div class="producto-barra-lateral"></div>
+            <div class="producto-imagen">
+              <img [src]="obtenerImagenProducto(item)" [alt]="obtenerNombreProducto(item)">
+            </div>
+            <div class="producto-info">
+              <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
 
-          <!-- Imagen del producto o menú -->
-          <div class="producto-imagen">
-            <img [src]="obtenerImagenProducto(item)" [alt]="obtenerNombreProducto(item)">
+              <!-- Si es producto, muestra personalizaciones -->
+              <div *ngIf="item.tipo === 'producto'">
+                <div class="producto-personalizaciones" *ngIf="item.personalizacion && item.personalizacion.length > 0">
+                  <ng-container *ngFor="let ingr of item.personalizacion">
+                    <span
+                      class="personalizacion"
+                      [ngClass]="{
+                        'personalizacion-agregado': ingr.accion === 'agregar',
+                        'personalizacion-removido': ingr.accion === 'quitar'
+                      }">
+                      {{ ingr.accion === 'agregar' ? 'extra' : 'sin' }} {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}
+                    </span>
+                  </ng-container>
+                </div>
+              </div>
+
+              <!-- Si es menú, muestra los productos incluidos -->
+              <div *ngIf="item.tipo === 'menu' && item.productos && item.productos.length > 0" class="menu-detalle-lista">
+                <span class="menu-detalle-titulo">Incluye:</span>
+                <ul>
+                  <li *ngFor="let prod of item.productos">
+                    {{ prod.nombre }} <span *ngIf="prod.cantidad && prod.cantidad > 1">(x{{ prod.cantidad }})</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
-          <!-- Información del producto o menú -->
-          <div class="producto-info">
-            <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
+          <!-- ✅ PARTE 2: CONTROLES (DERECHA) -->
+          <div class="producto-seccion-derecha">
+            
+            <!-- ✅ CONTROLES SUPERIORES (MÁS ESPACIO) -->
+            <div class="producto-controles-superiores">
+              <div class="cantidad-controles">
+                <button
+                  class="control-btn disminuir"
+                  (click)="disminuirCantidad(i)"
+                  [disabled]="item.cantidad <= 1">
+                  -
+                </button>
+                <span class="cantidad-numero">{{ item.cantidad }}</span>
+                <button
+                  class="control-btn aumentar"
+                  (click)="aumentarCantidad(i)">
+                  +
+                </button>
+              </div>
 
-            <!-- Si es producto, muestra personalizaciones -->
-            <div *ngIf="item.tipo === 'producto'">
-              <div class="producto-personalizaciones" *ngIf="item.personalizacion && item.personalizacion.length > 0">
-                <ng-container *ngFor="let ingr of item.personalizacion">
-                  <span
-                    class="personalizacion"
-                    [ngClass]="{
-                      'personalizacion-agregado': ingr.accion === 'agregar',
-                      'personalizacion-removido': ingr.accion === 'quitar'
-                    }">
-                    {{ ingr.accion === 'agregar' ? 'extra' : 'sin' }} {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}
-                  </span>
-                </ng-container>
+              <div class="precio-eliminar-grupo">
+                <div class="producto-precio">
+                  <span class="precio-valor">${{ calcularPrecioTotalProducto(item).toFixed(2) }}</span>
+                </div>
+                <div class="producto-eliminar">
+                  <button
+                    class="eliminar-btn"
+                    (click)="eliminarProducto(i)"
+                    title="Eliminar producto">
+                    🗑️
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Si es menú, muestra los productos incluidos -->
-            <div *ngIf="item.tipo === 'menu' && item.productos && item.productos.length > 0" class="menu-detalle-lista">
-              <span class="menu-detalle-titulo">Incluye:</span>
-              <ul>
-                <li *ngFor="let prod of item.productos">
-                  {{ prod.nombre }} <span *ngIf="prod.cantidad && prod.cantidad > 1">(x{{ prod.cantidad }})</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Controles y botón Personalizar SOLO para productos -->
-          <div class="producto-controles">
-            <button
-              *ngIf="item.tipo === 'producto'"
-              class="btn-personalizar-inline"
-              (click)="personalizarProducto(item, i)">
+            <!-- ✅ BOTÓN PERSONALIZAR INFERIOR (MENOS ESPACIO) -->
+            <div class="producto-controles-inferiores">
+              <button
+                *ngIf="item.tipo === 'producto'"
+                class="btn-personalizar-inline"
+                (click)="personalizarProducto(item, i)">
                 Personalizar
-            </button>
-            <button
-              class="control-btn disminuir"
-              (click)="disminuirCantidad(i)"
-              [disabled]="item.cantidad <= 1">
-              -
-            </button>
-            <span class="cantidad-numero">{{ item.cantidad }}</span>
-            <button
-              class="control-btn aumentar"
-              (click)="aumentarCantidad(i)">
-              +
-            </button>
-          </div>
+              </button>
+            </div>
 
-          <!-- Precio total del producto o menú -->
-          <div class="producto-precio">
-            <span class="precio-valor">${{ calcularPrecioTotalProducto(item).toFixed(2) }}</span>
-          </div>
-
-          <!-- Botón eliminar -->
-          <div class="producto-eliminar">
-            <button
-              class="eliminar-btn"
-              (click)="eliminarProducto(i)"
-              title="Eliminar producto">
-              🗑️
-            </button>
           </div>
         </div>
       </div>
