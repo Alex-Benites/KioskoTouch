@@ -551,7 +551,7 @@ $category-inactive-bg: #FFFFFF;
 
   &__empty-message,
   &__details {
-    font-size: 14px;
+    font-size: 25px;
     color: #333;
     text-align: center;
     margin: 0;
@@ -559,15 +559,16 @@ $category-inactive-bg: #FFFFFF;
 
   &__details {
     display: flex;
-    gap: 20px;
+    gap: 325px;
     justify-content: center;
   }
 
   &__actions {
     display: flex;
-    gap: 15px;
+    gap: 115px;
     width: 100%;
-    max-width: 400px;
+    max-width: 600px;
+    max-height: 100%;
   }
 
   &__button {
