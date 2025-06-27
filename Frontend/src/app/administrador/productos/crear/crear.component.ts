@@ -48,7 +48,7 @@ export class CrearComponent implements OnInit {
 
   productoForm: FormGroup;
   categorias: any[] = [];
-  estados: any[] = [];
+  estados: any[] = []; 
   imagePreview: string | null = null;
   selectedFile: File | null = null;
   ingredientes: any[] = [];
