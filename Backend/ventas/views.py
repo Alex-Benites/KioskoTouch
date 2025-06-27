@@ -178,17 +178,28 @@ def crear_pedido_principal(datos_validados, tipo_pago):
 
 def crear_detalles_pedido(pedido, productos_data):
     """
-    ✅ ACTUALIZAR: Crear detalles para productos Y menús + ingredientes
+    ✅ ACTUALIZADO: Crear detalles con promociones para productos Y menús
     """
+    # ✅ MANTENER TUS IMPORTACIONES EXISTENTES
     from catalogo.models import AppkioskoProductos, AppkioskoMenus
-    from .models import AppkioskoPedidoProductoIngredientes  # ✅ IMPORTAR
+    from .models import AppkioskoPedidoProductoIngredientes  # ✅ NECESARIO para ingredientes
+
+    print(f"📋 Creando detalles de pedido: {len(productos_data)} items")
 
     for producto_data in productos_data:
         producto_id = producto_data.get('producto_id')
         menu_id = producto_data.get('menu_id')
 
+        precio_original = float(producto_data['precio_unitario'])
+        cantidad = producto_data['cantidad']
+
+        # ✅ NUEVAS VARIABLES para promoción
+        promocion = None
+        precio_final = precio_original
+        descuento = 0.00
+
         if producto_id:
-            # ✅ PROCESAR PRODUCTO INDIVIDUAL
+            # ✅ PROCESAR PRODUCTO (CONSERVAR TU LÓGICA EXISTENTE)
             print(f"🍔 Procesando producto ID: {producto_id}")
 
             try:
@@ -200,23 +211,34 @@ def crear_detalles_pedido(pedido, productos_data):
             except AppkioskoProductos.DoesNotExist:
                 raise ValueError(f"Producto con ID {producto_id} no existe")
 
-            # Crear detalle del pedido
+            # ✅ AGREGAR: Verificar promoción activa
+            promocion = obtener_promocion_activa(producto=producto)
+            if promocion:
+                precio_final, descuento = calcular_precio_con_promocion(precio_original, promocion)
+
+            # ✅ MODIFICAR: Crear detalle con promoción
             detalle = AppkioskoDetallepedido.objects.create(
                 pedido_id=pedido.id,
                 producto_id=producto.id,
                 menu_id=None,
-                cantidad=producto_data['cantidad'],
-                precio_unitario=producto_data['precio_unitario'],
-                subtotal=producto_data['subtotal'],
+                cantidad=cantidad,
+                precio_unitario=precio_final,  # ✅ Precio CON descuento
+                subtotal=precio_final * cantidad,  # ✅ Subtotal correcto
+
+                # ✅ NUEVOS CAMPOS (solo si ya tienes los campos en el modelo)
+                precio_original=precio_original if promocion else None,
+                promocion=promocion,
+                descuento_promocion=descuento,
+
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
 
-            # ✅ NUEVO: Procesar ALL ingredientes (base + personalizados)
+            # ✅ CONSERVAR: Procesar ingredientes (TU FUNCIÓN EXISTENTE)
             procesar_todos_los_ingredientes(pedido, producto, producto_data)
 
         elif menu_id:
-            # ✅ PROCESAR MENÚ/COMBO (sin personalizaciones)
+            # ✅ PROCESAR MENÚ (CONSERVAR TU LÓGICA EXISTENTE)
             print(f"🍽️ Procesando menú ID: {menu_id}")
 
             try:
@@ -228,55 +250,46 @@ def crear_detalles_pedido(pedido, productos_data):
             except AppkioskoMenus.DoesNotExist:
                 raise ValueError(f"Menú con ID {menu_id} no existe")
 
-            # Crear detalle del pedido
+            # ✅ AGREGAR: Verificar promoción activa para menú
+            promocion = obtener_promocion_activa(menu=menu)
+            if promocion:
+                precio_final, descuento = calcular_precio_con_promocion(precio_original, promocion)
+
+            # ✅ MODIFICAR: Crear detalle con promoción
             detalle = AppkioskoDetallepedido.objects.create(
                 pedido_id=pedido.id,
                 producto_id=None,
                 menu_id=menu.id,
-                cantidad=producto_data['cantidad'],
-                precio_unitario=producto_data['precio_unitario'],
-                subtotal=producto_data['subtotal'],
+                cantidad=cantidad,
+                precio_unitario=precio_final,  # ✅ Precio CON descuento
+                subtotal=precio_final * cantidad,  # ✅ Subtotal correcto
+
+                # ✅ NUEVOS CAMPOS (solo si ya tienes los campos en el modelo)
+                precio_original=precio_original if promocion else None,
+                promocion=promocion,
+                descuento_promocion=descuento,
+
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
 
-            print(f"  ✅ Menú '{menu.nombre}' agregado (sin ingredientes personalizables)")
+            print(f"  ✅ Menú '{menu.nombre}' agregado")
 
         else:
             raise ValueError("Debe especificar producto_id o menu_id")
 
-        print(f"  ✅ Detalle de pedido creado: ID {detalle.id}")
+        # ✅ AGREGAR: Log del resultado
+        if promocion:
+            print(f"  ✅ Detalle creado CON promoción:")
+            print(f"     - Item: {producto.nombre if producto_id else menu.nombre}")
+            print(f"     - Promoción: {promocion.nombre}")
+            print(f"     - Precio original: ${precio_original}")
+            print(f"     - Descuento: ${descuento}")
+            print(f"     - Precio final: ${precio_final}")
+        else:
+            print(f"  ✅ Detalle creado SIN promoción: ID {detalle.id}")
 
-'''
-
-def procesar_personalizaciones(detalle_pedido, personalizaciones):
-    """
-    ✅ PROCESAR: Personalizaciones de ingredientes
-    Nota: Guardamos en el campo 'menu_id' la información de personalizaciones
-    """
-    personalizaciones_info = []
-
-    for p in personalizaciones:
-        # Verificar que el ingrediente existe
-        try:
-            ingrediente = AppkioskoIngredientes.objects.get(id=p['ingrediente_id'])
-            personalizaciones_info.append({
-                'ingrediente_id': p['ingrediente_id'],
-                'ingrediente_nombre': ingrediente.nombre,
-                'accion': p['accion'],
-                'precio_aplicado': float(p['precio_aplicado'])
-            })
-            print(f"  🥬 {p['accion']} {ingrediente.nombre} (+${p['precio_aplicado']})")
-        except AppkioskoIngredientes.DoesNotExist:
-            print(f"  ⚠️ Ingrediente ID {p['ingrediente_id']} no encontrado, omitiendo...")
-
-    # Guardar personalizaciones como JSON en menu_id (temporal)
-    # TODO: Considerar crear tabla específica para personalizaciones
-    if personalizaciones_info:
-        import json
-        detalle_pedido.menu_id = json.dumps(personalizaciones_info)
-        detalle_pedido.save()
-'''
+    print(f"📋 Detalles del pedido creados: {len(productos_data)} productos")
 
 def crear_factura(pedido, datos_facturacion):
     """
@@ -502,3 +515,122 @@ def obtener_pedido(request, pedido_id):
             'success': False,
             'message': 'Pedido no encontrado'
         }, status=status.HTTP_404_NOT_FOUND)
+
+def obtener_promocion_activa(producto=None, menu=None):
+    """
+    ✅ VERIFICAR: Si hay promoción activa para producto/menú (DINÁMICO)
+    """
+    try:
+        # ✅ IMPORTS CORREGIDOS
+        from marketing.models import AppkioskoPromocionproductos, AppkioskoPromocionmenu
+        from django.utils import timezone
+
+        if producto:
+            # ✅ BUSCAR PROMOCIÓN CON ESTADO ACTIVO (dinámico)
+            promocion_producto = AppkioskoPromocionproductos.objects.filter(
+                producto=producto,
+                promocion__fecha_inicio_promo__lte=timezone.now(),
+                promocion__fecha_fin_promo__gte=timezone.now(),
+                # ✅ VERIFICAR ESTADO ACTIVO POR NOMBRE O FLAG
+                promocion__estado__is_active=1  # O usar is_active=True si es Boolean
+            ).select_related('promocion', 'promocion__estado').first()
+
+            # ✅ DEBUG: Mostrar información detallada
+            if promocion_producto:
+                promo = promocion_producto.promocion
+                print(f"   🎁 Promoción encontrada para producto {producto.nombre}:")
+                print(f"      - Nombre: {promo.nombre}")
+                print(f"      - Estado ID: {promo.estado_id}")
+                print(f"      - Estado nombre: {promo.estado.nombre if promo.estado else 'N/A'}")
+                print(f"      - Fecha inicio: {promo.fecha_inicio_promo}")
+                print(f"      - Fecha fin: {promo.fecha_fin_promo}")
+                return promo
+            else:
+                # ✅ DEBUG: Mostrar por qué no encontró promoción
+                todas_promociones = AppkioskoPromocionproductos.objects.filter(
+                    producto=producto
+                ).select_related('promocion', 'promocion__estado')
+
+                print(f"   🔍 DEBUG - Promociones encontradas para producto {producto.nombre}:")
+                for promo_prod in todas_promociones:
+                    promo = promo_prod.promocion
+                    print(f"      - Promoción: {promo.nombre}")
+                    print(f"        Estado ID: {promo.estado_id}")
+                    print(f"        Estado nombre: {promo.estado.nombre if promo.estado else 'N/A'}")
+                    print(f"        Is active: {promo.estado.is_active if promo.estado else 'N/A'}")
+                    print(f"        Fecha inicio: {promo.fecha_inicio_promo}")
+                    print(f"        Fecha fin: {promo.fecha_fin_promo}")
+                    print(f"        En rango de fechas: {promo.fecha_inicio_promo <= timezone.now() <= promo.fecha_fin_promo}")
+
+        elif menu:
+            # ✅ SIMILAR PARA MENÚS
+            promocion_menu = AppkioskoPromocionmenu.objects.filter(
+                menu=menu,
+                promocion__fecha_inicio_promo__lte=timezone.now(),
+                promocion__fecha_fin_promo__gte=timezone.now(),
+                promocion__estado__is_active=1  # O usar estado_id=4
+            ).select_related('promocion', 'promocion__estado').first()
+
+            if promocion_menu:
+                promo = promocion_menu.promocion
+                print(f"   🎁 Promoción encontrada para menú {menu.nombre}:")
+                print(f"      - Nombre: {promo.nombre}")
+                print(f"      - Estado ID: {promo.estado_id}")
+                print(f"      - Estado nombre: {promo.estado.nombre if promo.estado else 'N/A'}")
+                return promo
+            else:
+                # ✅ DEBUG PARA MENÚS
+                todas_promociones = AppkioskoPromocionmenu.objects.filter(
+                    menu=menu
+                ).select_related('promocion', 'promocion__estado')
+
+                print(f"   🔍 DEBUG - Promociones encontradas para menú {menu.nombre}:")
+                for promo_menu in todas_promociones:
+                    promo = promo_menu.promocion
+                    print(f"      - Promoción: {promo.nombre}")
+                    print(f"        Estado ID: {promo.estado_id}")
+                    print(f"        Estado nombre: {promo.estado.nombre if promo.estado else 'N/A'}")
+                    print(f"        Is active: {promo.estado.is_active if promo.estado else 'N/A'}")
+                    print(f"        Fecha inicio: {promo.fecha_inicio_promo}")
+                    print(f"        Fecha fin: {promo.fecha_fin_promo}")
+
+        print(f"   📋 Sin promoción activa para {'producto' if producto else 'menú'}")
+        return None
+
+    except ImportError as e:
+        print(f"   ⚠️ Error de importación: {e}")
+        return None
+    except Exception as e:
+        print(f"   ❌ Error buscando promoción: {e}")
+        return None
+
+
+def calcular_precio_con_promocion(precio_base, promocion):
+    """
+    ✅ CALCULAR: Precio final aplicando promoción
+    """
+    if not promocion:
+        return precio_base, 0.00
+
+    try:
+        # Obtener el tipo de descuento desde la promoción
+        valor_descuento = float(promocion.valor_descuento)
+
+        # Asumir que el campo valor_descuento es el porcentaje
+        # Si tienes campo tipo_descuento, ajusta aquí
+        descuento = precio_base * (valor_descuento / 100)
+
+        # Asegurar que el descuento no sea mayor al precio
+        descuento = min(descuento, precio_base)
+        precio_final = max(0, precio_base - descuento)
+
+        print(f"   💰 Cálculo promoción:")
+        print(f"      - Precio base: ${precio_base}")
+        print(f"      - Descuento ({valor_descuento}%): ${descuento}")
+        print(f"      - Precio final: ${precio_final}")
+
+        return precio_final, descuento
+
+    except Exception as e:
+        print(f"   ❌ Error calculando promoción: {e}")
+        return precio_base, 0.00

@@ -55,6 +55,29 @@ class AppkioskoDetallepedido(models.Model):
     cantidad = models.IntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # ✅ NUEVOS CAMPOS PARA PROMOCIONES:
+    promocion = models.ForeignKey(
+        AppkioskoPromociones,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        help_text="Promoción aplicada a este producto/menú"
+    )
+    precio_original = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Precio antes de aplicar promoción"
+    )
+    descuento_promocion = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        help_text="Descuento aplicado por la promoción"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -63,6 +86,11 @@ class AppkioskoDetallepedido(models.Model):
         db_table = 'appkiosko_detallepedido'
         verbose_name = 'Detalle de Pedido'
         verbose_name_plural = 'Detalles de Pedido'
+
+    def __str__(self):
+        item_nombre = self.producto.nombre if self.producto else self.menu.nombre
+        promocion_info = f" (Promoción: {self.promocion.nombre})" if self.promocion else ""
+        return f"{self.pedido.invoice_number} - {item_nombre}{promocion_info}"
 
 class AppkioskoPedidosessions(models.Model):
     kiosko_touch = models.ForeignKey(AppkioskoKioskostouch, on_delete=models.CASCADE)
