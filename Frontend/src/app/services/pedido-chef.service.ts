@@ -9,7 +9,7 @@ export interface PedidoChef {
   id: number;
   numero: string;
   total: number;
-  numero_mesa: number;
+  numero_mesa: number | null;
   tipo_entrega: string;
   created_at: string;
   tiempo_transcurrido: string;
@@ -47,7 +47,7 @@ export interface PersonalizacionChef {
 export interface PromocionChef {
   nombre: string;
   descuento: number;
-  precio_original: number;
+  precio_original: number | null;
 }
 
 export interface EstadoCocina {
@@ -111,7 +111,7 @@ export class PedidoChefService {
   }
 
   /**
-   * CORREGIDO: Cargar pedidos desde el backend con manejo de lista vacía
+   * Cargar pedidos desde el backend con manejo de lista vacía
    */
   async cargarPedidos(): Promise<void> {
     this.loadingState.set(true);
@@ -138,7 +138,7 @@ export class PedidoChefService {
       console.log('✅ Respuesta recibida:', response);
       
       if (response?.success) {
-        // ✅ CORREGIDO: Manejar data vacía o undefined
+        // Manejar data vacía o undefined
         const pedidosData = response.data || [];
         
         // Agregar estados de cocina a cada pedido
@@ -151,7 +151,7 @@ export class PedidoChefService {
         this.pedidosState.set(pedidosConEstado);
         console.log('✅ Pedidos cargados exitosamente:', pedidosConEstado.length);
         
-        // ✅ Mensaje informativo si no hay pedidos
+        // Mensaje informativo si no hay pedidos
         if (pedidosConEstado.length === 0) {
           console.log('ℹ️ No hay pedidos en las últimas 24 horas');
         }
@@ -187,13 +187,12 @@ export class PedidoChefService {
   }
 
   /**
-   * CORREGIDO: Cambiar estado de un pedido en el backend
+   * Cambiar estado de un pedido en el backend
    */
   async cambiarEstadoPedido(pedidoId: number, estado: 'activado' | 'desactivado'): Promise<boolean> {
     try {
       console.log(`🔄 Cambiando estado del pedido ${pedidoId} a ${estado}...`);
       
-      // CORREGIDO: Usar firstValueFrom
       const response = await firstValueFrom(
         this.http.patch<any>(`${this.apiUrl}/${pedidoId}/estado/`, {
           estado: estado
@@ -243,7 +242,7 @@ export class PedidoChefService {
     } else {
       estadosActuales.push(nuevoEstadoObj);
     }
-
+    
     this.estadosCocinaState.set([...estadosActuales]);
     this.guardarEstadosEnStorage();
     
@@ -261,7 +260,7 @@ export class PedidoChefService {
   }
 
   /**
-   * CORREGIDO: Togglear selección de un pedido
+   * Togglear selección de un pedido
    */
   toggleSeleccionPedido(pedidoId: number): void {
     const pedidos = this.pedidosState();
@@ -280,7 +279,7 @@ export class PedidoChefService {
   }
 
   /**
-   * AGREGADO: Seleccionar un pedido específico
+   * Seleccionar un pedido específico
    */
   seleccionarPedido(pedidoId: number, seleccionado: boolean): void {
     const pedidos = this.pedidosState();

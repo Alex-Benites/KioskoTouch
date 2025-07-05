@@ -7,7 +7,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 import { PedidoChefService, PedidoChef } from '../../services/pedido-chef.service';
 
@@ -23,6 +23,7 @@ import { PedidoChefService, PedidoChef } from '../../services/pedido-chef.servic
     MatButtonModule,
     MatCardModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule, // ✅ AGREGADO
     HeaderAdminComponent
   ],
   templateUrl: './pedidos.component.html',
@@ -50,7 +51,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Inicializar el componente
+   * Inicializar el componente SIN mostrar loading
    */
   async inicializarComponente(): Promise<void> {
     try {
@@ -93,9 +94,9 @@ export class PedidosComponent implements OnInit, OnDestroy {
     console.log(`🍳 Cambiando estado de cocina del pedido ${pedidoId} a ${nuevoEstado}`);
     this.pedidoChefService.cambiarEstadoCocina(pedidoId, nuevoEstado);
     
-    // Mostrar confirmación
+    // Mensajes más específicos
     const mensajes = {
-      'pendiente': 'Pedido marcado como pendiente',
+      'pendiente': 'Pedido vuelto a pendiente',
       'en_preparacion': 'Pedido en preparación',
       'finalizado': 'Pedido finalizado'
     };
@@ -166,7 +167,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * CORREGIDO: Seleccionar todos los pedidos de una lista
+   * Seleccionar todos los pedidos de una lista
    */
   seleccionarTodos(lista: PedidoChef[]): void {
     console.log(`🔄 Seleccionando todos los pedidos: ${lista.length}`);
@@ -187,12 +188,36 @@ export class PedidosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Refresh manual de pedidos
+   * ✅ MODIFICADO: Refresh manual con snackbar de actualización
    */
-  refreshPedidos(): void {
+  async refreshPedidos(): Promise<void> {
     console.log('🔄 Refresh manual de pedidos');
-    this.pedidoChefService.refresh();
-    this.mostrarExito('Actualizando pedidos...');
+    
+    // Mostrar snackbar de actualización
+    const snackBarRef = this.snackBar.open('Actualizando pedidos...', '', {
+      duration: 0, // No se cierra automáticamente
+      panelClass: ['info-snackbar']
+    });
+    
+    try {
+      // Ejecutar refresh
+      await this.pedidoChefService.cargarPedidos();
+      
+      // Cerrar snackbar de actualización
+      snackBarRef.dismiss();
+      
+      // Mostrar mensaje de éxito
+      this.mostrarExito('Pedidos actualizados correctamente');
+      
+    } catch (error) {
+      console.error('❌ Error en refresh:', error);
+      
+      // Cerrar snackbar de actualización
+      snackBarRef.dismiss();
+      
+      // Mostrar mensaje de error
+      this.mostrarError('Error al actualizar los pedidos');
+    }
   }
 
   /**

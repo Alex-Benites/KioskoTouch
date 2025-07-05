@@ -4,24 +4,17 @@
   <div class="page-header">
     <h1 class="page-title">Gestión de Pedidos</h1>
     <button 
-      mat-icon-button 
+      mat-raised-button 
+      color="warn"
       (click)="refreshPedidos()"
-      matTooltip="Actualizar pedidos"
-      [disabled]="pedidoChefService.loading()">
-      <mat-icon [class.spinning]="pedidoChefService.loading()">refresh</mat-icon>
+      class="refresh-button">
+      <mat-icon>refresh</mat-icon>
+      Reiniciar
     </button>
   </div>
 
-  <!-- Loading State -->
-  @if (pedidoChefService.loading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Cargando pedidos...</p>
-    </div>
-  }
-
   <!-- Error State -->
-  @if (pedidoChefService.error() && !pedidoChefService.loading()) {
+  @if (pedidoChefService.error()) {
     <div class="error-container">
       <mat-icon class="error-icon">error_outline</mat-icon>
       <p>{{ pedidoChefService.error() }}</p>
@@ -32,7 +25,7 @@
   }
 
   <!-- Tabs de pedidos -->
-  @if (!pedidoChefService.loading() && !pedidoChefService.error()) {
+  @if (!pedidoChefService.error()) {
     <mat-tab-group 
       class="chef-pedidos-tabs" 
       (selectedTabChange)="onTabChange($event.index)"
@@ -42,10 +35,7 @@
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>restaurant</mat-icon>
-          <span>Pedidos Activos</span>
-          @if (pedidoChefService.cantidadActivos() > 0) {
-            <span matBadge="{{ pedidoChefService.cantidadActivos() }}" matBadgeColor="warn"></span>
-          }
+          <span>Pedidos Activos ({{ pedidoChefService.cantidadActivos() }})</span>
         </ng-template>
         
         <div class="tab-content">
@@ -163,22 +153,42 @@
 
                 <!-- Acciones del pedido -->
                 <div class="pedido-actions">
-                  <button 
-                    mat-button 
-                    color="primary" 
-                    (click)="cambiarEstadoCocina(pedido.id, 'en_preparacion')"
-                    [disabled]="pedido.estado_cocina === 'en_preparacion'">
-                    <mat-icon>restaurant_menu</mat-icon>
-                    Preparar
-                  </button>
-                  <button 
-                    mat-button 
-                    color="accent" 
-                    (click)="cambiarEstadoCocina(pedido.id, 'finalizado')"
-                    [disabled]="pedido.estado_cocina === 'finalizado'">
-                    <mat-icon>check_circle</mat-icon>
-                    Finalizar
-                  </button>
+                  @if (pedido.estado_cocina === 'pendiente') {
+                    <button 
+                      mat-raised-button 
+                      color="primary" 
+                      (click)="cambiarEstadoCocina(pedido.id, 'en_preparacion')">
+                      <mat-icon>restaurant_menu</mat-icon>
+                      Preparar
+                    </button>
+                  }
+                  
+                  @if (pedido.estado_cocina === 'en_preparacion') {
+                    <button 
+                      mat-button 
+                      color="warn" 
+                      (click)="cambiarEstadoCocina(pedido.id, 'pendiente')">
+                      <mat-icon>schedule</mat-icon>
+                      Volver a Pendiente
+                    </button>
+                    <button 
+                      mat-raised-button 
+                      color="accent" 
+                      (click)="cambiarEstadoCocina(pedido.id, 'finalizado')">
+                      <mat-icon>check_circle</mat-icon>
+                      Finalizar
+                    </button>
+                  }
+                  
+                  @if (pedido.estado_cocina === 'pendiente') {
+                    <button 
+                      mat-raised-button 
+                      color="accent" 
+                      (click)="cambiarEstadoCocina(pedido.id, 'finalizado')">
+                      <mat-icon>check_circle</mat-icon>
+                      Finalizar
+                    </button>
+                  }
                 </div>
 
                 <!-- Total del pedido -->
@@ -201,10 +211,7 @@
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>check_circle</mat-icon>
-          <span>Finalizados</span>
-          @if (pedidoChefService.cantidadFinalizados() > 0) {
-            <span matBadge="{{ pedidoChefService.cantidadFinalizados() }}" matBadgeColor="primary"></span>
-          }
+          <span>Finalizados ({{ pedidoChefService.cantidadFinalizados() }})</span>
         </ng-template>
         
         <div class="tab-content">
