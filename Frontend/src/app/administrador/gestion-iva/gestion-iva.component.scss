@@ -1,30 +1,35 @@
 .iva-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: calc(100vh - 140px);
+  padding: 20px 40px;
+  background-color: #F2F2F2;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 85vh;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
 
-  .breadcrumb-title {
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+.breadcrumb-title {
+  font-size: 20px;
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 0px;
+  text-transform: uppercase;
+}
 
-  .form-main-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 30px;
-    text-align: center;
-  }
+.form-main-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 30px;
 }
 
 .iva-content {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 30px;
+  flex-grow: 1;
 
   @media (min-width: 768px) {
     grid-template-columns: 1fr 1fr;
@@ -35,19 +40,52 @@
   }
 }
 
-// ✅ CARD DE INFORMACIÓN ACTUAL
+// ✅ CARD DE INFORMACIÓN ACTUAL MEJORADA
 .iva-info-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .mat-mdc-card-header {
+    .mat-mdc-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #333;
+      font-size: 1.2rem;
+      font-weight: 600;
+
+      mat-icon {
+        color: #D32F2F; // ✅ Cambiado a color rojo
+        font-size: 24px;
+      }
+    }
+  }
+
   .loading-state {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 2rem;
+    text-align: center;
 
     .loading-icon {
       font-size: 48px;
       color: #ff9800;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
       animation: pulse 1.5s infinite;
+    }
+
+    p {
+      color: #666;
+      font-size: 1rem;
+      margin: 0;
     }
   }
 
@@ -55,20 +93,32 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #e8f5e8 0%, #f8f9fa 100%);
+    border-radius: 12px;
+    margin: 1rem 0;
+    border: 1px solid #c8e6c9;
 
     .iva-percentage {
       display: flex;
       flex-direction: column;
+      align-items: center;
 
       .percentage-number {
-        font-size: 36px;
+        font-size: 3rem;
         font-weight: 700;
         color: #4caf50;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
       }
 
       .percentage-label {
-        font-size: 14px;
+        font-size: 0.9rem;
         color: #666;
+        font-weight: 500;
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
     }
 
@@ -76,15 +126,20 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 8px 16px;
+      background: rgba(76, 175, 80, 0.1);
+      border-radius: 20px;
+      border: 1px solid rgba(76, 175, 80, 0.3);
 
       .status-active {
         color: #4caf50;
-        font-size: 24px;
+        font-size: 20px;
       }
 
       span {
         color: #4caf50;
         font-weight: 600;
+        font-size: 0.9rem;
       }
     }
   }
@@ -93,35 +148,74 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 2rem;
     text-align: center;
+    background: linear-gradient(135deg, #fff3cd 0%, #fef9e7 100%);
+    border: 1px solid #ffeaa7;
+    border-radius: 12px;
+    margin: 1rem 0;
 
     .warning-icon {
       font-size: 48px;
       color: #ff9800;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
     }
 
     p {
       font-weight: 600;
-      color: #333;
-      margin-bottom: 5px;
+      color: #856404;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
     }
 
     small {
-      color: #666;
+      color: #856404;
+      font-size: 0.9rem;
+      opacity: 0.8;
     }
   }
 }
 
-// ✅ FORMULARIO
+// ✅ FORMULARIO MEJORADO
 .iva-form-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
   @media (min-width: 768px) {
     grid-column: span 2;
   }
 
   @media (min-width: 1024px) {
     grid-column: span 1;
+  }
+
+  .mat-mdc-card-header {
+    .mat-mdc-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #333;
+      font-size: 1.2rem;
+      font-weight: 600;
+
+      mat-icon {
+        color: #D32F2F; // ✅ Cambiado a color rojo
+        font-size: 24px;
+      }
+    }
+
+    .mat-mdc-card-subtitle {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
   }
 }
 
@@ -136,40 +230,90 @@
     .iva-input {
       font-size: 18px;
       font-weight: 600;
+      padding: 12px 16px;
+    }
+
+    // ✅ Mejorar posición del símbolo %
+    ::ng-deep .mat-mdc-form-field-text-suffix {
+      padding-left: 8px !important;
+      margin-left: 8px !important;
+      border-left: 1px solid #e0e0e0;
+      color: #666;
+      font-weight: 600;
+    }
+
+    // Mejorar el background del campo
+    ::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-flex {
+      background-color: #fff !important;
+      border-radius: 8px !important;
+      transition: all 0.3s ease;
+    }
+
+    ::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+      background-color: #fff !important;
+    }
+
+    &:hover {
+      ::ng-deep .mat-mdc-form-field-outline {
+        color: #2196f3 !important;
+      }
     }
   }
 
   .calculation-preview {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 20px;
+    background: linear-gradient(135deg, #fde7e3 0%, #faf8f8 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
     margin: 20px 0;
-    border-left: 4px solid #2196f3;
+    border-left: 4px solid #D32F2F;
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.1); // ✅ Sombra rojiza
+    animation: fadeIn 0.5s ease-in-out;
 
     h3 {
       margin-bottom: 16px;
       color: #333;
-      font-size: 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
     }
 
     .preview-example {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
       .example-row {
         display: flex;
         justify-content: space-between;
-        padding: 8px 0;
+        padding: 12px 0;
         border-bottom: 1px solid #e0e0e0;
+        font-size: 1rem;
 
         &.iva-row {
-          color: #2196f3;
+          color: #D32F2F;
           font-weight: 600;
+          background: rgba(211, 47, 47, 0.05); // ✅ Background rojizo
+          margin: 0 -1rem;
+          padding: 12px 1rem;
+          border-radius: 6px;
         }
 
         &.total-row {
           border-bottom: none;
           border-top: 2px solid #333;
-          margin-top: 8px;
-          padding-top: 12px;
-          font-size: 18px;
+          margin-top: 12px;
+          padding-top: 16px;
+          font-size: 1.2rem;
+          font-weight: 700;
+          background: rgba(76, 175, 80, 0.1);
+          margin: 12px -1rem 0;
+          padding: 16px 1rem;
+          border-radius: 6px;
+          color: #4caf50;
         }
 
         &:last-child {
@@ -184,21 +328,44 @@
     justify-content: space-between;
     gap: 16px;
     margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
 
     button {
       flex: 1;
       padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      // ✅ Mejorar alineación del icono y texto
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
 
       mat-icon {
-        margin-right: 8px;
+        margin-right: 0; // ✅ Quitar margin derecho
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
     }
 
     .submit-button {
-      background-color: #4caf50 !important;
+      background-color: #D32F2F !important; // ✅ Cambiado a color rojo
+      color: white !important;
 
       &:disabled {
         background-color: #cccccc !important;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+
+      &:hover:not(:disabled) {
+        background-color: #B71C1C !important; // ✅ Rojo más oscuro para hover
       }
     }
 
@@ -208,28 +375,67 @@
   }
 }
 
-// ✅ INFORMACIÓN ADICIONAL
+// ✅ INFORMACIÓN ADICIONAL MEJORADA
 .info-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
   @media (min-width: 1024px) {
     grid-column: span 1;
   }
 
+  .mat-mdc-card-header {
+    .mat-mdc-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #333;
+      font-size: 1.2rem;
+      font-weight: 600;
+
+      mat-icon {
+        color: #D32F2F; // ✅ Cambiado a color rojo
+        font-size: 24px;
+      }
+    }
+  }
+
   .info-list {
+    margin-top: 20px;
     .info-item {
       display: flex;
       align-items: flex-start;
       gap: 12px;
       margin-bottom: 16px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 3px solid #D32F2F;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #e3f2fd;
+        transform: translateX(4px);
+      }
 
       .info-bullet {
-        color: #2196f3;
-        font-size: 12px;
-        margin-top: 4px;
+        color: #D32F2F;
+        font-size: 8px;
+        margin-top: 8px;
+        flex-shrink: 0;
       }
 
       span {
         line-height: 1.5;
         color: #555;
+        font-size: 0.95rem;
       }
 
       &:last-child {
@@ -239,13 +445,15 @@
   }
 }
 
-// ✅ ANIMACIONES
+// ✅ ANIMACIONES MEJORADAS
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.7;
+    transform: scale(1.05);
   }
 }
 
@@ -258,21 +466,41 @@
   }
 }
 
-// ✅ SNACKBAR STYLES
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ✅ SNACKBAR STYLES MEJORADOS
 ::ng-deep .success-snackbar {
   background-color: #4caf50 !important;
   color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
 }
 
 ::ng-deep .error-snackbar {
   background-color: #f44336 !important;
   color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3) !important;
 }
 
-// ✅ RESPONSIVE
+// ✅ RESPONSIVE MEJORADO
 @media (max-width: 767px) {
+  .iva-container {
+    padding: 15px 20px;
+  }
+
   .iva-content {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .form-actions {
@@ -280,6 +508,94 @@
 
     button {
       width: 100%;
+      margin-bottom: 10px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
+  }
+
+  .iva-actual-display {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+
+    .iva-percentage {
+      .percentage-number {
+        font-size: 2.5rem;
+      }
+    }
+  }
+
+  .calculation-preview {
+    .preview-example {
+      .example-row {
+        font-size: 0.9rem;
+
+        &.total-row {
+          font-size: 1.1rem;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .breadcrumb-title {
+    font-size: 16px;
+  }
+
+  .form-main-title {
+    font-size: 1.5em;
+  }
+
+  .iva-actual-display {
+    .iva-percentage {
+      .percentage-number {
+        font-size: 2rem;
+      }
+    }
+  }
+
+  .info-list {
+    .info-item {
+      padding: 10px;
+      
+      span {
+        font-size: 0.85rem;
+      }
+    }
+  }
+}
+
+// ✅ ESTADOS DE VALIDACIÓN MEJORADOS
+.iva-form {
+  .form-field-container {
+    &.ng-invalid.ng-touched {
+      .iva-field {
+        ::ng-deep .mat-mdc-form-field-outline {
+          color: #f44336 !important;
+        }
+      }
+    }
+  }
+}
+
+// ✅ EFECTOS ADICIONALES
+.iva-info-card,
+.iva-form-card,
+.info-card {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #D32F2F; // ✅ Cambiado a color rojo sólido
   }
 }
