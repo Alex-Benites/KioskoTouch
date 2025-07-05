@@ -1,14 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
+import { PedidoChefService, PedidoChef } from '../../services/pedido-chef.service';
 
 @Component({
   selector: 'app-pedidos',
+  standalone: true,
   imports: [
     CommonModule,
     MatTabsModule,
@@ -16,158 +21,283 @@ import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.com
     MatBadgeModule,
     MatCheckboxModule,
     MatButtonModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
     HeaderAdminComponent
   ],
   templateUrl: './pedidos.component.html',
   styleUrls: ['./pedidos.component.scss']
 })
-export class PedidosComponent implements OnInit {
-
-  pedidosActivos: any[] = [
-    {
-      id: 1,
-      numero: 'P-001',
-      tiempo_transcurrido: '5 min',
-      estado: 'pendiente',
-      selected: false,
-      items: [
-        { id: 1, cantidad: 2, nombre: 'Hamburguesa Clásica' },
-        { id: 2, cantidad: 1, nombre: 'Papas Fritas Grandes' },
-        { id: 3, cantidad: 2, nombre: 'Coca Cola' }
-      ]
-    },
-    {
-      id: 2,
-      numero: 'P-002',
-      tiempo_transcurrido: '12 min',
-      estado: 'en_preparacion',
-      selected: false,
-      items: [
-        { id: 4, cantidad: 1, nombre: 'Pizza Margherita' },
-        { id: 5, cantidad: 1, nombre: 'Ensalada César' }
-      ]
-    },
-    {
-      id: 3,
-      numero: 'P-003',
-      tiempo_transcurrido: '3 min',
-      estado: 'pendiente',
-      selected: false,
-      items: [
-        { id: 6, cantidad: 3, nombre: 'Tacos al Pastor' },
-        { id: 7, cantidad: 1, nombre: 'Agua de Horchata' }
-      ]
-    },
-    {
-      id: 4,
-      numero: 'P-004',
-      tiempo_transcurrido: '18 min',
-      estado: 'en_preparacion',
-      selected: false,
-      items: [
-        { id: 8, cantidad: 1, nombre: 'Pasta Alfredo' },
-        { id: 9, cantidad: 1, nombre: 'Pan de Ajo' },
-        { id: 10, cantidad: 1, nombre: 'Vino Tinto' }
-      ]
-    }
-  ];
-
-  pedidosFinalizados: any[] = [
-    {
-      id: 5,
-      numero: 'P-005',
-      hora_finalizacion: '14:30',
-      estado: 'finalizado',
-      selected: false,
-      items: [
-        { id: 11, cantidad: 2, nombre: 'Sándwich Club' },
-        { id: 12, cantidad: 1, nombre: 'Jugo de Naranja' }
-      ]
-    },
-    {
-      id: 6,
-      numero: 'P-006',
-      hora_finalizacion: '14:15',
-      estado: 'finalizado',
-      selected: false,
-      items: [
-        { id: 13, cantidad: 1, nombre: 'Pollo a la Parrilla' },
-        { id: 14, cantidad: 1, nombre: 'Arroz con Verduras' },
-        { id: 15, cantidad: 1, nombre: 'Limonada' }
-      ]
-    }
-  ];
-
+export class PedidosComponent implements OnInit, OnDestroy {
+  
+  // Estados del componente
   selectedTabIndex = 0;
+  
+  constructor(
+    public pedidoChefService: PedidoChefService,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
-    this.cargarPedidos();
+    console.log('🚀 Iniciando componente de pedidos del chef...');
+    this.inicializarComponente();
   }
 
-  cargarPedidos() {
-    console.log('Pedidos cargados');
+  ngOnDestroy(): void {
+    console.log('🔄 Destruyendo componente de pedidos del chef...');
+    // Limpiar selecciones al salir
+    this.pedidoChefService.limpiarSelecciones();
   }
 
-  onTabChange(index: number) {
-    this.selectedTabIndex = index;
-    this.clearAllSelections();
-  }
-
-  togglePedidoSelection(pedido: any) {
-    pedido.selected = !pedido.selected;
-  }
-
-  clearAllSelections() {
-    this.pedidosActivos.forEach(p => p.selected = false);
-    this.pedidosFinalizados.forEach(p => p.selected = false);
-  }
-
-  getSelectedPedidos(lista: any[]) {
-    return lista.filter(p => p.selected);
-  }
-
-  finalizarPedidosSeleccionados() {
-    const seleccionados = this.getSelectedPedidos(this.pedidosActivos);
-    
-    seleccionados.forEach(pedido => {
-      pedido.estado = 'finalizado';
-      pedido.hora_finalizacion = new Date().toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-      pedido.selected = false;
+  /**
+   * Inicializar el componente
+   */
+  async inicializarComponente(): Promise<void> {
+    try {
+      // Limpiar estados antiguos
+      this.pedidoChefService.limpiarEstadosAntiguos();
       
-      const index = this.pedidosActivos.findIndex(p => p.id === pedido.id);
-      if (index > -1) {
-        this.pedidosActivos.splice(index, 1);
-        this.pedidosFinalizados.unshift(pedido);
-      }
-    });
-  }
-
-  restaurarPedidosSeleccionados() {
-    const seleccionados = this.getSelectedPedidos(this.pedidosFinalizados);
-    
-    seleccionados.forEach(pedido => {
-      pedido.estado = 'pendiente';
-      pedido.tiempo_transcurrido = '0 min';
-      delete pedido.hora_finalizacion;
-      pedido.selected = false;
+      // Cargar pedidos
+      await this.pedidoChefService.cargarPedidos();
       
-      const index = this.pedidosFinalizados.findIndex(p => p.id === pedido.id);
-      if (index > -1) {
-        this.pedidosFinalizados.splice(index, 1);
-        this.pedidosActivos.unshift(pedido);
-      }
-    });
-  }
-
-  getTipoClasePedido(estado: string): string {
-    switch(estado) {
-      case 'pendiente': return 'pendiente';
-      case 'en_preparacion': return 'en-preparacion';
-      case 'finalizado': return 'finalizado';
-      default: return '';
+      console.log('✅ Componente inicializado correctamente');
+    } catch (error) {
+      console.error('❌ Error inicializando componente:', error);
+      this.mostrarError('Error al cargar los pedidos');
     }
+  }
+
+  /**
+   * Manejar cambio de tab
+   */
+  onTabChange(index: number): void {
+    console.log(`🔄 Cambiando a tab ${index}`);
+    this.selectedTabIndex = index;
+    
+    // Limpiar selecciones al cambiar de tab
+    this.pedidoChefService.limpiarSelecciones();
+  }
+
+  /**
+   * Togglear selección de un pedido
+   */
+  toggleSeleccionPedido(pedidoId: number): void {
+    console.log(`🔄 Toggle selección pedido ${pedidoId}`);
+    this.pedidoChefService.toggleSeleccionPedido(pedidoId);
+  }
+
+  /**
+   * Cambiar estado de cocina de un pedido
+   */
+  cambiarEstadoCocina(pedidoId: number, nuevoEstado: 'pendiente' | 'en_preparacion' | 'finalizado'): void {
+    console.log(`🍳 Cambiando estado de cocina del pedido ${pedidoId} a ${nuevoEstado}`);
+    this.pedidoChefService.cambiarEstadoCocina(pedidoId, nuevoEstado);
+    
+    // Mostrar confirmación
+    const mensajes = {
+      'pendiente': 'Pedido marcado como pendiente',
+      'en_preparacion': 'Pedido en preparación',
+      'finalizado': 'Pedido finalizado'
+    };
+    
+    this.mostrarExito(mensajes[nuevoEstado]);
+  }
+
+  /**
+   * Finalizar pedidos seleccionados
+   */
+  async finalizarPedidosSeleccionados(): Promise<void> {
+    const seleccionados = this.pedidoChefService.obtenerPedidosSeleccionados(
+      this.pedidoChefService.pedidosActivos()
+    );
+    
+    if (seleccionados.length === 0) {
+      this.mostrarAdvertencia('No hay pedidos seleccionados');
+      return;
+    }
+
+    try {
+      console.log(`🏁 Finalizando ${seleccionados.length} pedidos...`);
+      
+      await this.pedidoChefService.finalizarPedidosSeleccionados();
+      
+      this.mostrarExito(`${seleccionados.length} pedido(s) finalizado(s) exitosamente`);
+      
+      // Cambiar al tab de finalizados si hay pedidos
+      if (this.pedidoChefService.pedidosFinalizados().length > 0) {
+        this.selectedTabIndex = 1;
+      }
+      
+    } catch (error) {
+      console.error('❌ Error finalizando pedidos:', error);
+      this.mostrarError('Error al finalizar los pedidos');
+    }
+  }
+
+  /**
+   * Restaurar pedidos seleccionados
+   */
+  async restaurarPedidosSeleccionados(): Promise<void> {
+    const seleccionados = this.pedidoChefService.obtenerPedidosSeleccionados(
+      this.pedidoChefService.pedidosFinalizados()
+    );
+    
+    if (seleccionados.length === 0) {
+      this.mostrarAdvertencia('No hay pedidos seleccionados');
+      return;
+    }
+
+    try {
+      console.log(`🔄 Restaurando ${seleccionados.length} pedidos...`);
+      
+      await this.pedidoChefService.restaurarPedidosSeleccionados();
+      
+      this.mostrarExito(`${seleccionados.length} pedido(s) restaurado(s) exitosamente`);
+      
+      // Cambiar al tab de activos si hay pedidos
+      if (this.pedidoChefService.pedidosActivos().length > 0) {
+        this.selectedTabIndex = 0;
+      }
+      
+    } catch (error) {
+      console.error('❌ Error restaurando pedidos:', error);
+      this.mostrarError('Error al restaurar los pedidos');
+    }
+  }
+
+  /**
+   * CORREGIDO: Seleccionar todos los pedidos de una lista
+   */
+  seleccionarTodos(lista: PedidoChef[]): void {
+    console.log(`🔄 Seleccionando todos los pedidos: ${lista.length}`);
+    
+    lista.forEach(pedido => {
+      if (!pedido.selected) {
+        this.pedidoChefService.toggleSeleccionPedido(pedido.id);
+      }
+    });
+  }
+
+  /**
+   * Deseleccionar todos los pedidos
+   */
+  deseleccionarTodos(): void {
+    console.log('🔄 Deseleccionando todos los pedidos');
+    this.pedidoChefService.limpiarSelecciones();
+  }
+
+  /**
+   * Refresh manual de pedidos
+   */
+  refreshPedidos(): void {
+    console.log('🔄 Refresh manual de pedidos');
+    this.pedidoChefService.refresh();
+    this.mostrarExito('Actualizando pedidos...');
+  }
+
+  /**
+   * Obtener clase CSS para el estado del pedido
+   */
+  obtenerClaseEstado(pedido: PedidoChef): string {
+    return this.pedidoChefService.obtenerClaseEstado(pedido.estado_cocina);
+  }
+
+  /**
+   * Obtener texto del estado de cocina
+   */
+  obtenerTextoEstado(estado: string): string {
+    const estados = {
+      'pendiente': 'Pendiente',
+      'en_preparacion': 'En Preparación',
+      'finalizado': 'Finalizado'
+    };
+    return estados[estado as keyof typeof estados] || estado;
+  }
+
+  /**
+   * Obtener icono del estado de cocina
+   */
+  obtenerIconoEstado(estado: string): string {
+    const iconos = {
+      'pendiente': 'schedule',
+      'en_preparacion': 'restaurant_menu',
+      'finalizado': 'check_circle'
+    };
+    return iconos[estado as keyof typeof iconos] || 'help';
+  }
+
+  /**
+   * Verificar si hay pedidos seleccionados en una lista
+   */
+  haySeleccionados(lista: PedidoChef[]): boolean {
+    return lista.some(pedido => pedido.selected);
+  }
+
+  /**
+   * Contar pedidos seleccionados
+   */
+  contarSeleccionados(lista: PedidoChef[]): number {
+    return lista.filter(pedido => pedido.selected).length;
+  }
+
+  /**
+   * Formatear número de mesa
+   */
+  formatearMesa(numeroMesa: number | null): string {
+    if (!numeroMesa) return 'Para llevar';
+    return `Mesa ${numeroMesa}`;
+  }
+
+  /**
+   * Formatear precio
+   */
+  formatearPrecio(precio: number): string {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(precio);
+  }
+
+  /**
+   * Obtener color del tiempo transcurrido
+   */
+  obtenerColorTiempo(tiempoTranscurrido: string): string {
+    if (tiempoTranscurrido.includes('h') || parseInt(tiempoTranscurrido) > 30) {
+      return 'warn'; // Rojo para más de 30 min
+    } else if (parseInt(tiempoTranscurrido) > 15) {
+      return 'accent'; // Amarillo para más de 15 min
+    } else {
+      return 'primary'; // Verde para menos de 15 min
+    }
+  }
+
+  /**
+   * Mostrar notificación de éxito
+   */
+  private mostrarExito(mensaje: string): void {
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 3000,
+      panelClass: ['success-snackbar']
+    });
+  }
+
+  /**
+   * Mostrar notificación de error
+   */
+  private mostrarError(mensaje: string): void {
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
+  }
+
+  /**
+   * Mostrar notificación de advertencia
+   */
+  private mostrarAdvertencia(mensaje: string): void {
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 4000,
+      panelClass: ['warning-snackbar']
+    });
   }
 }

@@ -3,128 +3,299 @@
 <div class="pedidos-container">
   <div class="page-header">
     <h1 class="page-title">Gestión de Pedidos</h1>
+    <button 
+      mat-icon-button 
+      (click)="refreshPedidos()"
+      matTooltip="Actualizar pedidos"
+      [disabled]="pedidoChefService.loading()">
+      <mat-icon [class.spinning]="pedidoChefService.loading()">refresh</mat-icon>
+    </button>
   </div>
 
-  <mat-tab-group 
-    class="chef-pedidos-tabs" 
-    (selectedTabChange)="onTabChange($event.index)"
-    [selectedIndex]="selectedTabIndex">
-    
-    <!-- Tab Pedidos Activos -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>restaurant</mat-icon>
-        <span>Pedidos Activos</span>
-        <span class="badge-count" *ngIf="pedidosActivos.length > 0">
-          {{ pedidosActivos.length }}
-        </span>
-      </ng-template>
-      
-      <div class="tab-content">
-        <!-- Botón de acción general -->
-        <div class="actions-bar" *ngIf="getSelectedPedidos(pedidosActivos).length > 0">
-          <button 
-            class="btn-action finalizar" 
-            (click)="finalizarPedidosSeleccionados()">
-            <mat-icon>check_circle</mat-icon>
-            Finalizar Seleccionados ({{ getSelectedPedidos(pedidosActivos).length }})
-          </button>
-        </div>
+  <!-- Loading State -->
+  @if (pedidoChefService.loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Cargando pedidos...</p>
+    </div>
+  }
 
-        <div class="pedidos-grid">
-          @for (pedido of pedidosActivos; track pedido.id) {
-            <div class="pedido-card" [class]="getTipoClasePedido(pedido.estado)">
-              <!-- Header rojo con checkbox -->
-              <div class="pedido-header-red">
-                <mat-checkbox 
-                  [checked]="pedido.selected"
-                  (change)="togglePedidoSelection(pedido)">
-                </mat-checkbox>
-                <span class="pedido-numero">#{{ pedido.numero }}</span>
-                <span class="pedido-tiempo">{{ pedido.tiempo_transcurrido }}</span>
+  <!-- Error State -->
+  @if (pedidoChefService.error() && !pedidoChefService.loading()) {
+    <div class="error-container">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p>{{ pedidoChefService.error() }}</p>
+      <button mat-raised-button color="primary" (click)="refreshPedidos()">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Tabs de pedidos -->
+  @if (!pedidoChefService.loading() && !pedidoChefService.error()) {
+    <mat-tab-group 
+      class="chef-pedidos-tabs" 
+      (selectedTabChange)="onTabChange($event.index)"
+      [selectedIndex]="selectedTabIndex">
+      
+      <!-- Tab Pedidos Activos -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>restaurant</mat-icon>
+          <span>Pedidos Activos</span>
+          @if (pedidoChefService.cantidadActivos() > 0) {
+            <span matBadge="{{ pedidoChefService.cantidadActivos() }}" matBadgeColor="warn"></span>
+          }
+        </ng-template>
+        
+        <div class="tab-content">
+          <!-- Barra de acciones para pedidos activos -->
+          @if (pedidoChefService.cantidadActivos() > 0) {
+            <div class="actions-bar">
+              <div class="selection-controls">
+                <button 
+                  mat-button 
+                  (click)="seleccionarTodos(pedidoChefService.pedidosActivos())"
+                  [disabled]="pedidoChefService.pedidosActivos().length === 0">
+                  <mat-icon>select_all</mat-icon>
+                  Seleccionar Todo
+                </button>
+                <button 
+                  mat-button 
+                  (click)="deseleccionarTodos()"
+                  [disabled]="!haySeleccionados(pedidoChefService.pedidosActivos())">
+                  <mat-icon>deselect</mat-icon>
+                  Deseleccionar
+                </button>
               </div>
               
-              <div class="pedido-items">
-                @for (item of pedido.items; track item.id) {
-                  <div class="item">
-                    <span class="cantidad">{{ item.cantidad }}x</span>
-                    <span class="nombre">{{ item.nombre }}</span>
-                  </div>
+              <div class="action-buttons">
+                @if (haySeleccionados(pedidoChefService.pedidosActivos())) {
+                  <span class="selected-count">
+                    {{ contarSeleccionados(pedidoChefService.pedidosActivos()) }} seleccionado(s)
+                  </span>
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    (click)="finalizarPedidosSeleccionados()">
+                    <mat-icon>check</mat-icon>
+                    Finalizar Seleccionados
+                  </button>
                 }
               </div>
-              
-              <div class="pedido-estado">
-                <span class="estado-badge" [class]="'estado-' + pedido.estado">
-                  {{ pedido.estado === 'pendiente' ? 'Pendiente' : 'En Preparación' }}
-                </span>
-              </div>
-            </div>
-          } @empty {
-            <div class="no-pedidos">
-              <mat-icon>restaurant_menu</mat-icon>
-              <p>No hay pedidos activos</p>
             </div>
           }
-        </div>
-      </div>
-    </mat-tab>
-    
-    <!-- Tab Pedidos Finalizados -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>check_circle</mat-icon>
-        <span>Pedidos Finalizados</span>
-        <span class="badge-count" *ngIf="pedidosFinalizados.length > 0">
-          {{ pedidosFinalizados.length }}
-        </span>
-      </ng-template>
-      
-      <div class="tab-content">
-        <!-- Botón de acción general -->
-        <div class="actions-bar" *ngIf="getSelectedPedidos(pedidosFinalizados).length > 0">
-          <button 
-            class="btn-action restaurar" 
-            (click)="restaurarPedidosSeleccionados()">
-            <mat-icon>restore</mat-icon>
-            Restaurar Seleccionados ({{ getSelectedPedidos(pedidosFinalizados).length }})
-          </button>
-        </div>
 
-        <div class="pedidos-grid">
-          @for (pedido of pedidosFinalizados; track pedido.id) {
-            <div class="pedido-card finalizado">
-              <!-- Header rojo con checkbox -->
-              <div class="pedido-header-red">
-                <mat-checkbox 
-                  [checked]="pedido.selected"
-                  (change)="togglePedidoSelection(pedido)">
-                </mat-checkbox>
-                <span class="pedido-numero">#{{ pedido.numero }}</span>
-                <span class="pedido-hora">{{ pedido.hora_finalizacion }}</span>
+          <!-- Grid de pedidos activos -->
+          <div class="pedidos-grid">
+            @for (pedido of pedidoChefService.pedidosActivos(); track pedido.id) {
+              <div class="pedido-card" [class]="obtenerClaseEstado(pedido)">
+                <!-- Header del pedido -->
+                <div class="pedido-header">
+                  <div class="pedido-info">
+                    <div class="pedido-numero">{{ pedido.numero }}</div>
+                    <div class="pedido-mesa">{{ formatearMesa(pedido.numero_mesa) }}</div>
+                    <div class="pedido-tiempo" [class]="obtenerColorTiempo(pedido.tiempo_transcurrido)">
+                      {{ pedido.tiempo_transcurrido }}
+                    </div>
+                  </div>
+                  <div class="pedido-controls">
+                    <mat-checkbox 
+                      [checked]="pedido.selected"
+                      (change)="toggleSeleccionPedido(pedido.id)">
+                    </mat-checkbox>
+                  </div>
+                </div>
+
+                <!-- Estado del pedido -->
+                <div class="pedido-estado" [class]="obtenerClaseEstado(pedido)">
+                  <mat-icon>{{ obtenerIconoEstado(pedido.estado_cocina) }}</mat-icon>
+                  <span>{{ obtenerTextoEstado(pedido.estado_cocina) }}</span>
+                </div>
+
+                <!-- Items del pedido -->
+                <div class="pedido-items">
+                  @for (item of pedido.items; track item.id) {
+                    <div class="item">
+                      <div class="item-header">
+                        <span class="cantidad">{{ item.cantidad }}x</span>
+                        <span class="nombre">{{ item.nombre }}</span>
+                        <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
+                      </div>
+                      
+                      <!-- Promoción si existe -->
+                      @if (item.promocion) {
+                        <div class="promocion-info">
+                          <span class="promocion-badge">{{ item.promocion.nombre }}</span>
+                          <span class="descuento">-{{ formatearPrecio(item.promocion.descuento) }}</span>
+                        </div>
+                      }
+                      
+                      <!-- Personalizaciones -->
+                      @if (item.personalizaciones && item.personalizaciones.length > 0) {
+                        <div class="personalizaciones">
+                          @for (pers of item.personalizaciones; track pers.ingrediente) {
+                            <div class="personalizacion" [class]="pers.accion">
+                              <span class="accion-icon">
+                                {{ 
+                                  pers.accion === 'agregar_nuevo' ? '+' : 
+                                  pers.accion === 'eliminar_completo' ? '×' : 
+                                  pers.accion === 'cantidad_aumentada' ? '++' : 
+                                  pers.accion === 'cantidad_reducida' ? '--' : '=' 
+                                }}
+                              </span>
+                              <span class="ingrediente">{{ pers.ingrediente }}</span>
+                              @if (pers.cantidad > 1) {
+                                <span class="cantidad">×{{ pers.cantidad }}</span>
+                              }
+                              @if (pers.precio_aplicado > 0) {
+                                <span class="precio-extra">
+                                  (+{{ formatearPrecio(pers.precio_aplicado) }})
+                                </span>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Acciones del pedido -->
+                <div class="pedido-actions">
+                  <button 
+                    mat-button 
+                    color="primary" 
+                    (click)="cambiarEstadoCocina(pedido.id, 'en_preparacion')"
+                    [disabled]="pedido.estado_cocina === 'en_preparacion'">
+                    <mat-icon>restaurant_menu</mat-icon>
+                    Preparar
+                  </button>
+                  <button 
+                    mat-button 
+                    color="accent" 
+                    (click)="cambiarEstadoCocina(pedido.id, 'finalizado')"
+                    [disabled]="pedido.estado_cocina === 'finalizado'">
+                    <mat-icon>check_circle</mat-icon>
+                    Finalizar
+                  </button>
+                </div>
+
+                <!-- Total del pedido -->
+                <div class="pedido-total">
+                  <strong>Total: {{ formatearPrecio(pedido.total) }}</strong>
+                </div>
+              </div>
+            } @empty {
+              <div class="no-pedidos">
+                <mat-icon>restaurant</mat-icon>
+                <h3>No hay pedidos activos</h3>
+                <p>Los nuevos pedidos aparecerán aquí automáticamente</p>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+      
+      <!-- Tab Pedidos Finalizados -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>check_circle</mat-icon>
+          <span>Finalizados</span>
+          @if (pedidoChefService.cantidadFinalizados() > 0) {
+            <span matBadge="{{ pedidoChefService.cantidadFinalizados() }}" matBadgeColor="primary"></span>
+          }
+        </ng-template>
+        
+        <div class="tab-content">
+          <!-- Barra de acciones para pedidos finalizados -->
+          @if (pedidoChefService.cantidadFinalizados() > 0) {
+            <div class="actions-bar">
+              <div class="selection-controls">
+                <button 
+                  mat-button 
+                  (click)="seleccionarTodos(pedidoChefService.pedidosFinalizados())"
+                  [disabled]="pedidoChefService.pedidosFinalizados().length === 0">
+                  <mat-icon>select_all</mat-icon>
+                  Seleccionar Todo
+                </button>
+                <button 
+                  mat-button 
+                  (click)="deseleccionarTodos()"
+                  [disabled]="!haySeleccionados(pedidoChefService.pedidosFinalizados())">
+                  <mat-icon>deselect</mat-icon>
+                  Deseleccionar
+                </button>
               </div>
               
-              <div class="pedido-items">
-                @for (item of pedido.items; track item.id) {
-                  <div class="item">
-                    <span class="cantidad">{{ item.cantidad }}x</span>
-                    <span class="nombre">{{ item.nombre }}</span>
-                  </div>
+              <div class="action-buttons">
+                @if (haySeleccionados(pedidoChefService.pedidosFinalizados())) {
+                  <span class="selected-count">
+                    {{ contarSeleccionados(pedidoChefService.pedidosFinalizados()) }} seleccionado(s)
+                  </span>
+                  <button 
+                    mat-raised-button 
+                    color="warn" 
+                    (click)="restaurarPedidosSeleccionados()">
+                    <mat-icon>restore</mat-icon>
+                    Restaurar Seleccionados
+                  </button>
                 }
               </div>
-              
-              <div class="pedido-status">
+            </div>
+          }
+
+          <!-- Grid de pedidos finalizados -->
+          <div class="pedidos-grid">
+            @for (pedido of pedidoChefService.pedidosFinalizados(); track pedido.id) {
+              <div class="pedido-card finalizado">
+                <!-- Header del pedido -->
+                <div class="pedido-header">
+                  <div class="pedido-info">
+                    <div class="pedido-numero">{{ pedido.numero }}</div>
+                    <div class="pedido-mesa">{{ formatearMesa(pedido.numero_mesa) }}</div>
+                    <div class="pedido-tiempo">{{ pedido.tiempo_transcurrido }}</div>
+                  </div>
+                  <div class="pedido-controls">
+                    <mat-checkbox 
+                      [checked]="pedido.selected"
+                      (change)="toggleSeleccionPedido(pedido.id)">
+                    </mat-checkbox>
+                  </div>
+                </div>
+
+                <!-- Estado finalizado -->
+                <div class="pedido-estado finalizado">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Finalizado</span>
+                </div>
+
+                <!-- Items del pedido (versión simplificada) -->
+                <div class="pedido-items">
+                  @for (item of pedido.items; track item.id) {
+                    <div class="item">
+                      <span class="cantidad">{{ item.cantidad }}x</span>
+                      <span class="nombre">{{ item.nombre }}</span>
+                      <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Total del pedido -->
+                <div class="pedido-total">
+                  <strong>Total: {{ formatearPrecio(pedido.total) }}</strong>
+                </div>
+              </div>
+            } @empty {
+              <div class="no-pedidos">
                 <mat-icon>check_circle</mat-icon>
-                <span>Completado</span>
+                <h3>No hay pedidos finalizados</h3>
+                <p>Los pedidos completados aparecerán aquí</p>
               </div>
-            </div>
-          } @empty {
-            <div class="no-pedidos">
-              <mat-icon>history</mat-icon>
-              <p>No hay pedidos finalizados hoy</p>
-            </div>
-          }
+            }
+          </div>
         </div>
-      </div>
-    </mat-tab>
-  </mat-tab-group>
+      </mat-tab>
+    </mat-tab-group>
+  }
 </div>
