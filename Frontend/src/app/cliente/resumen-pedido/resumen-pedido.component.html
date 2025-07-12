@@ -187,14 +187,14 @@
       <button
         class="secondary-button cancel-btn"
         (click)="cancelarPedido()">
-        <i class="fas fa-times"></i>
+        <mat-icon>cancel</mat-icon> <!-- ✅ CAMBIAR: Material Icon -->
         Cancelar Pedido
       </button>
 
       <button
         class="tertiary-button edit-btn"
         (click)="editarPedido()">
-        <i class="fas fa-edit"></i>
+        <mat-icon>edit</mat-icon> <!-- ✅ CAMBIAR: Material Icon -->
         Editar Pedido
       </button>
 
@@ -202,7 +202,7 @@
         class="primary-button confirm-btn"
         (click)="confirmarPedido()"
         [disabled]="cantidadProductos === 0 || !metodoPagoSeleccionado">
-        <i class="fas fa-check"></i>
+        <mat-icon>arrow_forward</mat-icon> <!-- ✅ CAMBIAR: Material Icon -->
         Continuar
       </button>
     </div>

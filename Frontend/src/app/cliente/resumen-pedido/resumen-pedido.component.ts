@@ -16,6 +16,7 @@ import {
   PersonalizacionRequest,
   DatosFacturacion,
 } from '../../models/pedido-request.models';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-resumen-pedido',
@@ -24,7 +25,8 @@ import {
     CommonModule,
     FormsModule,
     PublicidadSectionComponent,
-    MatDialogModule, // ✅ AGREGAR
+    MatDialogModule,
+    MatIconModule,
   ],
   templateUrl: './resumen-pedido.component.html',
   styleUrl: './resumen-pedido.component.scss',
