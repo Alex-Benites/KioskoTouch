@@ -1,112 +1,112 @@
-<!-- ✅ CREAR Frontend/src/app/administrador/gestion-categorias/crear-categoria/crear-categoria.component.html -->
 <app-header-admin></app-header-admin>
 
-<div class="crear-categoria-container">
-  <!-- ✅ Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-info">
-        <h1 class="page-title">
-          <i class="fas fa-tag"></i>
-          {{ getTitulo() }}
-        </h1>
+<div class="form-container">
+  <!-- ✅ Breadcrumb y título principal -->
+  <p class="breadcrumb-title">GESTIÓN DE CATEGORÍAS</p>
+  <h1 class="form-main-title">
+    {{ isEditMode ? 'Editar Categoría' : 'Creación de nueva Categoría' }}
+  </h1>
+
+  <!-- ✅ Loading mejorado -->
+  @if (loading && isEditMode) {
+    <div class="loading-container">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Cargando categoría...</p>
       </div>
     </div>
-  </div>
+  }
 
-  <!-- ✅ Loading -->
-  <div *ngIf="loading && isEditMode" class="loading-container">
-    <div class="loading-spinner">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Cargando categoría...</p>
+  <!-- ✅ Error mejorado -->
+  @if (error) {
+    <div class="error-alert">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>{{ error }}</span>
     </div>
-  </div>
+  }
 
-  <!-- ✅ Error -->
-  <div *ngIf="error" class="error-alert">
-    <i class="fas fa-exclamation-triangle"></i>
-    <span>{{ error }}</span>
-  </div>
-
-  <!-- ✅ Formulario -->
-  <div *ngIf="!loading || !isEditMode" class="form-container">
+  <!-- ✅ Formulario con layout vertical centrado -->
+  @if (!loading || !isEditMode) {
     <form [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()" class="categoria-form">
       
-      <!-- ✅ Campo Nombre -->
-      <div class="form-group">
-        <label for="nombre" class="form-label">
-          <i class="fas fa-tag"></i>
-          Nombre de la Categoría *
-        </label>
-        <input
-          type="text"
-          id="nombre"
-          formControlName="nombre"
-          class="form-control"
-          [class.is-invalid]="isFieldInvalid('nombre')"
-          placeholder="Ej: Hamburguesas, Bebidas, Postres..."
-          maxlength="50">
-        
-        <div *ngIf="isFieldInvalid('nombre')" class="invalid-feedback">
-          {{ getFieldError('nombre') }}
-        </div>
-        
-        <small class="form-text">
-          {{ categoriaForm.get('nombre')?.value?.length || 0 }}/50 caracteres
-        </small>
-      </div>
-
-      <!-- ✅ Campo Imagen -->
-      <div class="form-group">
-        <label class="form-label">
-          <i class="fas fa-image"></i>
-          Imagen de la Categoría
-        </label>
-
-        <!-- Preview de imagen actual (modo edición) -->
-        <div *ngIf="imagenActual && !imagenPreview" class="imagen-actual">
-          <div class="imagen-container">
-            <img [src]="imagenActual" alt="Imagen actual">
-            <div class="imagen-overlay">
-              <span>Imagen actual</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Preview de nueva imagen -->
-        <div *ngIf="imagenPreview" class="imagen-preview">
-          <div class="imagen-container">
-            <img [src]="imagenPreview" alt="Vista previa">
-            <div class="imagen-overlay">
-              <button 
-                type="button" 
-                class="btn-remove-image"
-                (click)="quitarImagen()"
-                title="Quitar imagen">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Input file -->
-        <div class="file-input-container">
-          <input
-            type="file"
-            id="imagen"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
-            (change)="onImagenSeleccionada($event)"
-            class="file-input">
-          
-          <label for="imagen" class="file-input-label">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <span>{{ imagenSeleccionada ? 'Cambiar imagen' : 'Seleccionar imagen' }}</span>
+      <div class="form-content">
+        <!-- ✅ Campo Nombre -->
+        <div class="form-field">
+          <label for="nombre" class="form-label">
+            <i class="fas fa-tag"></i>
+            Nombre de la Categoría *
           </label>
+          <input
+            type="text"
+            id="nombre"
+            formControlName="nombre"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('nombre')"
+            placeholder="Ej: Hamburguesas, Bebidas, Postres..."
+            maxlength="50">
+          
+          @if (isFieldInvalid('nombre')) {
+            <div class="invalid-feedback">
+              @if (categoriaForm.get('nombre')?.hasError('required')) {
+                El nombre de la categoría es obligatorio
+              }
+              @if (categoriaForm.get('nombre')?.hasError('minlength')) {
+                El nombre debe tener al menos 3 caracteres
+              }
+              @if (categoriaForm.get('nombre')?.hasError('maxlength')) {
+                El nombre no puede exceder 50 caracteres
+              }
+            </div>
+          }
+          
+          <small class="form-text">
+            {{ categoriaForm.get('nombre')?.value?.length || 0 }}/50 caracteres
+          </small>
         </div>
 
-        <small class="form-text">
-          Formatos soportados: JPG, PNG, WEBP. Tamaño máximo: 5MB
-        </small>
+        <!-- ✅ Campo Imagen -->
+        <div class="form-field">
+          <label class="form-label">
+            <i class="fas fa-image"></i>
+            Imagen de la Categoría
+          </label>
+          
+          <div class="image-upload-container" (click)="fileInput.click()">
+            <input hidden type="file" #fileInput id="fileInput" 
+                   (change)="onImagenSeleccionada($event)"
+                   accept="image/png,image/jpeg,image/jpg,image/webp">
+            
+            @if (!imagenPreview && !imagenActual) {
+              <img src="assets/admin/ADMIN_27.png" alt="Subir Imagen Icono" class="upload-placeholder-icon">
+              <p>Formato de imagen recomendado 300x300</p>
+            } @else {
+              @if (imagenPreview) {
+                <img [src]="imagenPreview" alt="Vista previa de la imagen" class="image-preview">
+              } @else if (imagenActual) {
+                <img [src]="imagenActual" alt="Imagen actual" class="image-preview">
+              }
+            }
+          </div>
+          
+          <!-- ✅ Mensaje de error para imagen -->
+          @if (!imagenPreview && !imagenActual && !isEditMode) {
+            <div class="image-error-message">
+              <i class="fas fa-exclamation-triangle error-icon"></i>
+              <span>Es recomendable seleccionar una imagen para la categoría</span>
+            </div>
+          }
+          
+          @if (imagenPreview || imagenActual) {
+            <button (click)="quitarImagen()" class="primary__button delete-image-button" type="button">
+              <i class="fas fa-trash"></i>
+              Quitar Imagen
+            </button>
+          }
+          
+          <small class="form-text">
+            Formatos soportados: JPG, PNG, WEBP. Tamaño máximo: 5MB
+          </small>
+        </div>
       </div>
 
       <!-- ✅ Botones de acción -->
@@ -122,50 +122,58 @@
 
         <button 
           type="submit" 
-          class="btn btn-primary"
+          class="primary__button"
           [disabled]="loading || categoriaForm.invalid">
           <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" 
              [class.fa-save]="!loading"></i>
-          {{ getBotonTexto() }}
+          {{ isEditMode ? 'Actualizar Categoría' : 'Crear Categoría' }}
         </button>
       </div>
     </form>
 
-    <!-- ✅ Info adicional -->
+    <!-- ✅ Panel de información -->
     <div class="info-panel">
-      <h4><i class="fas fa-info-circle"></i> Información</h4>
-      <ul>
-        <li>El nombre de la categoría debe ser único</li>
-        <li>La imagen es opcional pero recomendada</li>
-        <li>Se recomienda usar imágenes cuadradas (1:1)</li>
-        <li *ngIf="isEditMode">Los productos asociados mantendrán su categoría</li>
-      </ul>
+      <div class="info-header">
+        <i class="fas fa-info-circle"></i>
+        <h4>Información</h4>
+      </div>
+      <div class="info-content">
+        <div class="info-item">
+          <i class="fas fa-check-circle"></i>
+          <span>El nombre de la categoría debe ser único</span>
+        </div>
+        <div class="info-item">
+          <i class="fas fa-image"></i>
+          <span>La imagen es opcional pero recomendada</span>
+        </div>
+        <div class="info-item">
+          <i class="fas fa-expand-arrows-alt"></i>
+          <span>Se recomienda usar imágenes cuadradas (1:1)</span>
+        </div>
+        @if (isEditMode) {
+          <div class="info-item">
+            <i class="fas fa-link"></i>
+            <span>Los productos asociados mantendrán su categoría</span>
+          </div>
+        }
+      </div>
     </div>
-  </div>
+  }
 
-  <!-- ✅ MENSAJE INFORMATIVO -->
-  <div *ngIf="mensaje" class="mensaje-container" [ngClass]="'mensaje-' + tipoMensaje">
-    <div class="mensaje-content">
-      <i class="material-icons mensaje-icon">
-        {{ getMensajeIcon() }}
-      </i>
-      <span class="mensaje-texto">{{ mensaje }}</span>
-      <button class="btn-cerrar-mensaje" (click)="ocultarMensaje()">
-        <i class="material-icons">close</i>
-      </button>
+  <!-- ✅ Mensaje de éxito/error -->
+  @if (mensaje) {
+    <div class="mensaje-container" [ngClass]="'mensaje-' + tipoMensaje">
+      <div class="mensaje-content">
+        <i class="material-icons mensaje-icon">
+          {{ getMensajeIcon() }}
+        </i>
+        <span class="mensaje-texto">{{ mensaje }}</span>
+        <button class="btn-cerrar-mensaje" (click)="ocultarMensaje()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
     </div>
-  </div>
-
-  <!-- ✅ ERROR (si existe) -->
-  <div *ngIf="error" class="error-container">
-    <div class="error-card">
-      <i class="material-icons">error</i>
-      <span>{{ error }}</span>
-      <button class="btn-cerrar-error" (click)="error = null">
-        <i class="material-icons">close</i>
-      </button>
-    </div>
-  </div>
+  }
 </div>
 
 <app-footer-admin [backRoute]="'/administrador/gestion-categorias'"></app-footer-admin>
