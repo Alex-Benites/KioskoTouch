@@ -13,6 +13,7 @@ import { Publicidad } from '../../models/marketing.model';
 })
 export class PublicidadSectionComponent implements OnInit, OnDestroy {
   @Input() altura: string = '200px';
+  @Input() seccion?: string; 
   
   @Output() publicidadCambio = new EventEmitter<Publicidad>();
 
@@ -46,7 +47,7 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
     this.error = null;
 
     this.subscription.add(
-      this.publicidadService.getPublicidadesActivasParaCarrusel().subscribe({
+      this.publicidadService.getPublicidadesActivasParaCarrusel(undefined, this.seccion).subscribe({
         next: (publicidades) => {
           console.log('📺 Todas las publicidades recibidas:', publicidades);
           
@@ -58,7 +59,8 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
           console.log('✅ Publicidades válidas:', this.publicidades.map(p => ({
             nombre: p.nombre,
             media_type: p.media_type,
-            media_url: p.media_url
+            media_url: p.media_url,
+            seccion: p.seccion
           })));
           
           if (this.publicidades.length > 0) {

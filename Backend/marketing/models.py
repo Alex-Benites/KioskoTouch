@@ -69,6 +69,23 @@ class AppkioskoPublicidades(models.Model):
         (TIPO_VIDEO, 'Video'),
     ]
     
+    # CHOICES para secciones del sistema
+    SECCION_HOME = 'home'
+    SECCION_MENU = 'menu'
+    SECCION_CARRITO = 'carrito'
+    SECCION_PAGO = 'pago'
+    SECCION_TURNO = 'turno'
+    SECCION_GLOBAL = 'global'
+    
+    SECCIONES_SISTEMA = [
+        (SECCION_HOME, 'Página Principal'),
+        (SECCION_MENU, 'Menú de Productos'),
+        (SECCION_CARRITO, 'Carrito de Compras'),
+        (SECCION_PAGO, 'Proceso de Pago'),
+        (SECCION_TURNO, 'Sala de Espera/Turno'),
+        (SECCION_GLOBAL, 'Todas las Secciones'),
+    ]
+    
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     tipo_publicidad = models.CharField(
@@ -76,6 +93,12 @@ class AppkioskoPublicidades(models.Model):
         choices=TIPOS_PUBLICIDAD,
         default=TIPO_BANNER,
         help_text="Tipo de publicidad a mostrar"
+    )
+    seccion = models.CharField(
+        max_length=50,
+        choices=SECCIONES_SISTEMA,
+        default=SECCION_GLOBAL,
+        help_text="Sección del sistema donde se mostrará la publicidad"
     )
     fecha_inicio_publicidad = models.DateTimeField(blank=True, null=True)
     fecha_fin_publicidad = models.DateTimeField(blank=True, null=True)
@@ -97,6 +120,10 @@ class AppkioskoPublicidades(models.Model):
     def get_tipo_publicidad_display_custom(self):
         """Método personalizado para obtener el display del tipo"""
         return dict(self.TIPOS_PUBLICIDAD).get(self.tipo_publicidad, self.tipo_publicidad)
+    
+    def get_seccion_display_custom(self):
+        """Método personalizado para obtener el display de la sección"""
+        return dict(self.SECCIONES_SISTEMA).get(self.seccion, self.seccion)
 
 class AppkioskoPublicidadestablecimiento(models.Model):
     establecimiento = models.ForeignKey(AppkioskoEstablecimientos, on_delete=models.CASCADE, blank=True, null=True)

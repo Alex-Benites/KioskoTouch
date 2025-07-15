@@ -1,4 +1,4 @@
-import { Estado,Menu,Producto } from './catalogo.model';
+import {Menu,Producto } from './catalogo.model';
 
 export interface Imagen {
   id: number;
@@ -21,6 +21,8 @@ export interface Publicidad {
   nombre: string;
   descripcion?: string;
   tipo_publicidad: string;
+  seccion: string;
+  seccion_nombre?: string;
   fecha_inicio_publicidad: string;
   fecha_fin_publicidad: string;
   estado: number;
@@ -79,6 +81,15 @@ export interface ApiError {
   status: number;
 }
 
-// Tipos simples para el formulario (coinciden con el modelo Django)
 export type TipoPublicidad = 'banner' | 'video';
+export type SeccionSistema = 'home' | 'menu' | 'carrito' | 'pago' | 'turno' | 'global';
 export type UnidadTiempo = 'segundos' | 'minutos' | 'horas';
+
+export const SECCIONES_SISTEMA = [
+  { value: 'home', label: 'Página Principal' },
+  { value: 'menu', label: 'Menú de Productos' },
+  { value: 'carrito', label: 'Carrito de Compras' },
+  { value: 'pago', label: 'Proceso de Pago' },
+  { value: 'turno', label: 'Sala de Espera/Turno' },
+  { value: 'global', label: 'Todas las Secciones' }
+] as const;

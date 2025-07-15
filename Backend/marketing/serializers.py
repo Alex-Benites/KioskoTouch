@@ -38,6 +38,7 @@ class VideoSerializer(serializers.ModelSerializer):
 
 class PublicidadListSerializer(serializers.ModelSerializer):
     estado_nombre = serializers.CharField(source='estado.nombre', read_only=True)
+    seccion_nombre = serializers.CharField(source='get_seccion_display_custom', read_only=True)
     media_type = serializers.SerializerMethodField()
     media_url = serializers.SerializerMethodField()
     duracion_video = serializers.SerializerMethodField()
@@ -49,6 +50,8 @@ class PublicidadListSerializer(serializers.ModelSerializer):
             'nombre', 
             'descripcion', 
             'tipo_publicidad',
+            'seccion',
+            'seccion_nombre',
             'fecha_inicio_publicidad',
             'fecha_fin_publicidad', 
             'estado',
@@ -154,6 +157,7 @@ class PublicidadListSerializer(serializers.ModelSerializer):
 
 class PublicidadDetailSerializer(serializers.ModelSerializer):
     estado_info = EstadoSerializer(source='estado', read_only=True)
+    seccion_nombre = serializers.CharField(source='get_seccion_display_custom', read_only=True)
     videos = VideoSerializer(source='appkioskovideo_set', many=True, read_only=True)
     imagenes = serializers.SerializerMethodField()
     media_type = serializers.SerializerMethodField()
@@ -165,6 +169,8 @@ class PublicidadDetailSerializer(serializers.ModelSerializer):
             'nombre',
             'descripcion',
             'tipo_publicidad',
+            'seccion',
+            'seccion_nombre',
             'fecha_inicio_publicidad',
             'fecha_fin_publicidad',
             'estado',
@@ -232,6 +238,7 @@ class PublicidadCreateSerializer(serializers.ModelSerializer):
             'nombre',
             'descripcion',
             'tipo_publicidad',
+            'seccion',
             'fecha_inicio_publicidad',
             'fecha_fin_publicidad',
             'estado',
@@ -431,6 +438,7 @@ class PublicidadUpdateSerializer(serializers.ModelSerializer):
             'nombre',
             'descripcion',
             'tipo_publicidad',
+            'seccion',
             'fecha_inicio_publicidad',
             'fecha_fin_publicidad',
             'estado',

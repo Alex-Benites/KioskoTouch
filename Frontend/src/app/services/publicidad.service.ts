@@ -61,11 +61,19 @@ export class PublicidadService {
   }
 
 
-  getPublicidadesActivasParaCarrusel(tipo?: string): Observable<Publicidad[]> {
+  getPublicidadesActivasParaCarrusel(tipo?: string, seccion?: string): Observable<Publicidad[]> {
     let url = `${this.apiUrl}/publicidades/activas/`;
     
+    const params = new URLSearchParams();
     if (tipo) {
-      url += `?tipo_publicidad=${tipo}`;
+      params.append('tipo_publicidad', tipo);
+    }
+    if (seccion) {
+      params.append('seccion', seccion);
+    }
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
     }
     
     console.log(`📡 Solicitando publicidades activas: ${url}`);
