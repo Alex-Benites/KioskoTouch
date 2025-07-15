@@ -59,6 +59,21 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Sección del sistema</mat-label>
+          <mat-select formControlName="seccion">
+            @for (seccion of seccionesSistema; track seccion.value) {
+              <mat-option [value]="seccion.value">
+                {{ seccion.label }}
+              </mat-option>
+            }
+          </mat-select>
+          @if (seccion?.hasError('required') && seccion?.touched) {
+            <mat-error>La sección es requerida</mat-error>
+          }
+          <mat-hint>Selecciona dónde se mostrará la publicidad</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Fecha inicial</mat-label>
           <input 
             matInput 

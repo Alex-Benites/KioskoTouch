@@ -82,11 +82,10 @@ export interface ApiError {
 }
 
 export type TipoPublicidad = 'banner' | 'video';
-export type SeccionSistema = 'home' | 'menu' | 'carrito' | 'pago' | 'turno' | 'global';
+export type SeccionSistema = 'menu' | 'carrito' | 'pago' | 'turno' | 'global';
 export type UnidadTiempo = 'segundos' | 'minutos' | 'horas';
 
 export const SECCIONES_SISTEMA = [
-  { value: 'home', label: 'Página Principal' },
   { value: 'menu', label: 'Menú de Productos' },
   { value: 'carrito', label: 'Carrito de Compras' },
   { value: 'pago', label: 'Proceso de Pago' },

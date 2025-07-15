@@ -54,7 +54,10 @@ class PublicidadListCreateView(generics.ListCreateAPIView):
         # Filtrar por sección
         seccion = self.request.query_params.get('seccion', None)
         if seccion:
-            queryset = queryset.filter(seccion=seccion)
+            # ✅ CORREGIDO: Incluir publicidades de la sección específica Y las globales
+            queryset = queryset.filter(
+                Q(seccion=seccion) | Q(seccion='global')
+            )
         
         # Filtrar por estado activo/inactivo
         activo = self.request.query_params.get('activo', None)
@@ -510,8 +513,11 @@ def get_publicidades_activas_publicas(request):
         # Filtrar por sección si se especifica
         seccion = request.query_params.get('seccion', None)
         if seccion:
-            queryset = queryset.filter(seccion=seccion)
-            print(f"   📋 Filtrado por sección: {seccion}")
+            # ✅ CORREGIDO: Incluir publicidades de la sección específica Y las globales
+            queryset = queryset.filter(
+                Q(seccion=seccion) | Q(seccion='global')
+            )
+            print(f"   📋 Filtrado por sección: {seccion} (incluye globales)")
         
         # Filtrar por fechas vigentes
         from django.utils import timezone

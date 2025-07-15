@@ -70,7 +70,6 @@ class AppkioskoPublicidades(models.Model):
     ]
     
     # CHOICES para secciones del sistema
-    SECCION_HOME = 'home'
     SECCION_MENU = 'menu'
     SECCION_CARRITO = 'carrito'
     SECCION_PAGO = 'pago'
@@ -78,7 +77,6 @@ class AppkioskoPublicidades(models.Model):
     SECCION_GLOBAL = 'global'
     
     SECCIONES_SISTEMA = [
-        (SECCION_HOME, 'Página Principal'),
         (SECCION_MENU, 'Menú de Productos'),
         (SECCION_CARRITO, 'Carrito de Compras'),
         (SECCION_PAGO, 'Proceso de Pago'),

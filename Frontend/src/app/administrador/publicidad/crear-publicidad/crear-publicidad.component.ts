@@ -18,7 +18,7 @@ import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
 import { PublicidadService } from '../../../services/publicidad.service';
-import { ApiError, TipoPublicidad, UnidadTiempo } from '../../../models/marketing.model';
+import { ApiError, TipoPublicidad, UnidadTiempo, SECCIONES_SISTEMA } from '../../../models/marketing.model';
 import { Estado } from '../../../models/catalogo.model';
 
 import { environment } from '../../../../environments/environment';
@@ -90,6 +90,8 @@ export class CrearPublicidadComponent implements OnInit {
     { value: 'horas', label: 'Horas' }
   ];
 
+  readonly seccionesSistema = SECCIONES_SISTEMA;
+
   readonly maxFileSize = 50 * 1024 * 1024;
   readonly allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
   readonly allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/avi'];
@@ -114,6 +116,7 @@ export class CrearPublicidadComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(100)]],
       descripcion: ['', Validators.maxLength(500)],
       tipoPublicidad: ['', Validators.required],
+      seccion: ['global', Validators.required],
       fechaInicial: [null, Validators.required],
       fechaFinal: [null, Validators.required],
       estado: [null, Validators.required],
@@ -181,6 +184,7 @@ export class CrearPublicidadComponent implements OnInit {
       nombre: publicidad.nombre,
       descripcion: publicidad.descripcion,
       tipoPublicidad: publicidad.tipo_publicidad,
+      seccion: publicidad.seccion || 'global',
       fechaInicial: fechaInicio,
       fechaFinal: fechaFin,
       estado: publicidad.estado,
@@ -589,6 +593,7 @@ export class CrearPublicidadComponent implements OnInit {
     formData.append('nombre', formValues.nombre || '');
     formData.append('descripcion', formValues.descripcion || '');
     formData.append('tipo_publicidad', formValues.tipoPublicidad || '');
+    formData.append('seccion', formValues.seccion || 'global');
     
     if (formValues.fechaInicial instanceof Date) {
       const fechaInicio = formValues.fechaInicial.toISOString().split('T')[0];
@@ -888,6 +893,7 @@ export class CrearPublicidadComponent implements OnInit {
   get nombre() { return this.publicidadForm.get('nombre'); }
   get descripcion() { return this.publicidadForm.get('descripcion'); }
   get tipoPublicidad() { return this.publicidadForm.get('tipoPublicidad'); }
+  get seccion() { return this.publicidadForm.get('seccion'); }
   get fechaInicial() { return this.publicidadForm.get('fechaInicial'); }
   get fechaFinal() { return this.publicidadForm.get('fechaFinal'); }
   get estado() { return this.publicidadForm.get('estado'); }
