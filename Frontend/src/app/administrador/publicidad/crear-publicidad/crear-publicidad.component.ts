@@ -16,6 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 import { PublicidadService } from '../../../services/publicidad.service';
 import { ApiError, TipoPublicidad, UnidadTiempo, SECCIONES_SISTEMA } from '../../../models/marketing.model';
@@ -683,6 +684,31 @@ export class CrearPublicidadComponent implements OnInit {
       }
     }
 
+    this.mostrarDialogConfirmacion();
+  }
+
+  private mostrarDialogConfirmacion(): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'publicidad',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario();
+      }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
+  }
+
+  // ✅ NUEVO: Método para procesar el formulario después de la confirmación
+  private procesarFormulario(): void {
     this.isLoading = true;
     const formData = this.buildFormData();
 

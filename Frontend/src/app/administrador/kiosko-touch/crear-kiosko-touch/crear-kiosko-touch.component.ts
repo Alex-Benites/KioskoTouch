@@ -18,7 +18,8 @@ import { Establecimiento } from '../../../models/establecimiento.model';
 import { CatalogoService } from '../../../services/catalogo.service';
 import { ActivatedRoute } from '@angular/router'; // Agregar import
 import { MatDialog } from '@angular/material/dialog';
-import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component'; // Ajusta la ruta si es necesario
+import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { SuccessPopupComponent } from '../../../shared/success-popup/success-popup.component';
 
 @Component({
@@ -378,6 +379,30 @@ export class CrearKioskoTouchComponent implements OnInit {
       return;
     }
 
+    this.mostrarDialogConfirmacion();
+  }
+
+  private mostrarDialogConfirmacion(): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'kiosco touch',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario();
+      }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
+  }
+
+  private procesarFormulario(): void {
     const kioscoData = {
       nombre: this.form.get('nombreKiosco')?.value,
       token: this.form.get('token')?.value,

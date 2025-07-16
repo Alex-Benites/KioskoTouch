@@ -15,7 +15,8 @@ import { PantallaCocinaService } from '../../../services/pantalla-cocina.service
 import { KioskoTouchService } from '../../../services/kiosko-touch.service';
 import { CatalogoService } from '../../../services/catalogo.service';
 import { MatDialog } from '@angular/material/dialog';
-import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component'; // Ajusta la ruta si es necesario
+import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 
 @Component({
@@ -307,62 +308,86 @@ export class CrearPantallaCocinaComponent implements OnInit {
         return;
       }
 
-      this.loading = true;
-
-      const pantallaData = {
-        nombre: this.form.get('nombrePantalla')?.value,
-        token: this.form.get('token')?.value,
-        estado: this.form.get('estadoPantalla')?.value,
-        // ✅ IMPORTANTE: Enviar TODOS los kioskos asociados
-        kioskos_asociados: this.kioscosAsociados.map(k => k.id)
-      };
-
-      console.log('📤 Datos que se envían al backend:', pantallaData);
-
-      if (this.isEditMode && this.pantallaId) {
-        // Modo edición
-        console.log('🔧 Modo EDICIÓN - Actualizando pantalla ID:', this.pantallaId);
-
-        this.pantallaCocinaService.actualizarPantallaCocina(this.pantallaId, pantallaData).subscribe({
-          next: (response) => {
-            console.log('✅ Respuesta del backend (edición):', response);
-            this.loading = false;
-            if (response.success) {
-              this.abrirDialogoExito('¡Pantalla Actualizada!', 'La pantalla de cocina se ha actualizado correctamente.', () => {
-                this.router.navigate(['/administrador/gestion-pantallas-cocina']);
-              });
-            } else {
-              alert(`Error: ${response.error}`);
-            }
-          },
-          error: (error) => {
-            console.error('❌ Error al actualizar pantalla:', error);
-            this.loading = false;
-            alert('Error al actualizar la pantalla de cocina');
-          }
-        });
-      } else {
-        // Modo creación
-        this.pantallaCocinaService.crearPantallaCocina(pantallaData).subscribe({
-          next: (response) => {
-            this.loading = false;
-            if (response.success) {
-              this.abrirDialogoExito('¡Pantalla Creada!', 'La pantalla de cocina se ha creado correctamente.', () => {
-                this.router.navigate(['/administrador/gestion-pantallas-cocina']);
-              });
-            } else {
-              alert(`Error: ${response.error}`);
-            }
-          },
-          error: (error) => {
-            this.loading = false;
-            console.error('Error al crear pantalla:', error);
-            alert('Error al crear la pantalla de cocina');
-          }
-        });
-      }
+      this.mostrarDialogConfirmacion();
     } else {
       alert('Por favor, complete todos los campos requeridos.');
+    }
+  }
+
+  private mostrarDialogConfirmacion(): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'pantalla de cocina',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario();
+      }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
+  }
+
+  private procesarFormulario(): void {
+    this.loading = true;
+
+    const pantallaData = {
+      nombre: this.form.get('nombrePantalla')?.value,
+      token: this.form.get('token')?.value,
+      estado: this.form.get('estadoPantalla')?.value,
+      // ✅ IMPORTANTE: Enviar TODOS los kioskos asociados
+      kioskos_asociados: this.kioscosAsociados.map(k => k.id)
+    };
+
+    console.log('📤 Datos que se envían al backend:', pantallaData);
+
+    if (this.isEditMode && this.pantallaId) {
+      // Modo edición
+      console.log('🔧 Modo EDICIÓN - Actualizando pantalla ID:', this.pantallaId);
+
+      this.pantallaCocinaService.actualizarPantallaCocina(this.pantallaId, pantallaData).subscribe({
+        next: (response) => {
+          console.log('✅ Respuesta del backend (edición):', response);
+          this.loading = false;
+          if (response.success) {
+            this.abrirDialogoExito('¡Pantalla Actualizada!', 'La pantalla de cocina se ha actualizado correctamente.', () => {
+              this.router.navigate(['/administrador/gestion-pantallas-cocina']);
+            });
+          } else {
+            alert(`Error: ${response.error}`);
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error al actualizar pantalla:', error);
+          this.loading = false;
+          alert('Error al actualizar la pantalla de cocina');
+        }
+      });
+    } else {
+      // Modo creación
+      this.pantallaCocinaService.crearPantallaCocina(pantallaData).subscribe({
+        next: (response) => {
+          this.loading = false;
+          if (response.success) {
+            this.abrirDialogoExito('¡Pantalla Creada!', 'La pantalla de cocina se ha creado correctamente.', () => {
+              this.router.navigate(['/administrador/gestion-pantallas-cocina']);
+            });
+          } else {
+            alert(`Error: ${response.error}`);
+          }
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('Error al crear pantalla:', error);
+          alert('Error al crear la pantalla de cocina');
+        }
+      });
     }
   }
 }

@@ -14,7 +14,8 @@ import { CatalogoService } from '../../../services/catalogo.service';
 import { ActivatedRoute } from '@angular/router';
 import { EstablecimientosService } from '../../../services/establecimientos.service';
 import { MatDialog } from '@angular/material/dialog';
-import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component'; // Ajusta la ruta si es necesario
+import { SuccessDialogComponent } from '../../../shared/success-dialog/success-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-crear-establecimiento',
@@ -314,6 +315,30 @@ export class CrearEstablecimientoComponent implements OnInit {
       return;
     }
 
+    this.mostrarDialogConfirmacion();
+  }
+
+  private mostrarDialogConfirmacion(): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'establecimiento',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario();
+      }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
+  }
+
+  private procesarFormulario(): void {
     const empleadoSeleccionado = this.empleadosDisponibles.find(
       emp => emp.id === this.form.get('responsableAsignado')?.value
     );
