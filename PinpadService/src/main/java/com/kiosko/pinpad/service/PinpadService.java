@@ -60,6 +60,21 @@ public class PinpadService {
             // ✅ 4. EJECUTAR TRANSACCIÓN
             RespuestaProcesoPago respuesta = lan.ProcesoPago(envio);
             
+            // ✅ VALIDAR RESPUESTA ANTES DE PROCESAR
+            if (respuesta == null) {
+                logger.error("❌ Respuesta nula del PinPad");
+                return new PagoResponse("ER", "PinPad no respondió");
+            }
+            
+            // ✅ LOG DE DEBUG PARA VER QUÉ RECIBIMOS
+            logger.debug("📥 Respuesta cruda del PinPad: CodigoRespuesta={}", respuesta.CodigoRespuesta);
+            
+            // ✅ VALIDAR QUE LA RESPUESTA TENGA EL FORMATO ESPERADO
+            if (respuesta.CodigoRespuesta == null || respuesta.CodigoRespuesta.isEmpty()) {
+                logger.error("❌ Código de respuesta vacío del PinPad");
+                return new PagoResponse("ER", "Respuesta inválida del PinPad");
+            }
+            
             // ✅ 5. CREAR RESPUESTA BÁSICA (solo campos que SÍ existen)
             PagoResponse response = new PagoResponse();
             

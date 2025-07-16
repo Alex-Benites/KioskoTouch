@@ -488,35 +488,31 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     return 0;
   }
 
-  // ✅ NUEVO: Manejar respuesta exitosa
+  // ✅ MODIFICAR: Manejar respuesta exitosa SIN LIMPIAR CARRITO
   private manejarPedidoExitoso(response: any): void {
     if (response.success && response.data) {
       console.log('🎉 Pedido creado con ID:', response.data.pedido_id);
 
-      // Limpiar carrito
-      this.pedidoService.limpiarCarrito();
-
-      // ✅ USAR LOS VALORES CALCULADOS CORRECTOS (no this.totalPedido)
+      // ✅ CALCULAR VALORES ANTES DE NAVEGACIÓN
       const subtotalCalculado = this.calcularSubtotal();
       const ivaCalculado = this.calcularIVA();
       const totalCalculado = this.calcularTotal();
 
-      // Preparar parámetros para navegación
-      const queryParams: any = {
-        tipo: this.metodoPagoSeleccionado,
-        monto: totalCalculado.toFixed(2), // ✅ USAR totalCalculado
-        orden: response.data.numero_pedido || this.generarNumeroOrden(),
-        productos: this.cantidadItems,
-        subtotal: subtotalCalculado.toFixed(2), // ✅ USAR subtotalCalculado
-        iva: ivaCalculado.toFixed(2), // ✅ USAR ivaCalculado
-        pedido_id: response.data.pedido_id,
-      };
-
-      console.log('💰 VALORES PARA NAVEGACIÓN:');
+      console.log('💰 VALORES CALCULADOS PARA PAGO:');
       console.log(`   - Subtotal: ${subtotalCalculado.toFixed(2)}`);
       console.log(`   - IVA: ${ivaCalculado.toFixed(2)}`);
       console.log(`   - Total: ${totalCalculado.toFixed(2)}`);
-      console.log(`   - Total PedidoService (incorrecto): ${this.totalPedido}`);
+
+      // Preparar parámetros para navegación
+      const queryParams: any = {
+        tipo: this.metodoPagoSeleccionado,
+        monto: totalCalculado.toFixed(2),
+        orden: response.data.numero_pedido || this.generarNumeroOrden(),
+        productos: this.cantidadItems,
+        subtotal: subtotalCalculado.toFixed(2),
+        iva: ivaCalculado.toFixed(2),
+        pedido_id: response.data.pedido_id,
+      };
 
       // Agregar datos de turno si existe
       if (this.tieneTurno) {
@@ -531,12 +527,21 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
         }
       }
 
-      console.log(
-        '🚀 Navegando a instrucción de pago con datos del pedido guardado'
-      );
+      console.log('📋 Query params preparados:', queryParams);
 
-      // Navegar a instrucción de pago
-      this.router.navigate(['/cliente/instrucción-pago'], {
+      // ❌ NO LIMPIAR CARRITO AQUÍ - Solo después de confirmar pago
+      // this.pedidoService.limpiarCarrito();
+
+      // ✅ GUARDAR INFO DEL PEDIDO CREADO EN EL SERVICIO PARA REFERENCIA
+      this.pedidoService.setPedidoCreado({
+        id: response.data.pedido_id,
+        numero: response.data.numero_pedido,
+        estado: 'pendiente_pago'
+      });
+
+      console.log('🚀 Navegando a instrucción de pago (carrito conservado para posible cancelación)');
+
+      this.router.navigate(['/cliente/instruccion-pago'], {
         queryParams,
       });
     } else {

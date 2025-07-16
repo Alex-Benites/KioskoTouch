@@ -1,5 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   Pedido,
@@ -24,6 +26,8 @@ export class PedidoService {
 
   private turnoState = signal<number | null>(null);
 
+  // ✅ NUEVO: Estado del pedido creado en backend
+  private pedidoCreado: any = null;
 
   // ✅ Estado principal del pedido
   private pedidoState = signal<Partial<Pedido>>({
@@ -886,6 +890,110 @@ export class PedidoService {
     } catch (error) {
       console.error('❌ Error cargando turno desde localStorage:', error);
     }
+  }
+
+  /**
+   * ✅ NUEVO: Guardar información del pedido creado en backend
+   */
+  setPedidoCreado(pedido: any): void {
+    this.pedidoCreado = pedido;
+    console.log('📝 Pedido creado guardado para referencia:', pedido);
+    
+    // ✅ También guardar en localStorage para persistencia
+    try {
+      localStorage.setItem('kiosko_pedido_creado', JSON.stringify(pedido));
+    } catch (error) {
+      console.error('❌ Error guardando pedido creado:', error);
+    }
+  }
+
+  /**
+   * ✅ NUEVO: Obtener información del pedido creado
+   */
+  getPedidoCreado(): any {
+    // ✅ Si no está en memoria, intentar cargar desde localStorage
+    if (!this.pedidoCreado) {
+      try {
+        const datos = localStorage.getItem('kiosko_pedido_creado');
+        if (datos) {
+          this.pedidoCreado = JSON.parse(datos);
+        }
+      } catch (error) {
+        console.error('❌ Error cargando pedido creado:', error);
+      }
+    }
+    
+    return this.pedidoCreado;
+  }
+
+  /**
+   * ✅ NUEVO: Limpiar información del pedido creado
+   */
+  clearPedidoCreado(): void {
+    this.pedidoCreado = null;
+    
+    // ✅ También limpiar de localStorage
+    try {
+      localStorage.removeItem('kiosko_pedido_creado');
+      console.log('🗑️ Información del pedido creado eliminada');
+    } catch (error) {
+      console.error('❌ Error limpiando pedido creado:', error);
+    }
+  }
+
+  /**
+   * ✅ NUEVO: Cancelar pedido en backend
+   */
+  cancelarPedidoBackend(numeroPedido: string): Observable<any> {
+    console.log('🗑️ Cancelando pedido en backend:', numeroPedido);
+    
+    // ✅ Usar endpoint DELETE para cancelar el pedido
+    return this.http.delete(`${this.apiUrl}/${numeroPedido}/cancelar/`).pipe(
+      tap(() => {
+        console.log('✅ Pedido cancelado exitosamente en backend');
+      }),
+      catchError((error) => {
+        console.error('❌ Error cancelando pedido en backend:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * ✅ NUEVO: Confirmar pago del pedido en backend
+   */
+  confirmarPagoBackend(numeroPedido: string): Observable<any> {
+    console.log('💳 Confirmando pago en backend:', numeroPedido);
+    
+    // ✅ Usar endpoint PATCH para confirmar el pago
+    return this.http.patch(`${this.apiUrl}/${numeroPedido}/confirmar-pago/`, {}).pipe(
+      tap(() => {
+        console.log('✅ Pago confirmado exitosamente en backend');
+      }),
+      catchError((error) => {
+        console.error('❌ Error confirmando pago en backend:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * ✅ MEJORAR: Limpiar todo completamente (carrito + pedido creado)
+   */
+  limpiarTodoCompletamente(): void {
+    console.log('🧹 === LIMPIANDO TODO COMPLETAMENTE ===');
+    
+    // ✅ Limpiar carrito
+    this.limpiarCarrito();
+    
+    // ✅ Limpiar pedido creado
+    this.clearPedidoCreado();
+    
+    // ✅ Limpiar estado persistido
+    this.limpiarEstadoPersistido();
+    
+    console.log('✅ TODO LIMPIADO COMPLETAMENTE');
+    console.log('🧹 === FIN LIMPIEZA COMPLETA ===');
   }
 
 }

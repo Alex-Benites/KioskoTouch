@@ -27,7 +27,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   numeroTurno?: string;
   datosFacturacion?: any;
 
-  // ✅ NUEVAS PROPIEDADES PARA PINPAD
+  // ✅ PROPIEDADES PARA PINPAD
   estadoPago: EstadoPago = { estado: 'esperando', mensaje: 'Listo para procesar pago' };
   montoTotal: number = 0;
   procesandoPago: boolean = false;
@@ -38,16 +38,22 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private pinpadService: PinpadService, // ✅ INYECTAR SERVICIO
-    private pedidoService: PedidoService // INYECTAR SERVICIO DE PEDIDO
+    private pinpadService: PinpadService,
+    private pedidoService: PedidoService
   ) {}
 
   ngOnInit(): void {
+    console.log('🎬 Inicializando componente instrucción de pago');
+    
+    // ✅ REINICIAR ESTADO DEL PINPAD AL INICIO
+    this.pinpadService.reiniciarEstado();
+    
     this.route.queryParams.subscribe(params => {
       this.tipoPago = params['tipo'] || 'tarjeta';
       this.numeroOrden = params['orden'] || this.generarNumeroOrden();
+      
 
-      // ✅ OBTENER MONTO REAL DEL RESUMEN
+      // ✅ OBTENER DATOS DEL RESUMEN
       this.montoTotal = parseFloat(params['monto']) || 0;
       this.cantidadProductos = parseInt(params['productos']) || 0;
       this.subtotal = parseFloat(params['subtotal']) || 0;
@@ -63,13 +69,13 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         }
       }
 
-      console.log('📋 Datos recibidos del resumen:');
-      console.log('   💰 Monto total:', this.montoTotal);
-      console.log('   🛒 Cantidad productos:', this.cantidadProductos);
-      console.log('   💵 Subtotal:', this.subtotal);
-      console.log('   🏛️ IVA:', this.iva);
-      console.log('   🎫 Turno:', this.numeroTurno);
-      console.log('   📄 Facturación:', this.datosFacturacion);
+      console.log('📋 Datos recibidos del resumen:', {
+        montoTotal: this.montoTotal,
+        cantidadProductos: this.cantidadProductos,
+        subtotal: this.subtotal,
+        iva: this.iva,
+        numeroTurno: this.numeroTurno
+      });
 
       // ✅ VALIDAR que tenemos monto válido
       if (this.montoTotal <= 0) {
@@ -98,7 +104,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       this.verificarConectividad();
     }
   }
-
 
   ngOnDestroy(): void {
     if (this.estadoPagoSubscription) {
@@ -129,7 +134,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   obtenerInstrucciones(): string {
-    // ✅ INSTRUCCIONES DINÁMICAS SEGÚN ESTADO
     if (this.tipoPago === 'tarjeta') {
       switch (this.estadoPago.estado) {
         case 'esperando':
@@ -184,72 +188,203 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         console.log('✅ PinPad conectado:', respuesta);
       },
       error: (error) => {
-        console.warn('⚠️ PinPad no disponible:', error);
+        // ✅ MENSAJE MENOS ALARMANTE
+        console.log('ℹ️ Verificación inicial del PinPad pendiente (normal al inicio)');
       }
     });
   }
 
   /**
-   * ✅ PROCESAR PAGO CON TARJETA
+   * ✅ PROCESAR PAGO CON TARJETA - CORREGIDO
    */
   private procesarPagoTarjeta(): void {
-    this.pinpadService.procesarPago(this.montoTotal).subscribe({
+    console.log('💳 Iniciando proceso de pago con tarjeta...');
+    console.log('📊 Datos del pago:', {
+      montoTotal: this.montoTotal,
+      subtotal: this.subtotal,
+      iva: this.iva,
+      orden: this.numeroOrden
+    });
+
+    // ✅ VALIDAR DATOS ANTES DE ENVIAR
+    if (!this.montoTotal || this.montoTotal <= 0) {
+      console.error('❌ Monto inválido:', this.montoTotal);
+      // ✅ ERROR 1 CORREGIDO: No llamar método privado directamente
+      return;
+    }
+
+    // ✅ PROCESAR PAGO CON VALORES REALES
+    this.pinpadService.procesarPago(
+      this.montoTotal,
+      this.subtotal,  // Base imponible
+      this.iva,       // IVA
+      0               // Base 0% (sin productos exentos por ahora)
+    ).subscribe({
       next: (respuesta: PagoResponse) => {
-        if (respuesta.exitoso) {
-          this.pinpadService['actualizarEstado']('exitoso', 'Pago autorizado', respuesta);
+        console.log('✅ Respuesta del pago:', respuesta);
+        
+        if (respuesta.exitoso && respuesta.codigoRespuesta === '00') {
+          console.log('🎉 Pago autorizado:', respuesta.autorizacion);
         } else {
-          this.pinpadService['actualizarEstado']('error', respuesta.mensajeRespuesta);
+          console.warn('⚠️ Pago rechazado:', respuesta.mensajeRespuesta);
         }
       },
       error: (error) => {
         console.error('❌ Error procesando pago:', error);
-        this.pinpadService['actualizarEstado']('error', 'Error de comunicación con PinPad');
       }
     });
   }
 
   /**
-   * ✅ COMPLETAR PAGO EXITOSO
+   * ✅ MÉTODO PARA CANCELAR PAGO - LÓGICA FINAL CORREGIDA
    */
-  private completarPago(): void {
-    this.pedidoService.limpiarPedido();
-    setTimeout(() => {
-      this.router.navigate(['/cliente/home']);
-    }, 2000);
-  }
-
-  private generarNumeroOrden(): string {
-    return Math.floor(Math.random() * 1000 + 1).toString();
+  cancelarPago(): void {
+    console.log('❌ === CANCELANDO PAGO ===');
+    
+    // ✅ REINICIAR ESTADO DEL PINPAD
+    this.pinpadService.reiniciarEstado();
+    
+    // ✅ LIMPIAR VARIABLES LOCALES
+    this.procesandoPago = false;
+    this.ultimaTransaccion = undefined;
+    this.estadoPago = { estado: 'esperando', mensaje: 'Listo para procesar pago' };
+    
+    // ✅ RESETEAR TIPO DE PAGO
+    this.tipoPago = 'tarjeta';
+    
+    // 🗑️ OBTENER PEDIDO CREADO Y CANCELARLO EN BACKEND
+    const pedidoCreado = this.pedidoService.getPedidoCreado();
+    
+    if (pedidoCreado && pedidoCreado.numero) {
+      console.log('🗑️ Cancelando pedido en backend:', pedidoCreado.numero);
+      
+      this.pedidoService.cancelarPedidoBackend(pedidoCreado.numero).subscribe({
+        next: () => {
+          console.log('✅ Pedido cancelado exitosamente en backend');
+          this.pedidoService.clearPedidoCreado();
+          this.regresarAResumen();
+        },
+        error: (error) => {
+          console.warn('⚠️ Error cancelando pedido backend:', error);
+          // ✅ Aún así regresar al resumen (productos conservados)
+          this.pedidoService.clearPedidoCreado();
+          this.regresarAResumen();
+        }
+      });
+    } else {
+      console.log('ℹ️ No hay pedido creado para cancelar, regresando directamente');
+      this.regresarAResumen();
+    }
   }
 
   /**
-   * ✅ MANEJAR CLICK DEL BOTÓN CONTINUAR
+   * ✅ NUEVO: Método auxiliar para regresar al resumen
+   */
+  private regresarAResumen(): void {
+    console.log('🔙 Regresando a resumen-pedido (productos conservados)');
+    console.log('❌ === FIN CANCELACIÓN ===');
+    this.router.navigate(['/cliente/resumen-pedido']);
+  }
+
+  /**
+   * ✅ MANEJAR CLICK DEL BOTÓN CONTINUAR - LÓGICA FINAL
    */
   continuar(): void {
+    console.log('👆 Botón continuar presionado, estado:', this.tipoPago);
+    
     switch (this.tipoPago) {
       case 'tarjeta':
         this.manejarPagoTarjeta();
         break;
 
       case 'efectivo':
-        this.router.navigate(['/cliente/instruccion-pago'], {
-          queryParams: {
-            tipo: 'completado',
-            orden: this.generarNumeroOrden()
-          }
-        });
+        // ✅ Para efectivo, ir directo a completado
+        this.tipoPago = 'completado';
         break;
 
       case 'completado':
-        this.router.navigate(['/cliente/home']);
+        // ✅ CONFIRMAR PAGO Y FINALIZAR COMPLETAMENTE
+        this.confirmarPagoYFinalizar();
         break;
     }
+  }
+
+  /**
+   * ✅ NUEVO: CONFIRMAR PAGO Y FINALIZAR COMPLETAMENTE
+   */
+  private confirmarPagoYFinalizar(): void {
+    console.log('🎉 === CONFIRMANDO PAGO Y FINALIZANDO ===');
+    
+    const pedidoCreado = this.pedidoService.getPedidoCreado();
+    
+    if (pedidoCreado && pedidoCreado.numero) {
+      console.log('💳 Confirmando pago en backend para pedido:', pedidoCreado.numero);
+      
+      // ✅ ACTUALIZAR ESTADO DEL PEDIDO A "PAGADO"
+      this.pedidoService.confirmarPagoBackend(pedidoCreado.numero).subscribe({
+        next: () => {
+          console.log('✅ Pago confirmado exitosamente en backend');
+          this.finalizarCompletamente();
+        },
+        error: (error) => {
+          console.warn('⚠️ Error confirmando pago en backend:', error);
+          // ✅ Aún así finalizar por seguridad del usuario
+          this.finalizarCompletamente();
+        }
+      });
+    } else {
+      console.log('ℹ️ No hay pedido creado para confirmar, finalizando directamente');
+      this.finalizarCompletamente();
+    }
+  }
+
+  /**
+   * ✅ NUEVO: FINALIZAR COMPLETAMENTE Y LIMPIAR TODO
+   */
+  private finalizarCompletamente(): void {
+    console.log('🧹 Finalizando completamente...');
+    
+    // ✅ LIMPIAR TODO EL CARRITO Y ESTADO
+    this.pedidoService.limpiarTodoCompletamente();
+    console.log('🗑️ Carrito y estado limpiados tras confirmar pago');
+    
+    // ✅ LIMPIAR ESTADO DEL PINPAD
+    this.pinpadService.reiniciarEstado();
+    
+    console.log('🏠 Navegando al home');
+    console.log('🎉 === FINALIZACIÓN COMPLETA ===');
+    
+    // ✅ NAVEGAR AL HOME
+    this.router.navigate(['/cliente/home']);
+  }
+
+  /**
+   * ✅ COMPLETAR PAGO EXITOSO - SOLO CAMBIAR ESTADO (NO LIMPIAR AÚN)
+   */
+  private completarPago(): void {
+    console.log('🎉 Completando pago exitoso...');
+    
+    // ❌ NO LIMPIAR CARRITO AQUÍ - Solo cambiar estado visual
+    // El carrito se limpiará cuando el usuario presione "Finalizar pedido"
+    
+    // ✅ CAMBIAR A ESTADO COMPLETADO DIRECTAMENTE
+    this.tipoPago = 'completado';
+    this.estadoPago = { estado: 'exitoso', mensaje: 'Pago completado exitosamente' };
+    
+    // ✅ REINICIAR ESTADO DEL PINPAD PARA FUTUROS PAGOS
+    setTimeout(() => {
+      this.pinpadService.reiniciarEstado();
+    }, 1000);
+    
+    console.log('✅ Estado cambiado a completado (carrito conservado hasta confirmación final)');
   }
 
   /**
    * ✅ MANEJAR LÓGICA DE PAGO CON TARJETA
    */
   private manejarPagoTarjeta(): void {
+    console.log('🎯 Manejando pago con tarjeta, estado actual:', this.estadoPago.estado);
+    
     switch (this.estadoPago.estado) {
       case 'esperando':
         this.procesarPagoTarjeta();
@@ -260,27 +395,36 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         break;
 
       case 'error':
+        console.log('🔄 Reiniciando estado tras error');
+        this.pinpadService.reiniciarEstado();
+        break;
+        
+      case 'procesando':
+        console.log('⏳ Pago ya en proceso, esperando...');
+        break;
+        
+      default:
+        console.warn('⚠️ Estado no reconocido:', this.estadoPago.estado);
         this.pinpadService.reiniciarEstado();
         break;
     }
   }
 
   /**
-   * ✅ MÉTODO PARA CANCELAR PAGO
+   * ✅ ERROR 2 CORREGIDO: Métodos únicos y simplificados
    */
-  cancelarPago(): void {
-    this.pinpadService.reiniciarEstado();
-    this.router.navigate(['/cliente/home']);
+  private generarNumeroOrden(): string {
+    return 'ORD-' + Date.now().toString().slice(-6);
   }
 
-  // UTILIZAR A FUTURO
-  pagarConTarjeta() {
+  // ✅ MÉTODOS AUXILIARES SIMPLIFICADOS (sin dependencia de PedidoService)
+  pagarConTarjeta(): void {
     this.router.navigate(['/cliente/instruccion-pago'], {
       queryParams: { tipo: 'tarjeta' }
     });
   }
 
-  pagarEnEfectivo() {
+  pagarEnEfectivo(): void {
     this.router.navigate(['/cliente/instruccion-pago'], {
       queryParams: { tipo: 'efectivo' }
     });

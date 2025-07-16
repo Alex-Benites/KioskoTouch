@@ -34,19 +34,7 @@
           <span class="valor">${{ montoTotal | number:'1.2-2' }}</span>
         </div>
         
-        <!-- ✅ ESTADO DEL PAGO -->
-        <div class="estado-pago" [ngClass]="'estado-' + estadoPago.estado">
-          <div class="estado-icono">
-            @switch (estadoPago.estado) {
-              @case ('esperando') { <span>⏳</span> }
-              @case ('procesando') { <span class="icono-girando">🔄</span> }
-              @case ('exitoso') { <span>✅</span> }
-              @case ('error') { <span>❌</span> }
-              @default { <span>💳</span> }
-            }
-          </div>
-          <span class="estado-texto">{{ estadoPago.mensaje }}</span>
-        </div>
+ 
 
         <!-- ✅ DETALLES DE TRANSACCIÓN EXITOSA -->
         @if (ultimaTransaccion && estadoPago.estado === 'exitoso') {
@@ -121,56 +109,6 @@
       }
     </div>
 
-    <!-- ✅ INDICADOR DE CONECTIVIDAD (opcional) -->
-    @if (tipoPago === 'tarjeta') {
-      <div class="conectividad-info">
-        <span class="conectividad-icono">📡</span>
-        <span class="conectividad-texto">PinPad conectado</span>
-      </div>
-    }
 
-    <!-- ✅ AGREGAR DESPUÉS DE LA SECCIÓN info-pago: -->
-    @if (tipoPago === 'tarjeta') {
-      <div class="info-pago">
-        <!-- Información del Pedido -->
-        <div class="info-pedido">
-          <h3 class="info-titulo">Resumen del Pedido</h3>
-          
-          <div class="linea-info">
-            <span class="etiqueta">Orden:</span>
-            <span class="valor">#{{ numeroOrden }}</span>
-          </div>
-          
-          @if (numeroTurno) {
-            <div class="linea-info">
-              <span class="etiqueta">Turno:</span>
-              <span class="valor">{{ numeroTurno }}</span>
-            </div>
-          }
-          
-          <div class="linea-info">
-            <span class="etiqueta">Productos:</span>
-            <span class="valor">{{ cantidadProductos }} items</span>
-          </div>
-          
-          <div class="linea-info">
-            <span class="etiqueta">Subtotal:</span>
-            <span class="valor">${{ subtotal | number:'1.2-2' }}</span>
-          </div>
-          
-          <div class="linea-info">
-            <span class="etiqueta">IVA (15%):</span>
-            <span class="valor">${{ iva | number:'1.2-2' }}</span>
-          </div>
-          
-          <div class="linea-total">
-            <span class="etiqueta">TOTAL:</span>
-            <span class="valor">${{ montoTotal | number:'1.2-2' }}</span>
-          </div>
-        </div>
-
-        <!-- ... resto del código existente ... -->
-      </div>
-    }
   </main>
 </div>

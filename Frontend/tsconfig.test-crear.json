@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "types": [
+      "jasmine"
+    ]
+  },
+  "files": [
+    "src/test.ts"
+  ],
+  "include": [
+    "src/app/administrador/productos/crear/crear.component.spec.ts",
+    "src/app/administrador/productos/crear/crear.component.ts",
+    "src/app/services/catalogo.service.ts",
+    "src/app/models/*.ts",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "src/app/directives/has-permission.directive.spec.ts",
+    "src/app/guards/permission.guard.spec.ts"
+  ]
+}

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PedidoService } from '../../services/pedido.service'; // ✅ AGREGAR
 import { PersonalizacionIngrediente } from '../../models/pedido.model';
+import { combineLatest } from 'rxjs';
 
 // ✅ Interface para ingredientes
 interface IngredientePersonalizacion {
@@ -190,60 +191,52 @@ export class PersonalizarProductoComponent implements OnInit {
   categoriaDatos: any = null;
 
   ngOnInit(): void {
-    // ✅ Obtener ID del producto desde la URL
-    this.productoId = Number(this.route.snapshot.paramMap.get('id'));
+  combineLatest([
+    this.route.paramMap,
+    this.route.queryParams
+  ]).subscribe(([paramMap, params]) => {
+    // 🔧 RESETEO COMPLETO DEL ESTADO AL CAMBIAR DE PRODUCTO
+    this.modoEdicion = false;
+    this.procesandoConfirmacion = false;
+    this.carritoIndex = null;
+    this.datosActuales = null;
+    this.personalizacionOriginal = [];
+    this.ingredientesSeleccionados = [];
+    this.ingredientesAEliminar = [];
+    this.productoSeleccionado = true;
+    
+    // 🔧 RESETEAR SIGNALS DE CARGA
+    this.ingredientesCargados.set(false);
+    this.cargandoIngredientes.set(false);
+    this.ingredientesDisponibles.set([]);
+    
+    // Ahora procesa los parámetros
+    this.productoId = Number(paramMap.get('id'));
+    this.modoEdicion = params['modo'] === 'editar';
+    this.carritoIndex = this.modoEdicion && params['carritoIndex'] ? +params['carritoIndex'] : null;
+    this.datosActuales = this.modoEdicion ? history.state?.datosActuales : null;
+    this.personalizacionOriginal = [];
+    this.ingredientesSeleccionados = [];
+    this.ingredientesAEliminar = [];
+    this.productoSeleccionado = true;
+    this.procesandoConfirmacion = false;
+    this.cantidad.set(Number(params['cantidad']) || 1);
+    this.nombreProducto = params['nombre'] || '';
+    this.categoriaProducto = Number(params['categoria']) || null;
+    this.descripcionProducto = '';
+    this.imagenProducto = 'assets/placeholder-producto.png';
+    this.precioProducto = params['tamano_precio']
+      ? Number(params['tamano_precio']) || 0
+      : Number(params['precio']) || 0;
 
-    this.route.queryParams.subscribe(params => {
-      this.modoEdicion = params['modo'] === 'editar';
+    if (this.modoEdicion) {
+      this.precargarPersonalizaciones();
+    }
 
-      if (this.modoEdicion) {
-        this.carritoIndex = params['carritoIndex'] ? +params['carritoIndex'] : null;
-        this.datosActuales = history.state?.datosActuales;
-
-        console.log('🔧 Modo edición activado:', {
-          carritoIndex: this.carritoIndex,
-          datosActuales: this.datosActuales
-        });
-
-        this.precargarPersonalizaciones();
-      }
-    });
-
-    // ✅ MODIFICAR: Obtener parámetros adicionales incluyendo información de tamaño
-    this.route.queryParams.subscribe(params => {
-      const cantidadInicial = Number(params['cantidad']) || 1;
-      this.cantidad.set(cantidadInicial);
-      this.nombreProducto = params['nombre'] || '';
-      this.categoriaProducto = Number(params['categoria']) || null;
-
-      // ✅ NUEVO: Procesar precio según si tiene tamaño seleccionado
-      if (params['tamano_precio']) {
-        // Si viene con tamaño seleccionado, usar ese precio
-        this.precioProducto = Number(params['tamano_precio']) || 0;
-        console.log(`📏 Producto con tamaño seleccionado: ${params['tamano_codigo']} - $${this.precioProducto}`);
-      } else {
-        // Si no tiene tamaño, usar precio base
-        this.precioProducto = Number(params['precio']) || 0;
-        console.log(`💰 Producto sin tamaño, precio base: $${this.precioProducto}`);
-      }
-
-      console.log('🎨 Datos recibidos para personalización:', {
-        id: this.productoId,
-        cantidad: this.cantidad(),
-        nombre: this.nombreProducto,
-        precio: this.precioProducto,
-        categoria: this.categoriaProducto,
-        // ✅ NUEVO: Log de información de tamaño
-        tamano_id: params['tamano_id'] || 'N/A',
-        tamano_codigo: params['tamano_codigo'] || 'N/A',
-        tamano_precio: params['tamano_precio'] || 'N/A',
-        precioTotal: this.precioTotalCalculado()
-      });
-
-      // ✅ Cargar datos completos del producto
-      this.cargarDatosCompletos();
-    });
-  }
+    // Cargar datos completos del producto
+    this.cargarDatosCompletos();
+  });
+}
 
   // ✅ NUEVO método para precargar personalizaciones
   private precargarPersonalizaciones(): void {
@@ -497,7 +490,37 @@ export class PersonalizarProductoComponent implements OnInit {
 
   // ✅ Método para volver al menú (modo agregar)
   volverAlMenu(): void {
-    console.log('🔙 Volviendo al menú');
+    console.log('🔙 Volviendo al menú - RESETEO COMPLETO');
+    
+    // 🔧 RESETEAR COMPLETAMENTE todo el estado del componente
+    this.modoEdicion = false;
+    this.procesandoConfirmacion = false; // ✅ CRÍTICO: Resetear flag
+    this.carritoIndex = null;
+    this.datosActuales = null;
+    this.personalizacionOriginal = [];
+    this.ingredientesSeleccionados = [];
+    this.ingredientesAEliminar = [];
+    this.productoSeleccionado = true;
+    
+    // 🔧 RESETEAR signals
+    this.ingredientesCargados.set(false);
+    this.cargandoIngredientes.set(false);
+    this.ingredientesDisponibles.set([]); // ✅ Limpiar ingredientes
+    this.cantidad.set(1); // ✅ Resetear cantidad
+    
+    // 🔧 RESETEAR datos del producto
+    this.productoId = null;
+    this.nombreProducto = '';
+    this.precioProducto = 0;
+    this.categoriaProducto = null;
+    this.descripcionProducto = '';
+    this.imagenProducto = '';
+    this.nombreCategoria = '';
+    this.productoDatos = null;
+    this.categoriaDatos = null;
+    
+    console.log('✅ Estado completamente reseteado');
+    
     this.router.navigate(['/cliente/menu'], { replaceUrl: true });
   }
 
@@ -529,9 +552,14 @@ export class PersonalizarProductoComponent implements OnInit {
 
   // Método para cancelar
   cancelar(): void {
+    console.log('❌ Cancelando personalización');
+    
+    // 🔧 RESETEAR estado antes de volver
+    this.procesandoConfirmacion = false;
+    this.modoEdicion = false;
+    
     this.volverAlMenu();
   }
-
 
   // ✅ MÉTODOS PRIVADOS
   private cargarDatosCompletos(): void {
@@ -805,37 +833,24 @@ export class PersonalizarProductoComponent implements OnInit {
       this.productoId!,
       precioUnitarioConExtras,
       cantidadFinal,
-      personalizaciones // <-- Aquí pasas las personalizaciones
+      personalizaciones
     );
 
     // ✅ MANTENER: Log detallado para el usuario
     let mensaje = `✅ ${this.nombreProducto} agregado al carrito!\n`;
     mensaje += `Cantidad: ${cantidadFinal}\n`;
-
-    // ✅ MEJORAR: Mostrar desglose de precio
-    if (this.costoIngredientesAdicionales() > 0) {
-      mensaje += `Precio base: $${this.precioProducto.toFixed(2)}\n`;
-      mensaje += `Ingredientes extra: +$${this.costoIngredientesAdicionales().toFixed(2)}\n`;
-      mensaje += `Precio unitario: $${precioUnitarioConExtras.toFixed(2)}\n`;
-    }
-
     mensaje += `Precio total: $${precioTotal.toFixed(2)}`;
 
-    if (resumenPersonalizaciones.ingredientesAgregados.length > 0) {
-      mensaje += `\n\n➕ Ingredientes agregados:`;
-      resumenPersonalizaciones.ingredientesAgregados.forEach((ing: any) => {
-        mensaje += `\n• ${ing.nombre} (+$${ing.precio.toFixed(2)})`;
-      });
-    }
+    console.log(mensaje);
 
-    if (resumenPersonalizaciones.ingredientesRemovidos.length > 0) {
-      mensaje += `\n\n➖ Ingredientes removidos:`;
-      resumenPersonalizaciones.ingredientesRemovidos.forEach((nombre: string) => {
-        mensaje += `\n• ${nombre}`;
-      });
-    }
-
-    this.volverAlMenu();
+    // 🔧 RESETEAR estado INMEDIATAMENTE después de agregar
+    this.procesandoConfirmacion = false;
+    this.modoEdicion = false;
+    
+    // 🔧 NAVEGAR con un pequeño delay para asegurar que el estado se resetea
+    setTimeout(() => {
+      this.volverAlMenu();
+    }, 100);
   }
 
 
