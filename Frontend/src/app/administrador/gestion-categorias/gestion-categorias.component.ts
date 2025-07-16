@@ -7,7 +7,8 @@ import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.com
 import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
 import { AuthService } from '../../services/auth.service';
 import { PermissionDeniedDialogComponent } from '../../shared/permission-denied-dialog/permission-denied-dialog.component';
-import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../shared/success-dialog/success-dialog.component';
 @Component({
   selector: 'app-gestion-categorias',
   standalone: true,
@@ -24,7 +25,6 @@ export class GestionCategoriasComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
-  // ✅ NUEVAS PROPIEDADES PARA POPUP
   mostrarDetalles = false;
   categoriaSeleccionada: Categoria | null = null;
 
@@ -117,12 +117,10 @@ export class GestionCategoriasComponent implements OnInit {
     this.categoriaSeleccionada = null;
   }
 
-  // ✅ REEMPLAZAR: Método eliminarCategoria completo con diálogos elegantes
   eliminarCategoria(categoria: Categoria): void {
     // ✅ VALIDACIÓN más estricta del ID
     if (!categoria.id || categoria.id <= 0) {
       console.error('❌ Error: Categoría sin ID válido');
-      this.mostrarDialogoError('Error: No se puede eliminar una categoría sin identificador válido');
       return;
     }
 
@@ -139,66 +137,60 @@ export class GestionCategoriasComponent implements OnInit {
 
     // ✅ Verificar si la categoría puede ser eliminada
     if (!categoria.puede_eliminar) {
-      console.log('❌ Categoría protegida, mostrando diálogo informativo');
+      console.log('❌ Categoría protegida, no se puede eliminar');
       this.mostrarDialogoCategoriaNoPuedeEliminarse(categoria);
       return;
     }
 
-    // ✅ Categoría puede eliminarse - Mostrar diálogo de confirmación
     console.log('✅ Categoría puede eliminarse, mostrando diálogo de confirmación');
     this.mostrarDialogoConfirmacionEliminacion(categoria);
   }
 
-  // ✅ NUEVO: Método para mostrar diálogo cuando la categoría no puede eliminarse
   private mostrarDialogoCategoriaNoPuedeEliminarse(categoria: Categoria): void {
-    const productosText = categoria.productos_count ? `${categoria.productos_count} productos` : '';
-    const ingredientesText = categoria.ingredientes_count ? `${categoria.ingredientes_count} ingredientes` : '';
-    const relaciones = [productosText, ingredientesText].filter(Boolean).join(' y ');
+    const productosCount = categoria.productos_count || 0;
+    const ingredientesCount = categoria.ingredientes_count || 0;
+    
+    const mensaje = `No se puede eliminar la categoría "${categoria.nombre}" porque tiene ${productosCount} productos y ${ingredientesCount} ingredientes asociados.`;
 
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '500px',
-      disableClose: false,
-      panelClass: 'confirmation-dialog-panel',
-      data: {
-        itemType: `CATEGORÍA "${categoria.nombre.toUpperCase()}"`,
-        action: 'protect', // ✅ Acción especial para categorías protegidas
-        context: 'admin',
-        extraInfo: {
-          relaciones: relaciones,
-          esProtegida: true
-        }
-      }
-    });
-
-    // ✅ Solo hay botón de "Entendido" para categorías protegidas
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('🎯 Diálogo de categoría protegida cerrado:', result);
-    });
-  }
-
-  // ✅ NUEVO: Método para mostrar diálogo de confirmación de eliminación
-  private mostrarDialogoConfirmacionEliminacion(categoria: Categoria): void {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '450px',
       disableClose: false,
       panelClass: 'confirmation-dialog-panel',
       data: {
-        itemType: `CATEGORÍA "${categoria.nombre.toUpperCase()}"`,
-        action: 'delete',
-        context: 'admin'
+        itemType: 'CATEGORÍA PROTEGIDA',
+        action: 'warning',
+        context: 'admin',
+        extraInfo: {
+          mensaje: mensaje,
+          soloConfirmar: true,
+          detalles: `Productos: ${productosCount} | Ingredientes: ${ingredientesCount}`
+        }
       }
     });
 
-    // ✅ Manejar la respuesta del diálogo
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('🎯 Respuesta del diálogo de eliminación:', result);
+    dialogRef.afterClosed().subscribe(() => {
+      console.log('⚠️ Diálogo de categoría protegida cerrado');
+    });
+  }
 
-      if (result === true) {
-        // ✅ Usuario confirmó → Eliminar la categoría
+  private mostrarDialogoConfirmacionEliminacion(categoria: Categoria): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'categoría',
+      action: 'delete'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó → Eliminar la categoría
         console.log(`✅ Confirmado: Eliminando categoría ${categoria.nombre}`);
         this.procederConEliminacionCategoria(categoria);
       } else {
-        // ✅ Usuario canceló → No hacer nada
+        // Usuario canceló → No hacer nada
         console.log(`❌ Cancelado: La categoría ${categoria.nombre} no será eliminada`);
       }
     });
@@ -213,62 +205,21 @@ export class GestionCategoriasComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           console.log('✅ Categoría eliminada exitosamente');
-
-          this.mostrarDialogoExito(`Categoría "${categoria.nombre}" eliminada correctamente`);
+          this.mostrarDialogExito(
+            'Categoría Eliminada',
+            `La categoría "${categoria.nombre}" ha sido eliminada exitosamente.`,
+            'Continuar'
+          );
           this.cargarCategorias();
         } else {
           console.error('❌ Error en respuesta:', response.error);
-          this.mostrarDialogoError(response.error || 'Error al eliminar categoría');
+          this.mostrarDialogError(response.error || 'Error al eliminar categoría');
         }
       },
       error: (error) => {
         console.error('❌ Error eliminando categoría:', error);
-        this.mostrarDialogoError(error.message || 'Error al eliminar categoría');
+        this.mostrarDialogError(error.message || 'Error al eliminar categoría');
       }
-    });
-  }
-
-  // ✅ NUEVO: Método para mostrar diálogo de éxito
-  private mostrarDialogoExito(mensaje: string): void {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      disableClose: false,
-      panelClass: 'confirmation-dialog-panel',
-      data: {
-        itemType: 'OPERACIÓN EXITOSA',
-        action: 'success',
-        context: 'admin',
-        extraInfo: {
-          mensaje: mensaje,
-          soloConfirmar: true
-        }
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(() => {
-      console.log('✅ Diálogo de éxito cerrado');
-    });
-  }
-
-  // ✅ NUEVO: Método para mostrar diálogo de error
-  private mostrarDialogoError(mensaje: string): void {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      disableClose: false,
-      panelClass: 'confirmation-dialog-panel',
-      data: {
-        itemType: 'ERROR',
-        action: 'error',
-        context: 'admin',
-        extraInfo: {
-          mensaje: mensaje,
-          soloConfirmar: true
-        }
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(() => {
-      console.log('❌ Diálogo de error cerrado');
     });
   }
 
@@ -281,7 +232,6 @@ export class GestionCategoriasComponent implements OnInit {
     });
   }
 
-  // ✅ REEMPLAZAR: Método cargarCategoriasDefault con diálogo
   cargarCategoriasDefault(): void {
     const categoriasDefault = [
       'Hamburguesas', 'Pizzas', 'Ensaladas', 'Pollos', 'Helados',
@@ -290,23 +240,18 @@ export class GestionCategoriasComponent implements OnInit {
 
     console.log('🎯 Solicitando confirmación para crear categorías por defecto');
 
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'categorías por defecto',
+      action: 'create'
+    };
+
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '500px',
-      disableClose: false,
-      panelClass: 'confirmation-dialog-panel',
-      data: {
-        itemType: `${categoriasDefault.length} CATEGORÍAS POR DEFECTO`,
-        action: 'create',
-        context: 'admin',
-        extraInfo: {
-          categorias: categoriasDefault,
-          mensaje: 'Se crearán las categorías básicas para organizar tu menú'
-        }
-      }
+      disableClose: true,
+      data: dialogData
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result === true) {
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
         console.log('✅ Confirmado: Creando categorías por defecto');
         this.crearCategoriasSecuencial(categoriasDefault, 0);
       } else {
@@ -315,13 +260,14 @@ export class GestionCategoriasComponent implements OnInit {
     });
   }
 
-  // ✅ MODIFICAR: Actualizar el método crearCategoriasSecuencial para usar diálogo
   private crearCategoriasSecuencial(categorias: string[], index: number): void {
     if (index >= categorias.length) {
       console.log('✅ Proceso de creación de categorías completado');
-
-      // ✅ Mostrar diálogo de éxito en lugar de alert
-      this.mostrarDialogoExito('Categorías por defecto creadas exitosamente');
+      this.mostrarDialogExito(
+        'Categorías Creadas',
+        'Las categorías por defecto han sido creadas exitosamente.',
+        'Continuar'
+      );
       this.cargarCategorias();
       return;
     }
@@ -412,6 +358,44 @@ export class GestionCategoriasComponent implements OnInit {
       vacias: this.categorias.filter(c => this.getTotalElementos(c) === 0).length,
       protegidas: this.categorias.filter(c => !c.puede_eliminar).length
     };
+  }
+
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      console.log('✅ Diálogo de éxito cerrado');
+    });
+  }
+
+  private mostrarDialogError(mensaje: string): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      disableClose: false,
+      panelClass: 'confirmation-dialog-panel',
+      data: {
+        itemType: 'ERROR',
+        action: 'error',
+        context: 'admin',
+        extraInfo: {
+          mensaje: mensaje,
+          soloConfirmar: true
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      console.log('❌ Diálogo de error cerrado');
+    });
   }
 
   // ✅ REFRESH

@@ -1,11 +1,13 @@
-// ✅ ACTUALIZAR Frontend/src/app/administrador/gestion-categorias/crear-categoria/crear-categoria.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
 import { CategoriaService, Categoria } from '../../../services/categoria.service';
-import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component'; // ✅ RUTA CORRECTA
+import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
 
 @Component({
   selector: 'app-crear-categoria',
@@ -39,7 +41,8 @@ export class CrearCategoriaComponent implements OnInit {
     private fb: FormBuilder,
     private categoriaService: CategoriaService,
     public router: Router, // ✅ Cambiar a public para usar en template
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private dialog: MatDialog
   ) {
     this.categoriaForm = this.fb.group({
       nombre: ['', [
@@ -136,7 +139,7 @@ export class CrearCategoriaComponent implements OnInit {
     }
   }
 
-  // ✅ GUARDAR CATEGORÍA
+  // ✅ GUARDAR CATEGORÍA CON DIÁLOGO DE CONFIRMACIÓN
   guardarCategoria(): void {
     if (this.categoriaForm.invalid) {
       this.marcarCamposInvalidos();
@@ -150,6 +153,33 @@ export class CrearCategoriaComponent implements OnInit {
       return;
     }
 
+    // ✅ NUEVO: Mostrar diálogo de confirmación antes de procesar
+    this.mostrarDialogConfirmacion();
+  }
+
+  // ✅ NUEVO: Método para mostrar diálogo de confirmación
+  private mostrarDialogConfirmacion(): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'categoría',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        // Usuario confirmó, proceder con la operación
+        this.procesarFormulario();
+      }
+      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
+    });
+  }
+
+  // ✅ NUEVO: Método para procesar el formulario después de la confirmación
+  private procesarFormulario(): void {
     this.loading = true;
     this.error = null;
     this.ocultarMensaje();
@@ -200,12 +230,7 @@ export class CrearCategoriaComponent implements OnInit {
           console.log(`✅ Categoría ${mensaje} exitosamente`);
           
           const textoMensaje = response.mensaje || `Categoría ${mensaje} exitosamente`;
-          this.mostrarMensaje(textoMensaje, 'success');
-          
-          // Redirigir después de 2 segundos
-          setTimeout(() => {
-            this.router.navigate(['/administrador/gestion-categorias']);
-          }, 2000);
+          this.mostrarDialogExito(textoMensaje);
         } else {
           // Solo es error si realmente hay un error
           this.error = response.error || response.mensaje || 'Error desconocido al guardar categoría';
@@ -221,6 +246,24 @@ export class CrearCategoriaComponent implements OnInit {
           console.error('❌ Detalles del error:', error.error);
         }
       }
+    });
+  }
+
+  // ✅ NUEVO: Método para mostrar diálogo de éxito
+  private mostrarDialogExito(mensaje: string): void {
+    const dialogData: SuccessDialogData = {
+      title: this.isEditMode ? 'Categoría Actualizada' : 'Categoría Creada',
+      message: mensaje,
+      buttonText: 'Continuar'
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      this.router.navigate(['/administrador/gestion-categorias']);
     });
   }
 
@@ -270,12 +313,9 @@ export class CrearCategoriaComponent implements OnInit {
     return 'Campo inválido';
   }
 
-  // ✅ NAVEGACIÓN
+  // ✅ NAVEGACIÓN SIN CONFIRMACIÓN
   cancelar(): void {
-    const confirmacion = confirm('¿Estás seguro de que deseas cancelar? Los cambios no guardados se perderán.');
-    if (confirmacion) {
-      this.router.navigate(['/administrador/gestion-categorias']);
-    }
+    this.router.navigate(['/administrador/gestion-categorias']);
   }
 
   // ✅ TÍTULO DINÁMICO
