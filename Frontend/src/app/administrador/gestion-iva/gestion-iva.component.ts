@@ -6,10 +6,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../shared/footer-admin/footer-admin.component';
 import { CatalogoService } from '../../services/catalogo.service';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import { SuccessDialogComponent, SuccessDialogData } from '../../shared/success-dialog/success-dialog.component';
 
 // ✅ INTERFAZ MÁS ESPECÍFICA
 interface ConfiguracionIVA {
@@ -35,7 +37,6 @@ interface ApiResponse {
     MatButtonModule,
     MatCardModule,
     MatIconModule,
-    MatSnackBarModule,
     HeaderAdminComponent,
     FooterAdminComponent
   ],
@@ -46,7 +47,7 @@ export class GestionIvaComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private catalogoService = inject(CatalogoService);
-  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   ivaForm: FormGroup;
   ivaActual: ConfiguracionIVA | null = null;
@@ -116,44 +117,69 @@ export class GestionIvaComponent implements OnInit {
     if (this.ivaForm.valid && !this.loading) {
       const formData = this.ivaForm.value;
 
-      // ✅ NORMALIZAR: Asegurar formato decimal correcto
       const datosNormalizados = {
         porcentaje_iva: this.normalizarPorcentaje(formData.porcentaje_iva)
       };
 
-      console.log('📤 Enviando configuración IVA:', datosNormalizados);
-      console.log('🔢 Valor original:', formData.porcentaje_iva);
-      console.log('🔢 Valor normalizado:', datosNormalizados.porcentaje_iva);
-
-      this.loading = true;
-
-      const request = this.isEditMode
-        ? this.catalogoService.actualizarIva(datosNormalizados)
-        : this.catalogoService.crearIva(datosNormalizados);
-
-      request.subscribe({
-        next: (response) => {
-          if (response.success) {
-            const mensaje = this.isEditMode
-              ? `IVA actualizado al ${datosNormalizados.porcentaje_iva}%`
-              : `IVA creado al ${datosNormalizados.porcentaje_iva}%`;
-
-            this.mostrarMensaje(mensaje, 'success');
-            this.cargarIvaActual(); // Recargar datos
-          } else {
-            this.mostrarMensaje('Error al guardar la configuración', 'error');
-          }
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('❌ Error al guardar IVA:', error);
-          this.mostrarMensaje('Error al conectar con el servidor', 'error');
-          this.loading = false;
-        }
-      });
+      this.mostrarDialogConfirmacion(datosNormalizados);
     } else {
       this.marcarCamposComoTocados();
     }
+  }
+
+  private mostrarDialogConfirmacion(datosNormalizados: any): void {
+    const dialogData: ConfirmationDialogData = {
+      itemType: 'configuración de IVA',
+      action: this.isEditMode ? 'update' : 'create'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.procesarFormulario(datosNormalizados);
+      }
+    });
+  }
+
+  private procesarFormulario(datosNormalizados: any): void {
+    console.log('📤 Enviando configuración IVA:', datosNormalizados);
+    console.log('🔢 Valor original:', this.ivaForm.value.porcentaje_iva);
+    console.log('🔢 Valor normalizado:', datosNormalizados.porcentaje_iva);
+
+    this.loading = true;
+
+    const request = this.isEditMode
+      ? this.catalogoService.actualizarIva(datosNormalizados)
+      : this.catalogoService.crearIva(datosNormalizados);
+
+    request.subscribe({
+      next: (response) => {
+        if (response.success) {
+          const mensaje = this.isEditMode
+            ? `El IVA ha sido actualizado al ${datosNormalizados.porcentaje_iva}%`
+            : `El IVA ha sido creado al ${datosNormalizados.porcentaje_iva}%`;
+
+          this.mostrarDialogExito(
+            this.isEditMode ? 'IVA Actualizado' : 'IVA Creado',
+            mensaje,
+            'Continuar'
+          );
+          this.cargarIvaActual();
+        } else {
+          this.mostrarDialogError('Error al guardar la configuración de IVA');
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error al guardar IVA:', error);
+        this.mostrarDialogError('Error al conectar con el servidor');
+        this.loading = false;
+      }
+    });
   }
 
   private marcarCamposComoTocados(): void {
@@ -162,12 +188,41 @@ export class GestionIvaComponent implements OnInit {
     });
   }
 
-  private mostrarMensaje(mensaje: string, tipo: 'success' | 'error'): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 3000,
-      panelClass: tipo === 'success' ? 'success-snackbar' : 'error-snackbar',
-      horizontalPosition: 'center',
-      verticalPosition: 'top'
+  private mostrarDialogExito(title: string, message: string, buttonText: string = 'Continuar'): void {
+    const dialogData: SuccessDialogData = {
+      title,
+      message,
+      buttonText
+    };
+
+    const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      console.log('✅ Diálogo de éxito cerrado');
+    });
+  }
+
+  private mostrarDialogError(mensaje: string): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      disableClose: false,
+      panelClass: 'confirmation-dialog-panel',
+      data: {
+        itemType: 'ERROR',
+        action: 'error',
+        context: 'admin',
+        extraInfo: {
+          mensaje: mensaje,
+          soloConfirmar: true
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      console.log('❌ Diálogo de error cerrado');
     });
   }
 

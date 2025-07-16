@@ -28,7 +28,7 @@ export class ConfirmationDialogComponent {
 
   get articuloDeterminante(): string {
     const item = this.data.itemType?.toUpperCase();
-    const femeninos = ['PANTALLA', 'PUBLICIDAD', 'PROMOCIÓN'];
+    const femeninos = ['PANTALLA', 'PUBLICIDAD', 'PROMOCIÓN', 'CONFIGURACIÓN DE IVA'];
     if (item && femeninos.includes(item)) {
       return 'ESTA';
     }
