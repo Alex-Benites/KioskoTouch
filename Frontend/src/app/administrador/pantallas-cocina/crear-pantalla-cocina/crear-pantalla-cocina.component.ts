@@ -131,6 +131,7 @@ export class CrearPantallaCocinaComponent implements OnInit {
 
   abrirDialogoExito(titulo: string, mensaje: string, callback?: () => void) {
     const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
       data: {
         title: titulo,
         message: mensaje,

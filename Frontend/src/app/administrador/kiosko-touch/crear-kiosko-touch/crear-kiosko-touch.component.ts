@@ -125,6 +125,7 @@ export class CrearKioskoTouchComponent implements OnInit {
 
   abrirDialogoExito(titulo: string, mensaje: string, callback?: () => void) {
     const dialogRef = this.dialog.open(SuccessDialogComponent, {
+      disableClose: true,
       data: {
         title: titulo,
         message: mensaje,
@@ -416,11 +417,11 @@ export class CrearKioskoTouchComponent implements OnInit {
       this.kioskoTouchService.actualizarKioscoTouch(this.kioscoId, kioscoData).subscribe({
         next: () => {
           this.loading = false;
-          // ✅ CAMBIAR: Usar popup con navegación
-          this.mostrarPopupConNavegacion(
+          // ✅ CAMBIAR: Usar abrirDialogoExito consistente
+          this.abrirDialogoExito(
             '¡Éxito!',
             'Kiosco Touch actualizado exitosamente!',
-            '/administrador/gestion-kiosko-touch'
+            () => this.router.navigate(['/administrador/gestion-kiosko-touch'])
           );
         },
         error: (error) => {
@@ -437,11 +438,11 @@ export class CrearKioskoTouchComponent implements OnInit {
       this.kioskoTouchService.crearKioscoTouch(kioscoData).subscribe({
         next: () => {
           this.loading = false;
-          // ✅ CAMBIAR: Usar popup con navegación
-          this.mostrarPopupConNavegacion(
+          // ✅ CAMBIAR: Usar abrirDialogoExito consistente
+          this.abrirDialogoExito(
             '¡Éxito!',
             'Kiosco Touch creado exitosamente!',
-            '/administrador/gestion-kiosko-touch'
+            () => this.router.navigate(['/administrador/gestion-kiosko-touch'])
           );
         },
         error: (error) => {
