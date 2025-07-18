@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import FileResponse
 from django.http import HttpResponse, Http404
+from django.urls import path, include
 import os
 
 def serve_angular_app(request):
@@ -36,6 +37,8 @@ urlpatterns = [
     path('api/marketing/', include('marketing.urls')),
     path('api/establecimientos/', include('establecimientos.urls')),
     path('api/categoria/', include('categoria.urls')),
+    path('api/ventas/', include('ventas.urls')),
+    path('api/impresion/', include('impresion.urls')),
 ]
 
 # AGREGAR MEDIA/STATIC ANTES del catch-all
