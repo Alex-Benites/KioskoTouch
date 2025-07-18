@@ -38,7 +38,7 @@ urlpatterns = [
     path('api/establecimientos/', include('establecimientos.urls')),
     path('api/categoria/', include('categoria.urls')),
     path('api/ventas/', include('ventas.urls')),
-    path('api/impresion/', include('impresion.urls')),
+   
 ]
 
 # AGREGAR MEDIA/STATIC ANTES del catch-all

@@ -299,7 +299,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
 
       case 'efectivo':
         // ✅ Para efectivo, ir directo a completado
-        this.imprimirFactura();
         this.tipoPago = 'completado';
         break;
 
@@ -361,7 +360,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }*/
 
   private finalizarCompletamente(): void {
-    this.imprimirFactura(); // <-- Imprime antes de limpiar
     this.pedidoService.limpiarTodoCompletamente();
     this.pinpadService.reiniciarEstado();
     this.router.navigate(['/cliente/home']);
@@ -439,37 +437,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     });
   }
 
-  private imprimirFactura(): void {
-    const pedidoCreado = this.pedidoService.getPedidoCreado();
-    if (!pedidoCreado) return;
 
-    const factura = {
-      pedido_id: pedidoCreado.numero,
-      cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
-      productos: this.pedidoService.obtenerProductosParaCarrito().map(p => ({
-        nombre: p.nombre,
-        cantidad: p.cantidad,
-        precio: p.precio_unitario
-      })),
-      subtotal: this.subtotal,
-      iva: this.iva,
-      total: this.montoTotal
-    };
-
-    fetch('http://localhost:8000/api/ventas/factura/imprimir/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(factura)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        console.log('🖨️ Factura enviada a la impresora:', data.printer);
-      } else {
-        console.error('❌ Error imprimiendo factura:', data.error);
-      }
-    });
-  }
 
 
 }
