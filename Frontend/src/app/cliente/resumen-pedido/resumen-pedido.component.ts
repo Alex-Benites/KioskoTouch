@@ -669,8 +669,8 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   private imprimirFacturaFrontend(factura: any): void {
     console.log('🖨️ Imprimiendo factura desde frontend...', factura);
 
-    // Crear ventana nueva para impresión
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    // Crear ventana nueva para impresión (oculta)
+    const printWindow = window.open('', '_blank', 'width=1,height=1,scrollbars=no,resizable=no');
     
     if (!printWindow) {
       alert('❌ Error: No se pudo abrir la ventana de impresión. Verifica que no esté bloqueada.');
@@ -689,20 +689,15 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     
     // Esperar a que cargue completamente y luego imprimir
     printWindow.onload = () => {
-      printWindow.focus();
+      // ✅ AUTOMÁTICO: Imprimir directamente sin mostrar ventana
+      console.log('🖨️ Imprimiendo automáticamente...');
+      printWindow.print();
       
-      if (isKioskMode) {
-        // ✅ MODO KIOSCO: Imprimir automáticamente
-        console.log('🖨️ Modo kiosco detectado - Imprimiendo automáticamente');
-        printWindow.print();
-        setTimeout(() => printWindow.close(), 2000);
-      } else {
-        // ⚠️ NAVEGADOR NORMAL: Mostrar mensaje al usuario
-        console.log('🖨️ Navegador normal - Mostrando diálogo de impresión');
-        alert('🖨️ Se abrirá el diálogo de impresión. Selecciona tu impresora y confirma.');
-        printWindow.print();
-        setTimeout(() => printWindow.close(), 3000);
-      }
+      // ✅ CERRAR VENTANA INMEDIATAMENTE DESPUÉS DE ENVIAR A IMPRIMIR
+      setTimeout(() => {
+        printWindow.close();
+        console.log('✅ Ventana de impresión cerrada');
+      }, 500);
     };
   }
 
@@ -740,7 +735,16 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
         background: white;
       }
       
+      /* ✅ OCULTAR ELEMENTOS DEL NAVEGADOR */
       .no-print { display: none !important; }
+      @page { margin: 0; }
+      
+      /* ✅ FORZAR IMPRESIÓN INMEDIATA */
+      html, body {
+        width: 80mm;
+        height: auto;
+        overflow: hidden;
+      }
     }
     
     body {
@@ -870,9 +874,16 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   </div>
 
   <script>
-    // ✅ AUTO-IMPRIMIR AL CARGAR - ACTIVADO PARA MODO KIOSCO
+    // ✅ AUTO-IMPRIMIR AL CARGAR - ACTIVADO PARA MODO AUTOMÁTICO
     window.onload = function() {
-      window.print();
+      // ✅ IMPRIMIR INMEDIATAMENTE SIN MOSTRAR VISTA PREVIA
+      setTimeout(() => {
+        window.print();
+        // ✅ CERRAR VENTANA DESPUÉS DE ENVIAR A IMPRESORA
+        setTimeout(() => {
+          window.close();
+        }, 100);
+      }, 100);
     };
   </script>
 </body>
