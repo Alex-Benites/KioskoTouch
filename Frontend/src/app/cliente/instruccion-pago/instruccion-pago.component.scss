@@ -187,6 +187,15 @@ $line-color: #e0e0e0;
     padding: 18px;
     font-size: 1.2rem; 
   }
+
+  // ✅ AGREGADO: Responsive para btn-cancelar
+  .btn-cancelar {
+    width: 90%; // ✅ MODIFICADO: Cambio de 100% a 90% para que sea más ancho pero no todo el contenedor
+    max-width: 400px; // ✅ AGREGADO: Ancho máximo para mantener proporciones
+    min-width: 250px; // ✅ AGREGADO: Ancho mínimo en responsive
+    padding: 18px 40px; // ✅ MODIFICADO: Más padding horizontal
+    font-size: 1.2rem;
+  }
 }
 
 /* ✅ AGREGAR ESTOS ESTILOS A TU .scss EXISTENTE */
@@ -399,25 +408,36 @@ $line-color: #e0e0e0;
 }
 
 .btn-cancelar {
-  padding: 0.8rem 2rem;
-  font-size: 1rem;
-  border: 0px solid rgba(235, 50, 50, 0.74);
-  border-radius: 15px;
-  background: rgba(235, 50, 50, 0.74);
-  font-size: clamp(1.3rem, 3vw, 1.6rem); 
-  font-weight: 700; 
+  background-color: rgba(235, 50, 50, 0.74); // ✅ CAMBIADO: Usar background-color como pago-button
   color: white;
+  border: none; // ✅ IGUALADO: Sin border como pago-button
+  border-radius: 25px; // ✅ IGUALADO: Mismo border-radius que pago-button
+  padding: 22px 80px; // ✅ IGUALADO: Mismo padding que pago-button
+  font-size: clamp(1.3rem, 3vw, 1.6rem); // ✅ IGUALADO: Mismo font-size que pago-button
+  font-weight: 700; // ✅ IGUALADO: Mismo font-weight que pago-button
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease; // ✅ IGUALADO: Misma transition que pago-button
+  box-shadow: 0 5px 15px rgba(235, 50, 50, 0.4); // ✅ IGUALADO: Mismo box-shadow que pago-button
+  display: inline-block; // ✅ AGREGADO: Asegurar que se comporte igual
+  text-align: center; // ✅ AGREGADO: Centrar texto
+  min-width: 340px; // ✅ MODIFICADO: Ancho mínimo más grande
+  width: auto; // ✅ AGREGADO: Permitir que crezca según contenido
+  white-space: nowrap; // ✅ AGREGADO: Evitar que el texto se divida en líneas
 
   &:hover:not(:disabled) {
-    background: rgba(255,255,255,0.1);
-    border-color: white;
+    background-color: rgba(200, 40, 40, 0.9);
+    transform: translateY(-3px); // ✅ IGUALADO: Mismo transform que pago-button
+  }
+
+  &:active {
+    transform: translateY(0); // ✅ IGUALADO: Mismo active que pago-button
+    box-shadow: 0 2px 8px rgba(235, 50, 50, 0.3); // ✅ IGUALADO: Mismo active shadow
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6; // ✅ IGUALADO: Misma opacidad que pago-button
     cursor: not-allowed;
+    transform: none !important; // ✅ IGUALADO: Mismo comportamiento disabled
   }
 }
 
