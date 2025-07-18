@@ -684,15 +684,25 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     printWindow.document.write(facturaHTML);
     printWindow.document.close();
 
+    // ✅ MEJORADO: Detectar si es modo kiosco o navegador normal
+    const isKioskMode = window.outerHeight === screen.height && window.outerWidth === screen.width;
+    
     // Esperar a que cargue completamente y luego imprimir
     printWindow.onload = () => {
       printWindow.focus();
-      printWindow.print();
       
-      // Cerrar ventana después de imprimir (opcional)
-      setTimeout(() => {
-        printWindow.close();
-      }, 1000);
+      if (isKioskMode) {
+        // ✅ MODO KIOSCO: Imprimir automáticamente
+        console.log('🖨️ Modo kiosco detectado - Imprimiendo automáticamente');
+        printWindow.print();
+        setTimeout(() => printWindow.close(), 2000);
+      } else {
+        // ⚠️ NAVEGADOR NORMAL: Mostrar mensaje al usuario
+        console.log('🖨️ Navegador normal - Mostrando diálogo de impresión');
+        alert('🖨️ Se abrirá el diálogo de impresión. Selecciona tu impresora y confirma.');
+        printWindow.print();
+        setTimeout(() => printWindow.close(), 3000);
+      }
     };
   }
 
@@ -860,10 +870,10 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   </div>
 
   <script>
-    // ✅ AUTO-IMPRIMIR AL CARGAR (OPCIONAL)
-    // window.onload = function() {
-    //   window.print();
-    // };
+    // ✅ AUTO-IMPRIMIR AL CARGAR - ACTIVADO PARA MODO KIOSCO
+    window.onload = function() {
+      window.print();
+    };
   </script>
 </body>
 </html>`;
