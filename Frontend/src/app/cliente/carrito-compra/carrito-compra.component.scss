@@ -426,7 +426,7 @@ $font-family-base: 'Lato', sans-serif;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-top: 3px solid $kiosko-red;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  height: 160px;
+  height: 180px; // ✅ AUMENTADO: De 160px a 180px para que los botones se vean completos
   display: flex;
   flex-direction: column;
 
@@ -436,13 +436,13 @@ $font-family-base: 'Lato', sans-serif;
     font-size: 18px;
     font-weight: 600;
     margin: 0;
-    padding: 15px 30px;
+    padding: 12px 30px; // ✅ REDUCIDO: De 15px a 12px para dar más espacio a los botones
     text-align: center;
   }
 
   &__content {
     background-color: white;
-    padding: 20px 30px;
+    padding: 15px 30px 20px 30px; // ✅ AJUSTADO: Más padding abajo para los botones
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -453,7 +453,7 @@ $font-family-base: 'Lato', sans-serif;
     font-size: 16px;
     color: #333;
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 10px; // ✅ REDUCIDO: De 15px a 10px para dar más espacio a los botones
     display: flex;
     gap: 20px;
     justify-content: center;

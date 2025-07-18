@@ -54,7 +54,7 @@ $category-inactive-bg: #FFFFFF;
 .menu-content-layout {
   display: flex;
   flex: 1;
-  height: calc(100vh - 200px - 120px); // Total - footer - header/banner
+  height: calc(100vh - 200px - 140px); // ✅ AJUSTADO: De 120px a 140px para el footer más alto
   overflow: hidden;
 }
 
@@ -527,7 +527,7 @@ $category-inactive-bg: #FFFFFF;
   width: 100%;
   box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
   background-color: white;
-  height: 120px;
+  height: 140px; // ✅ AUMENTADO: De 120px a 140px para que los botones se vean completos
 
   &__title {
     background-color: $kiosko-red;
@@ -535,17 +535,17 @@ $category-inactive-bg: #FFFFFF;
     font-size: 18px;
     font-weight: 600;
     margin: 0;
-    padding: 10px 30px;
+    padding: 8px 30px; // ✅ REDUCIDO: De 10px a 8px para dar más espacio a los botones
     text-align: center;
   }
 
   &__content {
     background-color: white;
-    padding: 15px 30px;
+    padding: 10px 30px 15px 30px; // ✅ AJUSTADO: Más padding abajo para los botones
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px; // ✅ REDUCIDO: De 10px a 8px
     flex: 1;
   }
 
@@ -559,13 +559,13 @@ $category-inactive-bg: #FFFFFF;
 
   &__details {
     display: flex;
-    gap: 325px;
+    gap: 120px;
     justify-content: center;
   }
 
   &__actions {
     display: flex;
-    gap: 115px;
+    gap: 40px;
     width: 100%;
     max-width: 600px;
     max-height: 100%;
