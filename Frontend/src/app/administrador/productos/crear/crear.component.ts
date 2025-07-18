@@ -186,9 +186,9 @@ export class CrearComponent implements OnInit {
           }, 500);
         }
 
-        // Deshabilitar categoría en modo edición
-        this.productoForm.get('categoria')?.disable();
-        console.log('🔒 Campo categoría deshabilitado para edición');
+        // ✅ CAMBIO: Permitir editar categoría en modo edición
+        // this.productoForm.get('categoria')?.disable();
+        console.log('� Campo categoría habilitado para edición');
 
         // Manejar imagen actual
         if (producto.imagen_url) {
@@ -323,10 +323,8 @@ export class CrearComponent implements OnInit {
   cargarIngredientesPorCategoria(categoriaNombre: string): void {
     console.log('🥗 Cargando ingredientes para:', categoriaNombre);
 
-    // Limpiar selección anterior cuando se cambia de categoría (solo en modo creación)
-    if (!this.isEditMode) {
-      this.ingredientesSeleccionados = [];
-    }
+    // Limpiar selección anterior cuando se cambia de categoría
+    this.ingredientesSeleccionados = [];
 
     console.log('🔐 Enviando petición con token de autenticación');
 
@@ -391,17 +389,27 @@ export class CrearComponent implements OnInit {
 
 
   onCategoriaSeleccionada(event: MatSelectChange): void {
-    if (this.isEditMode) {
-      console.log('🚫 Cambio de categoría bloqueado en modo edición');
-      return;
-    }
-
     const categoriaId = event.value;
     const categoria = this.categorias.find(cat => cat.id === categoriaId);
 
     console.log('🏷️ Categoría seleccionada:', categoria);
 
     if (categoria) {
+      // ✅ CAMBIO: Permitir cambio de categoría también en modo edición
+      if (this.isEditMode) {
+        console.log('🔄 Cambiando categoría en modo edición, recargando ingredientes...');
+        
+        // Mostrar confirmación antes de cambiar los ingredientes
+        const confirmar = confirm(`⚠️ Al cambiar la categoría se perderán los ingredientes actuales. ¿Deseas continuar?`);
+        if (!confirmar) {
+          // Si no confirma, no hacer el cambio
+          return;
+        }
+        
+        // Limpiar ingredientes seleccionados antes de cargar nuevos
+        this.ingredientesSeleccionados = [];
+      }
+
       // ✅ NUEVO: Mapeo dinámico usando el nombre de la categoría
       const categoriaIngredientes = this.normalizarNombreCategoria(categoria.nombre);
       
@@ -412,10 +420,12 @@ export class CrearComponent implements OnInit {
       } else {
         console.log('📭 No hay ingredientes para esta categoría');
         this.ingredientesDisponibles = [];
+        this.ingredientesSeleccionados = [];
       }
     } else {
       console.log('❌ Categoría no encontrada');
       this.ingredientesDisponibles = [];
+      this.ingredientesSeleccionados = [];
     }
   }
 
@@ -454,9 +464,7 @@ export class CrearComponent implements OnInit {
 
   get categoriaError(): string {
     const control = this.productoForm.get('categoria');
-    if (this.isEditMode) {
-      return '';
-    }
+    // ✅ CAMBIO: Mostrar errores de categoría también en modo edición
     if (control?.hasError('required') && control?.touched) {
       return 'La categoría es obligatoria';
     }
@@ -502,14 +510,9 @@ export class CrearComponent implements OnInit {
     // ✅ NUEVO: Marcar todos los campos como touched para mostrar errores
     this.marcarTodosLosCamposComoTocados();
 
-    // Obtener valor de categoría incluso si está deshabilitado
-    let categoriaValue;
-    if (this.isEditMode) {
-      categoriaValue = this.productoForm.get('categoria')?.value;
-      console.log('📝 Categoría en edición:', categoriaValue);
-    } else {
-      categoriaValue = this.productoForm.get('categoria')?.value;
-    }
+    // Obtener valor de categoría (ahora siempre habilitado)
+    const categoriaValue = this.productoForm.get('categoria')?.value;
+    console.log('📝 Categoría seleccionada:', categoriaValue);
 
     // Debug del estado del formulario
     console.log('📋 Estado del formulario:', {
@@ -900,7 +903,7 @@ export class CrearComponent implements OnInit {
       }
     }
 
-    // Validar categoría (aunque esté disabled, debe tener valor)
+    // Validar categoría (ahora también editable en modo edición)
     const categoriaValue = this.productoForm.get('categoria')?.value;
     if (!categoriaValue) {
       console.log('❌ Categoría requerida');
