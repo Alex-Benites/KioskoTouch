@@ -628,4 +628,35 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  imprimirFacturaPrueba(): void {
+    // Prepara los datos igual que para el pedido real
+    const factura = {
+      pedido_id: 'PRUEBA-' + Date.now(),
+      cliente: this.datosFacturacion.nombreCompleto || 'Consumidor Final',
+      productos: this.productosCarrito.map(p => ({
+        nombre: this.obtenerNombreProducto(p),
+        cantidad: p.cantidad,
+        precio: p.precio_unitario
+      })),
+      subtotal: this.calcularSubtotal(),
+      iva: this.calcularIVA(),
+      total: this.calcularTotal()
+    };
+
+    fetch('http://localhost:8000/api/impresion/factura/imprimir/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(factura)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('🖨️ Factura de prueba enviada a la impresora');
+      } else {
+        alert('❌ Error imprimiendo: ' + data.error);
+      }
+    });
+  }
+
 }

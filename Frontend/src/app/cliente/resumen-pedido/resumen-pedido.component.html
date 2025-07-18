@@ -206,6 +206,15 @@
         <mat-icon>arrow_forward</mat-icon> <!-- ✅ CAMBIAR: Material Icon -->
         Continuar
       </button>
+
+      <button
+        class="secondary-button"
+        (click)="imprimirFacturaPrueba()"
+        [disabled]="cantidadProductos === 0">
+        <mat-icon>print</mat-icon>
+        Imprimir Prueba
+      </button>
+
     </div>
 
   </main>
