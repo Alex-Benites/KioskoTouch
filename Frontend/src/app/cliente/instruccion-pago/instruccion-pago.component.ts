@@ -540,53 +540,58 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     // ✅ GUARDAR EL CONTENIDO ACTUAL
     const contenidoOriginal = document.body.innerHTML;
     const tituloOriginal = document.title;
+    const style = document.createElement('style');
     
     try {
       // ✅ GENERAR HTML DE LA FACTURA
       const facturaHTML = this.generarHTMLFacturaDirecto(factura);
       
+      // ✅ AGREGAR ESTILOS PARA IMPRESIÓN TÉRMICA DIRECTAMENTE
+      style.innerHTML = this.obtenerEstilosImpresion();
+      document.head.appendChild(style);
+      
       // ✅ REEMPLAZAR TEMPORALMENTE EL CONTENIDO DE LA PÁGINA
       document.title = `Factura - ${factura.pedido_id}`;
       document.body.innerHTML = facturaHTML;
       
-      // ✅ AGREGAR ESTILOS PARA IMPRESIÓN TÉRMICA DIRECTAMENTE
-      const style = document.createElement('style');
-      style.innerHTML = this.obtenerEstilosImpresion();
-      document.head.appendChild(style);
-      
       console.log('🖨️ Enviando comando de impresión directa...');
       
-      // ✅ IMPRIMIR DIRECTAMENTE
-      window.print();
-      
-      // ✅ RESTAURAR CONTENIDO ORIGINAL INMEDIATAMENTE DESPUÉS
-      setTimeout(() => {
-        try {
-          document.body.innerHTML = contenidoOriginal;
-          document.title = tituloOriginal;
-          
-          // ✅ REMOVER ESTILOS DE IMPRESIÓN
-          if (style.parentNode) {
-            document.head.removeChild(style);
+      // ✅ IMPRIMIR Y RESTAURAR USANDO requestAnimationFrame PARA FLUIDEZ
+      requestAnimationFrame(() => {
+        window.print();
+        
+        // ✅ RESTAURAR CONTENIDO ORIGINAL INMEDIATAMENTE DESPUÉS
+        setTimeout(() => {
+          try {
+            document.body.innerHTML = contenidoOriginal;
+            document.title = tituloOriginal;
+            
+            // ✅ REMOVER ESTILOS DE IMPRESIÓN
+            if (style.parentNode) {
+              document.head.removeChild(style);
+            }
+            
+            console.log('✅ Contenido original restaurado');
+            
+            // ✅ REINICIALIZAR ANGULAR DESPUÉS DE RESTAURAR
+            this.reinicializarComponente();
+            
+          } catch (restoreError) {
+            console.error('⚠️ Error restaurando contenido:', restoreError);
+            // ✅ FORZAR RECARGA DE LA PÁGINA COMO ÚLTIMO RECURSO
+            window.location.reload();
           }
-          
-          console.log('✅ Contenido original restaurado');
-          
-          // ✅ REINICIALIZAR ANGULAR DESPUÉS DE RESTAURAR
-          this.reinicializarComponente();
-          
-        } catch (restoreError) {
-          console.error('⚠️ Error restaurando contenido:', restoreError);
-          // ✅ FORZAR RECARGA DE LA PÁGINA COMO ÚLTIMO RECURSO
-          window.location.reload();
-        }
-      }, 1000);
+        }, 50);
+      });
       
     } catch (error) {
       console.error('❌ Error en impresión directa:', error);
       // ✅ RESTAURAR CONTENIDO EN CASO DE ERROR
       document.body.innerHTML = contenidoOriginal;
       document.title = tituloOriginal;
+      if (style.parentNode) {
+        document.head.removeChild(style);
+      }
     }
   }
 
