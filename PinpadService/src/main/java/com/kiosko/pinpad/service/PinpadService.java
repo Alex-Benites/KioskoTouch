@@ -22,14 +22,11 @@ public class PinpadService {
     @Autowired
     private PinpadConfig config;
     
-    /**
-     * ✅ PROCESAR PAGO CON PINPAD - VERSIÓN SIMPLIFICADA
-     */
     public PagoResponse procesarPago(PagoRequest request) {
         logger.info("🎯 Iniciando proceso de pago: Monto={}", request.getMontoTotal());
         
         try {
-            // ✅ 1. CREAR CONFIGURACIÓN DATAFAST
+            // Configuración del PinPad con los datos del negocio y reglas
             LANConfig cfg = new LANConfig(
                 config.getPinpadIp(),
                 config.getPinpadPuerto(), 
@@ -41,13 +38,13 @@ public class PinpadService {
                 config.getSha()
             );
             
-            // ✅ 2. CREAR INSTANCIA LAN
+            // Se instancia un objeto LAN con las configuraciones anteriores
             LAN lan = new LAN(cfg);
             
-            // ✅ 3. PREPARAR DATOS DE ENVÍO
+            // Se instancia un objeto EnvioProcesoPago para preparar los datos de envío
             EnvioProcesoPago envio = new EnvioProcesoPago();
             
-            // ✅ Asignar campos básicos
+            // Asignar los campos básicos del envío
             envio.TipoTransaccion = request.getTipoTransaccion();
             envio.RedAdquirente = request.getRedAdquirente();
             envio.MontoTotal = request.getMontoTotal();
@@ -55,37 +52,55 @@ public class PinpadService {
             envio.Base0 = request.getBase0();
             envio.IVA = request.getIva();
             
-            logger.info("📡 Enviando transacción al PinPad...");
+            logger.info("Enviando transacción al PinPad...");
             
-            // ✅ 4. EJECUTAR TRANSACCIÓN
+            // Se ejecuta la transacción de pago
             RespuestaProcesoPago respuesta = lan.ProcesoPago(envio);
             
-            // ✅ VALIDAR RESPUESTA ANTES DE PROCESAR
+            // Primero se valida que la respuesta no sea nula
             if (respuesta == null) {
                 logger.error("❌ Respuesta nula del PinPad");
                 return new PagoResponse("ER", "PinPad no respondió");
             }
             
-            // ✅ LOG DE DEBUG PARA VER QUÉ RECIBIMOS
+            // LOG DE RESPUESTA CRUDA
             logger.debug("📥 Respuesta cruda del PinPad: CodigoRespuesta={}", respuesta.CodigoRespuesta);
             
-            // ✅ VALIDAR QUE LA RESPUESTA TENGA EL FORMATO ESPERADO
+            // Validar que la respuesta tenga el formato esperado
             if (respuesta.CodigoRespuesta == null || respuesta.CodigoRespuesta.isEmpty()) {
                 logger.error("❌ Código de respuesta vacío del PinPad");
                 return new PagoResponse("ER", "Respuesta inválida del PinPad");
             }
             
-            // ✅ 5. CREAR RESPUESTA BÁSICA (solo campos que SÍ existen)
+            // Crear la respuesta de pago
             PagoResponse response = new PagoResponse();
-            
-            // ✅ Campos básicos que SABEMOS que existen
             response.setCodigoRespuesta(respuesta.CodigoRespuesta);
-            response.setMensajeRespuesta(getMensajePorCodigo(respuesta.CodigoRespuesta));
-            
-            // ✅ Campos que probablemente existen en tu PagoResponse
-            if (respuesta.Autorizacion != null) {
-                response.setAutorizacion(respuesta.Autorizacion);
+
+            // Un pago es exitoso solo si tiene código '00' Y una autorización válida.
+            boolean esExitoso = "00".equals(respuesta.CodigoRespuesta) && 
+                                respuesta.Autorizacion != null && 
+                                !respuesta.Autorizacion.trim().isEmpty();
+
+            if (esExitoso) {
+                logger.info("✅ Transacción AUTORIZADA. Código: {}, Autorización: {}", respuesta.CodigoRespuesta, respuesta.Autorizacion);
+                response.setMensajeRespuesta("AUTORIZADO");
+                response.setExitoso(true);
+            } else {
+                // Si el código es '00' pero no hay autorización, es un rechazo.
+                String mensajeError = "00".equals(respuesta.CodigoRespuesta) 
+                    ? "Transacción Rechazada (Sin autorización)" 
+                    : getMensajePorCodigo(respuesta.CodigoRespuesta);
+                
+                logger.warn("Transacción RECHAZADA. Código: {}, Mensaje: {}", respuesta.CodigoRespuesta, mensajeError);
+                
+                // Sobrescribir el código a "RZ" (Rechazado) para que el frontend lo identifique claramente.
+                response.setCodigoRespuesta("RZ"); 
+                response.setMensajeRespuesta(mensajeError);
+                response.setExitoso(false);
             }
+            
+            // Asignar el resto de los campos que puedan existir
+            response.setAutorizacion(respuesta.Autorizacion);
             if (respuesta.Referencia != null) {
                 response.setReferencia(respuesta.Referencia);
             }
@@ -102,8 +117,8 @@ public class PinpadService {
                 response.setModoLectura(respuesta.ModoLectura);
             }
             
-            logger.info("✅ Respuesta del PinPad: Código={}, Autorización={}", 
-                       response.getCodigoRespuesta(), response.getAutorizacion());
+            logger.info("✅ Respuesta final enviada al frontend: Código={}, Mensaje={}, Exitoso={}", 
+                       response.getCodigoRespuesta(), response.getMensajeRespuesta(), response.isExitoso());
             
             return response;
             
