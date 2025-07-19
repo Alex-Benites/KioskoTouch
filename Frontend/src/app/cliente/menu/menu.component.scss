@@ -54,7 +54,7 @@ $category-inactive-bg: #FFFFFF;
 .menu-content-layout {
   display: flex;
   flex: 1;
-  height: calc(100vh - 200px - 140px); // ✅ AJUSTADO: De 120px a 140px para el footer más alto
+  height: calc(100vh - 200px - 200px);
   overflow: hidden;
 }
 
@@ -527,31 +527,31 @@ $category-inactive-bg: #FFFFFF;
   width: 100%;
   box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
   background-color: white;
-  height: 140px; // ✅ AUMENTADO: De 120px a 140px para que los botones se vean completos
+  height: 200px;
 
   &__title {
     background-color: $kiosko-red;
     color: white;
-    font-size: 18px;
+    font-size: 28px;
     font-weight: 600;
     margin: 0;
-    padding: 8px 30px; // ✅ REDUCIDO: De 10px a 8px para dar más espacio a los botones
+    padding: 15px 30px;
     text-align: center;
   }
 
   &__content {
     background-color: white;
-    padding: 10px 30px 15px 30px; // ✅ AJUSTADO: Más padding abajo para los botones
+    padding: 18px 30px 25px 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px; // ✅ REDUCIDO: De 10px a 8px
+    gap: 15px;
     flex: 1;
   }
 
   &__empty-message,
   &__details {
-    font-size: 25px;
+    font-size: 30px;
     color: #333;
     text-align: center;
     margin: 0;
@@ -577,8 +577,8 @@ $category-inactive-bg: #FFFFFF;
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 12px 20px;
-    font-size: 14px;
+    padding: 18px 26px;
+    font-size: 24px !important;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
