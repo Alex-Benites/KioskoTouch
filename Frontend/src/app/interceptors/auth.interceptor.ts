@@ -12,7 +12,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     '/cliente',                                   
     '/api/marketing/publicidades/activas/',       
     '/api/comun/estados/',                      
-    '/auth/login/'                                 
+    '/auth/login/',
+    '/api/catalogo/categorias/',
+    '/api/catalogo/menus/',    
+    '/api/catalogo/productos/',
+    '/api/marketing/promociones/'                      
   ];
 
   const isPublicRoute = publicAPIs.some(api => req.url.includes(api));
