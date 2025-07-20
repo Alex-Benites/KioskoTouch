@@ -65,9 +65,14 @@ import { PerfilUsuarioComponent } from './perfil-usuario/perfil-usuario.componen
 
 // ✅ AGREGAR: Componente de IVA
 import { GestionIvaComponent } from './gestion-iva/gestion-iva.component';
+import { WelcomeComponent } from './welcome/welcome.component';
 
 export const administradorRoutes: Routes = [
   // 🔓 Rutas públicas
+  {
+    path: 'welcome',
+    component: WelcomeComponent
+  },
   {
     path: 'login',
     component: LoginComponent,
