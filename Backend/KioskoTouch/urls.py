@@ -3,9 +3,13 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import FileResponse
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import path, include
 import os
+
+def redirect_to_welcome(request):
+    """Redirigir la raíz del sitio a /administrador/welcome"""
+    return HttpResponseRedirect('/administrador/welcome')
 
 def serve_angular_app(request):
     """Servir la aplicación Angular desde static files"""
@@ -30,6 +34,7 @@ def serve_angular_app(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('main.urls')),
+    path('', redirect_to_welcome, name='root_redirect'),  
     path('api/usuarios/', include('usuarios.urls')),
     path('api/catalogo/', include('catalogo.urls')),
     path('api/comun/', include('comun.urls')),
