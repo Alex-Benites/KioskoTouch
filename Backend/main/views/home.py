@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 def home(request):
-    return HttpResponse("<h1>Bienvenido a KioskoTouch</h1>")
+    return HttpResponseRedirect('/administrador/welcome')

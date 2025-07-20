@@ -33,7 +33,6 @@ def serve_angular_app(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('main.urls')),
     path('', redirect_to_welcome, name='root_redirect'),  
     path('api/usuarios/', include('usuarios.urls')),
     path('api/catalogo/', include('catalogo.urls')),
