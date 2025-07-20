@@ -13,7 +13,7 @@ import { CatalogoService } from '../../services/catalogo.service';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import { SuccessDialogComponent, SuccessDialogData } from '../../shared/success-dialog/success-dialog.component';
 
-// ✅ INTERFAZ MÁS ESPECÍFICA
+
 interface ConfiguracionIVA {
   id?: number;
   porcentaje_iva: number;
@@ -60,8 +60,8 @@ export class GestionIvaComponent implements OnInit {
         Validators.required,
         Validators.min(0),
         Validators.max(99.99),
-        // ✅ MEJORAR: Patrón más flexible que acepta enteros y decimales
-        Validators.pattern(/^\d+(\.\d{1,2})?$/)  // Acepta: 15, 15.0, 15.00
+        
+        Validators.pattern(/^\d+(\.\d{1,2})?$/) 
       ]]
     });
   }
@@ -83,22 +83,21 @@ export class GestionIvaComponent implements OnInit {
             porcentaje_iva: response.data.porcentaje_iva
           });
 
-          console.log('✅ IVA actual cargado:', this.ivaActual);
+          
         } else {
           this.isEditMode = false;
-          console.log('ℹ️ No hay IVA configurado, modo creación');
         }
         this.loading = false;
       },
       error: (error) => {
-        console.error('❌ Error al cargar IVA:', error);
+        
         this.loading = false;
         this.isEditMode = false;
       }
     });
   }
 
-  // ✅ AGREGAR: Método para normalizar el porcentaje
+  
   private normalizarPorcentaje(valor: any): number {
     if (typeof valor === 'string') {
       // Convertir string a número
@@ -146,9 +145,7 @@ export class GestionIvaComponent implements OnInit {
   }
 
   private procesarFormulario(datosNormalizados: any): void {
-    console.log('📤 Enviando configuración IVA:', datosNormalizados);
-    console.log('🔢 Valor original:', this.ivaForm.value.porcentaje_iva);
-    console.log('🔢 Valor normalizado:', datosNormalizados.porcentaje_iva);
+    
 
     this.loading = true;
 
@@ -175,7 +172,7 @@ export class GestionIvaComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('❌ Error al guardar IVA:', error);
+        
         this.mostrarDialogError('Error al conectar con el servidor');
         this.loading = false;
       }
@@ -201,7 +198,7 @@ export class GestionIvaComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(() => {
-      console.log('✅ Diálogo de éxito cerrado');
+      
     });
   }
 
@@ -222,12 +219,10 @@ export class GestionIvaComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(() => {
-      console.log('❌ Diálogo de error cerrado');
     });
   }
 
-  // Getters para errores
-  // ✅ MEJORAR: Getter para errores más específico
+  
   get porcentajeError(): string {
     const control = this.ivaForm.get('porcentaje_iva');
     if (control?.hasError('required') && control?.touched) {
@@ -245,7 +240,6 @@ export class GestionIvaComponent implements OnInit {
     return '';
   }
 
-  // Método para resetear el formulario
   resetearFormulario(): void {
     this.ivaForm.reset();
     this.cargarIvaActual();

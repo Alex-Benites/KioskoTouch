@@ -143,25 +143,20 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     }
   };
 
-  // Tipos de gráficos
   barChartType: ChartType = 'bar';
   doughnutChartType: ChartType = 'doughnut';
   horizontalBarChartType: ChartType = 'bar';
 
-  // KPIs
   porcentajeUsuarios = 0;
   totalDescuentos = 0;
   totalPedidosSistema = 0;
   totalPedidosPeriodo = 0;
   
-  // Tabla de pedidos por mes
   pedidosPorMes: PedidoPorMes[] = [];
 
-  // ✅ COLOR ÚNICO PARA TODAS LAS ESTADÍSTICAS
   private readonly colorPrincipal = '#D63031';
   private readonly colorInactivo = '#9E9E9E';
 
-  // Generar gradientes para las barras
   private crearGradiente(ctx: CanvasRenderingContext2D, chartArea: any): CanvasGradient {
     const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
     gradient.addColorStop(0, '#B71C1C');
@@ -171,7 +166,6 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
   }
 
   constructor() {
-    // Registrar componentes de Chart.js
     Chart.register(...registerables);
   }
 
@@ -188,25 +182,20 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     this.hasError = false;
     this.errorMessage = '';
 
-    console.log('🔄 Cargando estadísticas desde el backend...');
 
     const sub = this.estadisticasService.getEstadisticasPromociones().subscribe({
       next: (data: EstadisticasPromociones) => {
-        console.log('📊 Estadísticas recibidas del backend:', data);
         
         // ✅ VALIDAR QUE LLEGUEN DATOS
         if (!data || typeof data !== 'object') {
-          console.error('❌ Datos inválidos recibidos del backend:', data);
           this.mostrarError('Los datos recibidos del backend son inválidos');
           return;
         }
 
         this.procesarDatos(data);
         this.isLoading = false;
-        console.log('✅ Estadísticas procesadas correctamente');
       },
       error: (error: ApiError) => {
-        console.error('❌ Error al cargar estadísticas:', error);
         this.mostrarError(error.message || 'Error al conectar con el servidor');
       }
     });
@@ -219,11 +208,9 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     this.errorMessage = mensaje;
     this.isLoading = false;
     
-    console.log('🚫 No se cargarán datos por defecto. Mostrando error al usuario.');
   }
 
   private procesarDatos(data: EstadisticasPromociones): void {
-    console.log('🔄 Procesando datos recibidos...');
     
     try {
       this.configurarGraficoBarras(data);
@@ -232,19 +219,15 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
       this.configurarKPIs(data);
       this.configurarTablaMensual(data);
       
-      console.log('✅ Todos los gráficos y tablas configurados correctamente');
     } catch (error) {
-      console.error('❌ Error procesando datos:', error);
       this.mostrarError('Error al procesar los datos recibidos');
     }
   }
 
   private configurarGraficoBarras(data: EstadisticasPromociones): void {
     const ventas = data.ventas_por_promocion || [];
-    console.log('📊 Configurando gráfico de barras con:', ventas);
     
     if (ventas.length === 0) {
-      console.log('⚠️ No hay datos de ventas por promoción');
       this.barChartData = {
         labels: ['Sin datos'],
         datasets: [{
@@ -257,7 +240,6 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // ✅ USAR SOLO EL COLOR PRINCIPAL PARA TODAS LAS BARRAS
     const coloresArray = Array(ventas.length).fill(this.colorPrincipal);
     
     this.barChartData = {
@@ -281,7 +263,6 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     
     console.log('🍩 Configurando gráfico doughnut - Activas:', activas, 'Inactivas:', inactivas);
     
-    // ✅ USAR COLOR PRINCIPAL PARA ACTIVAS Y GRIS PARA INACTIVAS
     this.doughnutChartData = {
       labels: ['Activas', 'Inactivas'],
       datasets: [
@@ -297,10 +278,8 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
 
   private configurarGraficoBarrasHorizontales(data: EstadisticasPromociones): void {
     const promociones = data.promociones_mas_usadas || [];
-    console.log('📊 Configurando gráfico horizontal con:', promociones);
 
     if (promociones.length === 0) {
-      console.log('⚠️ No hay datos de promociones más usadas');
       this.horizontalBarChartData = {
         labels: ['Sin datos'],
         datasets: [{
@@ -313,7 +292,6 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ USAR SOLO EL COLOR PRINCIPAL PARA TODAS LAS BARRAS
     const coloresArray = Array(promociones.length).fill(this.colorPrincipal);
 
     this.horizontalBarChartData = {

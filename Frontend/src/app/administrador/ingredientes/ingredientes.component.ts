@@ -19,7 +19,6 @@ import { Ingrediente } from '../../models/catalogo.model';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 
 
-// ✅ INTERFAZ PARA ORGANIZAR DATOS
 interface CategoriaConIngredientes {
   categoria: Categoria;
   ingredientes: Ingrediente[];
@@ -52,7 +51,6 @@ export class IngredientesComponent implements OnInit {
   private authService = inject(AuthService);
   private dialog = inject(MatDialog);
 
-  // ✅ NUEVA ESTRUCTURA DINÁMICA
   categoriasConIngredientes: CategoriaConIngredientes[] = [];
   cargandoCategorias = false;
   errorCargandoCategorias = false;
@@ -61,27 +59,22 @@ export class IngredientesComponent implements OnInit {
     this.cargarCategoriasYIngredientes();
   }
 
-  // ✅ CARGAR CATEGORÍAS DINÁMICAS Y SUS INGREDIENTES
   cargarCategoriasYIngredientes() {
     this.cargandoCategorias = true;
     this.errorCargandoCategorias = false;
 
-    console.log('🔄 Cargando categorías dinámicas...');
 
     this.categoriaService.getCategorias().subscribe({
       next: (categorias) => {
-        console.log(`✅ ${categorias.length} categorías cargadas`);
 
-        // Filtrar solo categorías que tienen ingredientes o crear estructura vacía
         this.categoriasConIngredientes = categorias
           .filter(categoria => categoria.ingredientes_count !== undefined)
           .sort((a, b) => {
-            // Ordenar por más ingredientes primero, luego alfabético
             const countA = a.ingredientes_count || 0;
             const countB = b.ingredientes_count || 0;
 
             if (countA !== countB) {
-              return countB - countA; // Más ingredientes primero
+              return countB - countA; 
             }
 
             return a.nombre.localeCompare(b.nombre);
@@ -94,7 +87,6 @@ export class IngredientesComponent implements OnInit {
 
         this.cargandoCategorias = false;
 
-        // Cargar ingredientes para cada categoría
         this.cargarTodosLosIngredientes();
       },
       error: (error) => {
@@ -109,7 +101,6 @@ export class IngredientesComponent implements OnInit {
   }
 
   cargarTodosLosIngredientes() {
-    console.log('🔄 Cargando ingredientes para todas las categorías...');
 
     this.categoriasConIngredientes.forEach(categoriaItem => {
       this.cargarIngredientesPorCategoria(categoriaItem);
@@ -120,21 +111,18 @@ export class IngredientesComponent implements OnInit {
     const nombreCategoria = categoriaItem.categoria.nombre.toLowerCase();
     categoriaItem.cargando = true;
 
-    console.log(`🔍 Cargando ingredientes para: ${categoriaItem.categoria.nombre}`);
 
     this.catalogoService.getIngredientesPorCategoriaFiltro(nombreCategoria)
       .subscribe({
         next: (ingredientes) => {
           categoriaItem.ingredientes = ingredientes;
           categoriaItem.cargando = false;
-          console.log(`✅ ${ingredientes.length} ingredientes cargados para ${categoriaItem.categoria.nombre}`);
         },
         error: (error) => {
           console.error(`❌ Error al cargar ingredientes de ${categoriaItem.categoria.nombre}:`, error);
           categoriaItem.cargando = false;
-          categoriaItem.ingredientes = []; // Asegurar array vacío en caso de error
+          categoriaItem.ingredientes = []; 
 
-          // Solo mostrar error si no es un 404 (categoría sin ingredientes)
           if (error.status !== 404) {
             this.snackBar.open(
               `Error al cargar ingredientes de ${categoriaItem.categoria.nombre}`,
@@ -146,53 +134,40 @@ export class IngredientesComponent implements OnInit {
       });
   }
 
-  // ✅ HELPER: Recargar una categoría específica
   recargarCategoria(categoriaItem: CategoriaConIngredientes) {
     this.cargarIngredientesPorCategoria(categoriaItem);
   }
 
   crearIngrediente() {
-    console.log('✏️ Intentando crear nuevo ingrediente');
 
-    // ✅ AGREGADO: Validación de permisos para crear
     if (!this.authService.hasPermission('catalogo.add_appkioskoingredientes')) {
-      console.log('❌ Sin permisos para crear ingredientes');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, redirigiendo a creación');
     this.router.navigate(['/administrador/gestion-ingredientes/crear']);
   }
 
   editarIngrediente(id: number) {
     console.log('✏️ Intentando editar ingrediente ID:', id);
 
-    // ✅ AGREGADO: Validación de permisos para editar
     if (!this.authService.hasPermission('catalogo.change_appkioskoingredientes')) {
-      console.log('❌ Sin permisos para editar ingredientes');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-ingredientes/crear', id]);
   }
 
-  // ✅ REEMPLAZAR: Método eliminarIngrediente con diálogo elegante
   eliminarIngrediente(ingrediente: Ingrediente) {
     console.log('🗑️ Intentando eliminar ingrediente:', ingrediente.nombre);
 
-    // ✅ AGREGADO: Validación de permisos para eliminar
     if (!this.authService.hasPermission('catalogo.delete_appkioskoingredientes')) {
-      console.log('❌ Sin permisos para eliminar ingredientes');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, mostrando diálogo de confirmación');
 
-    // ✅ NUEVO: Abrir diálogo de confirmación
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '450px',
       disableClose: false,
@@ -200,33 +175,25 @@ export class IngredientesComponent implements OnInit {
       data: {
         itemType: `INGREDIENTE "${ingrediente.nombre.toUpperCase()}"`,
         action: 'delete',
-        context: 'admin' // ✅ Contexto administrativo
+        context: 'admin' 
       }
     });
 
-    // ✅ NUEVO: Manejar la respuesta del diálogo
     dialogRef.afterClosed().subscribe(result => {
       console.log('🎯 Respuesta del diálogo de eliminación:', result);
 
       if (result === true) {
-        // ✅ Usuario confirmó → Eliminar el ingrediente
-        console.log(`✅ Confirmado: Eliminando ingrediente ${ingrediente.nombre}`);
         this.procederConEliminacion(ingrediente);
       } else {
-        // ✅ Usuario canceló → No hacer nada
-        console.log(`❌ Cancelado: El ingrediente ${ingrediente.nombre} no será eliminado`);
       }
     });
   }
 
-  // ✅ NUEVO: Método separado para proceder con la eliminación
   private procederConEliminacion(ingrediente: Ingrediente): void {
-    console.log('🗑️ Eliminando ingrediente:', ingrediente.nombre);
 
     this.catalogoService.eliminarIngrediente(ingrediente.id)
       .subscribe({
         next: (response) => {
-          console.log('✅ Ingrediente eliminado exitosamente:', response);
 
           this.snackBar.open(
             `Ingrediente "${ingrediente.nombre}" eliminado correctamente`,
@@ -234,7 +201,6 @@ export class IngredientesComponent implements OnInit {
             { duration: 3000 }
           );
 
-          // Recargar la categoría correspondiente
           const categoriaItem = this.categoriasConIngredientes.find(
             item => item.categoria.nombre.toLowerCase() === ingrediente.categoria_producto.toLowerCase()
           );
@@ -259,7 +225,6 @@ export class IngredientesComponent implements OnInit {
   }
 
   private mostrarDialogoSinPermisos(): void {
-    console.log('🔒 Mostrando diálogo de sin permisos');
     this.dialog.open(PermissionDeniedDialogComponent, {
       width: '420px',
       disableClose: false,
@@ -267,7 +232,6 @@ export class IngredientesComponent implements OnInit {
     });
   }
 
-  // ✅ HELPERS
   getFullImageUrl(imagenUrl: string | undefined): string {
     return this.catalogoService.getFullImageUrl(imagenUrl);
   }
@@ -293,12 +257,10 @@ export class IngredientesComponent implements OnInit {
     this.router.navigate(['/administrador/gestion-productos']);
   }
 
-  // ✅ REFRESCAR TODO
   refrescar() {
     this.cargarCategoriasYIngredientes();
   }
 
-  // ✅ GETTERS DINÁMICOS
   get totalCategorias(): number {
     return this.categoriasConIngredientes.length;
   }
@@ -318,7 +280,6 @@ export class IngredientesComponent implements OnInit {
     return this.categoriasConIngredientes.filter(item => item.ingredientes.length === 0);
   }
 
-  // ✅ HELPER: Obtener estadísticas
   getEstadisticas() {
     return {
       totalCategorias: this.totalCategorias,
@@ -330,7 +291,6 @@ export class IngredientesComponent implements OnInit {
     };
   }
 
-  // ✅ HELPER: TrackBy para optimizar rendering
   trackByCategoria(index: number, item: CategoriaConIngredientes): number {
     return item.categoria.id || index;
   }
@@ -339,16 +299,14 @@ export class IngredientesComponent implements OnInit {
     return ingrediente.id;
   }
 
-  // Helper para obtener color del icono de stock
   getStockIconColor(ingrediente: Ingrediente): string {
     if (ingrediente.esta_agotado) return 'warn';
     if (ingrediente.necesita_reposicion) return 'accent';
     return 'primary';
   }
 
-  // Helper para obtener color del estado
   getEstadoColor(estadoStock: string | undefined): string {
-    if (!estadoStock) return 'primary'; // ✅ Valor por defecto
+    if (!estadoStock) return 'primary'; 
 
     switch (estadoStock.toLowerCase()) {
       case 'disponible': return 'primary';
@@ -358,9 +316,8 @@ export class IngredientesComponent implements OnInit {
     }
   }
 
-  // Helper para obtener icono del estado
   getEstadoIcon(estadoStock: string | undefined): string {
-    if (!estadoStock) return 'help'; // ✅ Valor por defecto
+    if (!estadoStock) return 'help'; 
 
     switch (estadoStock.toLowerCase()) {
       case 'disponible': return 'check_circle';
@@ -370,20 +327,17 @@ export class IngredientesComponent implements OnInit {
     }
   }
 
-  // Helper para etiquetas de tabs
   getCategoriaTabLabel(categoriaItem: CategoriaConIngredientes): string {
     const count = categoriaItem.ingredientes.length;
     const loading = categoriaItem.cargando ? ' ⏳' : '';
     return `${categoriaItem.categoria.nombre} (${count})${loading}`;
   }
 
-  // Helper para porcentajes en resumen
   getCategoriaPorcentaje(categoriaItem: CategoriaConIngredientes): number {
     if (this.totalIngredientes === 0) return 0;
     return (categoriaItem.ingredientes.length / this.totalIngredientes) * 100;
   }
 
-  // Navegación pública para template
   navegarACategorias(): void {
     this.router.navigate(['/administrador/gestion-categorias']);
   }

@@ -1,8 +1,8 @@
-<!-- ✅ REEMPLAZAR todo el contenido de ingredientes.component.html -->
+
 <app-header-admin></app-header-admin>
 
 <div class="container">
-  <!-- ✅ HEADER SECTION -->
+  
   <div class="header-section">
     <div class="breadcrumb-section">
       <p class="breadcrumb-title">GESTIÓN DE INGREDIENTES</p>
@@ -31,13 +31,13 @@
     </div>
   </div>
 
-  <!-- ✅ LOADING CATEGORÍAS -->
+  
   <div *ngIf="cargandoCategorias" class="loading-container">
     <mat-spinner diameter="50"></mat-spinner>
     <p>Cargando categorías dinámicas...</p>
   </div>
 
-  <!-- ✅ ERROR CARGANDO CATEGORÍAS -->
+  
   <div *ngIf="errorCargandoCategorias" class="empty-state">
     <mat-icon class="empty-icon" color="warn">error_outline</mat-icon>
     <h3>Error al cargar categorías</h3>
@@ -48,7 +48,7 @@
     </button>
   </div>
 
-  <!-- ✅ TABS DINÁMICOS -->
+  
   <div *ngIf="!cargandoCategorias && !errorCargandoCategorias && totalCategorias > 0" class="tabs-container">
     <mat-tab-group class="ingredients-tabs" dynamicHeight animationDuration="300ms">
 

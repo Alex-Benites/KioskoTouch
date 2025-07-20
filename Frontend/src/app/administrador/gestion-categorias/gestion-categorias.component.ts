@@ -58,57 +58,43 @@ export class GestionCategoriasComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    console.log('🔄 Cargando categorías dinámicamente...');
-
     this.categoriaService.getCategorias().subscribe({
       next: (categorias) => {
         this.categorias = categorias.sort((a, b) => {
-          // Ordenar por más usadas primero, luego por nombre
           const totalA = (a.productos_count || 0) + (a.ingredientes_count || 0);
           const totalB = (b.productos_count || 0) + (b.ingredientes_count || 0);
 
           if (totalA !== totalB) {
-            return totalB - totalA; // Más usadas primero
+            return totalB - totalA;
           }
 
-          return a.nombre.localeCompare(b.nombre); // Luego alfabético
+          return a.nombre.localeCompare(b.nombre);
         });
 
         this.loading = false;
-        console.log(`✅ ${categorias.length} categorías cargadas dinámicamente`);
-        console.log('📊 Estadísticas:', this.getEstadisticas());
       },
       error: (error) => {
         this.error = error.message;
         this.loading = false;
-        console.error('❌ Error cargando categorías:', error);
       }
     });
   }
 
   irACrearCategoria(): void {
-    console.log('✏️ Intentando crear nueva categoría');
-
     if (!this.authService.hasPermission('catalogo.add_appkioskocategorias')) {
-      console.log('❌ Sin permisos para crear categorías');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, redirigiendo a creación');
     this.router.navigate(['/administrador/gestion-categorias/crear']);
   }
 
   editarCategoria(categoria: Categoria): void {
-    console.log('✏️ Intentando editar categoría ID:', categoria.id);
-
     if (!this.authService.hasPermission('catalogo.change_appkioskocategorias')) {
-      console.log('❌ Sin permisos para editar categorías');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-categorias/crear', categoria.id]);
   }
 
@@ -118,31 +104,20 @@ export class GestionCategoriasComponent implements OnInit {
   }
 
   eliminarCategoria(categoria: Categoria): void {
-    // ✅ VALIDACIÓN más estricta del ID
     if (!categoria.id || categoria.id <= 0) {
-      console.error('❌ Error: Categoría sin ID válido');
       return;
     }
 
-    console.log('🗑️ Intentando eliminar categoría:', categoria.nombre);
-
-    // ✅ Validación de permisos
     if (!this.authService.hasPermission('catalogo.delete_appkioskocategorias')) {
-      console.log('❌ Sin permisos para eliminar categorías');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, verificando si puede eliminar');
-
-    // ✅ Verificar si la categoría puede ser eliminada
     if (!categoria.puede_eliminar) {
-      console.log('❌ Categoría protegida, no se puede eliminar');
       this.mostrarDialogoCategoriaNoPuedeEliminarse(categoria);
       return;
     }
 
-    console.log('✅ Categoría puede eliminarse, mostrando diálogo de confirmación');
     this.mostrarDialogoConfirmacionEliminacion(categoria);
   }
 
@@ -169,7 +144,6 @@ export class GestionCategoriasComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(() => {
-      console.log('⚠️ Diálogo de categoría protegida cerrado');
     });
   }
 
@@ -186,25 +160,16 @@ export class GestionCategoriasComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((confirmed: boolean) => {
       if (confirmed) {
-        // Usuario confirmó → Eliminar la categoría
-        console.log(`✅ Confirmado: Eliminando categoría ${categoria.nombre}`);
         this.procederConEliminacionCategoria(categoria);
       } else {
-        // Usuario canceló → No hacer nada
-        console.log(`❌ Cancelado: La categoría ${categoria.nombre} no será eliminada`);
       }
     });
   }
 
-  // ✅ NUEVO: Método separado para proceder con la eliminación
   private procederConEliminacionCategoria(categoria: Categoria): void {
-    console.log(`🗑️ Eliminando categoría: ${categoria.nombre}`);
-
-    // ✅ USANDO: Operador de aserción no nula (!)
     this.categoriaService.eliminarCategoria(categoria.id!).subscribe({
       next: (response) => {
         if (response.success) {
-          console.log('✅ Categoría eliminada exitosamente');
           this.mostrarDialogExito(
             'Categoría Eliminada',
             `La categoría "${categoria.nombre}" ha sido eliminada exitosamente.`,
@@ -212,19 +177,16 @@ export class GestionCategoriasComponent implements OnInit {
           );
           this.cargarCategorias();
         } else {
-          console.error('❌ Error en respuesta:', response.error);
           this.mostrarDialogError(response.error || 'Error al eliminar categoría');
         }
       },
       error: (error) => {
-        console.error('❌ Error eliminando categoría:', error);
         this.mostrarDialogError(error.message || 'Error al eliminar categoría');
       }
     });
   }
 
   private mostrarDialogoSinPermisos(): void {
-    console.log('🔒 Mostrando diálogo de sin permisos');
     this.dialog.open(PermissionDeniedDialogComponent, {
       width: '420px',
       disableClose: false,
@@ -238,8 +200,6 @@ export class GestionCategoriasComponent implements OnInit {
       'Bebidas', 'Snacks', 'Infantil', 'Combos', 'Desayunos'
     ];
 
-    console.log('🎯 Solicitando confirmación para crear categorías por defecto');
-
     const dialogData: ConfirmationDialogData = {
       itemType: 'categorías por defecto',
       action: 'create'
@@ -252,17 +212,14 @@ export class GestionCategoriasComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((confirmed: boolean) => {
       if (confirmed) {
-        console.log('✅ Confirmado: Creando categorías por defecto');
         this.crearCategoriasSecuencial(categoriasDefault, 0);
       } else {
-        console.log('❌ Cancelado: No se crearán categorías por defecto');
       }
     });
   }
 
   private crearCategoriasSecuencial(categorias: string[], index: number): void {
     if (index >= categorias.length) {
-      console.log('✅ Proceso de creación de categorías completado');
       this.mostrarDialogExito(
         'Categorías Creadas',
         'Las categorías por defecto han sido creadas exitosamente.',
@@ -278,32 +235,20 @@ export class GestionCategoriasComponent implements OnInit {
     this.categoriaService.crearCategoria(formData).subscribe({
       next: (response) => {
         if (response.success) {
-          console.log(`✅ Categoría creada: ${nombre}`);
         } else {
-          console.log(`⚠️ Categoría omitida: ${nombre} (ya existe)`);
         }
-        // Continuar con la siguiente
         this.crearCategoriasSecuencial(categorias, index + 1);
       },
       error: (error) => {
-        console.log(`⚠️ Error con categoría ${nombre}:`, error.message);
-        // Continuar con la siguiente aunque haya error
         this.crearCategoriasSecuencial(categorias, index + 1);
       }
     });
   }
 
-  // ✅ MODIFICAR: Método getImagenUrl con debug
   getImagenUrl(categoria: Categoria): string {
     const url = this.categoriaService.getFullImageUrl(categoria.imagen_url);
 
-    // ✅ DEBUG: Solo para la categoría Bebidas
     if (categoria.nombre.toLowerCase().includes('bebida')) {
-      console.log('🔍 DEBUG IMAGEN BEBIDAS:');
-      console.log('   - Nombre:', categoria.nombre);
-      console.log('   - imagen_url original:', categoria.imagen_url);
-      console.log('   - URL completa generada:', url);
-      console.log('   - Categoría completa:', categoria);
     }
 
     return url;
@@ -373,7 +318,6 @@ export class GestionCategoriasComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(() => {
-      console.log('✅ Diálogo de éxito cerrado');
     });
   }
 
@@ -394,11 +338,9 @@ export class GestionCategoriasComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(() => {
-      console.log('❌ Diálogo de error cerrado');
     });
   }
 
-  // ✅ REFRESH
   refrescar(): void {
     this.cargarCategorias();
   }

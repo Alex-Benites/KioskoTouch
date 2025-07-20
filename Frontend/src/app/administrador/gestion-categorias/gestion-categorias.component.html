@@ -1,16 +1,12 @@
-<!-- ✅ ACTUALIZAR gestion-categorias.component.html -->
 <app-header-admin></app-header-admin>
 
 <div class="gestion-categorias-container">
-  <!-- Header existente -->
   <div class="page-header">
   <div class="header-content">
     <div class="title-section">
       <h1 class="page-title">
-        <!-- <i class="material-icons">category</i> -->
         GESTIÓN DE CATEGORÍAS
       </h1>
-      <!-- ✅ AGREGAR: Subtítulo -->
       <p class="page-subtitle">Creación/Edición/Eliminación de Categorías</p>
     </div>
     <button class="btn btn-primary crear-btn" (click)="irACrearCategoria()">
@@ -20,7 +16,6 @@
   </div>
 </div>
 
-  <!-- Stats bar existente -->
   <div class="stats-bar" *ngIf="!loading && !error && categorias.length > 0">
     <div class="stat-item">
       <i class="material-icons">category</i>
@@ -36,7 +31,6 @@
     </div>
   </div>
 
-  <!-- Loading existente -->
   <div *ngIf="loading" class="loading-container">
     <div class="loading-spinner">
       <i class="material-icons spin">refresh</i>
@@ -44,7 +38,6 @@
     </div>
   </div>
 
-  <!-- Error existente -->
   <div *ngIf="error" class="error-container">
     <div class="error-card">
       <i class="material-icons">error</i>
@@ -54,22 +47,18 @@
     </div>
   </div>
 
-  <!-- Grid de categorías existente -->
   <div class="categorias-grid" *ngIf="!loading && !error && categorias.length > 0">
     <div *ngFor="let categoria of categorias; trackBy: trackByCategoria" class="categoria-card">
 
-      <!-- Badges existentes -->
       <div *ngIf="!categoria.puede_eliminar" class="no-eliminar-badge">
         <i class="material-icons">shield</i>
         Protegida
       </div>
 
-      <!-- Imagen existente -->
       <div class="categoria-imagen">
         <img [src]="getImagenUrl(categoria)" [alt]="categoria.nombre" (error)="onImageError($event)">
       </div>
 
-      <!-- Info existente -->
       <div class="categoria-info">
         <h3 class="categoria-nombre">{{ categoria.nombre }}</h3>
 
@@ -97,7 +86,6 @@
         </div>
       </div>
 
-      <!-- Acciones existentes -->
       <div class="categoria-acciones">
         <button class="btn btn-outline-info" (click)="verDetalles(categoria)">
           <i class="material-icons">visibility</i>
@@ -118,7 +106,6 @@
     </div>
   </div>
 
-  <!-- Empty state existente -->
   <div *ngIf="!loading && !error && categorias.length === 0" class="empty-state">
     <i class="material-icons">category</i>
     <h3>No hay categorías</h3>
@@ -132,10 +119,8 @@
   </div>
 </div>
 
-<!-- ✅ POPUP DE DETALLES INTEGRADO -->
 <div class="popup-overlay" *ngIf="mostrarDetalles" (click)="cerrarDetalles()">
   <div class="popup-content" (click)="$event.stopPropagation()">
-    <!-- Header del popup -->
     <div class="popup-header">
       <h3>
         <i class="material-icons">category</i>
@@ -146,9 +131,7 @@
       </button>
     </div>
 
-    <!-- Contenido del popup -->
     <div class="popup-body" *ngIf="categoriaSeleccionada">
-      <!-- Imagen principal -->
       <div class="detalle-imagen">
         <img
           [src]="getImagenUrl(categoriaSeleccionada)"
@@ -156,11 +139,9 @@
           (error)="onImageError($event)">
       </div>
 
-      <!-- Información principal -->
       <div class="detalle-info">
         <h2 class="detalle-nombre">{{ categoriaSeleccionada.nombre }}</h2>
 
-        <!-- Stats principales -->
         <div class="detalle-stats">
           <div class="stat-box productos">
             <i class="material-icons">inventory</i>
@@ -179,7 +160,6 @@
           </div>
         </div>
 
-        <!-- Información detallada -->
         <div class="detalle-rows">
           <div class="detalle-row">
             <i class="material-icons">event</i>
@@ -220,7 +200,6 @@
           </div>
         </div>
 
-        <!-- Barra de uso visual -->
         <div class="uso-visual" *ngIf="getTotalElementos(categoriaSeleccionada) > 0">
           <h4>Distribución de uso</h4>
           <div class="uso-items">
@@ -246,7 +225,6 @@
       </div>
     </div>
 
-    <!-- Footer del popup -->
     <div class="popup-footer">
       <button class="btn btn-primary" (click)="cerrarDetalles()">
         <i class="material-icons">check</i>

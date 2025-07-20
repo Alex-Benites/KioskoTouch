@@ -105,7 +105,7 @@ export class PerfilUsuarioComponent implements OnInit {
           this.loading = false;
         },
         error: (error) => {
-          console.error('❌ Error cambiando contraseña:', error);
+          
           
           let mensaje = 'Error al cambiar la contraseña';
           if (error.error?.error) {

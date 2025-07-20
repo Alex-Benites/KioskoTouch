@@ -1,15 +1,14 @@
 <div class="login-container">
-  <!-- Imagen lado izquierdo -->
+  
   <div class="image-container">
     <img src="img/administrador/ADMIN_1.png" alt="Hamburguesa" class="hamburguesa-img" />
   </div>
 
-  <!-- Formulario de inicio de sesión a la derecha -->
+  
   <div class="login-form-container">
     <h1 class="welcome-title">¡Bienvenido!</h1>
     <h2 class="app-title">KIOSKO GO</h2>
 
-    <!-- 🚨 Mostrar errores -->
     @if (errorMessage) {
       <div class="error-message">
         {{ errorMessage }}
@@ -17,7 +16,6 @@
     }
 
     <form (ngSubmit)="ingresar()" class="form-container">
-      <!-- Campo de Usuario/Email -->
       <div class="input-container">
         <label for="usuario">Usuario o Email</label>
         <div class="input-wrapper">
@@ -34,7 +32,6 @@
         </div>
       </div>
 
-      <!-- ✅ MODIFICADO: Campo de Contraseña con ícono del ojo -->
       <div class="input-container">
         <label for="password">Contraseña</label>
         <div class="input-wrapper password-wrapper">
@@ -48,7 +45,6 @@
             [disabled]="isLoading"
             required
           />
-          <!-- ✅ NUEVO: Ícono del ojo -->
           <span
             class="eye-icon"
             (click)="togglePasswordVisibility()"
@@ -58,14 +54,12 @@
         </div>
       </div>
 
-      <!-- Recuperar contraseña -->
       <div class="forgot-password">
         <button type="button" (click)="abrirPopupRecuperar()" [disabled]="isLoading">
           Recuperar contraseña
         </button>
       </div>
 
-      <!-- Botón ingresar con loading -->
       <button
         type="submit"
         class="primary__button ingresar-btn"
@@ -83,19 +77,17 @@
   </div>
 </div>
 
-<!-- POP-UP de recuperación - Solo solicitar email -->
 <div *ngIf="mostrarPopupRecuperar" class="popup-overlay">
   <div class="popup">
     <button (click)="cerrarPopupRecuperar()" class="popup-close">X</button>
     <h2>Recuperar contraseña</h2>
     <p>Ingrese su correo electrónico para recibir instrucciones.</p>
 
-    <!-- Mostrar errores -->
     <div *ngIf="errorRecuperacion" class="error-message" style="margin-bottom: 10px; color: #e74c3c;">
       {{ errorRecuperacion }}
     </div>
 
-    <!-- Mostrar mensaje de éxito -->
+    
     <div *ngIf="mensajeRecuperacion" class="success-message" style="margin-bottom: 10px; color: #27ae60;">
       {{ mensajeRecuperacion }}
     </div>

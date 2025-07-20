@@ -8,7 +8,6 @@
 
   <div class="content-grid">
     
-    <!-- ✅ INFORMACIÓN PERSONAL (Solo lectura) -->
     <mat-card class="info-card">
       <mat-card-header>
         <mat-card-title>
@@ -20,19 +19,16 @@
       <mat-card-content>
         <div class="info-grid">
           
-          <!-- Usuario del sistema -->
           <div class="info-item">
             <label>Usuario</label>
             <span>{{ currentUser?.username || 'No disponible' }}</span>
           </div>
           
-          <!-- Email -->
           <div class="info-item">
             <label>Email</label>
             <span>{{ currentUser?.email || 'No disponible' }}</span>
           </div>
           
-          <!-- Nombre completo del empleado -->
           @if (empleado) {
             <div class="info-item">
               <label>Nombre completo</label>
@@ -40,7 +36,6 @@
             </div>
           }
                     
-          <!-- Cédula -->
           @if (empleado && empleado.cedula) {
             <div class="info-item">
               <label>Cédula</label>
@@ -48,7 +43,6 @@
             </div>
           }
           
-          <!-- Teléfono -->
           @if (empleado && empleado.telefono) {
             <div class="info-item">
               <label>Teléfono</label>
@@ -56,7 +50,6 @@
             </div>
           }
           
-          <!-- Sexo -->
           @if (empleado && empleado.sexo) {
             <div class="info-item">
               <label>Sexo</label>
@@ -64,13 +57,11 @@
             </div>
           }
           
-          <!-- Rol -->
           <div class="info-item">
             <label>Rol</label>
             <span class="rol-badge">{{ rolUsuario }}</span>
           </div>
           
-          <!-- Permisos administrativos -->
           @if (currentUser?.is_staff || currentUser?.is_superuser) {
             <div class="info-item">
               <label>Permisos especiales</label>
@@ -89,7 +80,6 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- ✅ CAMBIO DE CONTRASEÑA -->
     <mat-card class="password-card">
       <mat-card-header>
         <mat-card-title>
@@ -104,7 +94,6 @@
       <mat-card-content>
         <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
           
-          <!-- Contraseña actual -->
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Contraseña actual</mat-label>
             <input 
@@ -123,7 +112,6 @@
             }
           </mat-form-field>
 
-          <!-- Nueva contraseña -->
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Nueva contraseña</mat-label>
             <input 
@@ -146,7 +134,6 @@
             }
           </mat-form-field>
 
-          <!-- Confirmar contraseña -->
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Confirmar nueva contraseña</mat-label>
             <input 
@@ -168,7 +155,7 @@
             }
           </mat-form-field>
 
-          <!-- Botones -->
+          
           <div class="form-actions">
             <button 
               mat-raised-button 
