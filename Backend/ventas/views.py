@@ -14,11 +14,12 @@ from .models import (
     AppkioskoDetallepedido,
     AppkioskoFacturas,
     AppkioskoTipopago,
-    AppkioskoPedidoProductoIngredientes
+    AppkioskoPedidoProductoIngredientes,
+    AppkioskoDetallefacturaproducto,
 )
-from catalogo.models import AppkioskoProductos, AppkioskoIngredientes, AppkioskoMenus, AppkioskoProductosIngredientes 
+from catalogo.models import AppkioskoProductos, AppkioskoIngredientes, AppkioskoMenus, AppkioskoProductosIngredientes
 from comun.models import AppkioskoIva, AppkioskoEstados
-from marketing.models import AppkioskoPromocionproductos, AppkioskoPromocionmenu  
+from marketing.models import AppkioskoPromocionproductos, AppkioskoPromocionmenu
 
 
 @api_view(['POST'])
@@ -94,32 +95,32 @@ def obtener_pedidos_chef(request):
     print("=== ENDPOINT CHEF LLAMADO ===")
     print(f"Method: {request.method}")
     print(f"Headers: {dict(request.headers)}")
-    
+
     try:
         print("OBTENIENDO PEDIDOS PARA CHEF...")
-        
+
         # Obtener pedidos de las últimas 24 horas
         hace_24_horas = timezone.now() - timedelta(hours=24)
-        
+
         pedidos = AppkioskoPedidos.objects.filter(
             created_at__gte=hace_24_horas
         ).select_related(
             'estado', 'tipo_pago'
         ).order_by('-created_at')
-        
+
         print(f"Pedidos encontrados: {pedidos.count()}")
-        
+
         pedidos_data = []
-        
+
         if pedidos.exists():
             for pedido in pedidos:
                 print(f"\nProcesando pedido ID: {pedido.id}")
-                
+
                 # Obtener detalles del pedido
                 detalles = AppkioskoDetallepedido.objects.filter(
                     pedido=pedido
                 ).select_related('producto', 'menu', 'promocion')
-                
+
                 items = []
                 for detalle in detalles:
                     item_data = {
@@ -129,7 +130,7 @@ def obtener_pedidos_chef(request):
                         'subtotal': float(detalle.subtotal),
                         'personalizaciones': []
                     }
-                    
+
                     # Información del producto o menú
                     if detalle.producto:
                         item_data.update({
@@ -137,14 +138,14 @@ def obtener_pedidos_chef(request):
                             'tipo': 'producto',
                             'producto_id': detalle.producto.id
                         })
-                        
+
                         # Obtener personalizaciones de ingredientes
                         try:
                             personalizaciones = AppkioskoPedidoProductoIngredientes.objects.filter(
                                 pedido=pedido,
                                 producto=detalle.producto
                             ).select_related('ingrediente')
-                            
+
                             item_data['personalizaciones'] = [
                                 {
                                     'ingrediente': p.ingrediente.nombre,
@@ -156,14 +157,14 @@ def obtener_pedidos_chef(request):
                         except Exception as e:
                             print(f"Error obteniendo personalizaciones: {e}")
                             item_data['personalizaciones'] = []
-                        
+
                     elif detalle.menu:
                         item_data.update({
                             'nombre': detalle.menu.nombre,
                             'tipo': 'menu',
                             'menu_id': detalle.menu.id
                         })
-                    
+
                     # Información de promoción
                     if hasattr(detalle, 'promocion') and detalle.promocion:
                         try:
@@ -175,16 +176,16 @@ def obtener_pedidos_chef(request):
                         except Exception as e:
                             print(f"Error procesando promoción: {e}")
                             item_data['promocion'] = None
-                    
+
                     items.append(item_data)
-                
+
                 # Calcular tiempo transcurrido
                 tiempo_transcurrido = calcular_tiempo_transcurrido(pedido.created_at)
-                
+
                 # Determinar estado del pedido
                 estado_nombre = pedido.estado.nombre if pedido.estado else 'Sin estado'
                 estado_activo = pedido.estado.is_active if pedido.estado else False
-                
+
                 pedido_data = {
                     'id': pedido.id,
                     'numero': pedido.invoice_number,
@@ -200,28 +201,28 @@ def obtener_pedidos_chef(request):
                     },
                     'items': items
                 }
-                
+
                 pedidos_data.append(pedido_data)
                 print(f"Pedido {pedido.id} procesado - Estado: {estado_nombre} - Items: {len(items)}")
-        
+
         print(f"Total pedidos procesados: {len(pedidos_data)}")
-        
+
         response_data = {
             'success': True,
             'data': pedidos_data,
             'total': len(pedidos_data),
             'message': 'Pedidos obtenidos exitosamente' if len(pedidos_data) > 0 else 'No hay pedidos en las últimas 24 horas'
         }
-        
+
         print(f"Respuesta preparada con {len(pedidos_data)} pedidos")
-        
+
         return Response(response_data, status=status.HTTP_200_OK)
-        
+
     except Exception as e:
         print(f"ERROR OBTENIENDO PEDIDOS: {e}")
         import traceback
         print(f"TRACEBACK: {traceback.format_exc()}")
-        
+
         return Response({
             'success': False,
             'message': 'Error interno del servidor',
@@ -239,16 +240,16 @@ def cambiar_estado_pedido(request, pedido_id):
     """
     try:
         print(f"CAMBIANDO ESTADO DE PEDIDO ID: {pedido_id}")
-        
+
         pedido = AppkioskoPedidos.objects.get(id=pedido_id)
         nuevo_estado = request.data.get('estado')
-        
+
         if not nuevo_estado:
             return Response({
                 'success': False,
                 'message': 'El campo estado es requerido'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Buscar estado por nombre o por is_active
         if nuevo_estado == 'activado':
             estado = AppkioskoEstados.objects.filter(is_active=True).first()
@@ -259,20 +260,20 @@ def cambiar_estado_pedido(request, pedido_id):
                 'success': False,
                 'message': 'Estado no válido. Use "activado" o "desactivado"'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if not estado:
             return Response({
                 'success': False,
                 'message': f'No se encontró estado {nuevo_estado}'
             }, status=status.HTTP_404_NOT_FOUND)
-        
+
         # Actualizar estado
         pedido.estado = estado
         pedido.updated_at = timezone.now()
         pedido.save()
-        
+
         print(f"Estado cambiado a: {estado.nombre}")
-        
+
         return Response({
             'success': True,
             'message': f'Pedido {pedido.invoice_number} {nuevo_estado} exitosamente',
@@ -285,7 +286,7 @@ def cambiar_estado_pedido(request, pedido_id):
                 }
             }
         })
-        
+
     except AppkioskoPedidos.DoesNotExist:
         return Response({
             'success': False,
@@ -321,20 +322,20 @@ def obtener_pedido(request, pedido_id):
                 'subtotal': float(detalle.subtotal),
                 'personalizaciones': []
             }
-            
+
             if detalle.producto:
                 item_data.update({
                     'nombre': detalle.producto.nombre,
                     'tipo': 'producto',
                     'producto_id': detalle.producto.id
                 })
-                
+
                 # Obtener personalizaciones
                 personalizaciones = AppkioskoPedidoProductoIngredientes.objects.filter(
                     pedido=pedido,
                     producto=detalle.producto
                 ).select_related('ingrediente')
-                
+
                 item_data['personalizaciones'] = [
                     {
                         'ingrediente': p.ingrediente.nombre,
@@ -343,21 +344,21 @@ def obtener_pedido(request, pedido_id):
                         'precio_aplicado': float(p.precio_aplicado)
                     } for p in personalizaciones
                 ]
-                
+
             elif detalle.menu:
                 item_data.update({
                     'nombre': detalle.menu.nombre,
                     'tipo': 'menu',
                     'menu_id': detalle.menu.id
                 })
-            
+
             if hasattr(detalle, 'promocion') and detalle.promocion:
                 item_data['promocion'] = {
                     'nombre': detalle.promocion.nombre,
                     'descuento': float(getattr(detalle, 'descuento_promocion', 0) or 0),
                     'precio_original': float(getattr(detalle, 'precio_original', 0)) if getattr(detalle, 'precio_original', None) else None
                 }
-            
+
             items.append(item_data)
 
         return Response({
@@ -402,7 +403,7 @@ def calcular_tiempo_transcurrido(fecha_creacion):
         ahora = timezone.now()
         diferencia = ahora - fecha_creacion
         minutos = int(diferencia.total_seconds() / 60)
-        
+
         if minutos < 1:
             return "Recién llegado"
         elif minutos == 1:
@@ -443,11 +444,10 @@ def procesar_pedido_completo(datos_validados):
     crear_detalles_pedido(pedido, datos_validados['productos'])
     print(f"Detalles del pedido creados: {len(datos_validados['productos'])} productos")
 
-    # 4. Crear factura si hay datos de facturación
-    factura = None
-    if datos_validados.get('datos_facturacion'):
-        factura = crear_factura(pedido, datos_validados['datos_facturacion'])
-        print(f"Factura creada: ID {factura.id}")
+    # 4. Crear factura SIEMPRE (con o sin datos de facturación)
+    factura = crear_factura(pedido, datos_validados.get('datos_facturacion'))
+    crear_detalles_factura(factura, datos_validados['productos'])
+    print(f"Factura creada: ID {factura.id}")
 
     return {
         'pedido': pedido,
@@ -616,22 +616,50 @@ def crear_detalles_pedido(pedido, productos_data):
     print(f"Detalles del pedido creados: {len(productos_data)} productos")
 
 
-def crear_factura(pedido, datos_facturacion):
+def crear_factura(pedido, datos_facturacion=None):
     """
     CREAR: Factura en appkiosko_facturas
     """
+    if datos_facturacion:
+        nombre = datos_facturacion['nombre_completo']
+        correo = datos_facturacion['correo']
+        cedula = datos_facturacion['cedula']
+        telefono = datos_facturacion['telefono']
+    else:
+        nombre = "Consumidor Final"
+        correo = ""
+        cedula = ""
+        telefono = ""
+
     factura = AppkioskoFacturas.objects.create(
         pedido_id=pedido.id,
-        nombre_cliente=datos_facturacion['nombre_completo'],
-        email_cliente=datos_facturacion['correo'],
-        cedula_cliente=datos_facturacion['cedula'],
-        telefono_cliente=datos_facturacion['telefono'],
+        nombre_cliente=nombre,
+        email_cliente=correo,
+        cedula_cliente=cedula,
+        telefono_cliente=telefono,
         created_at=datetime.now(),
         updated_at=datetime.now()
     )
 
-    print(f"Factura creada para {datos_facturacion['nombre_completo']}")
+    print(f"Factura creada para {nombre}")
     return factura
+
+def crear_detalles_factura(factura, productos):
+    """
+    Crea los registros de detalle de factura para cada producto comprado.
+    """
+    for prod in productos:
+        AppkioskoDetallefacturaproducto.objects.create(
+            factura_id=factura.id,
+            producto_id=prod.get('producto_id'),
+            cantidad=prod['cantidad'],
+            precio_unitario=prod['precio_unitario'],
+            iva=prod.get('iva', 0),  # Ajusta si tienes el IVA por producto
+            descuento=prod.get('descuento', 0),
+            subtotal=prod['subtotal'],
+            total=prod['subtotal'] + prod.get('iva', 0) - prod.get('descuento', 0),
+            fecha_emision_factura=datetime.now(),
+        )
 
 
 def generar_numero_pedido():
