@@ -5,23 +5,20 @@ import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
-// Angular Material Modules
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-// Shared Components
 import { HeaderAdminComponent } from '../../../shared/header-admin/header-admin.component';
 import { FooterAdminComponent } from '../../../shared/footer-admin/footer-admin.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { SuccessDialogComponent, SuccessDialogData } from '../../../shared/success-dialog/success-dialog.component';
-import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component'; // ✅ AGREGADO
+import { PermissionDeniedDialogComponent } from '../../../shared/permission-denied-dialog/permission-denied-dialog.component';
 
-// Services and Models
 import { PublicidadService } from '../../../services/publicidad.service';
-import { AuthService } from '../../../services/auth.service'; // ✅ AGREGADO
+import { AuthService } from '../../../services/auth.service';
 import { Publicidad, ApiError } from '../../../models/marketing.model';
 
 import { environment } from '../../../../environments/environment';
@@ -55,7 +52,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private publicidadService = inject(PublicidadService);
-  private authService = inject(AuthService); // ✅ AGREGADO
+  private authService = inject(AuthService);
 
   ngOnInit(): void {
     this.initializeForm();
@@ -73,31 +70,17 @@ export class EditarEliminarPublicidadComponent implements OnInit {
 
   cargarPublicidades(): void {
     this.isLoading = true;
-    console.log('=== CARGANDO PUBLICIDADES ===');
     
     this.publicidadService.getPublicidades().subscribe({
       next: (data) => {
-        console.log('✅ Publicidades cargadas:', data);
-        
-        data.forEach((pub, index) => {
-          console.log(`🔍 Publicidad ${index + 1}:`, {
-            id: pub.id,
-            nombre: pub.nombre,
-            media_type: pub.media_type,
-            media_url: pub.media_url,
-            duracion_video: pub.duracion_video
-          });
-        });
         
         this.todasLasPublicidades = data;
         this.publicidadesFiltradas = [...this.todasLasPublicidades];
         this.isLoading = false;
         
-        console.log(`📊 Total publicidades: ${data.length}`);
         this.mostrarEstadisticas();
       },
       error: (error: ApiError) => {
-        console.error('❌ Error al cargar publicidades:', error);
         alert('❌ No se pudieron cargar las publicidades.');
         this.isLoading = false;
       }
@@ -113,15 +96,12 @@ export class EditarEliminarPublicidadComponent implements OnInit {
       inactivos: this.todasLasPublicidades.filter(p => p.estado_nombre === 'Desactivado').length
     };
     
-    console.log('📈 Estadísticas:', stats);
   }
 
   aplicarFiltros(): void {
-    console.log('🔍 Aplicando filtros...');
     this.isLoading = true;
     
     const filtros = this.filtroForm.value;
-    console.log('Filtros seleccionados:', filtros);
 
     this.publicidadesFiltradas = this.todasLasPublicidades.filter(publicidad => {
       const coincideTipo = this.verificarFiltroTipo(publicidad, filtros);
@@ -129,13 +109,11 @@ export class EditarEliminarPublicidadComponent implements OnInit {
       const coincide = coincideTipo && coincideEstado;
       
       if (coincide) {
-        console.log(`✅ Publicidad "${publicidad.nombre}" coincide con filtros`);
       }
       
       return coincide;
     });
     
-    console.log(`🎯 Publicidades filtradas: ${this.publicidadesFiltradas.length}/${this.todasLasPublicidades.length}`);
     this.isLoading = false;
   }
 
@@ -166,7 +144,6 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   }
 
   limpiarFiltros(): void {
-    console.log('🧹 Limpiando filtros...');
     this.filtroForm.reset({
       tipoBanner: false,
       tipoVideo: false,
@@ -174,34 +151,25 @@ export class EditarEliminarPublicidadComponent implements OnInit {
       estadoInactivo: false
     });
     this.publicidadesFiltradas = [...this.todasLasPublicidades];
-    console.log('✅ Filtros limpiados, mostrando todas las publicidades');
   }
 
   editarPublicidad(id: number): void {
-    console.log('✏️ Intentando editar publicidad ID:', id);
     
-    // ✅ AGREGADO: Validación de permisos para editar
     if (!this.authService.hasPermission('marketing.change_appkioskopublicidades')) {
-      console.log('❌ Sin permisos para editar publicidad');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, redirigiendo a edición');
     this.router.navigate(['/administrador/gestion-publicidad/crear', id]);
   }
 
   confirmarEliminacion(id: number, nombre: string): void {
-    console.log('🗑️ Intentando eliminar publicidad:', nombre);
     
-    // ✅ AGREGADO: Validación de permisos para eliminar
     if (!this.authService.hasPermission('marketing.delete_appkioskopublicidades')) {
-      console.log('❌ Sin permisos para eliminar publicidad');
       this.mostrarDialogoSinPermisos();
       return;
     }
 
-    console.log('✅ Permisos validados, mostrando confirmación');
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
         itemType: 'publicidad',
@@ -210,21 +178,17 @@ export class EditarEliminarPublicidadComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        console.log('🗑️ Confirmado eliminar publicidad:', nombre);
         this.eliminarPublicidad(id, nombre);
       } else {
-        console.log('🚫 Eliminación cancelada');
       }
     });
   }
 
   eliminarPublicidad(id: number, nombre: string): void {
-    console.log('🗑️ Eliminando publicidad ID:', id);
     this.isLoading = true;
     
     this.publicidadService.deletePublicidad(id).subscribe({
       next: () => {
-        console.log('✅ Publicidad eliminada correctamente');
         
         // Remover de la lista local
         this.todasLasPublicidades = this.todasLasPublicidades.filter(p => p.id !== id);
@@ -234,7 +198,6 @@ export class EditarEliminarPublicidadComponent implements OnInit {
         // Sin dialog de éxito - eliminación silenciosa
       },
       error: (error: ApiError) => {
-        console.error('❌ Error al eliminar publicidad:', error);
         this.isLoading = false;
 
         let mensajeError = '❌ Error al eliminar la publicidad.';
@@ -252,9 +215,7 @@ export class EditarEliminarPublicidadComponent implements OnInit {
     });
   }
 
-  // ✅ AGREGADO: Método para mostrar diálogo sin permisos
   private mostrarDialogoSinPermisos(): void {
-    console.log('🔒 Mostrando diálogo de sin permisos');
     this.dialog.open(PermissionDeniedDialogComponent, {
       width: '420px',
       disableClose: false,
@@ -294,11 +255,9 @@ export class EditarEliminarPublicidadComponent implements OnInit {
   }
 
   onMediaLoaded(event: Event): void {
-    console.log('✅ Media cargada correctamente:', event.target);
   }
 
   onMediaError(event: Event): void {
-    console.error('❌ Error cargando media:', event.target);
     const target = event.target as HTMLElement;
     if (target) {
       target.style.display = 'none';
@@ -309,7 +268,6 @@ export class EditarEliminarPublicidadComponent implements OnInit {
     const video = event.target as HTMLVideoElement;
     if (video && video.tagName === 'VIDEO') {
       video.play().catch(error => {
-        console.log('No se pudo reproducir el video:', error);
       });
     }
   }

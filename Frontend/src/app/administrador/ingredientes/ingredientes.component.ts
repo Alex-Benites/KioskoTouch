@@ -90,7 +90,6 @@ export class IngredientesComponent implements OnInit {
         this.cargarTodosLosIngredientes();
       },
       error: (error) => {
-        console.error('❌ Error cargando categorías:', error);
         this.cargandoCategorias = false;
         this.errorCargandoCategorias = true;
         this.snackBar.open('Error al cargar categorías', 'Cerrar', {
@@ -119,7 +118,6 @@ export class IngredientesComponent implements OnInit {
           categoriaItem.cargando = false;
         },
         error: (error) => {
-          console.error(`❌ Error al cargar ingredientes de ${categoriaItem.categoria.nombre}:`, error);
           categoriaItem.cargando = false;
           categoriaItem.ingredientes = []; 
 
@@ -149,7 +147,6 @@ export class IngredientesComponent implements OnInit {
   }
 
   editarIngrediente(id: number) {
-    console.log('✏️ Intentando editar ingrediente ID:', id);
 
     if (!this.authService.hasPermission('catalogo.change_appkioskoingredientes')) {
       this.mostrarDialogoSinPermisos();
@@ -160,7 +157,6 @@ export class IngredientesComponent implements OnInit {
   }
 
   eliminarIngrediente(ingrediente: Ingrediente) {
-    console.log('🗑️ Intentando eliminar ingrediente:', ingrediente.nombre);
 
     if (!this.authService.hasPermission('catalogo.delete_appkioskoingredientes')) {
       this.mostrarDialogoSinPermisos();
@@ -180,7 +176,6 @@ export class IngredientesComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('🎯 Respuesta del diálogo de eliminación:', result);
 
       if (result === true) {
         this.procederConEliminacion(ingrediente);
@@ -210,8 +205,6 @@ export class IngredientesComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error al eliminar ingrediente:', error);
-
           let mensaje = 'Error al eliminar el ingrediente';
           if (error.error?.error && error.error.error.includes('siendo usado')) {
             mensaje = error.error.error;

@@ -261,7 +261,6 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     const activas = data.promociones_activas || 0;
     const inactivas = data.promociones_inactivas || 0;
     
-    console.log('🍩 Configurando gráfico doughnut - Activas:', activas, 'Inactivas:', inactivas);
     
     this.doughnutChartData = {
       labels: ['Activas', 'Inactivas'],
@@ -315,21 +314,13 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
     this.totalPedidosSistema = data.total_pedidos_sistema || 0;
     this.totalPedidosPeriodo = data.total_pedidos_periodo || 0;
     
-    console.log('📈 KPIs configurados:', {
-      porcentajeUsuarios: this.porcentajeUsuarios,
-      totalDescuentos: this.totalDescuentos,
-      totalPedidosSistema: this.totalPedidosSistema,
-      totalPedidosPeriodo: this.totalPedidosPeriodo
-    });
   }
 
   private configurarTablaMensual(data: EstadisticasPromociones): void {
     this.pedidosPorMes = data.pedidos_por_mes || [];
-    console.log('📅 Tabla mensual configurada:', this.pedidosPorMes.length, 'meses');
   }
 
   reintentarCarga(): void {
-    console.log('🔄 Reintentando cargar estadísticas...');
     this.cargarEstadisticas();
   }
 

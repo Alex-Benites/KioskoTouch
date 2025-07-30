@@ -91,11 +91,9 @@ export class PerfilUsuarioComponent implements OnInit {
         new_password: this.passwordForm.get('newPassword')?.value
       };
 
-      console.log('🔐 Cambiando contraseña...');
       
       this.usuariosService.cambiarPassword(passwordData).subscribe({
         next: (response) => {
-          console.log('✅ Contraseña cambiada exitosamente');
           this.snackBar.open('Contraseña actualizada correctamente', 'Cerrar', {
             duration: 3000,
             panelClass: ['success-snackbar']

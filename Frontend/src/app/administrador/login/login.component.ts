@@ -44,12 +44,10 @@ export class LoginComponent {
 
     this.authService.login(this.usuario, this.password).subscribe({
       next: (response: any) => {
-        console.log('✅ Login exitoso:', response);
         this.router.navigate(['/administrador/home'], { replaceUrl: true });
         this.isLoading = false;
       },
       error: (error: any) => {
-        console.error('❌ Error en login:', error);
         this.errorMessage = error || 'Error al iniciar sesión. Intente nuevamente.';
         this.isLoading = false;
       }
@@ -94,7 +92,6 @@ export class LoginComponent {
 
     this.authService.requestPasswordReset(this.emailRecuperacion).subscribe({
       next: (response: any) => {
-        console.log('✅ Solicitud de recuperación enviada:', response);
         this.mensajeRecuperacion = response.message;
         this.loadingRecuperacion = false;
 
@@ -104,7 +101,6 @@ export class LoginComponent {
         }, 2000);
       },
       error: (error: any) => {
-        console.error('❌ Error en recuperación:', error);
 
         // ← MANEJAR ERRORES ESPECÍFICOS
         if (error.status === 404) {

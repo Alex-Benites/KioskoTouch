@@ -94,7 +94,6 @@ export class RestablecerContrasenaComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.error = error.error?.error || 'Error al actualizar la contraseña';
       }
     });
   }

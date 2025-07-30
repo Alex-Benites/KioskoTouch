@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar'; // ✅ NUEVO: Solo agregar esto
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -70,7 +70,7 @@ export class CrearPublicidadComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly dialog = inject(MatDialog);
   private readonly publicidadService = inject(PublicidadService);
-  private readonly snackBar = inject(MatSnackBar); // ✅ NUEVO: Solo agregar esto
+  private readonly snackBar = inject(MatSnackBar);
 
   readonly tiposPublicidad: { value: TipoPublicidad; label: string; dimensions: string }[] = [
     { 
@@ -145,9 +145,7 @@ export class CrearPublicidadComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error al cargar estados:', error);
         this.loadingEstados = false;
-        // ✅ CAMBIO: Reemplazar alert con snackBar
         this.snackBar.open('Error al cargar los estados disponibles', 'Cerrar', { duration: 5000 });
       }
     });
@@ -157,17 +155,13 @@ export class CrearPublicidadComponent implements OnInit {
     if (!this.publicidadId) return;
     
     this.isLoading = true;
-    console.log('Cargando datos de publicidad ID:', this.publicidadId);
     
     this.publicidadService.getPublicidadById(this.publicidadId).subscribe({
       next: (publicidad) => {
-        console.log('Datos de publicidad cargados:', publicidad);
         this.populateForm(publicidad);
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar publicidad:', error);
-        // ✅ CAMBIO: Reemplazar alert con snackBar
         this.snackBar.open('No se pudo cargar la información de la publicidad', 'Cerrar', { duration: 5000 });
         this.isLoading = false;
         this.router.navigate(['/administrador/gestion-publicidad/editar-eliminar']);
@@ -192,7 +186,6 @@ export class CrearPublicidadComponent implements OnInit {
       mediaType: publicidad.media_type
     });
 
-    // ✅ NUEVO: Deshabilitar campos en modo edición
     this.disableFormFieldsInEditMode();
 
     if (publicidad.tiempo_visualizacion) {
@@ -205,17 +198,14 @@ export class CrearPublicidadComponent implements OnInit {
 
     this.selectedMediaType = publicidad.media_type;
 
-    // Cargar imágenes existentes si es tipo banner
     if (publicidad.media_type === 'image' && publicidad.imagenes && publicidad.imagenes.length > 0) {
       this.existingImages = publicidad.imagenes.map((img: any, index: number) => ({
         id: img.id || index,
         url: this.getMediaUrlForEdit(img.ruta),
         name: this.extractFileNameFromUrl(img.ruta)
       }));
-      console.log('Imágenes existentes cargadas:', this.existingImages);
     }
 
-    // Cargar video existente si es tipo video
     if (publicidad.media_type === 'video' && publicidad.videos && publicidad.videos.length > 0) {
       const video = publicidad.videos[0];
       this.existingVideoUrl = this.getMediaUrlForEdit(video.ruta);
@@ -226,18 +216,14 @@ export class CrearPublicidadComponent implements OnInit {
         this.videoDuration = video.duracion;
         this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
       }
-      console.log('Video existente cargado:', this.existingVideoUrl);
     }
 
     this.updateIntervalValidations();
   }
 
-  // Agregar este método después de populateForm():
   private disableFormFieldsInEditMode(): void {
     if (this.isEditMode) {
-      // Deshabilitar el campo tipo de publicidad
       this.publicidadForm.get('tipoPublicidad')?.disable();
-      console.log('Campo tipoPublicidad deshabilitado en modo edición');
     }
   }
 
@@ -252,22 +238,15 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   private getMediaUrlForEdit(mediaUrl: string): string {
-    console.log('Procesando URL de media:', mediaUrl);
-    
     if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
-      console.log('URL completa detectada:', mediaUrl);
       return mediaUrl;
     }
     
     if (mediaUrl.startsWith('/media/')) {
-      const fullUrl = `${environment.baseUrl}${mediaUrl}`;
-      console.log('URL relativa /media/ convertida:', fullUrl);
-      return fullUrl;
+      return `${environment.baseUrl}${mediaUrl}`;
     }
     
-    const fullUrl = `${environment.baseUrl}/media/${mediaUrl}`;
-    console.log('URL sin prefijo convertida:', fullUrl);
-    return fullUrl;
+    return `${environment.baseUrl}/media/${mediaUrl}`;
   }
 
   private extractFileNameFromUrl(url: string): string {
@@ -283,7 +262,6 @@ export class CrearPublicidadComponent implements OnInit {
       
       return decodedFileName;
     } catch (error) {
-      console.warn('Error extrayendo nombre de archivo:', error);
       return 'archivo_existente';
     }
   }
@@ -359,7 +337,6 @@ export class CrearPublicidadComponent implements OnInit {
 
     const tipoPublicidadSeleccionado = this.publicidadForm.get('tipoPublicidad')?.value;
     if (!tipoPublicidadSeleccionado) {
-      // ✅ CAMBIO: Reemplazar alert con snackBar
       this.snackBar.open('Primero debes seleccionar un tipo de publicidad (Banner o Video)', 'Cerrar', { duration: 4000 });
       this.clearFileInput(input);
       return;
@@ -370,7 +347,6 @@ export class CrearPublicidadComponent implements OnInit {
       const file = files[0];
       const validation = this.validateFile(file);
       if (!validation.valid) {
-        // ✅ CAMBIO: Reemplazar alert con snackBar
         this.snackBar.open(validation.error!, 'Cerrar', { duration: 5000 });
         this.clearFileInput(input);
         return;
@@ -393,22 +369,18 @@ export class CrearPublicidadComponent implements OnInit {
       reader.readAsDataURL(file);
 
     } else if (tipoPublicidadSeleccionado === 'banner') {
-      // Para banner, múltiples imágenes
       const currentTotal = this.existingImages.length + this.selectedFiles.length;
       const availableSlots = 5 - currentTotal;
       
       if (files.length > availableSlots) {
-        // ✅ CAMBIO: Reemplazar alert con snackBar
         this.snackBar.open(`Solo puedes agregar ${availableSlots} imagen(es) más. Máximo total: 5 imágenes`, 'Cerrar', { duration: 5000 });
         this.clearFileInput(input);
         return;
       }
 
-      // Validar cada archivo
       for (const file of files) {
         const validation = this.validateFile(file);
         if (!validation.valid) {
-          // ✅ CAMBIO: Reemplazar alert con snackBar
           this.snackBar.open(`Error en archivo "${file.name}": ${validation.error}`, 'Cerrar', { duration: 5000 });
           this.clearFileInput(input);
           return;
@@ -418,7 +390,6 @@ export class CrearPublicidadComponent implements OnInit {
       this.selectedMediaType = 'image';
       this.publicidadForm.patchValue({ mediaType: this.selectedMediaType });
 
-      // Agregar archivos a la lista
       files.forEach(file => {
         this.selectedFiles.push(file);
         
@@ -437,7 +408,6 @@ export class CrearPublicidadComponent implements OnInit {
     this.clearFileInput(input);
   }
 
-  // ✅ CAMBIO: Validación para no eliminar la última imagen en modo edición
   removeExistingImage(imageId: number): void {
     // Validación: No permitir eliminar la última imagen en modo edición
     if (this.isEditMode) {
@@ -449,10 +419,8 @@ export class CrearPublicidadComponent implements OnInit {
     }
     
     this.existingImages = this.existingImages.filter(img => img.id !== imageId);
-    console.log('Imagen existente removida:', imageId);
   }
 
-  // ✅ CAMBIO: Validación para no eliminar si quedaría sin imágenes en modo edición
   removeNewFile(index: number): void {
     // Validación: No permitir eliminar si quedaría sin imágenes en modo edición
     if (this.isEditMode && this.selectedMediaType === 'image') {
@@ -465,7 +433,6 @@ export class CrearPublicidadComponent implements OnInit {
     
     this.selectedFiles.splice(index, 1);
     this.filePreviews.splice(index, 1);
-    console.log('Archivo nuevo removido:', index);
   }
 
   getTotalImagesCount(): number {
@@ -504,11 +471,9 @@ export class CrearPublicidadComponent implements OnInit {
       video.onloadedmetadata = () => {
         this.videoDuration = Math.round(video.duration);
         this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
-        console.log('Duración del video:', this.videoDuration, 'segundos');
       };
 
       video.onerror = () => {
-        console.error('Error al cargar el video para obtener duración');
         this.videoDuration = 0;
         this.publicidadForm.patchValue({ videoDuration: 0 });
       };
@@ -516,31 +481,20 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   onImageLoaded(event: Event): void {
-    console.log('Imagen cargada correctamente en preview');
   }
 
   onImageError(event: Event): void {
-    console.error('Error cargando imagen en preview');
   }
 
   onVideoLoaded(event: Event): void {
     const video = event.target as HTMLVideoElement;
-    console.log('Video cargado correctamente en preview');
-    
-    if (!this.selectedFile && this.existingVideoUrl && !this.videoDuration) {
-      this.videoDuration = Math.round(video.duration);
-      this.publicidadForm.patchValue({ videoDuration: this.videoDuration });
-      console.log('Duración extraída del video existente:', this.videoDuration);
-    }
   }
 
   onVideoError(event: Event): void {
-    console.error('Error cargando video en preview');
   }
 
   onTipoPublicidadChange(): void {
     const tipoSeleccionado = this.publicidadForm.get('tipoPublicidad')?.value;
-    console.log('Tipo de publicidad cambiado a:', tipoSeleccionado);
     
     if (this.selectedFile || this.selectedFiles.length > 0) {
       const hasIncompatibleFiles = this.selectedFiles.some(file => {
@@ -549,7 +503,6 @@ export class CrearPublicidadComponent implements OnInit {
       }) || (this.selectedFile && !this.validateFile(this.selectedFile).valid);
 
       if (hasIncompatibleFiles) {
-        // ✅ CAMBIO: Reemplazar alert con snackBar
         this.snackBar.open('Los archivos seleccionados no son compatibles con el nuevo tipo de publicidad', 'Cerrar', { duration: 5000 });
         this.eliminarMedia();
       }
@@ -588,7 +541,6 @@ export class CrearPublicidadComponent implements OnInit {
   private buildFormData(): FormData {
     const formData = new FormData();
     
-    // ✅ CORREGIDO: Obtener el valor del campo incluso si está deshabilitado
     const formValues = this.publicidadForm.getRawValue(); // getRawValue() incluye campos deshabilitados
     
     formData.append('nombre', formValues.nombre || '');
@@ -624,12 +576,10 @@ export class CrearPublicidadComponent implements OnInit {
       
       formData.append('tiempo_visualizacion', tiempoEnSegundos.toString());
       
-      // Agregar múltiples imágenes
       this.selectedFiles.forEach((file, index) => {
         formData.append(`media_files`, file, file.name);
       });
       
-      // En modo edición, indicar qué imágenes existentes mantener
       if (this.isEditMode) {
         const keepImageIds = this.existingImages.map(img => img.id);
         formData.append('keep_image_ids', JSON.stringify(keepImageIds));
@@ -651,13 +601,11 @@ export class CrearPublicidadComponent implements OnInit {
 
   onSubmit(): void {
     if (this.publicidadForm.invalid) {
-      // ✅ CAMBIO: Reemplazar alert con snackBar
       this.snackBar.open('Por favor, completa todos los campos requeridos.', 'Cerrar', { duration: 5000 });
       this.publicidadForm.markAllAsTouched();
       return;
     }
 
-    // ✅ NUEVA VALIDACIÓN: Para creación
     if (!this.isEditMode) {
       if (this.selectedMediaType === 'image' && this.selectedFiles.length === 0) {
         this.snackBar.open('Por favor, selecciona al menos una imagen para la publicidad.', 'Cerrar', { duration: 5000 });
@@ -669,7 +617,6 @@ export class CrearPublicidadComponent implements OnInit {
       }
     }
 
-    // ✅ NUEVA VALIDACIÓN: Para edición de banners
     if (this.isEditMode) {
       if (this.selectedMediaType === 'image') {
         const totalImages = this.getTotalImagesCount();
@@ -700,14 +647,11 @@ export class CrearPublicidadComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((confirmed: boolean) => {
       if (confirmed) {
-        // Usuario confirmó, proceder con la operación
         this.procesarFormulario();
       }
-      // Si no confirmó, no hacer nada (el diálogo se cierra automáticamente)
     });
   }
 
-  // ✅ NUEVO: Método para procesar el formulario después de la confirmación
   private procesarFormulario(): void {
     this.isLoading = true;
     const formData = this.buildFormData();
@@ -716,7 +660,6 @@ export class CrearPublicidadComponent implements OnInit {
       this.publicidadService.updatePublicidad(this.publicidadId!, formData).subscribe({
         next: (response) => {
           this.isLoading = false;
-          console.log('Publicidad actualizada exitosamente', response);
 
           this.mostrarDialogExito(
             'ACTUALIZACIÓN',
@@ -733,7 +676,6 @@ export class CrearPublicidadComponent implements OnInit {
       this.publicidadService.createPublicidad(formData).subscribe({
         next: (response) => {
           this.isLoading = false;
-          console.log('Publicidad creada exitosamente', response);
 
           this.mostrarDialogExito(
             'REGISTRO',
@@ -771,15 +713,12 @@ export class CrearPublicidadComponent implements OnInit {
   }
 
   private handleSubmitError(error: ApiError): void {
-    console.error('ERROR COMPLETO', error);
     
     if (error.errors && error.errors.length > 0) {
       const errorMessages = error.errors.map(e => `${e.field}: ${e.message}`).join('\n');
-      // ✅ CAMBIO: Reemplazar alert con snackBar
       this.snackBar.open(`Errores de validación: ${errorMessages}`, 'Cerrar', { duration: 8000 });
     } else {
       const action = this.isEditMode ? 'actualizar' : 'crear';
-      // ✅ CAMBIO: Reemplazar alert con snackBar
       this.snackBar.open(error.message || `Error al ${action} la publicidad.`, 'Cerrar', { duration: 5000 });
     }
   }
@@ -806,7 +745,6 @@ export class CrearPublicidadComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ✅ NUEVO GETTER: Para validar media en edición
   get hasValidMediaForEdit(): boolean {
     if (!this.isEditMode) {
       return this.hasMedia;
