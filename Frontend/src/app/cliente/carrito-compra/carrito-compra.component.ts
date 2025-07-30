@@ -8,6 +8,9 @@ import { PublicidadSectionComponent } from '../../shared/publicidad-section/publ
 import { Publicidad } from '../../models/marketing.model';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TurnoConfirmationDialogComponent } from '../../shared/turno-confirmation-dialog/turno-confirmation-dialog.component';
+// ✅ AGREGAR: Import del ConfirmationDialog
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-carrito-compra',
@@ -15,7 +18,8 @@ import { TurnoConfirmationDialogComponent } from '../../shared/turno-confirmatio
   imports: [
     CommonModule,
     PublicidadSectionComponent,
-    MatDialogModule,
+    MatDialogModule, // ✅ AGREGAR
+    MatIconModule // ✅ AGREGAR
   ],
   templateUrl: './carrito-compra.component.html',
   styleUrl: './carrito-compra.component.scss'

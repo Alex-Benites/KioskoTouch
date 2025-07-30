@@ -12,6 +12,7 @@ import { ProductPopupComponent, ProductPopupData, ProductPopupResult } from '../
 import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
 import { Publicidad } from '../../models/marketing.model';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
 
 interface ProductoConBadge extends Producto {
   promoBadge?: string;
@@ -29,7 +30,8 @@ interface ItemConBadge extends Menu {
   imports: [
     CommonModule,
      FormsModule,
-     PublicidadSectionComponent
+     PublicidadSectionComponent,
+      MatIconModule,
   ],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'

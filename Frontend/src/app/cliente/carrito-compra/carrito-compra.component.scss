@@ -442,10 +442,9 @@ $font-family-base: 'Lato', sans-serif;
 
   &__content {
     background-color: white;
-    padding: 15px 30px 20px 30px; // ✅ AJUSTADO: Más padding abajo para los botones
+    padding: 0px; // ✅ AJUSTADO: Más padding abajo para los botones
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     flex: 1;
   }
 
@@ -468,7 +467,8 @@ $font-family-base: 'Lato', sans-serif;
   }
 
   &__button {
-    flex: 1; // ✅ CADA BOTÓN OCUPA 50% DEL ANCHO
+    flex: none; // ✅ CADA BOTÓN OCUPA 50% DEL ANCHO
+    width: 42%;
     border: none;
     border-radius: 12px;
     padding: 18px 20px; // ✅ BOTONES MÁS GRANDES
@@ -529,4 +529,113 @@ $font-family-base: 'Lato', sans-serif;
     background-color: color.scale($kiosko-red, $lightness: -10%);
     transform: scale(1.05);
   }
+}
+
+.order-summary-footer.mejorado {
+  background: #fff;
+  border-top: 3px solid #c0392b;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.07);
+  padding: 0px;
+  border-radius: 18px 18px 0 0;
+  margin-top: 24px;
+}
+
+.order-summary-footer__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.footer-icon {
+  font-size: 40px;
+  color: #c0392b;
+}
+
+.order-summary-footer__title {
+  font-size: 2.4rem;
+  font-weight: bold;
+  background-color: #ffffff;
+  color: #C3453A;
+  margin: 0;
+}
+
+.order-summary-footer__details {
+  display: flex;
+  margin-bottom: 10px;
+  gap: 140px;
+}
+
+.footer-detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 1.6rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.footer-detail-icon {
+  color: #c0392b;
+  font-size: 35px;
+}
+
+.footer-detail-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.footer-detail-value {
+  font-weight: bold;
+  color: #222;
+}
+
+.order-summary-footer__actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+  align-items: center;
+
+}
+
+.order-summary-footer__button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.primary__button {
+  background: #c0392b;
+  color: #fff;
+}
+
+.secondary__button {
+  background: #fff;
+  color: #c0392b;
+  border: 1.5px solid #c0392b;
+}
+
+.primary__button:disabled {
+  background: #e0e0e0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.mat-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
 }

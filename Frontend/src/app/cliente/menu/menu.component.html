@@ -136,31 +136,50 @@
   }
 
   <!-- Footer: Resumen del Pedido -->
+<<<<<<< Updated upstream
   <!--  MODIFICAR: Footer con texto dinámico del botón -->
   <footer class="order-summary-footer">
+=======
+
+<!-- Embellecido: Footer de Resumen del Pedido -->
+<footer class="order-summary-footer mejorado">
+  <div class="order-summary-footer__header">
+    <mat-icon class="footer-icon">shopping_cart</mat-icon>
+>>>>>>> Stashed changes
     <h2 class="order-summary-footer__title">Mi Orden</h2>
-    <div class="order-summary-footer__content">
-      @if (cantidadItemsSeguro > 0) {
-        <div class="order-summary-footer__details">
-          <span>Total: ${{ totalPedidoSeguro.toFixed(2) }}</span>
-          <span>Productos: {{ cantidadItemsSeguro }}</span>
+  </div>
+  <div class="order-summary-footer__content">
+    @if (cantidadItemsSeguro > 0) {
+      <div class="order-summary-footer__details">
+        <div class="footer-detail">
+          <mat-icon class="footer-detail-icon">attach_money</mat-icon>
+          <span class="footer-detail-label">Total:</span>
+          <span class="footer-detail-value">${{ totalPedidoSeguro.toFixed(2) }}</span>
         </div>
-      } @else {
-        <p class="order-summary-footer__empty-message">Tu pedido está vacío</p>
-      }
-      <div class="order-summary-footer__actions">
-        <button class="primary__button order-summary-footer__button" (click)="cancelarPedido()">
-          Cancelar pedido
-        </button>
-        <button
-          class="primary__button order-summary-footer__button"
-          (click)="continuar()"
-          [disabled]="!puedeContinuar">
-          {{ textoBotoncontinuar() }}
-        </button>
+        <div class="footer-detail">
+          <mat-icon class="footer-detail-icon">fastfood</mat-icon>
+          <span class="footer-detail-label">Productos:</span>
+          <span class="footer-detail-value">{{ cantidadItemsSeguro }}</span>
+        </div>
       </div>
+    } @else {
+      <p class="order-summary-footer__empty-message">Tu pedido está vacío</p>
+    }
+    <div class="order-summary-footer__actions">
+      <button class="secondary__button order-summary-footer__button" (click)="cancelarPedido()">
+        <mat-icon>cancel</mat-icon>
+        Cancelar pedido
+      </button>
+      <button
+        class="primary__button order-summary-footer__button"
+        (click)="continuar()"
+        [disabled]="!puedeContinuar">
+        <mat-icon>arrow_forward</mat-icon>
+        {{ textoBotoncontinuar() }}
+      </button>
     </div>
-  </footer>
+  </div>
+</footer>
 
   @if (mostrarLogin) {
     <div class="popup-overlay">

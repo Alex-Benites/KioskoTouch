@@ -131,9 +131,12 @@
     </div>
   </main>
 
-  <!-- Footer: Igual que en menu pero con botones específicos del carrito -->
-  <footer class="order-summary-footer">
+<!-- Embellecido: Footer de Resumen del Pedido para Carrito -->
+<footer class="order-summary-footer mejorado">
+  <div class="order-summary-footer__header">
+    <mat-icon class="footer-icon">shopping_cart</mat-icon>
     <h2 class="order-summary-footer__title">Resumen del Pedido</h2>
+<<<<<<< Updated upstream
     <div class="order-summary-footer__content">
       <!--  Mostrar totales del pedido -->
       <div class="order-summary-footer__details">
@@ -155,7 +158,37 @@
           [disabled]="cantidadProductos === 0">
           Finalizar Pedido
         </button>
+=======
+  </div>
+  <div class="order-summary-footer__content">
+    <div class="order-summary-footer__details">
+      <div class="footer-detail">
+        <mat-icon class="footer-detail-icon">attach_money</mat-icon>
+        <span class="footer-detail-label">Total:</span>
+        <span class="footer-detail-value">${{ totalPedido.toFixed(2) }}</span>
+      </div>
+      <div class="footer-detail">
+        <mat-icon class="footer-detail-icon">fastfood</mat-icon>
+        <span class="footer-detail-label">Productos:</span>
+        <span class="footer-detail-value">{{ cantidadProductosFooter }}</span>
+>>>>>>> Stashed changes
       </div>
     </div>
-  </footer>
+    <div class="order-summary-footer__actions">
+      <button
+        class="secondary__button order-summary-footer__button"
+        (click)="volverAlMenu()">
+        <mat-icon>arrow_back</mat-icon>
+        Seguir Comprando
+      </button>
+      <button
+        class="primary__button order-summary-footer__button carrito-finalizar-btn"
+        (click)="finalizarPedido()"
+        [disabled]="cantidadProductosFooter === 0">
+        <mat-icon>check_circle</mat-icon>
+        Finalizar Pedido
+      </button>
+    </div>
+  </div>
+</footer>
 </div>
