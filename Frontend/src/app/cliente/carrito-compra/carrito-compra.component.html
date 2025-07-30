@@ -136,29 +136,6 @@
   <div class="order-summary-footer__header">
     <mat-icon class="footer-icon">shopping_cart</mat-icon>
     <h2 class="order-summary-footer__title">Resumen del Pedido</h2>
-<<<<<<< Updated upstream
-    <div class="order-summary-footer__content">
-      <!--  Mostrar totales del pedido -->
-      <div class="order-summary-footer__details">
-        <span>Total: ${{ totalPedido.toFixed(2) }}</span>
-        <!-- <span>Productos: {{ cantidadProductos }}</span> -->
-        <span>Productos: {{ cantidadProductosFooter }}</span>
-      </div>
-
-      <!--  Botones específicos del carrito -->
-      <div class="order-summary-footer__actions">
-        <button
-          class="primary__button order-summary-footer__button"
-          (click)="volverAlMenu()">
-          Seguir Comprando
-        </button>
-        <button
-          class="primary__button order-summary-footer__button carrito-finalizar-btn"
-          (click)="finalizarPedido()"
-          [disabled]="cantidadProductos === 0">
-          Finalizar Pedido
-        </button>
-=======
   </div>
   <div class="order-summary-footer__content">
     <div class="order-summary-footer__details">
@@ -171,7 +148,6 @@
         <mat-icon class="footer-detail-icon">fastfood</mat-icon>
         <span class="footer-detail-label">Productos:</span>
         <span class="footer-detail-value">{{ cantidadProductosFooter }}</span>
->>>>>>> Stashed changes
       </div>
     </div>
     <div class="order-summary-footer__actions">
