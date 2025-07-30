@@ -1,17 +1,17 @@
 <div class="personalizar-page-container">
-  <!-- ✅ Banner Promocional Superior -->
+  <!--  Banner Promocional Superior -->
   <div class="promo-banner-top">
     <img src="assets/cliente/USUARIO_5.png" alt="Nuestra Nueva Hamburguesa">
   </div>
 
-  <!-- ✅ Header con logo -->
+  <!--  Header con logo -->
   <header class="menu-header">
     <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
 
-  <!-- ✅ Contenido principal -->
+  <!--  Contenido principal -->
   <main class="personalizacion-content">
-    <!-- ✅ Contenedor centrado solo para el producto -->
+    <!--  Contenedor centrado solo para el producto -->
     <div class="producto-container-centrado">
       <div class="producto-detalle">
         <!-- Imagen del producto -->
@@ -55,7 +55,7 @@
                 </button>
               </div>
 
-              <!-- ✅ QUITAR: Botón añadir de aquí -->
+              <!--  QUITAR: Botón añadir de aquí -->
               <!-- <button class="boton-anadir-principal" (click)="agregarAlCarrito()">
                 Añadir
               </button> -->
@@ -65,26 +65,26 @@
       </div>
     </div>
 
-    <!-- ✅ Sección de ingredientes con cuadrícula -->
+    <!--  Sección de ingredientes con cuadrícula -->
     <div class="ingredientes-container">
       <div class="ingredientes-seccion">
         <h2 class="ingredientes-titulo">Ingredientes</h2>
         <div class="ingredientes-separador"></div>
 
-        <!-- ✅ MOSTRAR loading mientras carga -->
+        <!--  MOSTRAR loading mientras carga -->
         <div *ngIf="mostrandoCarga()" class="ingredientes-loading">
           <div class="loading-spinner">⏳</div>
           <p>Cargando opciones de personalización...</p>
         </div>
 
-        <!-- ✅ MOSTRAR mensaje solo si ya cargó y no hay ingredientes -->
+        <!--  MOSTRAR mensaje solo si ya cargó y no hay ingredientes -->
         <div *ngIf="ingredientesCargados() && !tieneIngredientesPersonalizables()" class="sin-ingredientes-message">
           <div class="message-icon">ℹ️</div>
           <p class="message-text">{{ mensajeSinIngredientes() }}</p>
           <p class="message-subtext">Este producto se agregará al carrito con su preparación estándar.</p>
         </div>
 
-        <!-- ✅ MOSTRAR ingredientes solo si ya cargó y hay ingredientes -->
+        <!--  MOSTRAR ingredientes solo si ya cargó y hay ingredientes -->
         <div *ngIf="ingredientesCargados() && tieneIngredientesPersonalizables()" class="ingredientes-section">
           <h3 class="section-title">🥗 Personaliza tus ingredientes</h3>
           <p class="section-subtitle">Agrega o quita ingredientes según tu preferencia</p>
@@ -105,7 +105,7 @@
               <div class="ingrediente-info">
                 <h4 class="ingrediente-nombre">{{ ingrediente.nombre }}</h4>
                 <p class="ingrediente-precio">
-                  <!-- ✅ NUEVO: Para ingredientes incluidos -->
+                  <!--  NUEVO: Para ingredientes incluidos -->
                   <span *ngIf="ingrediente.esOriginal" class="precio-incluido">
                     <!-- Mostrar "Sin [ingrediente]" cuando cantidad es 0 -->
                     <span *ngIf="ingrediente.cantidad === 0" class="sin-ingrediente">
@@ -122,7 +122,7 @@
                     </span>
                   </span>
 
-                  <!-- ✅ Para ingredientes NO incluidos -->
+                  <!--  Para ingredientes NO incluidos -->
                   <span *ngIf="!ingrediente.esOriginal" class="precio-adicional">
                     <span *ngIf="ingrediente.cantidad === 0" class="no-seleccionado">
                       +${{ (ingrediente.precio || 0).toFixed(2) }} c/u
@@ -135,7 +135,7 @@
                 </p>
               </div>
 
-              <!-- ✅ NUEVO: Controles de cantidad -->
+              <!--  NUEVO: Controles de cantidad -->
               <div class="ingrediente-controles">
                 <!-- Botón disminuir con lógica mejorada -->
                 <button
@@ -164,7 +164,7 @@
     </div>
   </main>
 
-  <!-- ✅ Footer "Mi Orden" - SOLO para AGREGAR -->
+  <!--  Footer "Mi Orden" - SOLO para AGREGAR -->
   <footer class="order-summary-footer" *ngIf="!modoEdicion">
     <div class="order-summary-header">
       <h2>🛒 Mi Orden</h2>
@@ -202,7 +202,7 @@
     </div>
   </footer>
 
-  <!-- ✅ Barra de edición - SOLO para EDITAR -->
+  <!--  Barra de edición - SOLO para EDITAR -->
   <div class="edit-actions-bar" *ngIf="modoEdicion">
     <button class="btn-volver" (click)="volverAlCarrito()">
       <i class="material-icons">arrow_back</i>

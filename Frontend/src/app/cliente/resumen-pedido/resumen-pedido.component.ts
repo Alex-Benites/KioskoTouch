@@ -5,11 +5,9 @@ import { Router } from '@angular/router';
 import { PedidoService } from '../../services/pedido.service';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
-// ✅ AGREGAR: Imports para el diálogo
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
-import { Subscription } from 'rxjs'; // ✅ AGREGAR
-// ✅ AGREGAR: Importar los nuevos modelos
+import { Subscription } from 'rxjs';
 import {
   PedidoRequest,
   ProductoPedidoRequest,
@@ -32,23 +30,18 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './resumen-pedido.component.scss',
 })
 export class ResumenPedidoComponent implements OnInit, OnDestroy {
-  // ✅ Inject de servicios existentes
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private pedidoService = inject(PedidoService);
   private catalogoService = inject(CatalogoService);
-  // ✅ AGREGAR: Inject del diálogo
   private dialog = inject(MatDialog);
 
-  // ✅ Propiedades para el template
   private productosInfo: Map<number, any> = new Map();
   private menusInfo: Map<number, any> = new Map();
 
-  // ✅ Propiedades existentes
   metodoPagoSeleccionado: 'tarjeta' | 'efectivo' | null = null;
   mostrarDatosFacturacion: boolean = false;
 
-  // ✅ NUEVO: Datos de facturación
   datosFacturacion = {
     nombreCompleto: '',
     cedula: '',
@@ -56,15 +49,12 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     correo: '',
   };
 
-  // ✅ AGREGAR: Variables para IVA dinámico
   ivaActual: number = 15.0; // Valor por defecto
   ivaSubscription?: Subscription;
   cargandoIva = true;
 
-  // ✅ AGREGAR: Estado de guardado
   guardandoPedido = false;
 
-  // ✅ Getters para el template
   get productosCarrito(): any[] {
     return this.pedidoService.obtenerProductosParaCarrito();
   }
@@ -81,17 +71,14 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     return this.pedidoService.cantidadItems();
   }
 
-  // ✅ NUEVO: Getter para obtener el turno
   get numeroTurno(): string | null {
     return this.pedidoService.obtenerTurno()?.toString() || null;
   }
 
-  // ✅ NUEVO: Verificar si tiene turno
   get tieneTurno(): boolean {
     return this.pedidoService.tieneTurno();
   }
 
-  // ✅ AGREGAR: Método para obtener el texto del IVA
   getTextoIva(): string {
     if (this.cargandoIva) return 'Cargando...';
     return `IVA ${this.ivaActual}%`;
@@ -100,24 +87,17 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.renderer.addClass(document.body, 'fondo-home');
     this.cargarInformacionProductos();
-    this.cargarIvaActual(); // ✅ AGREGAR: Cargar IVA dinámico
+    this.cargarIvaActual();
 
-    console.log('📋 ResumenPedidoComponent inicializado');
-    console.log('📋 Productos del pedido:', this.productosCarrito);
-    console.log('💰 Total del pedido:', this.totalPedido);
-    console.log('🔢 Cantidad items:', this.cantidadItems);
-    console.log('🎫 Número de turno:', this.numeroTurno); // ✅ NUEVO
   }
 
   ngOnDestroy(): void {
     this.renderer.removeClass(document.body, 'fondo-home');
-    // ✅ AGREGAR: Limpiar suscripción
     if (this.ivaSubscription) {
       this.ivaSubscription.unsubscribe();
     }
   }
 
-  // ✅ Cargar información de productos
   private cargarInformacionProductos(): void {
     const productos = this.productosCarrito;
     const idsProductos = [...new Set(productos.filter(p => p.tipo === 'producto').map(p => p.producto_id).filter(id => id))];
@@ -160,7 +140,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Obtener nombre del producto o menú
   obtenerNombreProducto(item: any): string {
     if (item.tipo === 'menu') {
       const id = item.menu_id;
@@ -179,7 +158,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Obtener imagen del producto o menú
   obtenerImagenProducto(item: any): string | null {
     if (item.tipo === 'menu') {
       const id = item.menu_id;
@@ -198,54 +176,44 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Verificar si tiene personalizaciones
   tienePersonalizaciones(item: any): boolean {
     return item.personalizacion && item.personalizacion.length > 0;
   }
 
-  // ✅ Obtener ingredientes agregados
   obtenerIngredientesAgregados(item: any): any[] {
     if (!this.tienePersonalizaciones(item)) return [];
 
     return item.personalizacion.filter((p: any) => p.accion === 'agregar');
   }
 
-  // ✅ Obtener ingredientes removidos
   obtenerIngredientesRemovidos(item: any): any[] {
     if (!this.tienePersonalizaciones(item)) return [];
 
     return item.personalizacion.filter((p: any) => p.accion === 'quitar');
   }
 
-  // ✅ Obtener ingrediente por ID
   obtenerIngredientePorId(ingredienteId: number): any {
     // Implementar lógica para obtener nombre del ingrediente
     return { nombre: `Ingrediente ${ingredienteId}` };
   }
 
-  // ✅ AGREGAR: Método faltante - irAlMenu
   irAlMenu(): void {
-    console.log('🏠 Navegando al menú principal...');
     this.router.navigate(['/cliente/menu']);
   }
 
-  // ✅ AGREGAR: Método para manejar publicidad
   onPublicidadCambio(publicidad: any): void {
-    console.log('📢 Publicidad cambiada:', publicidad);
   }
 
-  // ✅ ARREGLAR: Método calcularSubtotal
   calcularSubtotal(): number {
     if (this.cargandoIva) return 0;
 
-    // ✅ CORRECTO: El subtotal es la suma de subtotales de productos SIN IVA
+    // El subtotal es la suma de subtotales de productos SIN IVA
     // Los precios de productos ya están sin IVA en la base de datos
     return this.productosCarrito.reduce((total, item) => {
       return total + item.precio_unitario * item.cantidad;
     }, 0);
   }
 
-  // ✅ ARREGLAR: Método calcularIVA basado en subtotal correcto
   calcularIVA(): number {
     if (this.cargandoIva) return 0;
 
@@ -253,29 +221,22 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     return subtotal * (this.ivaActual / 100);
   }
 
-  // ✅ NUEVO: Método para calcular total
   calcularTotal(): number {
     const subtotal = this.calcularSubtotal();
     const iva = this.calcularIVA();
     return subtotal + iva;
   }
 
-  // ✅ AGREGAR: Seleccionar método de pago
   seleccionarMetodoPago(metodo: 'tarjeta' | 'efectivo'): void {
     this.metodoPagoSeleccionado = metodo;
-    console.log('💳 Método de pago seleccionado:', metodo);
   }
 
-  // ✅ AGREGAR: Toggle datos de facturación
   toggleDatosFacturacion(): void {
     this.mostrarDatosFacturacion = !this.mostrarDatosFacturacion;
   }
 
-  // ✅ NUEVO: Cancelar pedido completamente (limpiar carrito)
   cancelarPedido(): void {
-    console.log('🗑️ Solicitando confirmación para cancelar pedido completo...');
 
-    // ✅ NUEVO: Abrir diálogo de confirmación
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '450px',
       disableClose: false,
@@ -283,38 +244,26 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       data: {
         itemType: 'PEDIDO COMPLETO',
         action: 'delete',
-        context: 'pedido', // ✅ Contexto específico para pedido
+        context: 'pedido',
       },
     });
 
-    // ✅ NUEVO: Manejar la respuesta del diálogo
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('🎯 Respuesta del diálogo de cancelación:', result);
 
       if (result === true) {
-        // ✅ Usuario confirmó → Cancelar pedido completo
-        console.log('✅ Confirmado: Cancelando pedido completo...');
-        console.log('🏠 Regresando al home...');
+        // Usuario confirmó → Cancelar pedido completo
 
-        // ✅ Regresar al home
         this.router.navigate(['/cliente/home']);
       } else {
-        // ✅ Usuario canceló → No hacer nada
-        console.log('❌ Cancelado: El pedido permanece activo');
       }
     });
   }
 
-  // ✅ NUEVO: Editar pedido (ir al carrito para modificar)
   editarPedido(): void {
-    console.log('✏️ Editando pedido...');
-    console.log('🔙 Volviendo al carrito para modificar...');
 
-    // ✅ Regresar al carrito para editar
     this.router.navigate(['/cliente/carrito']);
   }
 
-  // ✅ MODIFICAR: Confirmar pedido con método de pago
   confirmarPedido(): void {
     if (!this.metodoPagoSeleccionado) {
       alert('Por favor selecciona un método de pago');
@@ -326,27 +275,22 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('✅ Iniciando proceso de guardado del pedido...');
     this.guardarPedidoEnBaseDatos();
   }
 
-  // ✅ NUEVO: Método principal para guardar el pedido
   private guardarPedidoEnBaseDatos(): void {
     this.guardandoPedido = true;
 
     // 1. Preparar la estructura de datos
     const pedidoData = this.prepararDatosPedido();
 
-    console.log('📤 Enviando pedido al backend:', pedidoData);
 
     // 2. Enviar al backend
     this.catalogoService.crearPedido(pedidoData).subscribe({
       next: (response) => {
-        console.log('✅ Pedido guardado exitosamente:', response);
         this.manejarPedidoExitoso(response);
       },
       error: (error) => {
-        console.error('❌ Error al guardar pedido:', error);
         this.manejarErrorPedido(error);
       },
       complete: () => {
@@ -355,7 +299,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ NUEVO: Preparar estructura de datos para enviar
   private prepararDatosPedido(): PedidoRequest {
     // Obtener datos básicos
     const tipoEntrega = this.pedidoService.tipoEntrega() || 'servir';
@@ -364,7 +307,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     // Preparar productos con personalizaciones
     const productos = this.prepararProductosPedido();
 
-    // ✅ USAR LOS MÉTODOS CORREGIDOS
     const subtotal = Math.round(this.calcularSubtotal() * 100) / 100;
     const ivaValor = Math.round(this.calcularIVA() * 100) / 100;
     const total = Math.round(this.calcularTotal() * 100) / 100;
@@ -380,11 +322,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       total: total,
     };
 
-    console.log('💰 VALORES CALCULADOS CORREGIDOS:');
-    console.log(`   - Subtotal: ${subtotal} (suma de productos sin IVA)`);
-    console.log(`   - IVA (${this.ivaActual}%): ${ivaValor}`);
-    console.log(`   - Total: ${total} (subtotal + IVA)`);
-    console.log(`   - Total del pedido service: ${this.totalPedido}`);
 
     // Agregar turno si existe
     if (this.tieneTurno && this.numeroTurno) {
@@ -407,7 +344,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     return pedidoData;
   }
 
-  // ✅ MODIFICAR: Método prepararProductosPedido
   private prepararProductosPedido(): ProductoPedidoRequest[] {
     return this.productosCarrito.map((item) => {
       const subtotalProducto = Math.round(item.precio_unitario * item.cantidad * 100) / 100;
@@ -415,7 +351,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       // Preparar personalizaciones (solo para productos, no para menús)
       const personalizaciones: PersonalizacionRequest[] = [];
 
-      // ✅ NUEVO: Solo agregar personalizaciones para productos individuales
       if (item.tipo === 'producto' && item.personalizacion && Array.isArray(item.personalizacion)) {
         item.personalizacion.forEach((p: any) => {
           personalizaciones.push({
@@ -426,7 +361,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
         });
       }
 
-      // ✅ NUEVO: Estructura base
       const productoBase = {
         cantidad: item.cantidad,
         precio_unitario: Math.round(item.precio_unitario * 100) / 100,
@@ -434,7 +368,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
         personalizaciones: personalizaciones,
       };
 
-      // ✅ NUEVO: Agregar producto_id O menu_id según el tipo
       if (item.tipo === 'producto') {
         return {
           ...productoBase,
@@ -447,7 +380,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
         };
       }
 
-      // ✅ FALLBACK: Asumir producto si no está especificado
       return {
         ...productoBase,
         producto_id: item.producto_id,
@@ -455,53 +387,34 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ NUEVO: Obtener número de mesa
   private obtenerNumeroMesa(): number {
     const tipoEntrega = this.pedidoService.tipoEntrega() || 'servir';
 
-    console.log('🏠 OBTENIENDO NÚMERO DE MESA:');
-    console.log(`   - Tipo de entrega: ${tipoEntrega}`);
 
     if (tipoEntrega === 'llevar') {
-      // ✅ PARA LLEVAR: No necesita mesa
-      console.log('   - Para llevar: mesa = 0 (no aplica)');
       return 0;
     }
 
     if (tipoEntrega === 'servir') {
-      // ✅ PARA SERVIR: Verificar si tiene turno
       const turno = this.pedidoService.obtenerTurno();
 
       if (turno && turno > 0) {
-        // ✅ TIENE TURNO: Usar el número de turno como mesa
-        console.log(`   - Para servir CON turno: mesa = ${turno}`);
         return turno;
       } else {
-        // ✅ SIN TURNO: También usar 0 (NULL en BD)
-        console.log('   - Para servir SIN turno: mesa = 0 (NULL en BD)');
         return 0;
       }
     }
 
-    // ✅ FALLBACK: También 0
-    console.log('   - Fallback: mesa = 0');
     return 0;
   }
 
-  // ✅ MODIFICAR: Manejar respuesta exitosa SIN LIMPIAR CARRITO
   private manejarPedidoExitoso(response: any): void {
     if (response.success && response.data) {
-      console.log('🎉 Pedido creado con ID:', response.data.pedido_id);
 
-      // ✅ CALCULAR VALORES ANTES DE NAVEGACIÓN
       const subtotalCalculado = this.calcularSubtotal();
       const ivaCalculado = this.calcularIVA();
       const totalCalculado = this.calcularTotal();
 
-      console.log('💰 VALORES CALCULADOS PARA PAGO:');
-      console.log(`   - Subtotal: ${subtotalCalculado.toFixed(2)}`);
-      console.log(`   - IVA: ${ivaCalculado.toFixed(2)}`);
-      console.log(`   - Total: ${totalCalculado.toFixed(2)}`);
 
       // Preparar parámetros para navegación
       const queryParams: any = {
@@ -527,19 +440,16 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
         }
       }
 
-      console.log('📋 Query params preparados:', queryParams);
 
       // ❌ NO LIMPIAR CARRITO AQUÍ - Solo después de confirmar pago
       // this.pedidoService.limpiarCarrito();
 
-      // ✅ GUARDAR INFO DEL PEDIDO CREADO EN EL SERVICIO PARA REFERENCIA
       this.pedidoService.setPedidoCreado({
         id: response.data.pedido_id,
         numero: response.data.numero_pedido,
         estado: 'pendiente_pago'
       });
 
-      console.log('🚀 Navegando a instrucción de pago (carrito conservado para posible cancelación)');
 
       this.router.navigate(['/cliente/instruccion-pago'], {
         queryParams,
@@ -549,7 +459,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ NUEVO: Manejar errores
   private manejarErrorPedido(error: any): void {
     let mensajeError =
       'Error al procesar el pedido. Por favor intenta nuevamente.';
@@ -561,27 +470,17 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     }
 
     alert(mensajeError);
-    console.error('❌ Error detallado:', error);
   }
 
-  // ✅ AGREGAR: Generar número de orden
   private generarNumeroOrden(): string {
     return Math.floor(Math.random() * 1000 + 1)
       .toString()
       .padStart(3, '0');
   }
 
-  // ✅ Método para debug
   verificarDatos(): void {
-    console.log('🔍 VERIFICACIÓN RESUMEN PEDIDO:');
-    console.log('   - Productos:', this.productosCarrito);
-    console.log('   - Cantidad productos:', this.cantidadProductos);
-    console.log('   - Total pedido:', this.totalPedido);
-    console.log('   - Cantidad items:', this.cantidadItems);
-    console.log('   - Detalles raw:', this.pedidoService.detalles());
   }
 
-  // ✅ AGREGAR: Método para validar datos de facturación
   validarDatosFacturacion(): boolean {
     const { nombreCompleto, cedula, telefono, correo } = this.datosFacturacion;
 
@@ -605,7 +504,6 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  // ✅ NUEVO: Método para cargar el IVA actual
   cargarIvaActual(): void {
     this.cargandoIva = true;
 
@@ -613,16 +511,12 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success && response.data) {
           this.ivaActual = response.data.porcentaje_iva;
-          console.log(`✅ IVA dinámico cargado: ${this.ivaActual}%`);
         } else {
-          console.warn('⚠️ No se encontró IVA activo, usando 15% por defecto');
           this.ivaActual = 15.0;
         }
         this.cargandoIva = false;
       },
       error: (error) => {
-        console.error('❌ Error al cargar IVA:', error);
-        console.warn('⚠️ Error cargando IVA, usando 15% por defecto');
         this.ivaActual = 15.0;
         this.cargandoIva = false;
       },

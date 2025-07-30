@@ -23,7 +23,7 @@ import { PedidoChefService, PedidoChef } from '../../services/pedido-chef.servic
     MatButtonModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule, // ✅ AGREGADO
+    MatSnackBarModule,
     HeaderAdminComponent
   ],
   templateUrl: './pedidos.component.html',
@@ -40,12 +40,10 @@ export class PedidosComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('🚀 Iniciando componente de pedidos del chef...');
     this.inicializarComponente();
   }
 
   ngOnDestroy(): void {
-    console.log('🔄 Destruyendo componente de pedidos del chef...');
     // Limpiar selecciones al salir
     this.pedidoChefService.limpiarSelecciones();
   }
@@ -61,9 +59,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
       // Cargar pedidos
       await this.pedidoChefService.cargarPedidos();
       
-      console.log('✅ Componente inicializado correctamente');
     } catch (error) {
-      console.error('❌ Error inicializando componente:', error);
       this.mostrarError('Error al cargar los pedidos');
     }
   }
@@ -72,7 +68,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
    * Manejar cambio de tab
    */
   onTabChange(index: number): void {
-    console.log(`🔄 Cambiando a tab ${index}`);
     this.selectedTabIndex = index;
     
     // Limpiar selecciones al cambiar de tab
@@ -83,7 +78,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
    * Togglear selección de un pedido
    */
   toggleSeleccionPedido(pedidoId: number): void {
-    console.log(`🔄 Toggle selección pedido ${pedidoId}`);
     this.pedidoChefService.toggleSeleccionPedido(pedidoId);
   }
 
@@ -91,7 +85,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
    * Cambiar estado de cocina de un pedido
    */
   cambiarEstadoCocina(pedidoId: number, nuevoEstado: 'pendiente' | 'en_preparacion' | 'finalizado'): void {
-    console.log(`🍳 Cambiando estado de cocina del pedido ${pedidoId} a ${nuevoEstado}`);
     this.pedidoChefService.cambiarEstadoCocina(pedidoId, nuevoEstado);
     
     // Mensajes más específicos
@@ -118,7 +111,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
     }
 
     try {
-      console.log(`🏁 Finalizando ${seleccionados.length} pedidos...`);
       
       await this.pedidoChefService.finalizarPedidosSeleccionados();
       
@@ -130,7 +122,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
       }
       
     } catch (error) {
-      console.error('❌ Error finalizando pedidos:', error);
       this.mostrarError('Error al finalizar los pedidos');
     }
   }
@@ -149,7 +140,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
     }
 
     try {
-      console.log(`🔄 Restaurando ${seleccionados.length} pedidos...`);
       
       await this.pedidoChefService.restaurarPedidosSeleccionados();
       
@@ -161,7 +151,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
       }
       
     } catch (error) {
-      console.error('❌ Error restaurando pedidos:', error);
       this.mostrarError('Error al restaurar los pedidos');
     }
   }
@@ -170,7 +159,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
    * Seleccionar todos los pedidos de una lista
    */
   seleccionarTodos(lista: PedidoChef[]): void {
-    console.log(`🔄 Seleccionando todos los pedidos: ${lista.length}`);
     
     lista.forEach(pedido => {
       if (!pedido.selected) {
@@ -183,15 +171,13 @@ export class PedidosComponent implements OnInit, OnDestroy {
    * Deseleccionar todos los pedidos
    */
   deseleccionarTodos(): void {
-    console.log('🔄 Deseleccionando todos los pedidos');
     this.pedidoChefService.limpiarSelecciones();
   }
 
   /**
-   * ✅ MODIFICADO: Refresh manual con snackbar de actualización
+   * Refresh manual con snackbar de actualización
    */
   async refreshPedidos(): Promise<void> {
-    console.log('🔄 Refresh manual de pedidos');
     
     // Mostrar snackbar de actualización
     const snackBarRef = this.snackBar.open('Actualizando pedidos...', '', {
@@ -210,7 +196,6 @@ export class PedidosComponent implements OnInit, OnDestroy {
       this.mostrarExito('Pedidos actualizados correctamente');
       
     } catch (error) {
-      console.error('❌ Error en refresh:', error);
       
       // Cerrar snackbar de actualización
       snackBarRef.dismiss();

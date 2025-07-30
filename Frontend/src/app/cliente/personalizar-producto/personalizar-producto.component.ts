@@ -2,11 +2,10 @@ import { Component, OnInit, inject, computed, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CatalogoService } from '../../services/catalogo.service';
-import { PedidoService } from '../../services/pedido.service'; // ✅ AGREGAR
+import { PedidoService } from '../../services/pedido.service';
 import { PersonalizacionIngrediente } from '../../models/pedido.model';
 import { combineLatest } from 'rxjs';
 
-// ✅ Interface para ingredientes
 interface IngredientePersonalizacion {
   id: number;
   nombre: string;
@@ -26,11 +25,9 @@ interface IngredientePersonalizacion {
   styleUrls: ['./personalizar-producto.component.scss']
 })
 export class PersonalizarProductoComponent implements OnInit {
-  // ✅ AGREGAR: Signal para controlar el estado de carga
   ingredientesCargados = signal<boolean>(false);
   cargandoIngredientes = signal<boolean>(false);
 
-   // ✅ NUEVAS propiedades para edición
   modoEdicion = false;
   carritoIndex: number | null = null;
   datosActuales: any = null;
@@ -39,18 +36,15 @@ export class PersonalizarProductoComponent implements OnInit {
   ingredientesAEliminar: number[] = [];
   productoSeleccionado = true;
 
-  // ✅ AGREGAR flag para evitar ejecución múltiple
   procesandoConfirmacion = false;
-  // ✅ CORREGIR: Computed más inteligente
   tieneIngredientesPersonalizables = computed(() => {
     if (!this.ingredientesCargados()) {
       return true;
     }
-    return this.ingredientesDisponibles().length > 0; // ✅ USAR ()
+    return this.ingredientesDisponibles().length > 0;
   });
 
 
-  // ✅ CORREGIR: Computed para el mensaje
   mensajeSinIngredientes = computed(() => {
     // Solo mostrar mensaje si ya se cargaron y no hay ingredientes
     if (this.ingredientesCargados() && this.ingredientesDisponibles().length === 0) {
@@ -59,18 +53,15 @@ export class PersonalizarProductoComponent implements OnInit {
     return '';
   });
 
-  // ✅ NUEVO: Computed para saber si mostrar el loader
   mostrandoCarga = computed(() => {
     return this.cargandoIngredientes() || !this.ingredientesCargados();
   });
 
-  // ✅ AGREGAR inject del PedidoService existente
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private catalogoService = inject(CatalogoService);
-  public pedidoService = inject(PedidoService); // ✅ NUEVO: usar el servicio que ya funciona
+  public pedidoService = inject(PedidoService);
 
-  // ✅ Propiedades del componente con signals
   productoId: number | null = null;
   cantidad = signal<number>(1);
   nombreProducto: string = '';
@@ -80,11 +71,9 @@ export class PersonalizarProductoComponent implements OnInit {
   imagenProducto: string = '';
   nombreCategoria: string = '';
 
-  // ✅ Ingredientes disponibles
   ingredientesDisponibles = signal<IngredientePersonalizacion[]>([]);
 
 
-  // ✅ REEMPLAZAR el computed precioTotalCalculado (línea ~82)
   precioTotalCalculado = computed(() => {
     const precioBase = this.precioProducto;
     const ingredientes = this.ingredientesDisponibles();
@@ -92,37 +81,18 @@ export class PersonalizarProductoComponent implements OnInit {
     const costoIngredientesExtra = ingredientes.reduce((total: number, ing) => {
       if (ing.precio && ing.precio > 0) {
         if (ing.esOriginal) {
-          // ✅ INGREDIENTES BASE: Solo sumar cantidades EXTRA (por encima de la cantidad base)
+          // INGREDIENTES BASE: Solo sumar cantidades EXTRA (por encima de la cantidad base)
           const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           const costoEste = cantidadExtra * (ing.precio || 0);
 
-          // ✅ AGREGAR LOGS DE DEBUG:
-          console.log(`🔍 DEBUG ${ing.nombre}:`);
-          console.log(`   - Cantidad actual: ${ing.cantidad}`);
-          console.log(`   - Cantidad base: ${cantidadBase}`);
-          console.log(`   - Cantidad extra: ${cantidadExtra}`);
-          console.log(`   - Costo este ingrediente: $${costoEste}`);
-
-          if (cantidadExtra > 0) {
-            console.log(`🧀 ${ing.nombre} (base + ${cantidadExtra} extra): +$${costoEste}`);
-          }
           return total + costoEste;
         } else {
-          // ✅ INGREDIENTES OPCIONALES: Solo sumar cantidad EXTRA si estaba incluido
-          const cantidadBase = ing.cantidadBase || 0;  // ✅ Usar cantidadBase corregida
+          // INGREDIENTES OPCIONALES: Solo sumar cantidad EXTRA si estaba incluido
+          const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           const costoEste = cantidadExtra * (ing.precio || 0);
 
-          console.log(`🔍 DEBUG ${ing.nombre}:`);
-          console.log(`   - Cantidad actual: ${ing.cantidad}`);
-          console.log(`   - Cantidad base: ${cantidadBase}`);
-          console.log(`   - Cantidad extra: ${cantidadExtra}`);
-          console.log(`   - Costo este ingrediente: $${costoEste}`);
-
-          if (cantidadExtra > 0) {
-            console.log(`🥬 ${ing.nombre} (${cantidadBase} incluido + ${cantidadExtra} extra): +$${costoEste}`);
-          }
           return total + costoEste;
         }
       }
@@ -132,29 +102,22 @@ export class PersonalizarProductoComponent implements OnInit {
     const precioUnitario = precioBase + costoIngredientesExtra;
     const precioTotal = precioUnitario * this.cantidad();
 
-    console.log('💰 === CÁLCULO CORREGIDO ===');
-    console.log('Precio base:', precioBase);
-    console.log('Ingredientes extras:', costoIngredientesExtra);
-    console.log('Precio unitario:', precioUnitario);
-    console.log('PRECIO TOTAL:', precioTotal);
-    console.log('💰 === FIN CÁLCULO ===');
 
     return precioTotal;
   });
 
 
-  // ✅ ACTUALIZAR precioUnitarioConIngredientes (línea ~95):
   precioUnitarioConIngredientes = computed(() => {
     const precioBase = this.precioProducto;
     const costoIngredientesExtra = this.ingredientesDisponibles().reduce((total: number, ing) => {
       if (ing.precio && ing.precio > 0) {
         if (ing.esOriginal) {
-          // ✅ INGREDIENTES BASE: Solo cantidades extra
+          // INGREDIENTES BASE: Solo cantidades extra
           const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           return total + (cantidadExtra * (ing.precio || 0));
         } else {
-          // ✅ INGREDIENTES OPCIONALES: Solo cantidades extra
+          // INGREDIENTES OPCIONALES: Solo cantidades extra
           const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           return total + (cantidadExtra * (ing.precio || 0));
@@ -166,17 +129,16 @@ export class PersonalizarProductoComponent implements OnInit {
     return precioBase + costoIngredientesExtra;
   });
 
-  // ✅ ACTUALIZAR costoIngredientesAdicionales (línea ~105):
   costoIngredientesAdicionales = computed(() => {
     return this.ingredientesDisponibles().reduce((total: number, ing) => {
       if (ing.precio && ing.precio > 0) {
         if (ing.esOriginal) {
-          // ✅ INGREDIENTES BASE: Solo cantidades extra
+          // INGREDIENTES BASE: Solo cantidades extra
           const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           return total + (cantidadExtra * (ing.precio || 0));
         } else {
-          // ✅ INGREDIENTES OPCIONALES: Solo cantidades extra
+          // INGREDIENTES OPCIONALES: Solo cantidades extra
           const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
           return total + (cantidadExtra * (ing.precio || 0));
@@ -186,7 +148,6 @@ export class PersonalizarProductoComponent implements OnInit {
     }, 0);
   });
 
-  // ✅ Datos adicionales del producto
   productoDatos: any = null;
   categoriaDatos: any = null;
 
@@ -238,14 +199,11 @@ export class PersonalizarProductoComponent implements OnInit {
   });
 }
 
-  // ✅ NUEVO método para precargar personalizaciones
   private precargarPersonalizaciones(): void {
     if (this.datosActuales?.personalizacion) {
       this.personalizacionOriginal = [...this.datosActuales.personalizacion];
 
-      console.log('📋 Precargando personalizaciones:', this.personalizacionOriginal);
 
-      // ✅ ESPERAR a que se carguen los ingredientes y luego aplicar personalizaciones
       setTimeout(() => {
         this.aplicarPersonalizacionesAIngredientes();
       }, 500);
@@ -253,16 +211,12 @@ export class PersonalizarProductoComponent implements OnInit {
   }
 
 
-  // ✅ REEMPLAZAR método aplicarPersonalizacionesAIngredientes
   private aplicarPersonalizacionesAIngredientes(): void {
     if (this.personalizacionOriginal.length === 0) return;
 
     const ingredientes = this.ingredientesDisponibles();
 
-    console.log('🔧 === APLICANDO PERSONALIZACIONES ===');
-    console.log('📋 Personalizaciones a aplicar:', this.personalizacionOriginal);
 
-    // ✅ CONTAR cuántas veces aparece cada ingrediente con cada acción
     const conteoIngredientes = new Map<number, { agregar: number, quitar: number }>();
 
     this.personalizacionOriginal.forEach(p => {
@@ -278,110 +232,67 @@ export class PersonalizarProductoComponent implements OnInit {
       }
     });
 
-    console.log('📊 Conteo de ingredientes:', [...conteoIngredientes.entries()].map(([id, conteo]) => ({
-      ingrediente_id: id,
-      agregar: conteo.agregar,
-      quitar: conteo.quitar
-    })));
 
-    // ✅ APLICAR los conteos a cada ingrediente
     conteoIngredientes.forEach((conteo, ingrediente_id) => {
       const ingrediente = ingredientes.find(ing => ing.id === ingrediente_id);
       if (ingrediente) {
-        console.log(`🔧 Procesando ${ingrediente.nombre} (ID: ${ingrediente_id}):`);
-        console.log(`   - Es original: ${ingrediente.esOriginal}`);
-        console.log(`   - Cantidad inicial: ${ingrediente.cantidad}`);
-        console.log(`   - Agregar: ${conteo.agregar}`);
-        console.log(`   - Quitar: ${conteo.quitar}`);
-
         if (ingrediente.esOriginal) {
-          // ✅ INGREDIENTES ORIGINALES
+          // INGREDIENTES ORIGINALES
           if (conteo.quitar > 0) {
             // Si se quitó, cantidad = 0
             ingrediente.cantidad = 0;
             ingrediente.seleccionado = false;
-            console.log(`   ➖ RESULTADO: Quitado (cantidad = 0)`);
           } else {
             // Si no se quitó, cantidad base (1) + agregados extra
             ingrediente.cantidad = 1 + conteo.agregar;
             ingrediente.seleccionado = true;
-            console.log(`   ➕ RESULTADO: Original + ${conteo.agregar} extra (cantidad = ${ingrediente.cantidad})`);
           }
         } else {
-          // ✅ INGREDIENTES NO ORIGINALES
+          // INGREDIENTES NO ORIGINALES
           ingrediente.cantidad = conteo.agregar;
           ingrediente.seleccionado = ingrediente.cantidad > 0;
-          console.log(`   ➕ RESULTADO: Agregado ${conteo.agregar} veces (cantidad = ${ingrediente.cantidad})`);
         }
       } else {
-        console.warn(`⚠️ No se encontró ingrediente con ID ${ingrediente_id}`);
       }
     });
 
-    // ✅ ACTUALIZAR el signal después de modificar
     this.ingredientesDisponibles.set([...ingredientes]);
 
-    console.log('✅ Estado final de ingredientes:',
-      this.ingredientesDisponibles().map(ing => ({
-        id: ing.id,
-        nombre: ing.nombre,
-        esOriginal: ing.esOriginal,
-        cantidad: ing.cantidad,
-        seleccionado: ing.seleccionado,
-        precio: ing.precio
-      })).filter(ing => ing.cantidad !== (ing.esOriginal ? 1 : 0))
-    );
-    console.log('🔧 === FIN APLICACIÓN ===');
   }
 
 
 
-  // ✅ MODIFICAR el método confirmarPersonalizacion
   confirmarPersonalizacion(): void {
     if (!this.hayAlMenosUnIngredienteSeleccionado()) {
       alert('Debes seleccionar al menos un ingrediente para agregar este producto.');
       return;
     }
 
-    // ✅ PREVENIR ejecución múltiple
     if (this.procesandoConfirmacion) {
-      console.log('⚠️ Ya se está procesando la confirmación - IGNORANDO');
       return;
     }
 
     this.procesandoConfirmacion = true;
-    console.log('🔧 === INICIANDO CONFIRMACIÓN ÚNICA ===');
-    console.log('🔧 Modo edición:', this.modoEdicion);
-    console.log('🔧 Timestamp:', Date.now());
 
     try {
       if (this.modoEdicion) {
-        console.log('✏️ MODO EDICIÓN - Actualizando producto existente');
         this.actualizarProductoEnCarrito();
-        // ✅ NO resetear flag aquí - se hace en actualizarProductoEnCarrito
       } else {
-        console.log('➕ MODO NUEVO - Agregando producto al carrito');
         this.agregarAlCarrito();
-        // ✅ Resetear flag para modo agregar
         setTimeout(() => {
           this.procesandoConfirmacion = false;
         }, 1000);
       }
     } catch (error) {
-      console.error('❌ Error en confirmación:', error);
-      this.procesandoConfirmacion = false; // ✅ Resetear flag en caso de error
+      this.procesandoConfirmacion = false;
     }
 
-    console.log('🔧 === FIN CONFIRMACIÓN ===');
   }
 
 
-  // ✅ NUEVO método para actualizar producto existente
   private actualizarProductoEnCarrito(): void {
-    console.log('🔄 === INICIANDO ACTUALIZACIÓN ÚNICA ===');
 
     if (!this.datosActuales || this.carritoIndex === null) {
-      console.error('❌ Datos insuficientes para actualizar');
       this.procesandoConfirmacion = false;
       return;
     }
@@ -389,20 +300,8 @@ export class PersonalizarProductoComponent implements OnInit {
     const nuevaPersonalizacion = this.generarPersonalizacionFinal();
     const nuevoPrecio = this.calcularPrecioFinal();
 
-    // ✅ AGREGAR logs detallados del cálculo
-    console.log('🔄 === DETALLE DE ACTUALIZACIÓN ===');
-    console.log('Precio base del producto:', this.precioProducto);
-    console.log('Cantidad actual:', this.cantidad());
-    console.log('Costo ingredientes adicionales:', this.costoIngredientesAdicionales());
-    console.log('Precio unitario con ingredientes:', this.precioUnitarioConIngredientes());
-    console.log('NUEVO PRECIO TOTAL:', nuevoPrecio);
-    console.log('Personalización original:', this.personalizacionOriginal);
-    console.log('Nueva personalización:', nuevaPersonalizacion);
-    console.log('🔄 === FIN DETALLE ===');
 
-    // ✅ VERIFICAR que el precio sea correcto antes de actualizar
     if (nuevoPrecio <= 0) {
-      console.error('❌ Precio calculado inválido:', nuevoPrecio);
       this.procesandoConfirmacion = false;
       return;
     }
@@ -415,30 +314,19 @@ export class PersonalizarProductoComponent implements OnInit {
     );
 
     if (resultado !== false) {
-      console.log('✅ Actualización exitosa - Navegando al carrito');
       this.router.navigateByUrl('/cliente/carrito', {
         replaceUrl: true
       });
     } else {
-      console.error('❌ Falló la actualización');
       this.procesandoConfirmacion = false;
     }
   }
 
   private generarPersonalizacionFinal(): PersonalizacionIngrediente[] {
     const personalizaciones: PersonalizacionIngrediente[] = [];
-    const ingredientes = this.ingredientesDisponibles(); // ✅ USAR signal
+    const ingredientes = this.ingredientesDisponibles();
 
-    console.log('🔧 === GENERANDO PERSONALIZACIONES FINALES ===');
-    console.log('📋 Estado actual de ingredientes:', ingredientes.map(ing => ({
-      id: ing.id,
-      nombre: ing.nombre,
-      esOriginal: ing.esOriginal,
-      cantidad: ing.cantidad,
-      seleccionado: ing.seleccionado
-    })));
 
-    // ✅ USAR los ingredientes del signal
     ingredientes.forEach(ingrediente => {
       // Ingredientes NO originales agregados
       if (!ingrediente.esOriginal && ingrediente.cantidad > 0) {
@@ -449,7 +337,6 @@ export class PersonalizarProductoComponent implements OnInit {
             precio_aplicado: ingrediente.precio || 0
           });
         }
-        console.log(`➕ Agregando ${ingrediente.cantidad}x ${ingrediente.nombre}`);
       }
       // Ingredientes originales removidos
       else if (ingrediente.esOriginal && ingrediente.cantidad === 0) {
@@ -458,7 +345,6 @@ export class PersonalizarProductoComponent implements OnInit {
           accion: 'quitar',
           precio_aplicado: 0
         });
-        console.log(`➖ Quitando ${ingrediente.nombre}`);
       }
 
       // Ingredientes originales con cantidad extra
@@ -471,30 +357,23 @@ export class PersonalizarProductoComponent implements OnInit {
             precio_aplicado: ingrediente.precio || 0
           });
         }
-        console.log(`➕ Agregando ${cantidadExtra}x extra de ${ingrediente.nombre}`);
       }
     });
 
-    console.log('🔧 Personalizaciones generadas:', personalizaciones);
-    console.log('🔧 === FIN GENERACIÓN PERSONALIZACIONES ===');
 
     return personalizaciones;
   }
 
 
-  // ✅ Método para volver al carrito (modo edición)
   volverAlCarrito(): void {
-    console.log('🔙 Volviendo al carrito sin guardar cambios');
     this.router.navigate(['/cliente/carrito'], { replaceUrl: true });
   }
 
-  // ✅ Método para volver al menú (modo agregar)
   volverAlMenu(): void {
-    console.log('🔙 Volviendo al menú - RESETEO COMPLETO');
     
     // 🔧 RESETEAR COMPLETAMENTE todo el estado del componente
     this.modoEdicion = false;
-    this.procesandoConfirmacion = false; // ✅ CRÍTICO: Resetear flag
+    this.procesandoConfirmacion = false;
     this.carritoIndex = null;
     this.datosActuales = null;
     this.personalizacionOriginal = [];
@@ -505,8 +384,8 @@ export class PersonalizarProductoComponent implements OnInit {
     // 🔧 RESETEAR signals
     this.ingredientesCargados.set(false);
     this.cargandoIngredientes.set(false);
-    this.ingredientesDisponibles.set([]); // ✅ Limpiar ingredientes
-    this.cantidad.set(1); // ✅ Resetear cantidad
+    this.ingredientesDisponibles.set([]);
+    this.cantidad.set(1);
     
     // 🔧 RESETEAR datos del producto
     this.productoId = null;
@@ -519,14 +398,12 @@ export class PersonalizarProductoComponent implements OnInit {
     this.productoDatos = null;
     this.categoriaDatos = null;
     
-    console.log('✅ Estado completamente reseteado');
     
     this.router.navigate(['/cliente/menu'], { replaceUrl: true });
   }
 
 
 
-  // ✅ MÉTODO para obtener texto del botón
   obtenerTextoBoton(): string {
     if (this.modoEdicion) {
       return `Actualizar Producto $${this.calcularPrecioFinal().toFixed(2)}`;
@@ -536,23 +413,14 @@ export class PersonalizarProductoComponent implements OnInit {
   }
 
   calcularPrecioFinal(): number {
-    // ✅ USAR el computed que YA calcula correctamente
     const precioCalculado = this.precioTotalCalculado();
 
-    console.log('💰 === CÁLCULO PRECIO FINAL ===');
-    console.log('Precio base producto:', this.precioProducto);
-    console.log('Cantidad:', this.cantidad());
-    console.log('Costo ingredientes extra:', this.costoIngredientesAdicionales());
-    console.log('Precio unitario con extras:', this.precioUnitarioConIngredientes());
-    console.log('PRECIO FINAL TOTAL:', precioCalculado);
-    console.log('💰 === FIN CÁLCULO ===');
 
     return precioCalculado;
   }
 
   // Método para cancelar
   cancelar(): void {
-    console.log('❌ Cancelando personalización');
     
     // 🔧 RESETEAR estado antes de volver
     this.procesandoConfirmacion = false;
@@ -561,10 +429,8 @@ export class PersonalizarProductoComponent implements OnInit {
     this.volverAlMenu();
   }
 
-  // ✅ MÉTODOS PRIVADOS
   private cargarDatosCompletos(): void {
     if (!this.productoId) {
-      console.error('❌ No se proporcionó ID de producto');
       this.volverAlMenu();
       return;
     }
@@ -575,9 +441,7 @@ export class PersonalizarProductoComponent implements OnInit {
       this.cargarCategoriaDetalle(),
       this.cargarIngredientesDisponibles()
     ]).then(() => {
-      console.log('✅ Datos completos cargados');
     }).catch(error => {
-      console.error('❌ Error cargando datos:', error);
     });
   }
 
@@ -594,11 +458,9 @@ export class PersonalizarProductoComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error cargando producto:', error);
         }
       });
     } catch (error) {
-      console.error('❌ Error en cargarProductoDetalle:', error);
     }
   }
 
@@ -612,15 +474,12 @@ export class PersonalizarProductoComponent implements OnInit {
           if (categoria) {
             this.categoriaDatos = categoria;
             this.nombreCategoria = categoria.nombre || '';
-            console.log('📂 Categoría cargada:', this.nombreCategoria);
           }
         },
         error: (error) => {
-          console.error('❌ Error cargando categoría:', error);
         }
       });
     } catch (error) {
-      console.error('❌ Error en cargarCategoriaDetalle:', error);
     }
   }
 
@@ -628,13 +487,10 @@ export class PersonalizarProductoComponent implements OnInit {
   private async cargarIngredientesDisponibles(): Promise<void> {
     try {
       if (!this.productoId) {
-        console.error('❌ No hay ID de producto para cargar ingredientes');
         return;
       }
 
-      console.log('🥗 Cargando ingredientes reales para producto ID:', this.productoId);
 
-      // ✅ MARCAR que estamos cargando
       this.cargandoIngredientes.set(true);
       this.ingredientesCargados.set(false);
 
@@ -644,9 +500,7 @@ export class PersonalizarProductoComponent implements OnInit {
 
       this.catalogoService.getIngredientesPorProducto(this.productoId, tamano_codigo).subscribe({
         next: (response) => {
-          console.log('✅ Respuesta completa de ingredientes:', response);
 
-          // ✅ PROCESAR ingredientes
           if (response.ingredientes && response.ingredientes.length > 0) {
             this.ingredientesDisponibles.set(response.ingredientes.map((ing: any) => {
               // Manejo de imagen del ingrediente
@@ -660,62 +514,46 @@ export class PersonalizarProductoComponent implements OnInit {
                 }
               }
 
-              console.log(`🖼️ Ingrediente: ${ing.nombre} - Es base: ${ing.es_base} - Precio: $${ing.precio}`);
 
               return {
                 id: ing.id,
                 nombre: ing.nombre,
                 imagenUrl: imagenUrl,
-                seleccionado: ing.seleccionado,          // ✅ USAR seleccionado del backend
-                esOriginal: ing.es_base,                 // ✅ USAR es_base para saber si es ingrediente base
+                seleccionado: ing.seleccionado,
+                esOriginal: ing.es_base,
                 precio: Number(ing.precio) || 0,
-                cantidad: ing.seleccionado ? (ing.cantidad || 1) : 0,  // ✅ USAR cantidad real del backend
+                cantidad: ing.seleccionado ? (ing.cantidad || 1) : 0,
                 cantidadBase: ing.seleccionado ? (ing.cantidad || 1) : 0
               };
             }));
 
-            console.log(`🎉 ${this.ingredientesDisponibles().length} ingredientes reales cargados`);
 
-            // ✅ AGREGAR: Log detallado del estado final
-            console.log('📋 Estado final de ingredientes cargados:');
-            this.ingredientesDisponibles().forEach(ing => {
-              console.log(`  • ${ing.nombre}: esOriginal=${ing.esOriginal}, cantidad=${ing.cantidad}, precio=${ing.precio}`);
-            });
 
           } else {
-            console.log('ℹ️ Este producto no tiene ingredientes personalizables');
             this.ingredientesDisponibles.set([]);
 
             if (response.mensaje) {
-              console.log(`💬 Mensaje del servidor: ${response.mensaje}`);
             }
           }
 
-          // ✅ MARCAR que terminamos de cargar
           this.cargandoIngredientes.set(false);
           this.ingredientesCargados.set(true);
         },
         error: (error) => {
-          console.error('❌ Error cargando ingredientes del producto:', error);
           this.ingredientesDisponibles.set([]);
 
-          // ✅ MARCAR que terminamos (aunque con error)
           this.cargandoIngredientes.set(false);
           this.ingredientesCargados.set(true);
 
           if (error.status === 404) {
-            console.log('🔍 Producto no encontrado');
           } else if (error.status === 500) {
-            console.log('⚠️ Error del servidor al cargar ingredientes');
           }
         }
       });
 
     } catch (error) {
-      console.error('❌ Error en cargarIngredientesDisponibles:', error);
       this.ingredientesDisponibles.set([]);
 
-      // ✅ MARCAR que terminamos (aunque con error)
       this.cargandoIngredientes.set(false);
       this.ingredientesCargados.set(true);
     }
@@ -733,14 +571,10 @@ export class PersonalizarProductoComponent implements OnInit {
     this.nombreProducto = producto.nombre || this.nombreProducto;
     this.descripcionProducto = producto.descripcion || this.descripcionProducto;
 
-    // ✅ MODIFICAR: NO sobrescribir precio si ya viene con tamaño seleccionado
-    // Solo actualizar precio si no se recibió un precio de tamaño
     const tienePrecionTamano = this.route.snapshot.queryParams['tamano_precio'];
     if (!tienePrecionTamano) {
       this.precioProducto = Number(producto.precio) || this.precioProducto;
-      console.log('💰 Precio actualizado desde producto base:', this.precioProducto);
     } else {
-      console.log('📏 Manteniendo precio de tamaño seleccionado:', this.precioProducto);
     }
 
     if (producto.imagenUrl || producto.imagen_url) {
@@ -749,14 +583,6 @@ export class PersonalizarProductoComponent implements OnInit {
       );
     }
 
-    console.log('✅ Datos del producto actualizados desde la base de datos:', {
-      nombre: this.nombreProducto,
-      precio: this.precioProducto,
-      descripcion: this.descripcionProducto,
-      imagen: this.imagenProducto,
-      cantidadActual: this.cantidad(),
-      precioTotal: this.precioTotalCalculado()
-    });
   }
 
   private actualizarPrecioConIngredientes(): void {
@@ -766,13 +592,10 @@ export class PersonalizarProductoComponent implements OnInit {
 
     const precioIngredientesExtra = ingredientesExtra.reduce((total, ing) => total + (ing.precio || 0), 0);
 
-    console.log('🍔 Ingredientes extra seleccionados:', ingredientesExtra.map(ing => `${ing.nombre} (+$${ing.precio})`));
-    console.log('💰 Costo adicional por ingredientes:', precioIngredientesExtra);
   }
 
-  // ✅ CORREGIR obtenerResumenPersonalizaciones
   private obtenerResumenPersonalizaciones(): any {
-    const ingredientes = this.ingredientesDisponibles(); // ✅ USAR ()
+    const ingredientes = this.ingredientesDisponibles();
     const ingredientesOriginales = ingredientes.filter(ing => ing.esOriginal);
     const ingredientesAgregados = ingredientes.filter(ing => !ing.esOriginal && ing.seleccionado);
     const ingredientesRemovidos = ingredientes.filter(ing => ing.esOriginal && !ing.seleccionado);
@@ -790,7 +613,6 @@ export class PersonalizarProductoComponent implements OnInit {
 
 
 
-  // ✅ ACTUALIZAR toggleIngrediente para trabajar con cantidades:
   toggleIngrediente(ingrediente: IngredientePersonalizacion): void {
     if (ingrediente.cantidad === 0) {
       ingrediente.cantidad = 1;
@@ -800,23 +622,18 @@ export class PersonalizarProductoComponent implements OnInit {
       ingrediente.seleccionado = false;
     }
 
-    // ✅ ACTUALIZAR signal
     this.ingredientesDisponibles.update(ingredients => [...ingredients]);
 
-    console.log(`🥬 ${ingrediente.nombre}: cantidad = ${ingrediente.cantidad}`);
-    console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
   }
 
 
   aumentarCantidad(): void {
     this.cantidad.update(value => value + 1);
-    console.log('➕ Cantidad aumentada a:', this.cantidad(), '- Total:', this.precioTotalCalculado());
   }
 
   disminuirCantidad(): void {
     if (this.cantidad() > 1) {
       this.cantidad.update(value => value - 1);
-      console.log('➖ Cantidad disminuida a:', this.cantidad(), '- Total:', this.precioTotalCalculado());
     }
   }
 
@@ -836,12 +653,10 @@ export class PersonalizarProductoComponent implements OnInit {
       personalizaciones
     );
 
-    // ✅ MANTENER: Log detallado para el usuario
     let mensaje = `✅ ${this.nombreProducto} agregado al carrito!\n`;
     mensaje += `Cantidad: ${cantidadFinal}\n`;
     mensaje += `Precio total: $${precioTotal.toFixed(2)}`;
 
-    console.log(mensaje);
 
     // 🔧 RESETEAR estado INMEDIATAMENTE después de agregar
     this.procesandoConfirmacion = false;
@@ -855,12 +670,10 @@ export class PersonalizarProductoComponent implements OnInit {
 
 
   cancelarPedido(): void {
-    console.log('🛒 Cancelando pedido...');
     this.volverAlMenu();
   }
 
   continuar(): void {
-    console.log('🚀 Continuando con el pedido...');
     // Aquí podrías navegar a la siguiente página del flujo de pedido
     this.volverAlMenu();
   }
@@ -869,18 +682,8 @@ export class PersonalizarProductoComponent implements OnInit {
     ingrediente.cantidad++;
     ingrediente.seleccionado = ingrediente.cantidad > 0;
 
-    // ✅ ACTUALIZAR el signal para forzar reactividad
     this.ingredientesDisponibles.update(ingredientes => [...ingredientes]);
 
-    console.log(`➕ ${ingrediente.nombre}:`);
-    console.log(`   - Cantidad: ${ingrediente.cantidad}`);
-    console.log(`   - Es original: ${ingrediente.esOriginal}`);
-    console.log(`   - Precio: $${ingrediente.precio || 0}`);
-    console.log(`   - Seleccionado: ${ingrediente.seleccionado}`);
-
-    console.log('💰 === DEBUG DESPUÉS DE AGREGAR ===');
-    console.log('Precio total calculado:', this.precioTotalCalculado());
-    console.log('💰 === FIN DEBUG ===');
   }
 
 
@@ -897,8 +700,6 @@ export class PersonalizarProductoComponent implements OnInit {
     }
   }
   this.ingredientesDisponibles.update(ingredients => [...ingredients]);
-  console.log(`➖ ${ingrediente.nombre}: cantidad = ${ingrediente.cantidad}`);
-  console.log(`💰 Precio total actualizado: $${this.precioTotalCalculado().toFixed(2)}`);
 }
 
 
@@ -907,20 +708,10 @@ export class PersonalizarProductoComponent implements OnInit {
     const personalizaciones: PersonalizacionIngrediente[] = [];
     const ingredientes = this.ingredientesDisponibles();
 
-    console.log('🔧 === GENERANDO PERSONALIZACIONES PARA PEDIDO ===');
-    console.log('📋 Estado de ingredientes:', ingredientes.map(ing => ({
-      id: ing.id,
-      nombre: ing.nombre,
-      esOriginal: ing.esOriginal,
-      cantidad: ing.cantidad,
-      cantidadBase: ing.cantidadBase,
-      seleccionado: ing.seleccionado,
-      precio: ing.precio
-    })));
 
     ingredientes.forEach(ing => {
       if (ing.esOriginal) {
-        // ✅ INGREDIENTES BASE (ORIGINALES)
+        // INGREDIENTES BASE (ORIGINALES)
         if (ing.cantidad === 0) {
           // Ingrediente base removido completamente
           personalizaciones.push({
@@ -928,7 +719,6 @@ export class PersonalizarProductoComponent implements OnInit {
             accion: 'quitar',
             precio_aplicado: 0
           });
-          console.log(`➖ Quitando ${ing.nombre} (ingrediente base)`);
         } else if (ing.cantidad > (ing.cantidadBase || 1)) {
           // Ingrediente base con cantidad extra
           const cantidadBase = ing.cantidadBase || 1;
@@ -940,11 +730,10 @@ export class PersonalizarProductoComponent implements OnInit {
               precio_aplicado: ing.precio || 0
             });
           }
-          console.log(`➕ Extra ${cantidadExtra}x ${ing.nombre} (ingrediente base) (+$${(ing.precio || 0).toFixed(2)} c/u)`);
         }
         // Si cantidad === cantidadBase, no se agrega nada (está como viene por defecto)
       } else {
-        // ✅ INGREDIENTES NO ORIGINALES (OPCIONALES)
+        // INGREDIENTES NO ORIGINALES (OPCIONALES)
         const cantidadBase = ing.cantidadBase || 0; // Cantidad incluida en el producto
 
         if (ing.cantidad === 0 && cantidadBase > 0) {
@@ -956,7 +745,6 @@ export class PersonalizarProductoComponent implements OnInit {
               precio_aplicado: 0
             });
           }
-          console.log(`➖ Quitando ${cantidadBase}x ${ing.nombre} (incluido en producto)`);
         } else if (ing.cantidad > cantidadBase) {
           // Solo agregar la cantidad EXTRA por encima de lo incluido
           const cantidadExtra = ing.cantidad - cantidadBase;
@@ -969,17 +757,13 @@ export class PersonalizarProductoComponent implements OnInit {
           }
 
           if (cantidadBase > 0) {
-            console.log(`➕ Extra ${cantidadExtra}x ${ing.nombre} (${cantidadBase} incluido + ${cantidadExtra} extra) (+$${(ing.precio || 0).toFixed(2)} c/u)`);
           } else {
-            console.log(`➕ Agregando ${cantidadExtra}x ${ing.nombre} (nuevo ingrediente) (+$${(ing.precio || 0).toFixed(2)} c/u)`);
           }
         }
         // Si cantidad === cantidadBase, no se agrega nada (está como viene incluido)
       }
     });
 
-    console.log('🔧 Personalizaciones generadas:', personalizaciones);
-    console.log('🔧 === FIN GENERACIÓN ===');
 
     return personalizaciones;
   }

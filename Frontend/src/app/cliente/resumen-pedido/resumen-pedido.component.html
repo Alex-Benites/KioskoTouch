@@ -53,7 +53,7 @@
       <div class="separador"></div>
 
       <!-- Totales -->
-      <!-- ✅ SECCIÓN DE TOTALES ACTUALIZADA -->
+      <!--  SECCIÓN DE TOTALES ACTUALIZADA -->
       <div class="totales-section">
         <div class="totales-container">
 
@@ -67,7 +67,7 @@
           </div>
 
           <div class="total-item">
-            <!-- ✅ MOSTRAR solo la parte entera del IVA -->
+            <!--  MOSTRAR solo la parte entera del IVA -->
             <span class="total-label">IVA {{ ivaActual | number:'1.0-0' }}%</span>
             @if (cargandoIva) {
               <span class="total-valor loading">Calculando...</span>
@@ -112,7 +112,7 @@
       </div>
     </div>
 
-    <!-- ✅ NUEVO: Datos de Facturación con Checkbox -->
+    <!--  NUEVO: Datos de Facturación con Checkbox -->
     <div class="datos-facturacion">
       <div class="checkbox-container">
         <input
@@ -126,7 +126,7 @@
         </label>
       </div>
 
-      <!-- ✅ NUEVO: Formulario de datos de facturación -->
+      <!--  NUEVO: Formulario de datos de facturación -->
       <div class="datos-form" *ngIf="mostrarDatosFacturacion">
         <div class="form-row">
           <div class="form-group">
@@ -174,7 +174,7 @@
       </div>
     </div>
 
-    <!-- ✅ OPCIONAL: Mostrar el turno si existe -->
+    <!--  OPCIONAL: Mostrar el turno si existe -->
     <div class="turno-info" *ngIf="tieneTurno">
       <div class="turno-display">
         <i class="fas fa-ticket-alt"></i>
@@ -188,14 +188,14 @@
       <button
         class="secondary-button cancel-btn"
         (click)="cancelarPedido()">
-        <mat-icon>cancel</mat-icon> <!-- ✅ CAMBIAR: Material Icon -->
+        <mat-icon>cancel</mat-icon> <!--  CAMBIAR: Material Icon -->
         Cancelar Pedido
       </button>
 
       <button
         class="tertiary-button edit-btn"
         (click)="editarPedido()">
-        <mat-icon>edit</mat-icon> <!-- ✅ CAMBIAR: Material Icon -->
+        <mat-icon>edit</mat-icon> <!--  CAMBIAR: Material Icon -->
         Editar Pedido
       </button>
 
@@ -203,7 +203,7 @@
         class="primary-button confirm-btn"
         (click)="confirmarPedido()"
         [disabled]="cantidadProductos === 0 || !metodoPagoSeleccionado">
-        <mat-icon>arrow_forward</mat-icon> <!-- ✅ CAMBIAR: Material Icon -->
+        <mat-icon>arrow_forward</mat-icon> <!--  CAMBIAR: Material Icon -->
         Continuar
       </button>
 

@@ -19,17 +19,17 @@
 
     </div>
 
-    <!-- ✅ ESPACIO EN BLANCO para el contenido del carrito -->
+    <!--  ESPACIO EN BLANCO para el contenido del carrito -->
     <div class="carrito-body" [ngClass]="{'con-productos': productosCarrito.length > 0, 'vacio': productosCarrito.length === 0}">
-      <!-- ✅ MOSTRAR lista de productos si hay items -->
+      <!--  MOSTRAR lista de productos si hay items -->
       <div *ngIf="productosCarrito.length > 0; else carritoVacio" class="productos-lista">
-        <!-- ✅ CORREGIR: Iterar sobre el computed -->
-        <!-- ✅ Solo cambiar el contenido del producto-item: -->
+        <!--  CORREGIR: Iterar sobre el computed -->
+        <!--  Solo cambiar el contenido del producto-item: -->
         <div
           *ngFor="let item of productosCarrito; let i = index"
           class="producto-item">
 
-          <!-- ✅ PARTE 1: IMAGEN + NOMBRE (IZQUIERDA) -->
+          <!--  PARTE 1: IMAGEN + NOMBRE (IZQUIERDA) -->
           <div class="producto-seccion-izquierda">
             <div class="producto-barra-lateral"></div>
             <div class="producto-imagen">
@@ -66,10 +66,10 @@
             </div>
           </div>
 
-          <!-- ✅ PARTE 2: CONTROLES (DERECHA) -->
+          <!--  PARTE 2: CONTROLES (DERECHA) -->
           <div class="producto-seccion-derecha">
             
-            <!-- ✅ CONTROLES SUPERIORES (MÁS ESPACIO) -->
+            <!--  CONTROLES SUPERIORES (MÁS ESPACIO) -->
             <div class="producto-controles-superiores">
               <div class="cantidad-controles">
                 <button
@@ -101,7 +101,7 @@
               </div>
             </div>
 
-            <!-- ✅ BOTÓN PERSONALIZAR INFERIOR (MENOS ESPACIO) -->
+            <!--  BOTÓN PERSONALIZAR INFERIOR (MENOS ESPACIO) -->
             <div class="producto-controles-inferiores">
               <button
                 *ngIf="item.tipo === 'producto'"
@@ -115,7 +115,7 @@
         </div>
       </div>
 
-      <!-- ✅ TEMPLATE cuando el carrito está vacío -->
+      <!--  TEMPLATE cuando el carrito está vacío -->
       <ng-template #carritoVacio>
         <div class="carrito-vacio">
           <div class="carrito-vacio-icon">🛒</div>
@@ -135,14 +135,14 @@
   <footer class="order-summary-footer">
     <h2 class="order-summary-footer__title">Resumen del Pedido</h2>
     <div class="order-summary-footer__content">
-      <!-- ✅ Mostrar totales del pedido -->
+      <!--  Mostrar totales del pedido -->
       <div class="order-summary-footer__details">
         <span>Total: ${{ totalPedido.toFixed(2) }}</span>
         <!-- <span>Productos: {{ cantidadProductos }}</span> -->
         <span>Productos: {{ cantidadProductosFooter }}</span>
       </div>
 
-      <!-- ✅ Botones específicos del carrito -->
+      <!--  Botones específicos del carrito -->
       <div class="order-summary-footer__actions">
         <button
           class="primary__button order-summary-footer__button"

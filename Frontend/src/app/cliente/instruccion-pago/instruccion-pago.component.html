@@ -11,11 +11,11 @@
   <main class="pago-content">
     <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
 
-    <!-- ✅ ICONO CON SPINNER PARA TARJETA -->
+    <!--  ICONO CON SPINNER PARA TARJETA -->
     <div class="pago-icon-wrapper">
       <img [src]="obtenerImagenTipo()" [alt]="obtenerTitulo()" class="pago-icon">
       
-      <!-- ✅ SPINNER DE CARGA PARA PAGOS CON TARJETA -->
+      <!--  SPINNER DE CARGA PARA PAGOS CON TARJETA -->
       @if (tipoPago === 'tarjeta' && procesandoPago) {
         <div class="spinner-overlay">
           <div class="spinner"></div>
@@ -25,7 +25,7 @@
 
     <h2 class="pago-title">{{ obtenerTitulo() }}</h2>
 
-    <!-- ✅ INFORMACIÓN DEL PAGO PARA TARJETA -->
+    <!--  INFORMACIÓN DEL PAGO PARA TARJETA -->
     @if (tipoPago === 'tarjeta') {
       <div class="info-pago">
         <!-- Monto Total -->
@@ -36,7 +36,7 @@
         
  
 
-        <!-- ✅ DETALLES DE TRANSACCIÓN EXITOSA -->
+        <!--  DETALLES DE TRANSACCIÓN EXITOSA -->
         @if (ultimaTransaccion && estadoPago.estado === 'exitoso') {
           <div class="detalles-transaccion">
             @if (ultimaTransaccion.autorizacion) {
@@ -62,7 +62,7 @@
       </div>
     }
 
-    <!-- ✅ INFORMACIÓN DE ORDEN COMPLETADA -->
+    <!--  INFORMACIÓN DE ORDEN COMPLETADA -->
     @if (tipoPago === 'completado') {
       <div class="orden-info">
         <p class="orden-subtitle">Orden</p>
@@ -78,12 +78,12 @@
       </div>
     }
 
-    <!-- ✅ INSTRUCCIONES DINÁMICAS -->
+    <!--  INSTRUCCIONES DINÁMICAS -->
     <!-- <p class="pago-instructions">
       {{ obtenerInstrucciones() }}
     </p> -->
 
-    <!-- ✅ BOTONES CON ESTADOS -->
+    <!--  BOTONES CON ESTADOS -->
     <div class="botones-container">
       <button 
         class="pago-button" 
@@ -98,7 +98,7 @@
         {{ obtenerTextoBoton() }}
       </button>
 
-      <!-- ✅ BOTÓN CANCELAR PARA PAGOS CON TARJETA -->
+      <!--  BOTÓN CANCELAR PARA PAGOS CON TARJETA -->
       @if (tipoPago === 'tarjeta' && estadoPago.estado !== 'exitoso') {
         <button 
           class="btn-cancelar" 

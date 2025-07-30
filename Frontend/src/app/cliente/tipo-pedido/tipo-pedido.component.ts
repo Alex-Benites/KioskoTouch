@@ -34,23 +34,15 @@ export class TipoPedidoComponent {
 continuar(): void {
   const tipo = this.seleccionLocal();
   if (tipo) {
-    console.log('🚀 Tipo seleccionado:', tipo);
-    console.log('🧭 URL actual antes de navegar:', this.router.url);
     
     this.PedidoService.setTipoEntrega(tipo);
     
     this.router.navigate(['/cliente/menu']).then(success => {
-      console.log('✅ Navegación result:', success);
-      console.log('🧭 URL después de navegar:', this.router.url);
       
-      // ✅ NUEVO: Verificar después de un momento
       setTimeout(() => {
-        console.log('🧭 URL después de 500ms:', this.router.url);
-        console.log('🧭 Router state:', this.router.routerState.snapshot);
       }, 500);
       
     }).catch(error => {
-      console.error('💥 Error de navegación:', error);
     });
   }
 }

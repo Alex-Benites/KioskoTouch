@@ -6,11 +6,8 @@ import { PublicidadService } from '../../services/publicidad.service';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
 import { Publicidad } from '../../models/marketing.model';
-// ✅ AGREGAR: Imports para el diálogo
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TurnoConfirmationDialogComponent } from '../../shared/turno-confirmation-dialog/turno-confirmation-dialog.component';
-// ✅ AGREGAR: Import del ConfirmationDialog
-import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-carrito-compra',
@@ -18,109 +15,71 @@ import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/co
   imports: [
     CommonModule,
     PublicidadSectionComponent,
-    MatDialogModule // ✅ AGREGAR
+    MatDialogModule,
   ],
   templateUrl: './carrito-compra.component.html',
   styleUrl: './carrito-compra.component.scss'
 })
 export class CarritoCompraComponent implements OnInit, OnDestroy {
 
-  // ✅ Inject de servicios
   private router = inject(Router);
   private renderer = inject(Renderer2);
   private pedidoService = inject(PedidoService);
   private publicidadService = inject(PublicidadService);
-  // ✅ AGREGAR: Inject del CatalogoService
   private catalogoService = inject(CatalogoService);
-  // ✅ AGREGAR: Inject del diálogo
   private dialog = inject(MatDialog);
-    // Lista de ingredientes cargados
   ingredientes: any[] = [];
 
-  // ✅ AGREGAR: Propiedad computed para obtener productos del carrito
-  // productosCarrito = computed(() => {
-  //   return this.pedidoService.obtenerProductosParaCarrito();
-  // });
-
-  // ✅ NUEVO: Getter normal (más simple)
   get productosCarrito(): any[] {
     const productos = this.pedidoService.obtenerProductosParaCarrito();
-    console.log('🛒 Obteniendo productos carrito:', productos);
     return productos;
   }
 
-  // ✅ Propiedades para el template
   get totalPedido(): number {
     return this.pedidoService.total() || 0;
   }
 
-  // ✅ CAMBIAR: Usar el nuevo método del servicio
   get cantidadProductos(): number {
-    return this.productosCarrito.length; // ✅ SIN paréntesis
+    return this.productosCarrito.length;
   }
 
   private productosInfo: Map<number, any> = new Map();
   private menusInfo: Map<number, any> = new Map();
 
   ngOnInit(): void {
-    // ✅ Aplicar mismo fondo que menu
     this.renderer.addClass(document.body, 'fondo-home');
 
-    // ✅ CARGAR información de productos
     this.cargarInformacionProductos();
     this.cargarIngredientes(); // <-- Cargar ingredientes al iniciar
 
-    console.log('🛒 CarritoCompraComponent inicializado');
-    console.log('📋 Detalles del pedido (raw):', this.pedidoService.detalles());
-    console.log('📋 Productos del carrito:', this.productosCarrito); // ✅ SIN paréntesis
-    console.log('📋 Cantidad productos computed:', this.cantidadProductos);
-    console.log('💰 Total del pedido:', this.totalPedido);
-    console.log('🔢 Cantidad items del servicio:', this.pedidoService.cantidadItems());
   }
 
   ngOnDestroy(): void {
     this.renderer.removeClass(document.body, 'fondo-home');
   }
 
-  // ✅ Método para volver al menú
   volverAlMenu(): void {
-    console.log('🔙 Volviendo al menú...');
     this.router.navigate(['/cliente/menu']);
   }
 
-  // ✅ Método para finalizar pedido
   finalizarPedido(): void {
     if (this.cantidadProductos === 0) {
-      console.log('⚠️ No hay productos para finalizar');
       return;
     }
 
-    console.log('✅ Iniciando proceso de finalización...');
-    console.log('📋 Productos:', this.cantidadProductos);
-    console.log('💰 Total:', this.totalPedido);
 
-    // ✅ NUEVO: Verificar el tipo de entrega
     const tipoEntrega = this.pedidoService.tipoEntrega();
-    console.log('🏪 Tipo de entrega:', tipoEntrega);
 
     if (tipoEntrega === 'servir') {
-      // ✅ COMER AQUÍ: Mostrar popup de turno
-      console.log('🍽️ Pedido para comer aquí → Mostrando opción de turno');
       this.mostrarPopupTurno();
     } else if (tipoEntrega === 'llevar') {
-      // ✅ PARA LLEVAR: Ir directo al resumen
-      console.log('🥡 Pedido para llevar → Directo al resumen (sin turno)');
       this.irDirectoAlResumen();
     } else {
-      // ✅ FALLBACK: Si no hay tipo definido, mostrar popup por defecto
-      console.warn('⚠️ Tipo de entrega no definido, mostrando popup por defecto');
       this.mostrarPopupTurno();
     }
   }
 
-  // ✅ NUEVO: Método privado para mostrar el popup de turno
   private mostrarPopupTurno(): void {
-    console.log('🎯 Abriendo popup de confirmación de turno...');
 
     const dialogRef = this.dialog.open(TurnoConfirmationDialogComponent, {
       width: '450px',
@@ -132,37 +91,24 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('🎯 Respuesta del diálogo de turno:', result);
 
       if (result === true) {
-        // ✅ Usuario seleccionó "Sí" → Ir a componente Turno
-        console.log('✅ Usuario quiere tomar turno → Navegando a Turno');
         this.router.navigate(['/cliente/turno']);
       } else if (result === false) {
-        // ✅ Usuario seleccionó "No" → Ir directo al resumen
-        console.log('❌ Usuario NO quiere turno → Navegando a Resumen del Pedido');
         this.router.navigate(['/cliente/resumen-pedido']);
       } else {
-        // ✅ Diálogo cerrado sin selección (no debería pasar con disableClose)
-        console.log('⚠️ Diálogo cerrado sin selección');
       }
     });
   }
 
-  // ✅ NUEVO: Método para ir directo al resumen (para llevar)
   private irDirectoAlResumen(): void {
-    console.log('🎯 Navegando directo al resumen del pedido (sin turno)');
     this.router.navigate(['/cliente/resumen-pedido']);
   }
 
-  // ✅ Handler para publicidad (igual que menu)
   onPublicidadCambio(publicidad: Publicidad): void {
-    console.log('📺 Nueva publicidad mostrada:', publicidad.nombre);
   }
 
-  // ✅ AGREGAR métodos para manejar los productos
 
-  // ✅ NUEVO: Obtener imagen del producto
   obtenerImagenProducto(item: any): string | null {
     if (item.tipo === 'menu') {
       const id = item.menu_id;
@@ -199,78 +145,58 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ NUEVO: Verificar si tiene personalizaciones
   tienePersonalizaciones(item: any): boolean {
     return (item.personalizacion && item.personalizacion.length > 0) ||
            (item.productos && item.productos.length > 0); // Para menús
   }
 
 
-  // ✅ NUEVO: Calcular precio total del producto (cantidad × precio unitario)
   calcularPrecioTotalProducto(item: any): number {
     return item.subtotal || (item.precio_unitario * item.cantidad);
   }
 
-  // ✅ NUEVO: Aumentar cantidad de un producto
   aumentarCantidad(index: number): void {
-    console.log(`➕ Aumentando cantidad del producto en índice ${index}`);
     this.pedidoService.aumentarCantidadProducto(index);
   }
 
-  // ✅ NUEVO: Disminuir cantidad de un producto
   disminuirCantidad(index: number): void {
-    const productos = this.productosCarrito; // ✅ SIN paréntesis
-    const item = productos[index];
+    const item = this.productosCarrito[index];
     if (item && item.cantidad > 1) {
-      console.log(`➖ Disminuyendo cantidad del producto en índice ${index}`);
       this.pedidoService.disminuirCantidadProducto(index);
     }
   }
 
-  // ✅ NUEVO: Eliminar producto del carrito
   eliminarProducto(index: number): void {
     const productos = this.productosCarrito;
     const item = productos[index];
 
     if (!item) {
-      console.error('❌ No se encontró el producto en el índice', index);
       return;
     }
 
     const nombreProducto = this.obtenerNombreProducto(item);
-    console.log(`🗑️ Solicitando confirmación para eliminar: ${nombreProducto}`);
 
-    // ✅ NUEVO: Abrir diálogo de confirmación
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+    const dialogRef = this.dialog.open(TurnoConfirmationDialogComponent, {
       width: '420px',
       disableClose: false,
       panelClass: 'confirmation-dialog-panel',
       data: {
-        itemType: nombreProducto, // ✅ Pasar el nombre del producto
-        action: 'delete' // ✅ Acción de eliminar
+        itemType: nombreProducto,
+        action: 'delete'
       }
     });
 
-    // ✅ NUEVO: Manejar la respuesta del diálogo
     dialogRef.afterClosed().subscribe(result => {
-      console.log('🎯 Respuesta del diálogo de confirmación:', result);
 
       if (result === true) {
-        // ✅ Usuario confirmó → Eliminar el producto
-        console.log(`✅ Confirmado: Eliminando ${nombreProducto} del carrito`);
         this.pedidoService.eliminarProducto(index);
 
-        // ✅ Opcional: Mostrar mensaje de éxito
-        console.log(`🗑️ Producto eliminado exitosamente: ${nombreProducto}`);
 
       } else {
-        // ✅ Usuario canceló → No hacer nada
-        console.log(`❌ Cancelado: ${nombreProducto} permanece en el carrito`);
       }
     });
   }
 
-  // ✅ CORREGIR: Cantidad de productos en el footer
   get cantidadProductosFooter(): number {
     return this.pedidoService.cantidadItems() || 0;
   }
@@ -319,15 +245,12 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   }
 
 
-  // Cargar ingredientes desde el servicio
   private cargarIngredientes(): void {
     this.catalogoService.getIngredientes().subscribe({
       next: (ingredientes) => {
         this.ingredientes = ingredientes;
-        console.log('🧅 Ingredientes cargados:', this.ingredientes);
       },
       error: (error) => {
-        console.error('❌ Error cargando ingredientes:', error);
         this.ingredientes = [];
       }
     });
@@ -337,28 +260,22 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   obtenerIngredientePorId(ingredienteId: number): any {
     const ingrediente = this.ingredientes.find(i => Number(i.id) === Number(ingredienteId));
     if (!ingrediente) {
-      console.warn(`⚠️ Ingrediente con id ${ingredienteId} no encontrado en el array de ingredientes`, this.ingredientes);
       return { nombre: `ingrediente desconocido (${ingredienteId})` };
     }
     return ingrediente;
   }
 
   personalizarProducto(item: any, index: number): void {
-    // ✅ VALIDAR que sea un producto, no un menú
     if (!item.producto_id) {
-      console.log('⚠️ No se puede personalizar un menú');
       alert('Los menús no se pueden personalizar individualmente');
       return;
     }
 
-    console.log('🎛️ Personalizando producto desde carrito:', item);
 
-    // ✅ USAR ÍNDICE REAL del array de productos del carrito
     const productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
     const productoReal = productosCarrito[index];
 
     if (!productoReal) {
-      console.error('❌ No se encontró el producto en el índice', index);
       return;
     }
 
@@ -369,11 +286,9 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       precio_unitario: productoReal.precio_unitario,
       cantidad: productoReal.cantidad,
       carritoIndex: index,
-      // ✅ IMPORTANTE: Usar los datos exactos del producto
       subtotal: productoReal.subtotal
     };
 
-    // ✅ NAVEGAR correctamente igual que en el menú
     this.router.navigate(['/cliente/personalizar-producto', productoReal.producto_id], {
       queryParams: {
         modo: 'editar',

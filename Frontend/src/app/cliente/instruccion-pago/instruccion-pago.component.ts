@@ -28,13 +28,11 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   numeroTurno?: string;
   datosFacturacion?: any;
 
-  // ✅ PROPIEDADES PARA PINPAD
   estadoPago: EstadoPago = { estado: 'esperando', mensaje: 'Listo para procesar pago' };
   montoTotal: number = 0;
   procesandoPago: boolean = false;
   ultimaTransaccion?: PagoResponse;
 
-  // ✅ NUEVAS PROPIEDADES PARA IMPRESIÓN
   private renderer = inject(Renderer2);
   private catalogoService = inject(CatalogoService);
   ivaActual: number = 15.0; // Valor por defecto, se cargará dinámicamente
@@ -50,9 +48,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('🎬 Inicializando componente instrucción de pago');
     
-    // ✅ REINICIAR ESTADO DEL PINPAD AL INICIO
     this.pinpadService.reiniciarEstado();
     
     this.route.queryParams.subscribe(params => {
@@ -60,45 +56,31 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       this.numeroOrden = params['orden'] || this.generarNumeroOrden();
       
 
-      // ✅ OBTENER DATOS DEL RESUMEN
       this.montoTotal = parseFloat(params['monto']) || 0;
       this.cantidadProductos = parseInt(params['productos']) || 0;
       this.subtotal = parseFloat(params['subtotal']) || 0;
       this.iva = parseFloat(params['iva']) || 0;
       this.numeroTurno = params['turno'] || undefined;
 
-      // ✅ OBTENER DATOS DE FACTURACIÓN SI EXISTEN
       if (params['facturacion']) {
         try {
           this.datosFacturacion = JSON.parse(params['facturacion']);
         } catch (e) {
-          console.warn('⚠️ Error parseando datos de facturación');
         }
       }
 
-      console.log('📋 Datos recibidos del resumen:', {
-        montoTotal: this.montoTotal,
-        cantidadProductos: this.cantidadProductos,
-        subtotal: this.subtotal,
-        iva: this.iva,
-        numeroTurno: this.numeroTurno
-      });
 
-      // ✅ VALIDAR que tenemos monto válido
       if (this.montoTotal <= 0) {
-        console.error('❌ Monto inválido recibido');
         this.router.navigate(['/cliente/carrito']);
         return;
       }
     });
 
-    // ✅ SUSCRIBIRSE AL ESTADO DEL PAGO
     this.estadoPagoSubscription = this.pinpadService.estadoPago$.subscribe(
       estado => {
         this.estadoPago = estado;
         this.procesandoPago = estado.estado === 'procesando';
 
-        // ✅ MANEJAR RESPUESTA EXITOSA
         if (estado.estado === 'exitoso' && estado.respuesta) {
           this.ultimaTransaccion = estado.respuesta;
           this.completarPago();
@@ -106,7 +88,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       }
     );
 
-    // ✅ VERIFICAR CONECTIVIDAD AL INICIALIZAR
     if (this.tipoPago === 'tarjeta') {
       this.verificarConectividad();
     }
@@ -187,40 +168,26 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ VERIFICAR CONECTIVIDAD CON PINPAD
+   * VERIFICAR CONECTIVIDAD CON PINPAD
    */
   private verificarConectividad(): void {
     this.pinpadService.verificarConectividad().subscribe({
       next: (respuesta) => {
-        console.log('✅ PinPad conectado:', respuesta);
       },
       error: (error) => {
-        // ✅ MENSAJE MENOS ALARMANTE
-        console.log('ℹ️ Verificación inicial del PinPad pendiente (normal al inicio)');
       }
     });
   }
 
   /**
-   * ✅ PROCESAR PAGO CON TARJETA - CORREGIDO
+   * PROCESAR PAGO CON TARJETA - CORREGIDO
    */
   private procesarPagoTarjeta(): void {
-    console.log('💳 Iniciando proceso de pago con tarjeta...');
-    console.log('📊 Datos del pago:', {
-      montoTotal: this.montoTotal,
-      subtotal: this.subtotal,
-      iva: this.iva,
-      orden: this.numeroOrden
-    });
 
-    // ✅ VALIDAR DATOS ANTES DE ENVIAR
     if (!this.montoTotal || this.montoTotal <= 0) {
-      console.error('❌ Monto inválido:', this.montoTotal);
-      // ✅ ERROR 1 CORREGIDO: No llamar método privado directamente
       return;
     }
 
-    // ✅ PROCESAR PAGO CON VALORES REALES
     this.pinpadService.procesarPago(
       this.montoTotal,
       this.subtotal,  // Base imponible
@@ -228,76 +195,60 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       0               // Base 0% (sin productos exentos por ahora)
     ).subscribe({
       next: (respuesta: PagoResponse) => {
-        console.log('✅ Respuesta del pago:', respuesta);
         
         if (respuesta.exitoso && respuesta.codigoRespuesta === '00') {
-          console.log('🎉 Pago autorizado:', respuesta.autorizacion);
         } else {
-          console.warn('⚠️ Pago rechazado:', respuesta.mensajeRespuesta);
         }
       },
       error: (error) => {
-        console.error('❌ Error procesando pago:', error);
       }
     });
   }
 
   /**
-   * ✅ MÉTODO PARA CANCELAR PAGO - LÓGICA FINAL CORREGIDA
+   * MÉTODO PARA CANCELAR PAGO - LÓGICA FINAL CORREGIDA
    */
   cancelarPago(): void {
-    console.log('❌ === CANCELANDO PAGO ===');
     
-    // ✅ REINICIAR ESTADO DEL PINPAD
     this.pinpadService.reiniciarEstado();
     
-    // ✅ LIMPIAR VARIABLES LOCALES
     this.procesandoPago = false;
     this.ultimaTransaccion = undefined;
     this.estadoPago = { estado: 'esperando', mensaje: 'Listo para procesar pago' };
     
-    // ✅ RESETEAR TIPO DE PAGO
     this.tipoPago = 'tarjeta';
     
     // 🗑️ OBTENER PEDIDO CREADO Y CANCELARLO EN BACKEND
     const pedidoCreado = this.pedidoService.getPedidoCreado();
     
     if (pedidoCreado && pedidoCreado.numero) {
-      console.log('🗑️ Cancelando pedido en backend:', pedidoCreado.numero);
       
       this.pedidoService.cancelarPedidoBackend(pedidoCreado.numero).subscribe({
         next: () => {
-          console.log('✅ Pedido cancelado exitosamente en backend');
           this.pedidoService.clearPedidoCreado();
           this.regresarAResumen();
         },
         error: (error) => {
-          console.warn('⚠️ Error cancelando pedido backend:', error);
-          // ✅ Aún así regresar al resumen (productos conservados)
           this.pedidoService.clearPedidoCreado();
           this.regresarAResumen();
         }
       });
     } else {
-      console.log('ℹ️ No hay pedido creado para cancelar, regresando directamente');
       this.regresarAResumen();
     }
   }
 
   /**
-   * ✅ NUEVO: Método auxiliar para regresar al resumen
+   * NUEVO: Método auxiliar para regresar al resumen
    */
   private regresarAResumen(): void {
-    console.log('🔙 Regresando a resumen-pedido (productos conservados)');
-    console.log('❌ === FIN CANCELACIÓN ===');
     this.router.navigate(['/cliente/resumen-pedido']);
   }
 
   /**
-   * ✅ MANEJAR CLICK DEL BOTÓN CONTINUAR - LÓGICA FINAL
+   * MANEJAR CLICK DEL BOTÓN CONTINUAR - LÓGICA FINAL
    */
   continuar(): void {
-    console.log('👆 Botón continuar presionado, estado:', this.tipoPago);
     
     switch (this.tipoPago) {
       case 'tarjeta':
@@ -305,7 +256,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         break;
 
       case 'efectivo':
-        // ✅ Para efectivo, ir directo a completado
         this.cargarDatosParaImpresion();
         setTimeout(() => {
           this.imprimirFacturaAutomatica();
@@ -314,59 +264,42 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         break;
 
       case 'completado':
-        // ✅ CONFIRMAR PAGO Y FINALIZAR COMPLETAMENTE
         this.confirmarPagoYFinalizar();
         break;
     }
   }
 
   /**
-   * ✅ NUEVO: CONFIRMAR PAGO Y FINALIZAR COMPLETAMENTE
+   * NUEVO: CONFIRMAR PAGO Y FINALIZAR COMPLETAMENTE
    */
   private confirmarPagoYFinalizar(): void {
-    console.log('🎉 === CONFIRMANDO PAGO Y FINALIZANDO ===');
     
     const pedidoCreado = this.pedidoService.getPedidoCreado();
     
     if (pedidoCreado && pedidoCreado.numero) {
-      console.log('💳 Confirmando pago en backend para pedido:', pedidoCreado.numero);
       
-      // ✅ ACTUALIZAR ESTADO DEL PEDIDO A "PAGADO"
       this.pedidoService.confirmarPagoBackend(pedidoCreado.numero).subscribe({
         next: () => {
-          console.log('✅ Pago confirmado exitosamente en backend');
           this.finalizarCompletamente();
         },
         error: (error) => {
-          console.warn('⚠️ Error confirmando pago en backend:', error);
-          // ✅ Aún así finalizar por seguridad del usuario
           this.finalizarCompletamente();
         }
       });
     } else {
-      console.log('ℹ️ No hay pedido creado para confirmar, finalizando directamente');
       this.finalizarCompletamente();
     }
   }
 
   /**
-   * ✅ NUEVO: FINALIZAR COMPLETAMENTE Y LIMPIAR TODO
+   * NUEVO: FINALIZAR COMPLETAMENTE Y LIMPIAR TODO
    */
   /*
   private finalizarCompletamente(): void {
-    console.log('🧹 Finalizando completamente...');
-    
-    // ✅ LIMPIAR TODO EL CARRITO Y ESTADO
     this.pedidoService.limpiarTodoCompletamente();
-    console.log('🗑️ Carrito y estado limpiados tras confirmar pago');
     
-    // ✅ LIMPIAR ESTADO DEL PINPAD
     this.pinpadService.reiniciarEstado();
     
-    console.log('🏠 Navegando al home');
-    console.log('🎉 === FINALIZACIÓN COMPLETA ===');
-    
-    // ✅ NAVEGAR AL HOME
     this.router.navigate(['/cliente/home']);
   }*/
 
@@ -377,39 +310,32 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ COMPLETAR PAGO EXITOSO - CAMBIAR ESTADO E IMPRIMIR FACTURA
+   * COMPLETAR PAGO EXITOSO - CAMBIAR ESTADO E IMPRIMIR FACTURA
    */
   private completarPago(): void {
-    console.log('🎉 Completando pago exitoso...');
     
     // ❌ NO LIMPIAR CARRITO AQUÍ - Solo cambiar estado visual
     // El carrito se limpiará cuando el usuario presione "Finalizar pedido"
     
-    // ✅ CAMBIAR A ESTADO COMPLETADO DIRECTAMENTE
     this.tipoPago = 'completado';
     this.estadoPago = { estado: 'exitoso', mensaje: 'Pago completado exitosamente' };
     
-    // ✅ CARGAR DATOS DEL CARRITO PARA IMPRESIÓN
     this.cargarDatosParaImpresion();
     
-    // ✅ IMPRIMIR FACTURA AUTOMÁTICAMENTE TRAS PAGO EXITOSO
     setTimeout(() => {
       this.imprimirFacturaAutomatica();
     }, 500);
     
-    // ✅ REINICIAR ESTADO DEL PINPAD PARA FUTUROS PAGOS
     setTimeout(() => {
       this.pinpadService.reiniciarEstado();
     }, 1000);
     
-    console.log('✅ Estado cambiado a completado (carrito conservado hasta confirmación final)');
   }
 
   /**
-   * ✅ MANEJAR LÓGICA DE PAGO CON TARJETA
+   * MANEJAR LÓGICA DE PAGO CON TARJETA
    */
   private manejarPagoTarjeta(): void {
-    console.log('🎯 Manejando pago con tarjeta, estado actual:', this.estadoPago.estado);
     
     switch (this.estadoPago.estado) {
       case 'esperando':
@@ -421,29 +347,25 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         break;
 
       case 'error':
-        console.log('🔄 Reiniciando estado tras error');
         this.pinpadService.reiniciarEstado();
         break;
         
       case 'procesando':
-        console.log('⏳ Pago ya en proceso, esperando...');
         break;
         
       default:
-        console.warn('⚠️ Estado no reconocido:', this.estadoPago.estado);
         this.pinpadService.reiniciarEstado();
         break;
     }
   }
 
   /**
-   * ✅ ERROR 2 CORREGIDO: Métodos únicos y simplificados
+   * ERROR 2 CORREGIDO: Métodos únicos y simplificados
    */
   private generarNumeroOrden(): string {
     return 'ORD-' + Date.now().toString().slice(-6);
   }
 
-  // ✅ MÉTODOS AUXILIARES SIMPLIFICADOS (sin dependencia de PedidoService)
   pagarConTarjeta(): void {
     this.router.navigate(['/cliente/instruccion-pago'], {
       queryParams: { tipo: 'tarjeta' }
@@ -458,10 +380,9 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
 
 
 
-  // ✅ NUEVAS FUNCIONES DE IMPRESIÓN MOVIDAS DESDE RESUMEN-PEDIDO
 
   /**
-   * ✅ CARGAR DATOS DEL CARRITO PARA IMPRESIÓN
+   * CARGAR DATOS DEL CARRITO PARA IMPRESIÓN
    */
   private cargarDatosParaImpresion(): void {
     // Obtener productos del carrito
@@ -472,24 +393,20 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success && response.data) {
           this.ivaActual = response.data.porcentaje_iva;
-          console.log(`✅ IVA dinámico cargado para impresión: ${this.ivaActual}%`);
         } else {
-          console.warn('⚠️ No se encontró IVA activo, usando 15% por defecto');
           this.ivaActual = 15.0;
         }
       },
       error: (error) => {
-        console.error('❌ Error al cargar IVA:', error);
         this.ivaActual = 15.0;
       }
     });
   }
 
   /**
-   * ✅ IMPRIMIR FACTURA AUTOMÁTICAMENTE TRAS PAGO EXITOSO
+   * IMPRIMIR FACTURA AUTOMÁTICAMENTE TRAS PAGO EXITOSO
    */
   private imprimirFacturaAutomatica(): void {
-    console.log('🖨️ Iniciando impresión automática tras pago exitoso...');
 
     // Preparar datos de la factura
     const factura = {
@@ -510,7 +427,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ OBTENER NOMBRE DEL PRODUCTO O MENÚ
+   * OBTENER NOMBRE DEL PRODUCTO O MENÚ
    */
   private obtenerNombreProducto(item: any): string {
     if (item.tipo === 'menu') {
@@ -521,76 +438,57 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ MÉTODO PARA IMPRESIÓN COMPLETAMENTE INVISIBLE (SIN VENTANAS NI IFRAMES)
+   * MÉTODO PARA IMPRESIÓN COMPLETAMENTE INVISIBLE (SIN VENTANAS NI IFRAMES)
    */
   private imprimirFacturaFrontend(factura: any): void {
-    console.log('🖨️ Imprimiendo factura de forma completamente invisible...');
 
     try {
-      // ✅ MÉTODO 1: Manipular el DOM actual directamente
       this.imprimirContenidoDirecto(factura);
       
     } catch (error) {
-      console.error('❌ Error en impresión invisible:', error);
-      // ✅ FALLBACK: Enviar a servicio backend como último recurso
       this.enviarFacturaABackend(factura);
     }
   }
 
   /**
-   * ✅ IMPRIMIR MANIPULANDO EL DOM ACTUAL SIN VENTANAS
+   * IMPRIMIR MANIPULANDO EL DOM ACTUAL SIN VENTANAS
    */
   private imprimirContenidoDirecto(factura: any): void {
-    // ✅ GUARDAR EL CONTENIDO ACTUAL
     const contenidoOriginal = document.body.innerHTML;
     const tituloOriginal = document.title;
     const style = document.createElement('style');
     
     try {
-      // ✅ GENERAR HTML DE LA FACTURA
       const facturaHTML = this.generarHTMLFacturaDirecto(factura);
       
-      // ✅ AGREGAR ESTILOS PARA IMPRESIÓN TÉRMICA DIRECTAMENTE
       style.innerHTML = this.obtenerEstilosImpresion();
       document.head.appendChild(style);
       
-      // ✅ REEMPLAZAR TEMPORALMENTE EL CONTENIDO DE LA PÁGINA
       document.title = `Factura - ${factura.pedido_id}`;
       document.body.innerHTML = facturaHTML;
       
-      console.log('🖨️ Enviando comando de impresión directa...');
       
-      // ✅ IMPRIMIR Y RESTAURAR USANDO requestAnimationFrame PARA FLUIDEZ
       requestAnimationFrame(() => {
         window.print();
         
-        // ✅ RESTAURAR CONTENIDO ORIGINAL INMEDIATAMENTE DESPUÉS
         setTimeout(() => {
           try {
             document.body.innerHTML = contenidoOriginal;
             document.title = tituloOriginal;
             
-            // ✅ REMOVER ESTILOS DE IMPRESIÓN
             if (style.parentNode) {
               document.head.removeChild(style);
             }
             
-            console.log('✅ Contenido original restaurado');
             
-            // ✅ REINICIALIZAR ANGULAR DESPUÉS DE RESTAURAR
             this.reinicializarComponente();
             
-          } catch (restoreError) {
-            console.error('⚠️ Error restaurando contenido:', restoreError);
-            // ✅ FORZAR RECARGA DE LA PÁGINA COMO ÚLTIMO RECURSO
             window.location.reload();
-          }
+          } catch (restoreError) {}
         }, 50);
       });
       
     } catch (error) {
-      console.error('❌ Error en impresión directa:', error);
-      // ✅ RESTAURAR CONTENIDO EN CASO DE ERROR
       document.body.innerHTML = contenidoOriginal;
       document.title = tituloOriginal;
       if (style.parentNode) {
@@ -600,7 +498,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ GENERAR HTML SIMPLIFICADO PARA IMPRESIÓN DIRECTA
+   * GENERAR HTML SIMPLIFICADO PARA IMPRESIÓN DIRECTA
    */
   private generarHTMLFacturaDirecto(factura: any): string {
     const fecha = new Date().toLocaleString('es-EC', {
@@ -673,7 +571,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ OBTENER ESTILOS CSS PARA IMPRESIÓN TÉRMICA
+   * OBTENER ESTILOS CSS PARA IMPRESIÓN TÉRMICA
    */
   private obtenerEstilosImpresion(): string {
     return `
@@ -773,21 +671,18 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ REINICIALIZAR COMPONENTE DESPUÉS DE RESTAURAR CONTENIDO
+   * REINICIALIZAR COMPONENTE DESPUÉS DE RESTAURAR CONTENIDO
    */
   private reinicializarComponente(): void {
     try {
-      console.log('✅ Componente reinicializado correctamente');
     } catch (error) {
-      console.log('⚠️ Error reinicializando componente:', error);
     }
   }
 
   /**
-   * ✅ MÉTODO FALLBACK PARA ENVÍO A BACKEND
+   * MÉTODO FALLBACK PARA ENVÍO A BACKEND
    */
   private enviarFacturaABackend(factura: any): void {
-    console.log('🔄 Enviando factura al backend como fallback...');
     
     const datosImpresion = {
       establecimiento: 'KIOSKO TOUCH',
@@ -803,10 +698,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
       total: factura.total
     };
 
-    // ✅ NOTA: Esto solo funcionará si tienes un endpoint local
-    // Para PythonAnywhere, este método no será efectivo
-    console.log('📄 Datos preparados para impresión:', datosImpresion);
-    console.log('⚠️ Servicio backend no disponible en PythonAnywhere');
   }
 
 }
