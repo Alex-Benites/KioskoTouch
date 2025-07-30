@@ -306,6 +306,10 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
 
       case 'efectivo':
         // ✅ Para efectivo, ir directo a completado
+        this.cargarDatosParaImpresion();
+        setTimeout(() => {
+          this.imprimirFacturaAutomatica();
+        }, 500);
         this.tipoPago = 'completado';
         break;
 
