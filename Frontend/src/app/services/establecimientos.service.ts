@@ -12,17 +12,13 @@ export class EstablecimientosService {
     private apiUrl = `${environment.apiUrl}/establecimientos`;
 
     constructor(private http: HttpClient) {
-        console.log('🏗️ EstablecimientosService inicializado');
-        console.log('🏗️ apiUrl:', this.apiUrl);
     }
 
     crearEstablecimiento(establecimiento: FormData): Observable<any> {
-        console.log('📤 Creando establecimiento con FormData');
         return this.http.post<any>(`${this.apiUrl}/crear/`, establecimiento);
     }
 
     actualizarEstablecimiento(id: number, establecimiento: FormData): Observable<any> {
-        console.log('📤 Actualizando establecimiento con FormData');
         return this.http.put<any>(`${this.apiUrl}/${id}/`, establecimiento);
     }
 
@@ -38,7 +34,6 @@ export class EstablecimientosService {
         return this.http.get<Establecimiento>(`${this.apiUrl}/${id}/`);
     }
 
-    // ✅ AGREGAR: Método para obtener solo establecimientos activos para filtros
     obtenerEstablecimientosParaFiltro(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/establecimientos/`).pipe(
             map((establecimientos: any[]) =>

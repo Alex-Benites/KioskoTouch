@@ -22,8 +22,6 @@ export class UsuariosService {
   }
 
   obtenerEmpleado(id: number): Observable<any> {
-    console.log(`🔍 Solicitando empleado con ID: ${id}`);
-    console.log(`🔍 URL completa: ${this.baseUrl}/empleados/${id}/`);
     return this.http.get<any>(`${this.baseUrl}/empleados/${id}/`);
   }
 

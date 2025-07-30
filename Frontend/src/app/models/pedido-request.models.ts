@@ -1,17 +1,12 @@
-// ✅ ESTRUCTURA para enviar al backend
 export interface PedidoRequest {
-  // Datos básicos del pedido
   numero_mesa: number;
   tipo_entrega: 'servir' | 'llevar';
   tipo_pago: 'efectivo' | 'tarjeta';
 
-  // Productos con personalizaciones
   productos: ProductoPedidoRequest[];
 
-  // Datos de facturación (opcional)
   datos_facturacion?: DatosFacturacion;
 
-  // Datos adicionales
   turno?: number;
   subtotal: number;
   iva_porcentaje: number;
@@ -20,7 +15,6 @@ export interface PedidoRequest {
 }
 
 export interface ProductoPedidoRequest {
-  // ✅ CAMBIO: Hacer campos opcionales
   producto_id?: number;
   menu_id?: number;
 
@@ -43,7 +37,6 @@ export interface DatosFacturacion {
   correo: string;
 }
 
-// ✅ RESPUESTA del backend
 export interface PedidoResponse {
   success: boolean;
   data?: {

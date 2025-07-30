@@ -42,19 +42,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       
       if (error.status === 401 && !isLoginRoute) {
-        console.warn('🔑 Token inválido o expirado. Redirigiendo al login...');
         
-        // Limpiar localStorage
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
         
-        // Redirigir al login
         router.navigate(['/administrador/login'], { replaceUrl: true });
       }
       
       if (error.status === 403) {
-        console.warn('🚫 Acceso denegado. Sin permisos suficientes...');
         router.navigate(['/administrador/unauthorized']);
       }
       

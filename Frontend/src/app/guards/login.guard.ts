@@ -8,7 +8,6 @@ export const loginGuard: CanActivateFn = (route, state) => {
 
   // Si ya está autenticado, redirigir al home en lugar de mostrar login
   if (authService.isAuthenticated()) {
-    console.log('✅ Usuario ya autenticado, redirigiendo al home...');
     router.navigate(['/administrador/home']);
     return false;
   }

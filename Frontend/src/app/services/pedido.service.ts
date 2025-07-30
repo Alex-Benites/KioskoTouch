@@ -21,15 +21,12 @@ import { CatalogoService } from './catalogo.service';
 export class PedidoService {
   private apiUrl = `${environment.apiUrl}/pedidos`;
 
-  // ✅ AGREGAR clave para localStorage
   private readonly STORAGE_KEY = 'kiosko-pedido-actual';
 
   private turnoState = signal<number | null>(null);
 
-  // ✅ NUEVO: Estado del pedido creado en backend
   private pedidoCreado: any = null;
 
-  // ✅ Estado principal del pedido
   private pedidoState = signal<Partial<Pedido>>({
     tipo_entrega: null,
     numero_mesa: null,
@@ -38,20 +35,16 @@ export class PedidoService {
     is_facturado: true,
   });
 
-  // ✅ Arrays para detalles y personalizaciones
   private detallesState = signal<DetallePedido[]>([]);
   private personalizacionesState = signal<PersonalizacionIngrediente[]>([]);
 
-  // ✅ Getters públicos (signals read-only)
   pedido = this.pedidoState.asReadonly();
   detalles = this.detallesState.asReadonly();
   personalizaciones = this.personalizacionesState.asReadonly();
 
-  // ✅ Computed signals específicos
   tipoEntrega = computed(() => this.pedidoState().tipo_entrega);
   numeroMesa = computed(() => this.pedidoState().numero_mesa);
 
-  // ✅ Computed signals para cálculos
   subtotal = computed(() =>
     this.detallesState().reduce((sum, detalle) => {
       let subtotalProductos = (detalle.productos ?? []).reduce((s, p) => s + (p.subtotal || 0), 0);
@@ -77,7 +70,6 @@ export class PedidoService {
     }, 0)
   );
 
-  // ✅ Validaciones
   esPedidoValido = computed(() => {
     const pedido = this.pedidoState();
     const tipo = pedido.tipo_entrega;
@@ -126,9 +118,7 @@ export class PedidoService {
       };
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(estado));
-      console.log('💾 Estado guardado en localStorage');
     } catch (error) {
-      console.error('❌ Error guardando estado:', error);
     }
   }
 
@@ -138,15 +128,12 @@ export class PedidoService {
       if (datos) {
         const estado = JSON.parse(datos);
         
-        // ✅ Verificar que no sea muy antiguo (ej: más de 1 día)
         const unDiaEnMs = 24 * 60 * 60 * 1000;
         if (Date.now() - estado.timestamp > unDiaEnMs) {
-          console.log('🧹 Estado muy antiguo, iniciando limpio');
           this.limpiarEstadoPersistido();
           return;
         }
         
-        // ✅ Restaurar estado
         this.pedidoState.set(estado.pedido || {
           tipo_entrega: null,
           numero_mesa: null,
@@ -158,10 +145,8 @@ export class PedidoService {
         this.detallesState.set(estado.detalles || []);
         this.personalizacionesState.set(estado.personalizaciones || []);
         
-        console.log('📋 Estado cargado desde localStorage:', estado);
       }
     } catch (error) {
-      console.error('❌ Error cargando estado:', error);
       this.limpiarEstadoPersistido();
     }
   }
@@ -169,13 +154,10 @@ export class PedidoService {
   private limpiarEstadoPersistido(): void {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
-      console.log('🧹 localStorage limpiado');
     } catch (error) {
-      console.error('❌ Error limpiando localStorage:', error);
     }
   }
 
-  // ✅ MÉTODO PÚBLICO para limpiar (después de pagar)
   limpiarCarritoPersistido(): void {
     this.limpiarPedido(); // Método existente
     this.limpiarEstadoPersistido(); // Nuevo método
@@ -187,7 +169,7 @@ export class PedidoService {
       tipo_entrega: tipo,
       numero_mesa: tipo === 'llevar' ? null : state.numero_mesa
     }));
-    this.guardarEstado(); // ✅ AGREGAR
+    this.guardarEstado();
   }
 
   setNumeroMesa(mesa: number): void {
@@ -195,7 +177,7 @@ export class PedidoService {
       ...state,
       numero_mesa: mesa
     }));
-    this.guardarEstado(); // ✅ AGREGAR
+    this.guardarEstado();
   }
 
   setTipoPago(tipoPagoId: number): void {
@@ -292,20 +274,16 @@ export class PedidoService {
     this.detallesState.set([...this.detallesState()]);
     this.actualizarTotalEnEstado();
 
-    // Mostrar en consola el detalle actual
-    console.log('📝 Detalle actual del pedido:', this.detallesState());
   }
 
-  // ✅ Método privado para actualizar el total en el estado
   private actualizarTotalEnEstado(): void {
     this.pedidoState.update(state => ({
       ...state,
       total: this.total()
     }));
-    this.guardarEstado(); // ✅ AGREGAR
+    this.guardarEstado();
   }
 
-  // ✅ Remover items
   removerDetalleProducto(index: number): void {
     let detalles = this.detallesState();
     let detalle = detalles.find(d => d.productos);
@@ -339,7 +317,6 @@ export class PedidoService {
     this.guardarEstado(); // ✅ AGREGAR
   }
 
-  // ✅ Método para obtener datos para el backend
   obtenerDatosParaBackend(): CrearPedidoRequest | null {
     const pedido = this.pedidoState();
     const detalles = this.detallesState();
@@ -528,13 +505,7 @@ export class PedidoService {
     }
   }
 
-  // ✅ MEJORAR la comparación de personalizaciones (línea ~520)
   private personalizacionesIguales(p1?: PersonalizacionIngrediente[], p2?: PersonalizacionIngrediente[]): boolean {
-    console.log('🔍 === COMPARANDO PERSONALIZACIONES DETALLADO ===');
-    console.log('p1 (actual):', p1);
-    console.log('p2 (buscada):', p2);
-
-    // ✅ NORMALIZAR: Convertir undefined/null a array vacío
     const normalize = (arr?: PersonalizacionIngrediente[]): PersonalizacionIngrediente[] => {
       return arr && Array.isArray(arr) ? arr : [];
     };
@@ -542,23 +513,17 @@ export class PedidoService {
     const p1Norm = normalize(p1);
     const p2Norm = normalize(p2);
 
-    console.log('🔧 p1 normalizado:', p1Norm);
-    console.log('🔧 p2 normalizado:', p2Norm);
-
     // ✅ Si ambas están vacías después de normalizar
     if (p1Norm.length === 0 && p2Norm.length === 0) {
-      console.log('✅ Ambas son vacías (después de normalizar) - SON IGUALES');
       return true;
     }
 
     // ✅ Si tienen diferentes longitudes
     if (p1Norm.length !== p2Norm.length) {
-      console.log(`❌ Diferentes longitudes: ${p1Norm.length} vs ${p2Norm.length} - NO SON IGUALES`);
       return false;
     }
 
     try {
-      // ✅ Comparación detallada para arrays con contenido
       const normalizeItem = (personalizaciones: PersonalizacionIngrediente[]) => {
         return personalizaciones
           .map(p => ({
@@ -581,39 +546,19 @@ export class PedidoService {
       const jsonP2 = JSON.stringify(p2Items);
       const sonIguales = jsonP1 === jsonP2;
       
-      console.log('🔍 Comparación normalizada:', {
-        p1_normalized: p1Items,
-        p2_normalized: p2Items,
-        json_p1: jsonP1,
-        json_p2: jsonP2,
-        son_iguales: sonIguales
-      });
-      
-      if (sonIguales) {
-        console.log('✅ Personalizaciones idénticas - SON IGUALES');
-      } else {
-        console.log('❌ Personalizaciones diferentes - NO SON IGUALES');
-      }
-      
-      console.log('🔍 === FIN COMPARACIÓN ===');
       return sonIguales;
       
     } catch (error) {
-      console.error('❌ Error comparando personalizaciones:', error);
-      console.log('🔍 === FIN COMPARACIÓN (ERROR) ===');
       return false;
     }
   }
 
-  // ✅ AGREGAR: Métodos públicos que faltan para el carrito
 
   // Obtener productos para el carrito
   obtenerProductosParaCarrito(): any[] {
     const detalles = this.detallesState();
     const productos: any[] = [];
 
-    console.log('🔍 [PedidoService] Obteniendo productos para carrito...');
-    console.log('   - Detalles disponibles:', detalles);
 
     detalles.forEach((detalle, detalleIndex) => {
       // Agregar productos individuales
@@ -653,7 +598,6 @@ export class PedidoService {
       }
     });
 
-    console.log('🛒 [PedidoService] Productos finales:', productos);
     return productos;
   }
 
@@ -663,7 +607,6 @@ export class PedidoService {
     if (index < 0 || index >= productosCarrito.length) return;
 
     const item = productosCarrito[index];
-    console.log(`➕ Aumentando cantidad del producto:`, item);
 
     if (item.tipo === 'producto') {
       this.aumentarCantidadProductoInterno(item.producto_id, item.personalizacion);
@@ -680,7 +623,6 @@ export class PedidoService {
     const item = productosCarrito[index];
     if (item.cantidad <= 1) return;
 
-    console.log(`➖ Disminuyendo cantidad del producto:`, item);
 
     if (item.tipo === 'producto') {
       this.disminuirCantidadProductoInterno(item.producto_id, item.personalizacion);
@@ -695,7 +637,6 @@ export class PedidoService {
     if (index < 0 || index >= productosCarrito.length) return;
 
     const item = productosCarrito[index];
-    console.log(`🗑️ Eliminando producto:`, item);
 
     if (item.tipo === 'producto') {
       this.eliminarProductoInterno(item.producto_id, item.personalizacion);
@@ -704,21 +645,12 @@ export class PedidoService {
     }
   }
 
-  // ✅ REEMPLAZAR en pedido.service.ts (línea ~734)
   actualizarProductoEnCarrito(
     productoId: number, 
     personalizacionOriginal: PersonalizacionIngrediente[] | undefined,
     nuevaPersonalizacion: PersonalizacionIngrediente[],
     nuevoPrecio: number
   ): boolean {
-    console.log('🔄 === SERVICIO: ACTUALIZANDO PRODUCTO (ÚNICO) ===');
-    console.log('📥 Datos recibidos:', {
-      productoId,
-      personalizacionOriginal,
-      nuevaPersonalizacion,
-      nuevoPrecio,
-      timestamp: Date.now()
-    });
     
     const detalles = this.detallesState();
     let actualizado = false;
@@ -734,15 +666,6 @@ export class PedidoService {
         if (productoIndex !== -1) {
           const producto = detalle.productos[productoIndex];
           
-          console.log('✅ Producto encontrado para actualizar:', {
-            detalleIndex,
-            productoIndex,
-            producto_id: producto.producto_id,
-            cantidad: producto.cantidad,
-            subtotal_anterior: producto.subtotal,
-            precio_unitario_anterior: producto.subtotal / producto.cantidad,
-            personalizacion_anterior: producto.personalizacion
-          });
 
           // ✅ ACTUALIZAR CORRECTAMENTE: Primero personalización, luego precio
           producto.personalizacion = [...nuevaPersonalizacion];
@@ -755,12 +678,6 @@ export class PedidoService {
 
           actualizado = true;
 
-          console.log('✅ Producto actualizado exitosamente:', {
-            nuevo_precio_unitario: nuevoPrecioUnitario,
-            nuevo_subtotal: producto.subtotal,
-            nueva_personalizacion: producto.personalizacion,
-            cantidad: producto.cantidad
-          });
         }
       }
     });
@@ -770,84 +687,50 @@ export class PedidoService {
       this.detallesState.set([...detalles]);
       this.actualizarTotalEnEstado();
       
-      console.log('✅ SERVICIO: Estado actualizado correctamente');
-      console.log('💾 Total carrito actualizado:', this.total());
-      console.log('🔄 === FIN ACTUALIZACIÓN SERVICIO ===');
       
       return true;
     } else {
-      console.error('❌ SERVICIO: No se encontró producto para actualizar');
-      console.log('🔄 === FIN ACTUALIZACIÓN SERVICIO (FALLÓ) ===');
       return false;
     }
   }
 
 
-  /**
-   * ✅ Establecer número de turno
-   */
   establecerTurno(numeroTurno: number): void {
-    console.log('🎫 === ESTABLECIENDO TURNO ===');
-    console.log('Número de turno:', numeroTurno);
     
     this.turnoState.set(numeroTurno);
     
     // ✅ Guardar en localStorage
     try {
       localStorage.setItem('kiosko_turno', numeroTurno.toString());
-      console.log('✅ Turno guardado en localStorage');
     } catch (error) {
-      console.error('❌ Error guardando turno:', error);
     }
     
-    console.log('🎫 === FIN ESTABLECER TURNO ===');
   }
 
-  /**
-   * ✅ Obtener número de turno actual
-   */
   obtenerTurno(): number | null {
     const turno = this.turnoState();
-    console.log('🎫 Obteniendo turno actual:', turno);
     return turno;
   }
 
-  /**
-   * ✅ Verificar si tiene turno asignado
-   */
   tieneTurno(): boolean {
     const turno = this.turnoState();
     const tiene = turno !== null && turno > 0;
-    console.log('🎫 ¿Tiene turno?', tiene, '(turno:', turno, ')');
     return tiene;
   }
 
-  /**
-   * ✅ Limpiar turno
-   */
   limpiarTurno(): void {
-    console.log('🎫 === LIMPIANDO TURNO ===');
     
     this.turnoState.set(null);
     
     // ✅ Limpiar de localStorage
     try {
       localStorage.removeItem('kiosko_turno');
-      console.log('✅ Turno eliminado de localStorage');
     } catch (error) {
-      console.error('❌ Error limpiando turno:', error);
     }
     
-    console.log('🎫 === FIN LIMPIAR TURNO ===');
   }
 
-  /**
-   * ✅ Limpiar todo el carrito
-   */
   limpiarCarrito(): void {
-    console.log('🗑️ === LIMPIANDO CARRITO COMPLETO ===');
-    console.log('Detalles antes:', this.detallesState().length);
-    console.log('Total antes:', this.total());
     
     // ✅ Limpiar estados
     this.detallesState.set([]);
@@ -859,21 +742,12 @@ export class PedidoService {
     // ✅ También limpiar turno si existe
     this.limpiarTurno();
     
-    console.log('✅ Carrito completamente limpiado');
-    console.log('Detalles después:', this.detallesState().length);
-    console.log('Total después:', this.total());
-    console.log('🗑️ === FIN LIMPIAR CARRITO ===');
   }
 
-  /**
-   * ✅ Limpiar solo localStorage
-   */
   private limpiarStorage(): void {
     try {
       localStorage.removeItem('kiosko_pedido_detalles');
-      console.log('✅ localStorage limpiado');
     } catch (error) {
-      console.error('❌ Error limpiando localStorage:', error);
     }
   }
 
@@ -884,32 +758,22 @@ export class PedidoService {
         const numeroTurno = parseInt(turnoGuardado, 10);
         if (!isNaN(numeroTurno) && numeroTurno > 0) {
           this.turnoState.set(numeroTurno);
-          console.log('✅ Turno cargado desde localStorage:', numeroTurno);
         }
       }
     } catch (error) {
-      console.error('❌ Error cargando turno desde localStorage:', error);
     }
   }
 
-  /**
-   * ✅ NUEVO: Guardar información del pedido creado en backend
-   */
   setPedidoCreado(pedido: any): void {
     this.pedidoCreado = pedido;
-    console.log('📝 Pedido creado guardado para referencia:', pedido);
     
     // ✅ También guardar en localStorage para persistencia
     try {
       localStorage.setItem('kiosko_pedido_creado', JSON.stringify(pedido));
     } catch (error) {
-      console.error('❌ Error guardando pedido creado:', error);
     }
   }
 
-  /**
-   * ✅ NUEVO: Obtener información del pedido creado
-   */
   getPedidoCreado(): any {
     // ✅ Si no está en memoria, intentar cargar desde localStorage
     if (!this.pedidoCreado) {
@@ -919,69 +783,47 @@ export class PedidoService {
           this.pedidoCreado = JSON.parse(datos);
         }
       } catch (error) {
-        console.error('❌ Error cargando pedido creado:', error);
       }
     }
     
     return this.pedidoCreado;
   }
 
-  /**
-   * ✅ NUEVO: Limpiar información del pedido creado
-   */
   clearPedidoCreado(): void {
     this.pedidoCreado = null;
     
     // ✅ También limpiar de localStorage
     try {
       localStorage.removeItem('kiosko_pedido_creado');
-      console.log('🗑️ Información del pedido creado eliminada');
     } catch (error) {
-      console.error('❌ Error limpiando pedido creado:', error);
     }
   }
 
-  /**
-   * ✅ NUEVO: Cancelar pedido en backend
-   */
   cancelarPedidoBackend(numeroPedido: string): Observable<any> {
-    console.log('🗑️ Cancelando pedido en backend:', numeroPedido);
     
     // ✅ Usar endpoint DELETE para cancelar el pedido
     return this.http.delete(`${this.apiUrl}/${numeroPedido}/cancelar/`).pipe(
       tap(() => {
-        console.log('✅ Pedido cancelado exitosamente en backend');
       }),
       catchError((error) => {
-        console.error('❌ Error cancelando pedido en backend:', error);
         throw error;
       })
     );
   }
 
-  /**
-   * ✅ NUEVO: Confirmar pago del pedido en backend
-   */
   confirmarPagoBackend(numeroPedido: string): Observable<any> {
-    console.log('💳 Confirmando pago en backend:', numeroPedido);
     
     // ✅ Usar endpoint PATCH para confirmar el pago
     return this.http.patch(`${this.apiUrl}/${numeroPedido}/confirmar-pago/`, {}).pipe(
       tap(() => {
-        console.log('✅ Pago confirmado exitosamente en backend');
       }),
       catchError((error) => {
-        console.error('❌ Error confirmando pago en backend:', error);
         throw error;
       })
     );
   }
 
-  /**
-   * ✅ MEJORAR: Limpiar todo completamente (carrito + pedido creado)
-   */
   limpiarTodoCompletamente(): void {
-    console.log('🧹 === LIMPIANDO TODO COMPLETAMENTE ===');
     
     // ✅ Limpiar carrito
     this.limpiarCarrito();
@@ -992,8 +834,6 @@ export class PedidoService {
     // ✅ Limpiar estado persistido
     this.limpiarEstadoPersistido();
     
-    console.log('✅ TODO LIMPIADO COMPLETAMENTE');
-    console.log('🧹 === FIN LIMPIEZA COMPLETA ===');
   }
 
 }

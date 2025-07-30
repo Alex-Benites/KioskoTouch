@@ -1,4 +1,3 @@
-// 🔑 Interfaz para un permiso individual
 export interface Permiso {
   id: number;
   name: string;
@@ -8,14 +7,12 @@ export interface Permiso {
   content_type__model: string;
 }
 
-// 📋 Interfaz para una gestión (agrupación de permisos)
 export interface Gestion {
   label: string;
   permisos: Permiso[];
   models: string[];
 }
 
-// 🏢 Interfaz para las gestiones organizadas del backend
 export interface GestionesData {
   usuarios: Gestion;
   productos: Gestion;
@@ -27,7 +24,6 @@ export interface GestionesData {
   kiosko_touch: Gestion;
 }
 
-// 📊 Interfaz para el resumen de permisos por gestión
 export interface ResumenGestion {
   label: string;
   total_permisos: number;
@@ -40,7 +36,6 @@ export interface ResumenGestion {
   };
 }
 
-// 📈 Interfaz para la respuesta completa del backend
 export interface GestionesResponse {
   gestiones: GestionesData;
   resumen: { [key: string]: ResumenGestion };
@@ -49,32 +44,27 @@ export interface GestionesResponse {
   total_permisos: number;
 }
 
-// 👤 Interfaz para un grupo/rol
 export interface Grupo {
   id: number;
   name: string;
   permisos_count?: number;
 }
 
-// 📝 Interfaz para la respuesta de grupos
 export interface GruposResponse {
   grupos: Grupo[];
   total: number;
 }
 
-// ➕ Interfaz para crear un nuevo rol
 export interface CrearRolRequest {
   nombre: string;
   permisos: number[];
 }
 
-// ✏️ Interfaz para editar un rol existente
 export interface EditarRolRequest {
   nombre?: string;
   permisos: number[];
 }
 
-// 🔍 Interfaz para el detalle de un rol específico
 export interface DetalleRol {
   grupo: {
     id: number;
@@ -84,7 +74,6 @@ export interface DetalleRol {
   };
 }
 
-// 📋 Interfaz para la respuesta de creación/edición de rol
 export interface RolResponse {
   message: string;
   grupo: {
@@ -94,7 +83,6 @@ export interface RolResponse {
   };
 }
 
-// 🎨 Interfaz para el UI del componente (gestión con estados de selección)
 export interface GestionUI {
   key: string;
   label: string;
@@ -114,18 +102,15 @@ export interface GestionUI {
   };
 }
 
-// 📊 Tipos auxiliares
 export type AccionPermiso = 'crear' | 'modificar' | 'eliminar' | 'ver' | 'todos';
 export type TipoGestion = keyof GestionesData;
 
-// 🔧 Interfaces para estados de carga
 export interface EstadoCarga {
   cargando: boolean;
   error: string | null;
   datos: any | null;
 }
 
-// 📋 Interfaz para filtros de permisos 
 export interface FiltrosPermisos {
   app?: string;
   accion?: AccionPermiso;

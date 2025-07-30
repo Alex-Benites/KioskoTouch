@@ -28,17 +28,11 @@ export class EmpleadosService {
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * 📋 Obtener empleados para dropdown
-   */
   getEmpleadosParaDropdown(): Observable<EmpleadosResponse> {
     return this.http.get<EmpleadosResponse>(`${this.apiUrl}/empleados/dropdown/`);
     // ✅ Sin headers - El interceptor los agrega automáticamente
   }
 
-  /**
-   * 📝 Obtener empleado por ID
-   */
   getEmpleadoPorId(id: number): Observable<EmpleadoDropdown> {
     return this.http.get<EmpleadoDropdown>(`${this.apiUrl}/empleados/${id}/`);
     // ✅ Sin headers - El interceptor los agrega automáticamente

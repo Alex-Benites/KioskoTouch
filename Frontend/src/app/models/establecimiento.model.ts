@@ -8,16 +8,14 @@ export interface Establecimiento {
   telefono: string;
   correo: string;
   responsable_id: number;
-  responsable_nombre?: string; // Nombre del responsable
+  responsable_nombre?: string;
   estado_id: number;
-  estado_nombre?: string; // ✅ Nombre del estado
+  estado_nombre?: string;
   created_at?: string;
   updated_at?: string;
   
-  // 🖼️ Propiedades para imagen
   imagen_id?: number | null;
   imagen_url?: string | null;
   
-  // 🗺️ Propiedades para mapa
   mapa_url?: string | null;
 }

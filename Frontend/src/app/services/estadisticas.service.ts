@@ -53,17 +53,11 @@ export class EstadisticasService {
 
   constructor(private http: HttpClient) { }
 
-  /**
-   * Obtener estadísticas completas de promociones
-   */
   getEstadisticasPromociones(): Observable<EstadisticasPromociones> {
     return this.http.get<EstadisticasPromociones>(`${this.apiUrl}/estadisticas/`)
       .pipe(catchError(this.handleError));
   }
 
-  /**
-   * Manejo de errores HTTP
-   */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let apiError: ApiError = {
       message: 'Ha ocurrido un error inesperado',

@@ -76,7 +76,6 @@ export class PublicidadService {
       url += `?${params.toString()}`;
     }
     
-    console.log(`📡 Solicitando publicidades activas: ${url}`);
     return this.http.get<Publicidad[]>(url)
       .pipe(catchError(this.handleError));
   }

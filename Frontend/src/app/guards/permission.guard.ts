@@ -14,11 +14,8 @@ export const permissionGuard = (requiredPermissions: string[]): CanActivateFn =>
     }
 
     if (authService.hasAllPermissions(requiredPermissions)) { 
-      console.log('✅ Usuario tiene TODOS los permisos:', requiredPermissions);
       return true;
     } else {
-      console.warn('❌ Usuario sin permisos suficientes:', requiredPermissions);
-      console.log('👤 Permisos del usuario:', authService.getCurrentUser()?.permissions);
       router.navigate(['/administrador/unauthorized']);
       return false;
     }

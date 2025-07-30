@@ -1,4 +1,3 @@
-// ✅ CREAR Frontend/src/app/administrador/gestion-categorias/categoria.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
@@ -32,7 +31,6 @@ export class CategoriaService {
 
   constructor(private http: HttpClient) {}
 
-  // ✅ LISTAR todas las categorías
   getCategorias(): Observable<Categoria[]> {
     console.log('🔍 Obteniendo lista de categorías...');
     return this.http.get<Categoria[]>(`${this.apiUrl}/`).pipe(
@@ -40,7 +38,6 @@ export class CategoriaService {
     );
   }
 
-  // ✅ OBTENER una categoría específica
   getCategoria(id: number): Observable<Categoria> {
     console.log(`🔍 Obteniendo categoría ID: ${id}`);
     return this.http.get<Categoria>(`${this.apiUrl}/${id}/`).pipe(
@@ -48,7 +45,6 @@ export class CategoriaService {
     );
   }
 
-  // ✅ CREAR nueva categoría
   crearCategoria(categoriaData: FormData): Observable<CategoriaResponse> {
     console.log('➕ Creando nueva categoría...');
     return this.http.post<CategoriaResponse>(`${this.apiUrl}/`, categoriaData).pipe(
@@ -56,7 +52,6 @@ export class CategoriaService {
     );
   }
 
-  // ✅ ACTUALIZAR categoría existente
   actualizarCategoria(id: number, categoriaData: FormData): Observable<CategoriaResponse> {
     console.log(`📝 Actualizando categoría ID: ${id}`);
     return this.http.put<CategoriaResponse>(`${this.apiUrl}/${id}/`, categoriaData).pipe(
@@ -64,7 +59,6 @@ export class CategoriaService {
     );
   }
 
-  // ✅ ELIMINAR categoría
   eliminarCategoria(id: number): Observable<CategoriaResponse> {
     console.log(`🗑️ Eliminando categoría ID: ${id}`);
     return this.http.delete<CategoriaResponse>(`${this.apiUrl}/${id}/`).pipe(
@@ -72,7 +66,6 @@ export class CategoriaService {
     );
   }
 
-  // ✅ HELPER: Crear FormData para envío
   crearFormData(categoria: Partial<Categoria>, imagen?: File): FormData {
     const formData = new FormData();
     
@@ -87,7 +80,6 @@ export class CategoriaService {
     return formData;
   }
 
-  // ✅ HELPER: Obtener URL completa de imagen
   getFullImageUrl(imagenUrl: string | null | undefined): string {
     if (!imagenUrl) {
       return 'assets/placeholder-categoria.png';
@@ -100,7 +92,6 @@ export class CategoriaService {
     return `${environment.apiUrl.replace('/api', '')}${imagenUrl}`;
   }
 
-  // ✅ MANEJO DE ERRORES
   private handleError(error: any): Observable<never> {
     console.error('❌ Error en CategoriaService:', error);
     
