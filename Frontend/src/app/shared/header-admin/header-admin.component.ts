@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/usuarios.model';
@@ -15,6 +15,7 @@ export class HeaderAdminComponent implements OnInit, OnDestroy {
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
   currentUser: User | null = null;
   username: string = '';
@@ -56,20 +57,16 @@ export class HeaderAdminComponent implements OnInit, OnDestroy {
 
 logout() {
   if (this.isLoggingOut) {
-    console.log('⏳ Logout ya en proceso...');
     return; 
   }
 
   this.isLoggingOut = true;
-  console.log('🚪 Iniciando logout...');
   
   this.authService.logout().subscribe({
     next: () => {
-      console.log('✅ Logout exitoso');
       this.isLoggingOut = false;
     },
     error: (error) => {
-      console.error('❌ Error en logout:', error);
       this.isLoggingOut = false;
       this.router.navigate(['/administrador/login']);
     }
@@ -77,6 +74,9 @@ logout() {
 }
 
   goToHome(){
+    if (this.router.url === '/chef/pedidos') {
+      return;
+    }
     this.router.navigate(['/administrador/home']);
   }
 
