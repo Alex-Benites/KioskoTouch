@@ -17,7 +17,7 @@ export class FooterAdminComponent {
   constructor(private router: Router, private location: Location) {}
 
   volver() {
-      if (this.backRoute) {
+    if (this.backRoute) {
       const routeToNavigate = Array.isArray(this.backRoute) ? this.backRoute : [this.backRoute];
       this.router.navigate(routeToNavigate);
     } else {

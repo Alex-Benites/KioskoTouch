@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/usuarios.model';
@@ -15,7 +15,6 @@ export class HeaderAdminComponent implements OnInit, OnDestroy {
 
   private authService = inject(AuthService);
   private router = inject(Router);
-  private activatedRoute = inject(ActivatedRoute);
 
   currentUser: User | null = null;
   username: string = '';
@@ -81,6 +80,9 @@ logout() {
   }
 
   goToProfile(): void {
+    if (this.router.url === '/chef/pedidos') {
+      return;
+    }
     this.router.navigate(['/administrador/perfil']);
   }
 
