@@ -527,7 +527,7 @@ $category-inactive-bg: #FFFFFF;
   width: 100%;
   box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
   background-color: white;
-  height: 200px;
+  height: 230px;
 
   &__title {
     background-color: $kiosko-red;
@@ -583,9 +583,7 @@ $category-inactive-bg: #FFFFFF;
     cursor: pointer;
     transition: all 0.2s ease;
 
-    &:hover:not(:disabled) {
-      background-color: color.scale($kiosko-red, $lightness: -10%);
-    }
+
 
     &:disabled {
       background-color: #6c757d;
