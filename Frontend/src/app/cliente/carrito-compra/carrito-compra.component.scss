@@ -482,6 +482,7 @@ $font-family-base: 'Lato', sans-serif;
     // ✅ BOTÓN "SEGUIR COMPRANDO" - GRIS
     &:first-child {
       background: #C3453A;
+      justify-content: center;
       color: white;
 
       &:hover:not(:disabled) {
