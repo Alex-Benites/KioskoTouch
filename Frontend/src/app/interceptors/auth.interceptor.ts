@@ -16,7 +16,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     '/api/catalogo/categorias/',
     '/api/catalogo/menus/',    
     '/api/catalogo/productos/',
-    '/api/marketing/promociones/'                      
+    '/api/marketing/promociones/',
+    '/api/comun/iva/actual/'                      
   ];
 
   const isPublicRoute = publicAPIs.some(api => req.url.includes(api));
