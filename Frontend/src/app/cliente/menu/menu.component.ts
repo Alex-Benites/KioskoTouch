@@ -241,7 +241,7 @@ export class MenuComponent implements OnInit, OnDestroy {
         tamano = `(${p.tamano_nombre.charAt(0).toUpperCase()})`;
       }
       let cantidadStr = cantidad > 1 ? `(x${cantidad})` : '';
-      return `- ${nombre} ${cantidadStr}${tamano}`.trim();
+      return `${nombre} ${cantidadStr}${tamano}`.trim();
     });
   }
 
