@@ -41,6 +41,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   private categorias = signal<Categoria[]>([]);
   private productos = signal<ProductoConBadge[]>([]);
   private menus = signal<Menu[]>([]);
+  private promocionesActivas = signal<any[]>([]);
 
   cargandoCategorias = signal<boolean>(true);
   cargandoProductos = signal<boolean>(true);
@@ -163,6 +164,9 @@ export class MenuComponent implements OnInit, OnDestroy {
   p.estado === idEstadoActivado &&
   (!p.codigo_promocional || String(p.codigo_promocional).trim() === '')
 );
+
+          // Guardar promociones activas en estado
+          this.promocionesActivas.set(promocionesActivas);
 
           // Procesar productos con badges de promociones activas
           const productosConBadges = this.procesarProductosConBadges(
@@ -360,6 +364,11 @@ export class MenuComponent implements OnInit, OnDestroy {
     return `$${this.obtenerPrecioMostrar(producto).toFixed(2)}`;
   }
 
+  obtenerTextoPrecioConDescuento(item: ProductoConBadge | Menu): string {
+    const precioConDescuento = this.obtenerPrecioConDescuento(item as ProductoConBadge);
+    return `$${precioConDescuento.toFixed(2)}`;
+  }
+
 
   obtenerTextoPrecioMenu(menu: Menu): string {
     return `$${menu.precio.toFixed(2)}`;
@@ -509,27 +518,30 @@ export class MenuComponent implements OnInit, OnDestroy {
 
 
   private agregarProductoAlCarrito(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
+    let precio = producto.precio;
+    let precioConDescuento = precio;
+
     if (this.esMenu(producto)) {
-      // Ahora usa agregarMenu
-      this.pedidoService.agregarMenu(producto.id, producto.precio, cantidad, []);
+      // Calcular precio con descuento para menús
+      precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+      console.log(`Agregando menú ${producto.id} con precio descuento: $${precioConDescuento}`);
+      this.pedidoService.agregarMenu(producto.id, precioConDescuento, cantidad, []);
     } else {
-      let precio = producto.precio;
-      let descripcionExtra = '';
+      // Calcular precio con descuento para productos
+      precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+      console.log(`Agregando producto ${producto.id} con precio descuento: $${precioConDescuento}`);
 
       if (tamanoSeleccionado) {
         precio = tamanoSeleccionado.precio;
-        descripcionExtra = ` (${tamanoSeleccionado.codigo})`;
+        precioConDescuento = precioConDescuento * (tamanoSeleccionado.precio / precio);
       }
-      else if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
-        const primerTamano = producto.tamanos_detalle[0];
+      else if ((producto as ProductoConBadge).aplica_tamanos && (producto as ProductoConBadge).tamanos_detalle && (producto as ProductoConBadge).tamanos_detalle!.length > 0) {
+        const primerTamano = (producto as ProductoConBadge).tamanos_detalle![0];
         precio = primerTamano.precio;
-        descripcionExtra = ` (${primerTamano.codigo_tamano})`;
-      }
-      else {
-        precio = this.calcularPrecioFinal(producto);
+        precioConDescuento = precioConDescuento * (primerTamano.precio / precio);
       }
 
-      this.pedidoService.agregarProducto(producto.id, precio, cantidad);
+      this.pedidoService.agregarProducto(producto.id, precioConDescuento, cantidad);
     }
 
     // Mostrar el detalle del pedido en consola
@@ -635,6 +647,59 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   onPublicidadCambio(publicidad: Publicidad): void {
     // Aquí puedes agregar lógica adicional como analytics
+  }
+
+  // Método para calcular precio con descuento
+  private calcularPrecioConDescuento(producto: ProductoConBadge | Menu, promocionesActivas: any[]): number {
+    const precioOriginal = typeof producto.precio === 'number' ? producto.precio : this.obtenerPrecioMostrar(producto as ProductoConBadge);
+    
+    // Para menús, buscar promociones específicas de menús
+    if (this.esMenu(producto)) {
+      const promosMenu = promocionesActivas.filter((p: any) =>
+        Array.isArray(p.menus_detalle) &&
+        p.menus_detalle.some((menu: any) =>
+          (menu.menu && menu.menu.id === producto.id) ||
+          (menu.menu_id === producto.id) ||
+          (menu.id === producto.id)
+        )
+      );
+
+      if (promosMenu.length > 0) {
+        const mayorDescuento = Math.max(...promosMenu.map((p: any) => Number(p.valor_descuento) || 0));
+        const precioConDescuento = precioOriginal * (1 - mayorDescuento / 100);
+        console.log(`Menú ${producto.id}: Original $${precioOriginal}, Descuento ${mayorDescuento}%, Final $${precioConDescuento}`);
+        return precioConDescuento;
+      }
+    } else {
+      // Para productos, buscar promociones de productos
+      const promosProducto = promocionesActivas.filter((p: any) =>
+        Array.isArray(p.productos_detalle) &&
+        p.productos_detalle.some((prod: any) =>
+          (prod.producto && prod.producto.id === producto.id) ||
+          (prod.producto_id === producto.id)
+        )
+      );
+
+      if (promosProducto.length > 0) {
+        const mayorDescuento = Math.max(...promosProducto.map((p: any) => Number(p.valor_descuento) || 0));
+        const precioConDescuento = precioOriginal * (1 - mayorDescuento / 100);
+        console.log(`Producto ${producto.id}: Original $${precioOriginal}, Descuento ${mayorDescuento}%, Final $${precioConDescuento}`);
+        return precioConDescuento;
+      }
+    }
+    
+    console.log(`Sin promoción: ${producto.id} - $${precioOriginal}`);
+    return precioOriginal;
+  }
+
+  // Método para obtener precio con descuento
+  obtenerPrecioConDescuento(producto: ProductoConBadge): number {
+    return this.calcularPrecioConDescuento(producto, this.promocionesActivas());
+  }
+
+  // Método para verificar si tiene promoción
+  tienePromociones(producto: ProductoConBadge): boolean {
+    return this.tienePromoBadge(producto);
   }
 
 }
