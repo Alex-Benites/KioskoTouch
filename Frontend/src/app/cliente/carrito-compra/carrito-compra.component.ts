@@ -8,7 +8,6 @@ import { PublicidadSectionComponent } from '../../shared/publicidad-section/publ
 import { Publicidad } from '../../models/marketing.model';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TurnoConfirmationDialogComponent } from '../../shared/turno-confirmation-dialog/turno-confirmation-dialog.component';
-// ✅ AGREGAR: Import del ConfirmationDialog
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -180,22 +179,21 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
 
     const nombreProducto = this.obtenerNombreProducto(item);
 
-    const dialogRef = this.dialog.open(TurnoConfirmationDialogComponent, {
-      width: '420px',
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '450px',
       disableClose: false,
       panelClass: 'confirmation-dialog-panel',
       data: {
-        itemType: nombreProducto,
-        action: 'delete'
-      }
+        itemType: 'producto',
+        action: 'delete',
+        context: 'carrito',
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
 
       if (result === true) {
         this.pedidoService.eliminarProducto(index);
-
-
       } else {
       }
     });
