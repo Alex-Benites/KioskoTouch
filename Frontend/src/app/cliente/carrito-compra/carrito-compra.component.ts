@@ -291,6 +291,13 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       subtotal: productoReal.subtotal
     };
 
+    console.log('Navegando a personalización con modo edición:', {
+      productoId: productoReal.producto_id,
+      carritoIndex: index,
+      cantidad: productoReal.cantidad,
+      precio: productoReal.precio_unitario
+    });
+
     this.router.navigate(['/cliente/personalizar-producto', productoReal.producto_id], {
       queryParams: {
         modo: 'editar',

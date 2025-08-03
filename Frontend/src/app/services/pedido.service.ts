@@ -649,7 +649,8 @@ export class PedidoService {
     productoId: number, 
     personalizacionOriginal: PersonalizacionIngrediente[] | undefined,
     nuevaPersonalizacion: PersonalizacionIngrediente[],
-    nuevoPrecio: number
+    nuevoPrecio: number,
+    nuevaCantidad?: number
   ): boolean {
     
     const detalles = this.detallesState();
@@ -667,13 +668,15 @@ export class PedidoService {
           const producto = detalle.productos[productoIndex];
           
 
-          // ✅ ACTUALIZAR CORRECTAMENTE: Primero personalización, luego precio
+          // ✅ ACTUALIZAR CORRECTAMENTE: personalización, cantidad y precio
           producto.personalizacion = [...nuevaPersonalizacion];
           
-          // ✅ CLAVE: Actualizar el subtotal basado en el NUEVO precio unitario
-          // nuevoPrecio YA es el precio TOTAL (unitario * cantidad)
-          // Pero necesitamos calcular el precio unitario correcto
-          const nuevoPrecioUnitario = nuevoPrecio / producto.cantidad;
+          // ✅ ACTUALIZAR CANTIDAD SI SE PROPORCIONA
+          if (nuevaCantidad !== undefined && nuevaCantidad > 0) {
+            producto.cantidad = nuevaCantidad;
+          }
+          
+          // ✅ ACTUALIZAR SUBTOTAL
           producto.subtotal = nuevoPrecio;
 
           actualizado = true;

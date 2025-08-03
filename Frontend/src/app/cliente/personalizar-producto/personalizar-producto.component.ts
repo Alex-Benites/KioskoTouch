@@ -63,6 +63,11 @@ export class PersonalizarProductoComponent implements OnInit {
   private catalogoService = inject(CatalogoService);
   public pedidoService = inject(PedidoService);
   private publicidadService = inject(PublicidadService);
+  
+  // Variables para guardar estado original y personalizado
+  private precioOriginal: number = 0;
+  private cantidadOriginal: number = 1;
+  private cantidadPersonalizada: number = 1;
 
   productoId: number | null = null;
   cantidad = signal<number>(1);
@@ -188,9 +193,18 @@ export class PersonalizarProductoComponent implements OnInit {
     this.categoriaProducto = Number(params['categoria']) || null;
     this.descripcionProducto = '';
     this.imagenProducto = 'assets/placeholder-producto.png';
-    this.precioProducto = params['tamano_precio']
+    // Guardar precio original para cálculos
+    this.precioOriginal = params['tamano_precio']
       ? Number(params['tamano_precio']) || 0
       : Number(params['precio']) || 0;
+    
+    // Establecer precio inicial (sin descuento aún)
+    this.precioProducto = this.precioOriginal;
+
+    // Establecer cantidad inicial y sincronizar con la cantidad visual
+    const cantidadInicial = Number(params['cantidad']) || 1;
+    this.cantidadPersonalizada = cantidadInicial;
+    this.cantidad.set(cantidadInicial);
 
     // Aplicar descuento de promoción si existe
     setTimeout(() => {
@@ -306,6 +320,7 @@ export class PersonalizarProductoComponent implements OnInit {
 
     const nuevaPersonalizacion = this.generarPersonalizacionFinal();
     const nuevoPrecio = this.calcularPrecioFinal();
+    const nuevaCantidad = this.cantidad(); // ✅ OBTENER LA NUEVA CANTIDAD
 
 
     if (nuevoPrecio <= 0) {
@@ -317,7 +332,8 @@ export class PersonalizarProductoComponent implements OnInit {
       this.datosActuales.producto_id,
       this.personalizacionOriginal,
       nuevaPersonalizacion,
-      nuevoPrecio
+      nuevoPrecio,
+      nuevaCantidad // ✅ PASAR LA NUEVA CANTIDAD
     );
 
     if (resultado !== false) {
@@ -661,17 +677,31 @@ export class PersonalizarProductoComponent implements OnInit {
     // NUEVO: Obtén las personalizaciones
     const personalizaciones = this.obtenerPersonalizacionesParaPedido();
 
-    this.pedidoService.agregarProducto(
-      this.productoId!,
-      precioUnitarioConExtras,
-      cantidadFinal,
-      personalizaciones
-    );
+    // Actualizar la cantidad personalizada antes de agregar al carrito
+    this.cantidadPersonalizada = cantidadFinal;
+
+    console.log('agregarAlCarrito - Modo edición:', this.modoEdicion);
+    console.log('agregarAlCarrito - Carrito index:', this.carritoIndex);
+    console.log('agregarAlCarrito - Cantidad final:', cantidadFinal);
+
+    // Si estamos en modo edición, actualizar el producto existente
+    if (this.modoEdicion && this.carritoIndex !== null) {
+      console.log('Actualizando producto existente...');
+      this.actualizarCantidadEnCarrito();
+    } else {
+      console.log('Agregando nuevo producto...');
+      // Si es un producto nuevo, agregarlo normalmente
+      this.pedidoService.agregarProducto(
+        this.productoId!,
+        precioUnitarioConExtras,
+        cantidadFinal,
+        personalizaciones
+      );
+    }
 
     let mensaje = `✅ ${this.nombreProducto} agregado al carrito!\n`;
     mensaje += `Cantidad: ${cantidadFinal}\n`;
     mensaje += `Precio total: $${precioTotal.toFixed(2)}`;
-
 
     // 🔧 RESETEAR estado INMEDIATAMENTE después de agregar
     this.procesandoConfirmacion = false;
@@ -685,11 +715,18 @@ export class PersonalizarProductoComponent implements OnInit {
 
 
   cancelarPedido(): void {
+    // Actualizar el carrito con los cambios antes de navegar
+    if (this.modoEdicion && this.carritoIndex !== null) {
+      this.actualizarCantidadEnCarrito();
+    }
     this.volverAlMenu();
   }
 
   continuar(): void {
-    // Aquí podrías navegar a la siguiente página del flujo de pedido
+    // Actualizar el carrito con los cambios antes de navegar
+    if (this.modoEdicion && this.carritoIndex !== null) {
+      this.actualizarCantidadEnCarrito();
+    }
     this.volverAlMenu();
   }
 
@@ -779,8 +816,41 @@ export class PersonalizarProductoComponent implements OnInit {
       }
     });
 
-
     return personalizaciones;
+  }
+
+  private actualizarCantidadEnCarrito(): void {
+    if (this.carritoIndex === null || this.productoId === null) {
+      console.log('No se puede actualizar: carritoIndex o productoId es null');
+      return;
+    }
+
+    console.log('Actualizando carrito:', {
+      carritoIndex: this.carritoIndex,
+      productoId: this.productoId,
+      cantidadPersonalizada: this.cantidadPersonalizada,
+      precioProducto: this.precioProducto
+    });
+
+    try {
+      // Eliminar el producto original del carrito
+      console.log('Eliminando producto original del carrito...');
+      this.pedidoService.eliminarProducto(this.carritoIndex);
+      
+      // Agregar el producto actualizado con la nueva cantidad y personalizaciones
+      const personalizaciones = this.obtenerPersonalizacionesParaPedido();
+      console.log('Agregando producto actualizado al carrito...');
+      this.pedidoService.agregarProducto(
+        this.productoId,
+        this.precioProducto,
+        this.cantidadPersonalizada,
+        personalizaciones
+      );
+
+      console.log('Carrito actualizado exitosamente');
+    } catch (error) {
+      console.error('Error al actualizar carrito:', error);
+    }
   }
 
   public hayAlMenosUnIngredienteSeleccionado(): boolean {
@@ -829,8 +899,8 @@ export class PersonalizarProductoComponent implements OnInit {
             Number(p.valor_descuento) || 0
           ));
           
-          // Aplicar descuento al precio del producto
-          const precioConDescuento = this.precioProducto * (1 - mayorDescuento / 100);
+          // Aplicar descuento al precio original (no al precio actual)
+          const precioConDescuento = this.precioOriginal * (1 - mayorDescuento / 100);
           const precioFinal = Math.round(precioConDescuento * 100) / 100;
           
           // Forzar actualización del precio con un cambio detectable por Angular
