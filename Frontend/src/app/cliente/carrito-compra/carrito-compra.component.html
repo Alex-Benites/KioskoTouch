@@ -101,11 +101,10 @@
               </div>
             </div>
 
-            <!--  BOTÓN PERSONALIZAR INFERIOR (MENOS ESPACIO) -->
             <div class="producto-controles-inferiores">
               <button
                 *ngIf="item.tipo === 'producto'"
-                class="btn-personalizar-inline"
+                class="btn-personalizar-below"
                 (click)="personalizarProducto(item, i)">
                 Personalizar
               </button>
