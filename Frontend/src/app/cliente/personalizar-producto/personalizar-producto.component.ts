@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PedidoService } from '../../services/pedido.service';
+import { PublicidadService } from '../../services/publicidad.service';
 import { PersonalizacionIngrediente } from '../../models/pedido.model';
 import { combineLatest } from 'rxjs';
 
@@ -61,6 +62,7 @@ export class PersonalizarProductoComponent implements OnInit {
   private router = inject(Router);
   private catalogoService = inject(CatalogoService);
   public pedidoService = inject(PedidoService);
+  private publicidadService = inject(PublicidadService);
 
   productoId: number | null = null;
   cantidad = signal<number>(1);
@@ -189,6 +191,11 @@ export class PersonalizarProductoComponent implements OnInit {
     this.precioProducto = params['tamano_precio']
       ? Number(params['tamano_precio']) || 0
       : Number(params['precio']) || 0;
+
+    // Aplicar descuento de promoción si existe
+    setTimeout(() => {
+      this.aplicarDescuentoPromocion();
+    }, 200);
 
     if (this.modoEdicion) {
       this.precargarPersonalizaciones();
@@ -454,7 +461,14 @@ export class PersonalizarProductoComponent implements OnInit {
           const producto = productos.find(p => p.id === this.productoId);
           if (producto) {
             this.productoDatos = producto;
+            // Guardar precio original antes de aplicar descuentos
+            const precioOriginal = Number(producto.precio) || this.precioProducto;
             this.actualizarDatosProducto(producto);
+            
+            // Volver a aplicar descuento después de actualizar datos
+            setTimeout(() => {
+              this.aplicarDescuentoPromocion();
+            }, 100);
           }
         },
         error: (error) => {
@@ -573,7 +587,8 @@ export class PersonalizarProductoComponent implements OnInit {
 
     const tienePrecionTamano = this.route.snapshot.queryParams['tamano_precio'];
     if (!tienePrecionTamano) {
-      this.precioProducto = Number(producto.precio) || this.precioProducto;
+      // No actualizar precio aquí para evitar sobrescribir el descuento
+      // this.precioProducto = Number(producto.precio) || this.precioProducto;
     } else {
     }
 
@@ -786,6 +801,52 @@ export class PersonalizarProductoComponent implements OnInit {
         return `Disminuir cantidad de ${ingrediente.nombre}`;
       }
     }
+  }
+
+  private aplicarDescuentoPromocion(): void {
+    // Obtener promociones activas usando el servicio de publicidad
+    this.publicidadService.getPromociones().subscribe({
+      next: (promociones: any[]) => {
+        // Filtrar promociones activas
+        const promocionesActivas = promociones.filter(p =>
+          p.estado === 'Activado' &&
+          (!p.codigo_promocional || String(p.codigo_promocional).trim() === '')
+        );
+
+        // Buscar promociones que incluyan este producto
+        const promocionesProducto = promocionesActivas.filter(p => {
+          if (!p.productos_detalle || !Array.isArray(p.productos_detalle)) return false;
+          
+          return p.productos_detalle.some((prod: any) =>
+            (prod.producto && prod.producto.id === this.productoId) ||
+            (prod.producto_id === this.productoId)
+          );
+        });
+
+        if (promocionesProducto.length > 0) {
+          // Obtener el mayor descuento
+          const mayorDescuento = Math.max(...promocionesProducto.map(p =>
+            Number(p.valor_descuento) || 0
+          ));
+          
+          // Aplicar descuento al precio del producto
+          const precioConDescuento = this.precioProducto * (1 - mayorDescuento / 100);
+          const precioFinal = Math.round(precioConDescuento * 100) / 100;
+          
+          // Forzar actualización del precio con un cambio detectable por Angular
+          this.precioProducto = precioFinal;
+          
+          // Forzar actualización de los computed properties
+          this.precioTotalCalculado();
+          this.precioUnitarioConIngredientes();
+          this.costoIngredientesAdicionales();
+        }
+      },
+      error: (error: any) => {
+        // Si hay error al obtener promociones, mantener el precio original
+        console.log('Error al obtener promociones:', error);
+      }
+    });
   }
 
 }
