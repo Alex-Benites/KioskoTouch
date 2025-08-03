@@ -74,18 +74,23 @@ export class ProductPopupComponent implements OnInit {
     console.log('📏 Tiene tamaños:', this.tieneTamanos);
     console.log('📊 Tamaños disponibles:', this.data.producto.tamanos_detalle);
 
-    // ✅ SELECCIONAR primer tamaño con conversión de precio
+    // ✅ SELECCIONAR primer tamaño si tiene tamaños
     if (this.tieneTamanos && this.data.producto.tamanos_detalle && this.data.producto.tamanos_detalle.length > 0) {
       const primerTamano = this.data.producto.tamanos_detalle[0];
       
-      // ✅ CONVERTIR precio a número
+      // ✅ CONVERTIR precio a número y crear objeto del tamaño
       this.tamanoSeleccionado = {
         ...primerTamano,
         precio: parseFloat(primerTamano.precio.toString()) || 0
       };
       
       console.log('🎯 Tamaño seleccionado por defecto:', this.tamanoSeleccionado);
+    } else {
+      console.log('🏷️ Producto sin tamaños, usando precio base:', this.data.producto.precio);
     }
+
+    // ✅ INICIALIZAR precio total
+    this.precioTotal = 0;
   }
 
   ngOnInit(): void {
@@ -104,14 +109,25 @@ export class ProductPopupComponent implements OnInit {
     this.calcularTotal();
   }
 
-  // ✅ AGREGAR: Método para obtener precio actual
+  // ✅ MEJORAR: Método para obtener precio actual
   getPrecioActual(): number {
+    console.log('💰 getPrecioActual - Estado:', {
+      tieneTamanos: this.tieneTamanos,
+      tamanoSeleccionado: this.tamanoSeleccionado,
+      precioProducto: this.data.producto.precio
+    });
+
     if (this.tieneTamanos && this.tamanoSeleccionado) {
-      // ✅ CONVERTIR string a number
-      return parseFloat(this.tamanoSeleccionado.precio) || 0;
+      // Producto con tamaños - usar precio del tamaño seleccionado
+      const precioTamano = parseFloat(this.tamanoSeleccionado.precio.toString()) || 0;
+      console.log('📏 Usando precio de tamaño:', precioTamano);
+      return precioTamano;
     }
-    // ✅ ASEGURAR que sea número
-    return parseFloat(this.data.producto.precio.toString()) || 0;
+    
+    // Producto sin tamaños - usar precio base del producto
+    const precioBase = parseFloat(this.data.producto.precio.toString()) || 0;
+    console.log('🏷️ Usando precio base:', precioBase);
+    return precioBase;
   }
 
   // ✅ Aumentar cantidad
@@ -128,9 +144,16 @@ export class ProductPopupComponent implements OnInit {
     }
   }
 
-  // ✅ Calcular precio total usando precio actual
+  // ✅ MEJORAR: Calcular precio total
   private calcularTotal(): void {
-    this.precioTotal = this.getPrecioActual() * this.cantidad;
+    const precioUnitario = this.getPrecioActual();
+    this.precioTotal = precioUnitario * this.cantidad;
+    
+    console.log('💰 calcularTotal:', {
+      precioUnitario: precioUnitario,
+      cantidad: this.cantidad,
+      precioTotal: this.precioTotal
+    });
   }
 
   // ✅ Agregar al carrito con tamaño

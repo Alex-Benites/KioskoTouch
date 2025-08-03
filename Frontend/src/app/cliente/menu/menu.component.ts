@@ -464,22 +464,49 @@ export class MenuComponent implements OnInit, OnDestroy {
     const imagenUrl = this.obtenerImagenProducto(producto);
     const permitirPersonalizacion = this.debePermitirPersonalizacion(producto);
 
+    // ✅ CALCULAR PRECIO CON DESCUENTO PARA EL POPUP
+    const precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+
+    console.log('🎯 Popup - Precio original vs con descuento:', {
+      original: producto.precio,
+      conDescuento: precioConDescuento,
+      producto: producto.nombre,
+      tieneTamanos: (producto as ProductoConBadge).aplica_tamanos
+    });
+
     const dialogData: ProductPopupData = {
       producto: {
         id: producto.id,
         nombre: producto.nombre,
-        precio: producto.precio,
+        precio: precioConDescuento, // ✅ USAR PRECIO CON DESCUENTO
         imagenUrl: imagenUrl,
         categoria: (producto as ProductoConBadge).categoria,
         descripcion: (producto as ProductoConBadge).descripcion,
 
         aplica_tamanos: (producto as ProductoConBadge).aplica_tamanos,
-        tamanos_detalle: (producto as ProductoConBadge).tamanos_detalle?.map(t => ({
-          id: t.id,
-          tamano_nombre: t.nombre_tamano,
-          codigo_tamano: t.codigo_tamano,
-          precio: t.precio
-        }))
+        tamanos_detalle: (producto as ProductoConBadge).tamanos_detalle?.map(t => {
+          // ✅ MEJORAR: Manejo de precios de tamaños
+          let precioTamanoFinal = t.precio;
+          
+          // Solo aplicar factor de descuento si hay promoción activa
+          if (precioConDescuento !== producto.precio) {
+            // Hay descuento activo
+            const factorTamano = t.precio / producto.precio;
+            precioTamanoFinal = precioConDescuento * factorTamano;
+            console.log(`📏 Tamaño ${t.codigo_tamano}: Original $${t.precio}, Factor ${factorTamano}, Final $${precioTamanoFinal}`);
+          } else {
+            // No hay descuento, usar precio original del tamaño
+            precioTamanoFinal = t.precio;
+            console.log(`📏 Tamaño ${t.codigo_tamano}: Sin descuento $${t.precio}`);
+          }
+          
+          return {
+            id: t.id,
+            tamano_nombre: t.nombre_tamano,
+            codigo_tamano: t.codigo_tamano,
+            precio: precioTamanoFinal // ✅ PRECIO DE TAMAÑO CORRECTO
+          };
+        })
       },
       imagenUrl: imagenUrl,
       permitirPersonalizacion: permitirPersonalizacion
@@ -548,18 +575,39 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   private irAPersonalizar(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
+    // ✅ CALCULAR PRECIO CON DESCUENTO
+    const precioOriginal = producto.precio;
+    const precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+
+    console.log('🍔 Navegando a personalizar:', {
+      producto: producto.nombre,
+      precioOriginal: precioOriginal,
+      precioConDescuento: precioConDescuento,
+      tieneDescuento: precioOriginal !== precioConDescuento
+    });
 
     const queryParams: any = {
       cantidad: cantidad,
       nombre: producto.nombre,
-      precio: producto.precio,
+      precio: precioConDescuento, // ✅ USAR PRECIO CON DESCUENTO
       categoria: (producto as ProductoConBadge).categoria || null
     };
 
     if (tamanoSeleccionado) {
       queryParams.tamano_id = tamanoSeleccionado.id;
-      queryParams.tamano_precio = tamanoSeleccionado.precio;
+      // ✅ CALCULAR PRECIO DE TAMAÑO CON DESCUENTO PROPORCIONAL
+      const factorTamano = tamanoSeleccionado.precio / precioOriginal;
+      queryParams.tamano_precio = precioConDescuento * factorTamano;
+      
+      console.log('📏 Tamaño seleccionado:', {
+        tamano: tamanoSeleccionado.nombre,
+        precioTamanoOriginal: tamanoSeleccionado.precio,
+        factorTamano: factorTamano,
+        precioTamanoConDescuento: precioConDescuento * factorTamano
+      });
     }
+
+    console.log('📋 Query params enviados:', queryParams);
 
     this.router.navigate(['/cliente/personalizar-producto', producto.id], {
       queryParams: queryParams

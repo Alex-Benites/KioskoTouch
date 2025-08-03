@@ -193,23 +193,23 @@ export class PersonalizarProductoComponent implements OnInit {
     this.categoriaProducto = Number(params['categoria']) || null;
     this.descripcionProducto = '';
     this.imagenProducto = 'assets/placeholder-producto.png';
-    // Guardar precio original para cálculos
-    this.precioOriginal = params['tamano_precio']
+    
+    // ✅ OBTENER PRECIO RECIBIDO (ya viene con descuento aplicado desde el menú)
+    const precioRecibido = params['tamano_precio']
       ? Number(params['tamano_precio']) || 0
       : Number(params['precio']) || 0;
     
-    // Establecer precio inicial (sin descuento aún)
-    this.precioProducto = this.precioOriginal;
+    console.log('💰 Precio recibido en personalizar-producto:', precioRecibido);
+    console.log('📝 Parámetros recibidos:', params);
+    
+    // ✅ USAR PRECIO RECIBIDO DIRECTAMENTE
+    this.precioOriginal = precioRecibido;
+    this.precioProducto = precioRecibido;
 
     // Establecer cantidad inicial y sincronizar con la cantidad visual
     const cantidadInicial = Number(params['cantidad']) || 1;
     this.cantidadPersonalizada = cantidadInicial;
     this.cantidad.set(cantidadInicial);
-
-    // Aplicar descuento de promoción si existe
-    setTimeout(() => {
-      this.aplicarDescuentoPromocion();
-    }, 200);
 
     if (this.modoEdicion) {
       this.precargarPersonalizaciones();
@@ -477,14 +477,12 @@ export class PersonalizarProductoComponent implements OnInit {
           const producto = productos.find(p => p.id === this.productoId);
           if (producto) {
             this.productoDatos = producto;
-            // Guardar precio original antes de aplicar descuentos
-            const precioOriginal = Number(producto.precio) || this.precioProducto;
             this.actualizarDatosProducto(producto);
             
-            // Volver a aplicar descuento después de actualizar datos
-            setTimeout(() => {
-              this.aplicarDescuentoPromocion();
-            }, 100);
+            // ❌ NO aplicar descuento aquí - el precio ya viene con descuento del menú
+            // setTimeout(() => {
+            //   this.aplicarDescuentoPromocion();
+            // }, 100);
           }
         },
         error: (error) => {
@@ -915,6 +913,50 @@ export class PersonalizarProductoComponent implements OnInit {
       error: (error: any) => {
         // Si hay error al obtener promociones, mantener el precio original
         console.log('Error al obtener promociones:', error);
+      }
+    });
+  }
+
+  private verificarYAplicarDescuento(): void {
+    // Método para verificar si necesita aplicar descuento
+    // Solo aplicar si no viene ya con descuento del menú
+    console.log('Verificando si necesita aplicar descuento...');
+    console.log('Precio recibido:', this.precioProducto);
+    
+    // Obtener promociones para ver si este producto debería tener descuento
+    this.publicidadService.getPromociones().subscribe({
+      next: (promociones: any[]) => {
+        const promocionesActivas = promociones.filter(p =>
+          p.estado === 'Activado' &&
+          (!p.codigo_promocional || String(p.codigo_promocional).trim() === '')
+        );
+
+        const promocionesProducto = promocionesActivas.filter(p => {
+          if (!p.productos_detalle || !Array.isArray(p.productos_detalle)) return false;
+          
+          return p.productos_detalle.some((prod: any) =>
+            (prod.producto && prod.producto.id === this.productoId) ||
+            (prod.producto_id === this.productoId)
+          );
+        });
+
+        if (promocionesProducto.length > 0) {
+          // Hay promociones para este producto
+          const mayorDescuento = Math.max(...promocionesProducto.map(p =>
+            Number(p.valor_descuento) || 0
+          ));
+          
+          console.log('Descuento encontrado:', mayorDescuento, '%');
+          
+          // El precio ya debería venir con descuento desde el menú
+          // Solo verificar que esté correcto
+          console.log('Precio con descuento ya aplicado desde menú:', this.precioProducto);
+        } else {
+          console.log('No hay promociones para este producto');
+        }
+      },
+      error: (error: any) => {
+        console.log('Error al verificar promociones:', error);
       }
     });
   }
