@@ -5,6 +5,8 @@ import { CatalogoService } from '../../services/catalogo.service';
 import { PedidoService } from '../../services/pedido.service';
 import { PublicidadService } from '../../services/publicidad.service';
 import { PersonalizacionIngrediente } from '../../models/pedido.model';
+import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
+import { Publicidad } from '../../models/marketing.model';
 import { combineLatest } from 'rxjs';
 
 interface IngredientePersonalizacion {
@@ -21,7 +23,7 @@ interface IngredientePersonalizacion {
 @Component({
   selector: 'app-personalizar-producto',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PublicidadSectionComponent],
   templateUrl: './personalizar-producto.component.html',
   styleUrls: ['./personalizar-producto.component.scss']
 })
@@ -982,6 +984,11 @@ export class PersonalizarProductoComponent implements OnInit {
         console.log('Error al verificar promociones:', error);
       }
     });
+  }
+
+  // Método para manejar cambios de publicidad
+  onPublicidadCambio(publicidad: Publicidad): void {
+    // Implementación opcional para manejar cambios de publicidad
   }
 
 }
