@@ -166,29 +166,6 @@ $category-inactive-bg: #FFFFFF;
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
 
-    &.selected {
-      background-color: $kiosko-red;
-      border-color: $kiosko-red;
-
-      .product-card__name,
-      .product-card__price {
-        color: white;
-      }
-
-      .product-card__order-button {
-        background-color: white;
-        color: $kiosko-red;
-        border: 2px solid white;
-
-        &:hover {
-          background-color: rgba(255, 255, 255, 0.9);
-        }
-      }
-
-      .product-card__content {
-        background-color: $kiosko-red;
-      }
-    }
 
     // ✅ IMAGEN DEL PRODUCTO
     &__image-wrapper {

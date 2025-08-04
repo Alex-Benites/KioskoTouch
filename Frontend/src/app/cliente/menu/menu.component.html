@@ -113,9 +113,7 @@
           @if (productosActuales.length > 0) {
             <div class="products-grid">
               @for (producto of productosActuales; track $index) {
-                <div class="product-card"
-                     [class.selected]="estaSeleccionado(producto)"
-                     (click)="seleccionarProducto(producto)">
+                <div class="product-card">
                   @if (tienePromoBadge(producto)) {
                     <span class="promo-badge" [ngClass]="producto.promoBadgeClass || ''">{{ producto.promoBadge }}</span>
                   }

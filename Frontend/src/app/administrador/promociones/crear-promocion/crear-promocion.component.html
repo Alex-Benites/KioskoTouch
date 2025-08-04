@@ -38,9 +38,7 @@
           <mat-label>Tipo de promoción</mat-label>
           <mat-select formControlName="tipo_promocion" required>
             <mat-option value="navidad">Tiempo limitado</mat-option>
-            <mat-option value="cumpleanos">Cumpleaños</mat-option>
             <mat-option value="agotado">Hasta Agotar Stock</mat-option>
-            <mat-option value="cupon">Cupón</mat-option>
             <mat-option value="otro">Otro</mat-option>
           </mat-select>
           <mat-error *ngIf="promocionForm.get('tipo_promocion')?.hasError('required')">
