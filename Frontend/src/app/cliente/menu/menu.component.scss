@@ -254,6 +254,16 @@ $category-inactive-bg: #FFFFFF;
         margin: 0;
       }
 
+      // ✅ AGREGAR: Estilo para la nota de precios por tamaño
+      .price-note {
+        font-size: 11px;
+        color: #666;
+        font-style: italic;
+        margin-top: 2px;
+        line-height: 1.2;
+        opacity: 0.8;
+      }
+
       &__price {
         font-size: 18px;
         font-weight: 700;
@@ -472,6 +482,16 @@ $category-inactive-bg: #FFFFFF;
       font-weight: 700;
       color: #C3453A;
       margin: 0;
+    }
+
+    // ✅ AGREGAR: Estilo para la nota de precios por tamaño (también para menús)
+    .price-note {
+      font-size: 11px;
+      color: #666;
+      font-style: italic;
+      margin-top: 2px;
+      line-height: 1.2;
+      opacity: 0.8;
     }
 
     .menu-price {

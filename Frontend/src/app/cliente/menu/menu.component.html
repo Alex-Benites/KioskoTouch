@@ -89,6 +89,7 @@
                   </div>
                   <div class="menu-actions">
                     <div class="price-container">
+                      <!-- ✅ MEJORADO: Mostrar descuento en menús si aplica -->
                       @if (tienePromoBadge(menu)) {
                         <span class="price-original">{{ obtenerTextoPrecioGenerico(menu) }}</span>
                         <span class="price-discount">{{ obtenerTextoPrecioConDescuento(menu) }}</span>
@@ -125,11 +126,18 @@
                     <h3 class="product-card__name">{{ producto.nombre }}</h3>
                     <div class="product-card__footer">
                       <div class="price-container">
-                        @if (tienePromoBadge(producto)) {
-                          <span class="price-original">{{ obtenerTextoPrecio(producto) }}</span>
-                          <span class="price-discount">{{ obtenerTextoPrecioConDescuento(producto) }}</span>
-                        } @else {
+                        <!-- ✅ VALIDACIÓN: Si tiene tamaños, solo precio original. Si no tiene tamaños, mostrar descuento -->
+                        @if (productoTieneTamanos(producto)) {
+                          <!-- Producto CON tamaños: Solo precio original (rango) -->
                           <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
+                        } @else {
+                          <!-- Producto SIN tamaños: Mostrar descuento si aplica -->
+                          @if (tienePromoBadge(producto)) {
+                            <span class="price-original">{{ obtenerTextoPrecio(producto) }}</span>
+                            <span class="price-discount">{{ obtenerTextoPrecioConDescuento(producto) }}</span>
+                          } @else {
+                            <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
+                          }
                         }
                       </div>
                       <button class="product-card__order-button"

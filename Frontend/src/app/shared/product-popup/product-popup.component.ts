@@ -13,13 +13,14 @@ export interface ProductPopupData {
     categoria?: number;
     descripcion?: string;
 
-        // ✅ AGREGAR información de tamaños
+    // ✅ AGREGAR información de tamaños
     aplica_tamanos?: boolean;
     tamanos_detalle?: Array<{
       id: number;
       tamano_nombre: string;
       codigo_tamano: string;
       precio: number;
+      precio_original?: number; // ✅ AGREGAR: precio original sin descuento
     }>;
   };
   imagenUrl: string;
@@ -72,7 +73,6 @@ export class ProductPopupComponent implements OnInit {
     );
 
     console.log('📏 Tiene tamaños:', this.tieneTamanos);
-    console.log('📊 Tamaños disponibles:', this.data.producto.tamanos_detalle);
 
     // ✅ SELECCIONAR primer tamaño si tiene tamaños
     if (this.tieneTamanos && this.data.producto.tamanos_detalle && this.data.producto.tamanos_detalle.length > 0) {
@@ -216,6 +216,50 @@ export class ProductPopupComponent implements OnInit {
   // ✅ AGREGAR: Método para formatear precio
   formatearPrecio(precio: any): string {
     return parseFloat(precio.toString()).toFixed(2);
+  }
+
+  // ✅ MEJORADO: Método para verificar si un tamaño tiene descuento
+  tamanoTieneDescuento(tamano: any): boolean {
+    // Verificar que ambos precios existan
+    if (!tamano.precio_original || !tamano.precio) {
+      return false;
+    }
+
+    const precioOriginal = parseFloat(tamano.precio_original.toString());
+    const precioActual = parseFloat(tamano.precio.toString());
+    
+    // Comparar con tolerancia para evitar problemas de precisión decimal
+    if (Math.abs(precioOriginal - precioActual) > 0.01) {
+      const descuento = ((precioOriginal - precioActual) / precioOriginal) * 100;
+      return Math.abs(descuento) > 0.01; // Considerar descuento si es mayor a 0.01%
+    }
+    
+    return false;
+  }
+
+  // ✅ MEJORADO: Método para obtener precio original de un tamaño
+  obtenerPrecioOriginalTamano(tamano: any): number {
+    // Si hay precio_original definido, usarlo; sino usar el precio actual
+    const precioOriginal = tamano.precio_original ? 
+      parseFloat(tamano.precio_original.toString()) : 
+      parseFloat(tamano.precio.toString());
+    
+    return precioOriginal;
+  }
+
+  // ✅ MEJORADO: Método para debugging - mostrar información del tamaño
+  debugTamano(tamano: any): void {
+    const tieneDescuento = this.tamanoTieneDescuento(tamano);
+    const precioOriginal = this.obtenerPrecioOriginalTamano(tamano);
+    const descuentoPorcentaje = tieneDescuento ? 
+      ((precioOriginal - tamano.precio) / precioOriginal * 100).toFixed(1) : 0;
+    
+    console.log(`🏷️ POPUP - Tamaño ${tamano.codigo_tamano}:`, {
+      precio_actual: tamano.precio,
+      precio_original: precioOriginal,
+      tiene_descuento: tieneDescuento,
+      descuento_porcentaje: `${descuentoPorcentaje}%`
+    });
   }
   
 }
