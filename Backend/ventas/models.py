@@ -148,7 +148,8 @@ class AppkioskoDetallefacturaproducto(models.Model):
 
 class AppkioskoPedidoProductoIngredientes(models.Model):
     pedido = models.ForeignKey(AppkioskoPedidos, on_delete=models.CASCADE, blank=True, null=True)
-    producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True)
+    detalle_pedido = models.ForeignKey(AppkioskoDetallepedido, on_delete=models.CASCADE, blank=True, null=True) 
+    producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True) 
     ingrediente = models.ForeignKey(AppkioskoIngredientes, on_delete=models.CASCADE, blank=True, null=True)
     accion = models.CharField(max_length=20)
     precio_aplicado = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
@@ -158,8 +159,8 @@ class AppkioskoPedidoProductoIngredientes(models.Model):
     class Meta:
         managed = True
         db_table = 'appkiosko_pedido_producto_ingredientes'
-        # ✅ MANTENER CONSTRAINTA ÚNICA (sin cantidad)
-        unique_together = ['pedido', 'producto', 'ingrediente', 'accion']
+        # ✅ NUEVA RESTRICCIÓN: Usar detalle_pedido en lugar de producto
+        unique_together = ['pedido', 'detalle_pedido', 'ingrediente', 'accion']
 
     def __str__(self):
         return f"{self.pedido.invoice_number} - {self.producto.nombre} - {self.ingrediente.nombre} ({self.accion})"
