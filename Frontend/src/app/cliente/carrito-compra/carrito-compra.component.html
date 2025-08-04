@@ -41,14 +41,11 @@
               <!-- Si es producto, muestra personalizaciones -->
               <div *ngIf="item.tipo === 'producto'">
                 <div class="producto-personalizaciones" *ngIf="item.personalizacion && item.personalizacion.length > 0">
-                  <ng-container *ngFor="let ingr of item.personalizacion">
+                  <ng-container *ngFor="let ingr of obtenerPersonalizacionesAgrupadas(item.personalizacion)">
                     <span
-                      class="personalizacion"
-                      [ngClass]="{
-                        'personalizacion-agregado': ingr.accion === 'agregar',
-                        'personalizacion-removido': ingr.accion === 'quitar'
-                      }">
-                      {{ ingr.accion === 'agregar' ? 'extra' : 'sin' }} {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}
+                      *ngIf="ingr.accion === 'agregar'"
+                      class="personalizacion personalizacion-agregado">
+                      Extra: {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}<span *ngIf="ingr.cantidad > 1"> x{{ ingr.cantidad }}</span>
                     </span>
                   </ng-container>
                 </div>

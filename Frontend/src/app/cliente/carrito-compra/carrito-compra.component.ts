@@ -267,6 +267,31 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     return ingrediente;
   }
 
+  // Agrupa las personalizaciones por ingrediente y cuenta las cantidades (solo ingredientes agregados)
+  obtenerPersonalizacionesAgrupadas(personalizaciones: any[]): any[] {
+    const agrupadas = new Map();
+    
+    // Solo procesar ingredientes agregados
+    personalizaciones
+      .filter(p => p.accion === 'agregar')
+      .forEach(p => {
+        const key = p.ingrediente_id;
+        
+        if (agrupadas.has(key)) {
+          agrupadas.get(key).cantidad += 1;
+        } else {
+          agrupadas.set(key, {
+            ingrediente_id: p.ingrediente_id,
+            accion: p.accion,
+            cantidad: 1,
+            precio_aplicado: p.precio_aplicado
+          });
+        }
+      });
+    
+    return Array.from(agrupadas.values());
+  }
+
   personalizarProducto(item: any, index: number): void {
     if (!item.producto_id) {
       alert('Los menús no se pueden personalizar individualmente');
