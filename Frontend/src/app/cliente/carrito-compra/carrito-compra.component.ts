@@ -286,6 +286,7 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       producto_id: productoReal.producto_id,
       personalizacion: productoReal.personalizacion || [],
       precio_unitario: productoReal.precio_unitario,
+      precio_base: productoReal.precio_base || productoReal.precio_unitario, // ✅ AGREGAR precio base sin personalizaciones
       cantidad: productoReal.cantidad,
       carritoIndex: index,
       subtotal: productoReal.subtotal
@@ -295,7 +296,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       productoId: productoReal.producto_id,
       carritoIndex: index,
       cantidad: productoReal.cantidad,
-      precio: productoReal.precio_unitario
+      precio_unitario: productoReal.precio_unitario,
+      precio_base: productoReal.precio_base || productoReal.precio_unitario
     });
 
     this.router.navigate(['/cliente/personalizar-producto', productoReal.producto_id], {
@@ -303,7 +305,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
         modo: 'editar',
         carritoIndex: index,
         cantidad: productoReal.cantidad,
-        precio: productoReal.precio_unitario,
+        precio: productoReal.precio_base || productoReal.precio_unitario, // ✅ USAR precio base sin personalizaciones
+        precio_personalizado: productoReal.precio_unitario, // ✅ AGREGAR precio personalizado actual
         nombre: this.obtenerNombreProducto(productoReal)
       },
       state: {

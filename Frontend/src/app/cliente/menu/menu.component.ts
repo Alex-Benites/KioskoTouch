@@ -640,7 +640,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     const queryParams: any = {
       cantidad: cantidad,
       nombre: producto.nombre,
-      precio: precioConDescuento, // ✅ USAR PRECIO CON DESCUENTO CORRECTO
+      precio: precioConDescuento, // ✅ PRECIO CON DESCUENTO (será el precio base en personalización)
+      precio_original_menu: precioOriginal, // ✅ PRECIO ORIGINAL DEL MENÚ (para referencia)
       categoria: (producto as ProductoConBadge).categoria || null
     };
 

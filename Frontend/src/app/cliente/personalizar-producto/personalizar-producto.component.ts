@@ -202,9 +202,24 @@ export class PersonalizarProductoComponent implements OnInit {
     console.log('💰 Precio recibido en personalizar-producto:', precioRecibido);
     console.log('📝 Parámetros recibidos:', params);
     
-    // ✅ USAR PRECIO RECIBIDO DIRECTAMENTE
-    this.precioOriginal = precioRecibido;
-    this.precioProducto = precioRecibido;
+    // ✅ LÓGICA CORREGIDA: Distinguir entre precio base y precio personalizado
+    if (this.modoEdicion) {
+      // En modo edición, usar el precio base sin personalizaciones previas
+      this.precioOriginal = precioRecibido; // Este ya es el precio base
+      this.precioProducto = precioRecibido;
+      console.log('🔧 Modo edición: usando precio base', {
+        precio_recibido: precioRecibido,
+        datos_actuales: this.datosActuales
+      });
+    } else {
+      // Primera vez (desde menú), usar precio recibido como base
+      this.precioOriginal = precioRecibido;
+      this.precioProducto = precioRecibido;
+      console.log('🆕 Nuevo producto: usando precio recibido como base', {
+        precio_recibido: precioRecibido,
+        precio_original_menu: params['precio_original_menu']
+      });
+    }
 
     // Establecer cantidad inicial y sincronizar con la cantidad visual
     const cantidadInicial = Number(params['cantidad']) || 1;
@@ -693,7 +708,8 @@ export class PersonalizarProductoComponent implements OnInit {
         this.productoId!,
         precioUnitarioConExtras,
         cantidadFinal,
-        personalizaciones
+        personalizaciones,
+        this.precioOriginal // ✅ PASAR precio base sin personalizaciones
       );
     }
 

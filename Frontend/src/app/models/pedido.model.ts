@@ -20,6 +20,7 @@ export interface DetallePedidoProducto {
   cantidad: number;
   subtotal: number;
   personalizacion?: PersonalizacionIngrediente[];
+  precio_base?: number; // ✅ AGREGAR precio base sin personalizaciones
 }
 
 export interface DetallePedidoMenu {

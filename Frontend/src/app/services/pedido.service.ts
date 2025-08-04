@@ -187,7 +187,7 @@ export class PedidoService {
     }));
   }
 
-  agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[]): void {
+  agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[], precioBase?: number): void {
     let detalles = this.detallesState();
     let detalle = detalles.find(d => d.productos);
 
@@ -211,7 +211,8 @@ export class PedidoService {
         producto_id,
         cantidad,
         subtotal: precio * cantidad,
-        personalizacion
+        personalizacion,
+        precio_base: precioBase || precio // ✅ AGREGAR precio base sin personalizaciones
       });
     }
 
@@ -570,6 +571,7 @@ export class PedidoService {
             producto_id: producto.producto_id,
             cantidad: producto.cantidad,
             precio_unitario: producto.subtotal / producto.cantidad,
+            precio_base: producto.precio_base || (producto.subtotal / producto.cantidad), // ✅ INCLUIR precio base
             subtotal: producto.subtotal,
             personalizacion: producto.personalizacion || [],
             nombre: `Producto ${producto.producto_id}`, // Temporal
