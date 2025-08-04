@@ -1,8 +1,10 @@
 <div class="personalizar-page-container">
-  <!--  Banner Promocional Superior -->
-  <div class="promo-banner-top">
-    <img src="assets/cliente/USUARIO_5.png" alt="Nuestra Nueva Hamburguesa">
-  </div>
+  <!-- Banner Promocional Superior -->
+  <app-publicidad-section
+    seccion="carrito"
+    altura="200px"
+    (publicidadCambio)="onPublicidadCambio($event)">
+  </app-publicidad-section>
 
   <!--  Header con logo -->
   <header class="menu-header">

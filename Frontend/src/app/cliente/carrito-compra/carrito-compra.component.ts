@@ -8,7 +8,6 @@ import { PublicidadSectionComponent } from '../../shared/publicidad-section/publ
 import { Publicidad } from '../../models/marketing.model';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TurnoConfirmationDialogComponent } from '../../shared/turno-confirmation-dialog/turno-confirmation-dialog.component';
-// ✅ AGREGAR: Import del ConfirmationDialog
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -33,6 +32,7 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   private catalogoService = inject(CatalogoService);
   private dialog = inject(MatDialog);
   ingredientes: any[] = [];
+  ingredientesCargados: boolean = false; // ✅ AGREGAR flag de estado
 
   get productosCarrito(): any[] {
     const productos = this.pedidoService.obtenerProductosParaCarrito();
@@ -180,22 +180,21 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
 
     const nombreProducto = this.obtenerNombreProducto(item);
 
-    const dialogRef = this.dialog.open(TurnoConfirmationDialogComponent, {
-      width: '420px',
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '450px',
       disableClose: false,
       panelClass: 'confirmation-dialog-panel',
       data: {
-        itemType: nombreProducto,
-        action: 'delete'
-      }
+        itemType: 'producto',
+        action: 'delete',
+        context: 'carrito',
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
 
       if (result === true) {
         this.pedidoService.eliminarProducto(index);
-
-
       } else {
       }
     });
@@ -253,20 +252,69 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     this.catalogoService.getIngredientes().subscribe({
       next: (ingredientes) => {
         this.ingredientes = ingredientes;
+        this.ingredientesCargados = true; // ✅ MARCAR como cargados
       },
       error: (error) => {
         this.ingredientes = [];
+        this.ingredientesCargados = true; // ✅ MARCAR como cargados aunque haya error
       }
     });
   }
 
   // Obtener ingrediente por ID real
   obtenerIngredientePorId(ingredienteId: number): any {
+    // Si los ingredientes aún no se han cargado, mostrar placeholder
+    if (!this.ingredientesCargados) {
+      return { nombre: '...' }; // ✅ PLACEHOLDER mientras se cargan
+    }
+    
     const ingrediente = this.ingredientes.find(i => Number(i.id) === Number(ingredienteId));
     if (!ingrediente) {
       return { nombre: `ingrediente desconocido (${ingredienteId})` };
     }
     return ingrediente;
+  }
+
+  // Agrupa las personalizaciones por ingrediente y cuenta las cantidades (solo ingredientes agregados)
+  obtenerPersonalizacionesAgrupadas(personalizaciones: any[]): any[] {
+    const agrupadas = new Map();
+    
+    // Solo procesar ingredientes agregados
+    personalizaciones
+      .filter(p => p.accion === 'agregar')
+      .forEach(p => {
+        const key = p.ingrediente_id;
+        
+        if (agrupadas.has(key)) {
+          agrupadas.get(key).cantidad += 1;
+        } else {
+          agrupadas.set(key, {
+            ingrediente_id: p.ingrediente_id,
+            accion: p.accion,
+            cantidad: 1,
+            precio_aplicado: p.precio_aplicado
+          });
+        }
+      });
+    
+    return Array.from(agrupadas.values());
+  }
+
+  // Obtener información del tamaño si existe
+  obtenerInfoTamano(item: any): string | null {
+    if (item.tamano_codigo) {
+      // Convertir código de tamaño a descripción legible
+      const codigo = item.tamano_codigo.toLowerCase();
+      
+      switch (codigo) {
+        case 'p': case 'pequeno': case 'pequeño': return 'Pequeño';
+        case 'm': case 'mediano': return 'Mediano';
+        case 'g': case 'grande': return 'Grande';
+        case 'xl': case 'extragrand': case 'extra_grande': return 'Extra Grande';
+        default: return item.tamano_codigo.toUpperCase();
+      }
+    }
+    return null;
   }
 
   personalizarProducto(item: any, index: number): void {
@@ -288,18 +336,31 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       producto_id: productoReal.producto_id,
       personalizacion: productoReal.personalizacion || [],
       precio_unitario: productoReal.precio_unitario,
+      precio_base: productoReal.precio_base || productoReal.precio_unitario, // ✅ AGREGAR precio base sin personalizaciones
       cantidad: productoReal.cantidad,
       carritoIndex: index,
-      subtotal: productoReal.subtotal
+      subtotal: productoReal.subtotal,
+      tamano_codigo: productoReal.tamano_codigo // ✅ AGREGAR código de tamaño
     };
+
+    console.log('Navegando a personalización con modo edición:', {
+      productoId: productoReal.producto_id,
+      carritoIndex: index,
+      cantidad: productoReal.cantidad,
+      precio_unitario: productoReal.precio_unitario,
+      precio_base: productoReal.precio_base || productoReal.precio_unitario,
+      tamano_codigo: productoReal.tamano_codigo
+    });
 
     this.router.navigate(['/cliente/personalizar-producto', productoReal.producto_id], {
       queryParams: {
         modo: 'editar',
         carritoIndex: index,
         cantidad: productoReal.cantidad,
-        precio: productoReal.precio_unitario,
-        nombre: this.obtenerNombreProducto(productoReal)
+        precio: productoReal.precio_base || productoReal.precio_unitario, // ✅ USAR precio base sin personalizaciones
+        precio_personalizado: productoReal.precio_unitario, // ✅ AGREGAR precio personalizado actual
+        nombre: this.obtenerNombreProducto(productoReal),
+        tamano_codigo: productoReal.tamano_codigo // ✅ AGREGAR código de tamaño
       },
       state: {
         datosActuales: datosActuales

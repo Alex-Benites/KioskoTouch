@@ -88,8 +88,16 @@
                     }
                   </div>
                   <div class="menu-actions">
-                    <span class="menu-price">{{ obtenerTextoPrecioGenerico(menu) }}</span>
-                    <button 
+                    <div class="price-container">
+                      <!-- ✅ MEJORADO: Mostrar descuento en menús si aplica -->
+                      @if (tienePromoBadge(menu)) {
+                        <span class="price-original">{{ obtenerTextoPrecioGenerico(menu) }}</span>
+                        <span class="price-discount">{{ obtenerTextoPrecioConDescuento(menu) }}</span>
+                      } @else {
+                        <span class="menu-price">{{ obtenerTextoPrecioGenerico(menu) }}</span>
+                      }
+                    </div>
+                    <button
                       class="product-card__order-button"
                       (click)="agregarProducto(menu, $event)">
                       Ordenar
@@ -117,7 +125,21 @@
                   <div class="product-card__content">
                     <h3 class="product-card__name">{{ producto.nombre }}</h3>
                     <div class="product-card__footer">
-                      <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
+                      <div class="price-container">
+                        <!-- ✅ VALIDACIÓN: Si tiene tamaños, solo precio original. Si no tiene tamaños, mostrar descuento -->
+                        @if (productoTieneTamanos(producto)) {
+                          <!-- Producto CON tamaños: Solo precio original (rango) -->
+                          <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
+                        } @else {
+                          <!-- Producto SIN tamaños: Mostrar descuento si aplica -->
+                          @if (tienePromoBadge(producto)) {
+                            <span class="price-original">{{ obtenerTextoPrecio(producto) }}</span>
+                            <span class="price-discount">{{ obtenerTextoPrecioConDescuento(producto) }}</span>
+                          } @else {
+                            <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
+                          }
+                        }
+                      </div>
                       <button class="product-card__order-button"
                               (click)="agregarProducto(producto, $event)">
                         Ordenar

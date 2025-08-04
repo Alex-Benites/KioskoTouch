@@ -446,7 +446,7 @@ def procesar_pedido_completo(datos_validados):
 
     # 4. Crear factura SIEMPRE (con o sin datos de facturación)
     factura = crear_factura(pedido, datos_validados.get('datos_facturacion'))
-    crear_detalles_factura(factura, datos_validados['productos'])
+    crear_detalles_factura(factura, pedido)  # ✅ CAMBIAR: pasar pedido en lugar de productos
     print(f"Factura creada: ID {factura.id}")
 
     return {
@@ -563,7 +563,7 @@ def crear_detalles_pedido(pedido, productos_data):
             )
 
             # Procesar ingredientes
-            procesar_todos_los_ingredientes(pedido, producto, producto_data)
+            procesar_todos_los_ingredientes(pedido, detalle, producto_data)
 
         elif menu_id:
             print(f"Procesando menú ID: {menu_id}")
@@ -644,22 +644,36 @@ def crear_factura(pedido, datos_facturacion=None):
     print(f"Factura creada para {nombre}")
     return factura
 
-def crear_detalles_factura(factura, productos):
+def crear_detalles_factura(factura, pedido):
     """
-    Crea los registros de detalle de factura para cada producto comprado.
+    Crea los registros de detalle de factura para cada detalle de pedido.
+    ✅ ACTUALIZADO: Usa detalles del pedido en lugar de productos directos
     """
-    for prod in productos:
+    # Obtener todos los detalles del pedido
+    detalles_pedido = AppkioskoDetallepedido.objects.filter(pedido=pedido)
+    
+    print(f"Creando detalles de factura para {detalles_pedido.count()} productos")
+    
+    for detalle in detalles_pedido:
+        # Calcular valores para la factura basados en los campos disponibles
+        iva_calculado = 0  # Por ahora, no hay IVA en el modelo de detalle
+        descuento = detalle.descuento_promocion if detalle.descuento_promocion else 0
+        total_calculado = detalle.subtotal + iva_calculado - descuento
+        
         AppkioskoDetallefacturaproducto.objects.create(
-            factura_id=factura.id,
-            producto_id=prod.get('producto_id'),
-            cantidad=prod['cantidad'],
-            precio_unitario=prod['precio_unitario'],
-            iva=prod.get('iva', 0),  # Ajusta si tienes el IVA por producto
-            descuento=prod.get('descuento', 0),
-            subtotal=prod['subtotal'],
-            total=prod['subtotal'] + prod.get('iva', 0) - prod.get('descuento', 0),
-            fecha_emision_factura=datetime.now(),
+            factura=factura,
+            detalle_pedido=detalle,  # ✅ NUEVO CAMPO
+            producto=detalle.producto,  # ✅ MANTENER por compatibilidad
+            cantidad=detalle.cantidad,
+            precio_unitario=detalle.precio_unitario,
+            iva=iva_calculado,  # ✅ CALCULAR IVA (por ahora 0)
+            descuento=descuento,  # ✅ USAR descuento_promocion
+            subtotal=detalle.subtotal,
+            total=total_calculado,  # ✅ CALCULAR TOTAL
+            fecha_emision_factura=timezone.now(),  # ✅ USAR timezone.now() para evitar warning
         )
+        
+        print(f"Detalle factura creado: {detalle.producto.nombre} x{detalle.cantidad} - Subtotal: ${detalle.subtotal}")
 
 
 def generar_numero_pedido():
@@ -676,11 +690,13 @@ def generar_numero_pedido():
     return f"{fecha_parte}-{hora_parte}-{secuencial}"
 
 
-def procesar_todos_los_ingredientes(pedido, producto, producto_data):
+def procesar_todos_los_ingredientes(pedido, detalle_pedido, producto_data):
     """
-    Procesar ingredientes con cantidad FINAL correcta
+    Procesa todos los ingredientes para un detalle específico del pedido
     """
-    print(f"Procesando ingredientes para producto: {producto.nombre}")
+    # Obtener el producto desde el detalle
+    producto = detalle_pedido.producto
+    print(f"Procesando ingredientes para detalle ID: {detalle_pedido.id}, producto: {producto.nombre}")
 
     # Obtener ingredientes del producto
     ingredientes_producto = AppkioskoProductosIngredientes.objects.filter(
@@ -712,7 +728,7 @@ def procesar_todos_los_ingredientes(pedido, producto, producto_data):
 
     print(f"   Cambios de ingredientes: {len(cambios_ingredientes)}")
 
-    # Procesar ingredientes
+    # Procesar ingredientes base del producto
     for ingrediente_producto in ingredientes_producto:
         ingrediente_id = ingrediente_producto.ingrediente.id
         ingrediente_nombre = ingrediente_producto.ingrediente.nombre
@@ -736,13 +752,13 @@ def procesar_todos_los_ingredientes(pedido, producto, producto_data):
         if cantidad_final < 0:
             cantidad_final = 0
 
-        # Guardar resultado
         if cantidad_final == 0:
             print(f"     Ingrediente ELIMINADO completamente: {ingrediente_nombre}")
 
             AppkioskoPedidoProductoIngredientes.objects.create(
                 pedido=pedido,
-                producto=producto,
+                detalle_pedido=detalle_pedido,  
+                producto=producto,  
                 ingrediente=ingrediente_producto.ingrediente,
                 accion='eliminar_completo',
                 precio_aplicado=0.00,
@@ -756,7 +772,8 @@ def procesar_todos_los_ingredientes(pedido, producto, producto_data):
             accion_tipo = 'incluir_base' if es_base else 'incluir_adicional'
             AppkioskoPedidoProductoIngredientes.objects.create(
                 pedido=pedido,
-                producto=producto,
+                detalle_pedido=detalle_pedido,
+                producto=producto,  
                 ingrediente=ingrediente_producto.ingrediente,
                 accion=accion_tipo,
                 precio_aplicado=0.00,
@@ -776,7 +793,8 @@ def procesar_todos_los_ingredientes(pedido, producto, producto_data):
 
             AppkioskoPedidoProductoIngredientes.objects.create(
                 pedido=pedido,
-                producto=producto,
+                detalle_pedido=detalle_pedido, 
+                producto=producto,  
                 ingrediente=ingrediente_producto.ingrediente,
                 accion=accion_tipo,
                 precio_aplicado=precio_extra,
@@ -788,7 +806,7 @@ def procesar_todos_los_ingredientes(pedido, producto, producto_data):
         if ingrediente_id in cambios_ingredientes:
             del cambios_ingredientes[ingrediente_id]
 
-    # Procesar ingredientes completamente nuevos
+    # Procesar ingredientes completamente nuevos (personalizaciones)
     for ingrediente_id, cambios in cambios_ingredientes.items():
         if cambios['cantidad_agregada'] > 0:
             try:
@@ -800,7 +818,8 @@ def procesar_todos_los_ingredientes(pedido, producto, producto_data):
 
                 AppkioskoPedidoProductoIngredientes.objects.create(
                     pedido=pedido,
-                    producto=producto,
+                    detalle_pedido=detalle_pedido, 
+                    producto=producto,  
                     ingrediente=ingrediente,
                     accion='agregar_nuevo',
                     precio_aplicado=cambios['precio_por_unidad'],
@@ -813,7 +832,7 @@ def procesar_todos_los_ingredientes(pedido, producto, producto_data):
             except AppkioskoIngredientes.DoesNotExist:
                 print(f"   Ingrediente ID {ingrediente_id} no encontrado, omitiendo...")
 
-    print(f"\n   Procesamiento completado para {producto.nombre}")
+    print(f"\n   Procesamiento completado para {producto.nombre} (detalle {detalle_pedido.id})")
 
 
 def obtener_promocion_activa(producto=None, menu=None):

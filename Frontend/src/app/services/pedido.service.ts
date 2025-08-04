@@ -187,7 +187,7 @@ export class PedidoService {
     }));
   }
 
-  agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[]): void {
+  agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[], precioBase?: number, tamanoCodigo?: string): void {
     let detalles = this.detallesState();
     let detalle = detalles.find(d => d.productos);
 
@@ -196,10 +196,11 @@ export class PedidoService {
       this.detallesState.update(detalles => [...detalles, detalle!]);
     }
 
-    // Busca si el producto ya existe en el array productos, considerando la personalización
+    // Busca si el producto ya existe considerando producto_id, personalización Y tamaño
     let productoExistente = detalle.productos!.find(p =>
       p.producto_id === producto_id &&
-      this.personalizacionesIguales(p.personalizacion, personalizacion)
+      this.personalizacionesIguales(p.personalizacion, personalizacion) &&
+      p.tamano_codigo === tamanoCodigo
     );
 
     if (productoExistente) {
@@ -211,7 +212,9 @@ export class PedidoService {
         producto_id,
         cantidad,
         subtotal: precio * cantidad,
-        personalizacion
+        personalizacion,
+        precio_base: precioBase || precio, // ✅ AGREGAR precio base sin personalizaciones
+        tamano_codigo: tamanoCodigo // ✅ AGREGAR código de tamaño
       });
     }
 
@@ -570,8 +573,10 @@ export class PedidoService {
             producto_id: producto.producto_id,
             cantidad: producto.cantidad,
             precio_unitario: producto.subtotal / producto.cantidad,
+            precio_base: producto.precio_base || (producto.subtotal / producto.cantidad), // ✅ INCLUIR precio base
             subtotal: producto.subtotal,
             personalizacion: producto.personalizacion || [],
+            tamano_codigo: producto.tamano_codigo, // ✅ INCLUIR código de tamaño
             nombre: `Producto ${producto.producto_id}`, // Temporal
             imagen_url: null
           };
@@ -649,7 +654,8 @@ export class PedidoService {
     productoId: number, 
     personalizacionOriginal: PersonalizacionIngrediente[] | undefined,
     nuevaPersonalizacion: PersonalizacionIngrediente[],
-    nuevoPrecio: number
+    nuevoPrecio: number,
+    nuevaCantidad?: number
   ): boolean {
     
     const detalles = this.detallesState();
@@ -667,13 +673,15 @@ export class PedidoService {
           const producto = detalle.productos[productoIndex];
           
 
-          // ✅ ACTUALIZAR CORRECTAMENTE: Primero personalización, luego precio
+          // ✅ ACTUALIZAR CORRECTAMENTE: personalización, cantidad y precio
           producto.personalizacion = [...nuevaPersonalizacion];
           
-          // ✅ CLAVE: Actualizar el subtotal basado en el NUEVO precio unitario
-          // nuevoPrecio YA es el precio TOTAL (unitario * cantidad)
-          // Pero necesitamos calcular el precio unitario correcto
-          const nuevoPrecioUnitario = nuevoPrecio / producto.cantidad;
+          // ✅ ACTUALIZAR CANTIDAD SI SE PROPORCIONA
+          if (nuevaCantidad !== undefined && nuevaCantidad > 0) {
+            producto.cantidad = nuevaCantidad;
+          }
+          
+          // ✅ ACTUALIZAR SUBTOTAL
           producto.subtotal = nuevoPrecio;
 
           actualizado = true;

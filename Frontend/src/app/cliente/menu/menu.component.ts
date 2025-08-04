@@ -41,6 +41,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   private categorias = signal<Categoria[]>([]);
   private productos = signal<ProductoConBadge[]>([]);
   private menus = signal<Menu[]>([]);
+  private promocionesActivas = signal<any[]>([]);
 
   cargandoCategorias = signal<boolean>(true);
   cargandoProductos = signal<boolean>(true);
@@ -164,6 +165,9 @@ export class MenuComponent implements OnInit, OnDestroy {
   (!p.codigo_promocional || String(p.codigo_promocional).trim() === '')
 );
 
+          // Guardar promociones activas en estado
+          this.promocionesActivas.set(promocionesActivas);
+
           // Procesar productos con badges de promociones activas
           const productosConBadges = this.procesarProductosConBadges(
             productos.map(p => ({
@@ -237,7 +241,7 @@ export class MenuComponent implements OnInit, OnDestroy {
         tamano = `(${p.tamano_nombre.charAt(0).toUpperCase()})`;
       }
       let cantidadStr = cantidad > 1 ? `(x${cantidad})` : '';
-      return `- ${nombre} ${cantidadStr}${tamano}`.trim();
+      return `${nombre} ${cantidadStr}${tamano}`.trim();
     });
   }
 
@@ -245,7 +249,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     return productos.map(producto => {
       const productoConBadge: ProductoConBadge = { ...producto };
 
-      // Buscar TODAS las promociones activas que incluyan este producto
+      // ✅ MEJORADO: Buscar promociones considerando tamaños específicos
       const promosProducto = promocionesActivas.filter((p: any) =>
         Array.isArray(p.productos_detalle) &&
         p.productos_detalle.some((prod: any) =>
@@ -255,9 +259,29 @@ export class MenuComponent implements OnInit, OnDestroy {
       );
 
       if (promosProducto.length > 0) {
-        const mayorDescuento = Math.max(...promosProducto.map((p: any) => Number(p.valor_descuento) || 0));
-        productoConBadge.promoBadge = `-${mayorDescuento}%`;
-        productoConBadge.promoBadgeClass = 'discount';
+        // ✅ MEJORADO: Si el producto tiene tamaños, considerar el mejor descuento posible
+        let mayorDescuento = 0;
+        
+        if ((producto as any).aplica_tamanos && (producto as any).tamanos_detalle?.length > 0) {
+          // Para productos con tamaños, encontrar el mayor descuento entre todos los tamaños
+          const descuentosPorTamano = promosProducto.map((promo: any) => {
+            return promo.productos_detalle
+              .filter((prod: any) => 
+                ((prod.producto && prod.producto.id === producto.id) || (prod.producto_id === producto.id))
+              )
+              .map((prod: any) => Number(prod.valor_descuento || promo.valor_descuento) || 0);
+          }).flat();
+          
+          mayorDescuento = Math.max(...descuentosPorTamano, 0);
+        } else {
+          // Para productos sin tamaños, usar el descuento general
+          mayorDescuento = Math.max(...promosProducto.map((p: any) => Number(p.valor_descuento) || 0));
+        }
+
+        if (mayorDescuento > 0) {
+          productoConBadge.promoBadge = `-${mayorDescuento}%`;
+          productoConBadge.promoBadgeClass = 'discount';
+        }
       }
 
       return productoConBadge;
@@ -338,7 +362,7 @@ export class MenuComponent implements OnInit, OnDestroy {
       return `$${item.precio.toFixed(2)}`;
     }
 
-    // Si es producto, usar lógica de tamaños
+    // Si es producto, usar lógica de tamaños ORIGINAL (sin descuentos)
     const producto = item as ProductoConBadge;
 
     if (producto.aplica_tamanos) {
@@ -346,6 +370,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
 
     if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
+      // ✅ MOSTRAR PRECIOS ORIGINALES (sin descuento) en las cards
       const precios = producto.tamanos_detalle.map(t => t.precio);
       const precioMin = Math.min(...precios);
       const precioMax = Math.max(...precios);
@@ -357,7 +382,14 @@ export class MenuComponent implements OnInit, OnDestroy {
       }
     }
 
+    // ✅ PRECIO ORIGINAL sin descuento para productos sin tamaños
     return `$${this.obtenerPrecioMostrar(producto).toFixed(2)}`;
+  }
+
+  obtenerTextoPrecioConDescuento(item: ProductoConBadge | Menu): string {
+    // ✅ SIMPLIFICADO: Solo mostrar el precio con descuento general del producto/menú
+    const precioConDescuento = this.obtenerPrecioConDescuento(item as ProductoConBadge);
+    return `$${precioConDescuento.toFixed(2)}`;
   }
 
 
@@ -385,7 +417,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     // Por ahora, agregar el tamaño más pequeño por defecto
     if (producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
       const tamanoDefault = producto.tamanos_detalle[0]; // El más pequeño (orden)
-      this.pedidoService.agregarProducto(producto.id, tamanoDefault.precio, 1);
+      this.pedidoService.agregarProducto(producto.id, tamanoDefault.precio, 1, undefined, undefined, tamanoDefault.codigo_tamano);
     }
   }
 
@@ -455,22 +487,57 @@ export class MenuComponent implements OnInit, OnDestroy {
     const imagenUrl = this.obtenerImagenProducto(producto);
     const permitirPersonalizacion = this.debePermitirPersonalizacion(producto);
 
+    // ✅ CALCULAR PRECIO BASE CON DESCUENTO PARA EL POPUP (sin tamaño específico)
+    const precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+
+    console.log('🎯 Popup - Precio original vs con descuento:', {
+      original: producto.precio,
+      conDescuento: precioConDescuento,
+      producto: producto.nombre,
+      tieneTamanos: (producto as ProductoConBadge).aplica_tamanos
+    });
+
     const dialogData: ProductPopupData = {
       producto: {
         id: producto.id,
         nombre: producto.nombre,
-        precio: producto.precio,
+        precio: precioConDescuento, // ✅ USAR PRECIO CON DESCUENTO BASE
         imagenUrl: imagenUrl,
         categoria: (producto as ProductoConBadge).categoria,
         descripcion: (producto as ProductoConBadge).descripcion,
 
         aplica_tamanos: (producto as ProductoConBadge).aplica_tamanos,
-        tamanos_detalle: (producto as ProductoConBadge).tamanos_detalle?.map(t => ({
-          id: t.id,
-          tamano_nombre: t.nombre_tamano,
-          codigo_tamano: t.codigo_tamano,
-          precio: t.precio
-        }))
+        tamanos_detalle: (producto as ProductoConBadge).tamanos_detalle?.map(t => {
+          // ✅ PRECIO ORIGINAL DEL TAMAÑO (sin descuento)
+          const precioOriginalTamano = parseFloat(t.precio.toString());
+          
+          // ✅ CALCULAR precio con descuento para este tamaño específico
+          const tamanoData = {
+            codigo_tamano: t.codigo_tamano,
+            codigo: t.codigo_tamano
+          };
+          
+          // Obtener precio con descuento aplicando promociones específicas de tamaño
+          const precioTamanoConDescuento = this.calcularPrecioConDescuento(
+            producto as any, 
+            this.promocionesActivas(), 
+            tamanoData
+          );
+          
+          console.log(`📏 Popup - Calculando tamaño ${t.codigo_tamano}:`, {
+            precio_original: precioOriginalTamano,
+            precio_con_descuento: precioTamanoConDescuento,
+            tiene_descuento: precioTamanoConDescuento !== precioOriginalTamano
+          });
+          
+          return {
+            id: t.id,
+            tamano_nombre: t.nombre_tamano,
+            codigo_tamano: t.codigo_tamano,
+            precio: precioTamanoConDescuento, // ✅ PRECIO CON DESCUENTO APLICADO
+            precio_original: precioOriginalTamano // ✅ PRECIO ORIGINAL PARA COMPARACIÓN
+          };
+        })
       },
       imagenUrl: imagenUrl,
       permitirPersonalizacion: permitirPersonalizacion
@@ -509,45 +576,94 @@ export class MenuComponent implements OnInit, OnDestroy {
 
 
   private agregarProductoAlCarrito(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
+    let precio = producto.precio;
+    let precioConDescuento = precio;
+
     if (this.esMenu(producto)) {
-      // Ahora usa agregarMenu
-      this.pedidoService.agregarMenu(producto.id, producto.precio, cantidad, []);
+      // ✅ Calcular precio con descuento para menús (sin cambios)
+      precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+      console.log(`Agregando menú ${producto.id} con precio descuento: $${precioConDescuento}`);
+      this.pedidoService.agregarMenu(producto.id, precioConDescuento, cantidad, []);
     } else {
-      let precio = producto.precio;
-      let descripcionExtra = '';
+      // ✅ Variable para almacenar el código de tamaño
+      let codigoTamano: string | undefined = undefined;
 
+      // ✅ MEJORADO: Calcular precio con descuento para productos considerando tamaño específico
       if (tamanoSeleccionado) {
-        precio = tamanoSeleccionado.precio;
-        descripcionExtra = ` (${tamanoSeleccionado.codigo})`;
-      }
-      else if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
-        const primerTamano = producto.tamanos_detalle[0];
-        precio = primerTamano.precio;
-        descripcionExtra = ` (${primerTamano.codigo_tamano})`;
-      }
-      else {
-        precio = this.calcularPrecioFinal(producto);
+        // Si hay tamaño seleccionado, usar ese precio ya con descuento aplicado
+        precioConDescuento = tamanoSeleccionado.precio;
+        codigoTamano = tamanoSeleccionado.codigo; // ✅ Guardar código de tamaño
+        console.log(`Agregando producto ${producto.id} tamaño ${tamanoSeleccionado.codigo} con precio: $${precioConDescuento}`);
+      } else if ((producto as ProductoConBadge).aplica_tamanos && (producto as ProductoConBadge).tamanos_detalle && (producto as ProductoConBadge).tamanos_detalle!.length > 0) {
+        // Si no hay tamaño seleccionado pero tiene tamaños, usar el primero
+        const primerTamano = (producto as ProductoConBadge).tamanos_detalle![0];
+        const tamanoData = {
+          codigo_tamano: primerTamano.codigo_tamano,
+          codigo: primerTamano.codigo_tamano
+        };
+        precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas(), tamanoData);
+        // Aplicar proporción al precio del tamaño
+        const factorDescuento = precioConDescuento / producto.precio;
+        precioConDescuento = primerTamano.precio * factorDescuento;
+        codigoTamano = primerTamano.codigo_tamano; // ✅ Guardar código de tamaño
+        console.log(`Agregando producto ${producto.id} primer tamaño ${primerTamano.codigo_tamano} con precio: $${precioConDescuento}`);
+      } else {
+        // Producto sin tamaños, usar descuento general
+        precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+        console.log(`Agregando producto ${producto.id} sin tamaños con precio descuento: $${precioConDescuento}`);
       }
 
-      this.pedidoService.agregarProducto(producto.id, precio, cantidad);
+      // ✅ Pasar el código de tamaño al servicio
+      this.pedidoService.agregarProducto(producto.id, precioConDescuento, cantidad, undefined, undefined, codigoTamano);
     }
-
-    // Mostrar el detalle del pedido en consola
   }
 
   private irAPersonalizar(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
+    // ✅ MEJORADO: Calcular precio con descuento considerando tamaño específico
+    const precioOriginal = producto.precio;
+    let precioConDescuento = precioOriginal;
+
+    if (tamanoSeleccionado) {
+      // Si hay tamaño seleccionado, usar ese precio ya con descuento aplicado
+      precioConDescuento = tamanoSeleccionado.precio;
+      console.log('🍔 Navegando a personalizar con tamaño específico:', {
+        producto: producto.nombre,
+        tamano: tamanoSeleccionado.codigo,
+        precioOriginal: precioOriginal,
+        precioTamanoConDescuento: precioConDescuento
+      });
+    } else {
+      // Sin tamaño seleccionado, usar descuento general del producto
+      precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+      console.log('🍔 Navegando a personalizar sin tamaño específico:', {
+        producto: producto.nombre,
+        precioOriginal: precioOriginal,
+        precioConDescuento: precioConDescuento,
+        tieneDescuento: precioOriginal !== precioConDescuento
+      });
+    }
 
     const queryParams: any = {
       cantidad: cantidad,
       nombre: producto.nombre,
-      precio: producto.precio,
+      precio: precioConDescuento, // ✅ PRECIO CON DESCUENTO (será el precio base en personalización)
+      precio_original_menu: precioOriginal, // ✅ PRECIO ORIGINAL DEL MENÚ (para referencia)
       categoria: (producto as ProductoConBadge).categoria || null
     };
 
     if (tamanoSeleccionado) {
       queryParams.tamano_id = tamanoSeleccionado.id;
-      queryParams.tamano_precio = tamanoSeleccionado.precio;
+      queryParams.tamano_precio = tamanoSeleccionado.precio; // ✅ YA INCLUYE DESCUENTO
+      queryParams.tamano_codigo = tamanoSeleccionado.codigo; // ✅ AGREGAR código de tamaño
+      
+      console.log('📏 Tamaño seleccionado enviado a personalizar:', {
+        tamano: tamanoSeleccionado.nombre || tamanoSeleccionado.codigo,
+        precioTamanoConDescuento: tamanoSeleccionado.precio,
+        codigoTamano: tamanoSeleccionado.codigo
+      });
     }
+
+    console.log('📋 Query params enviados a personalizar:', queryParams);
 
     this.router.navigate(['/cliente/personalizar-producto', producto.id], {
       queryParams: queryParams
@@ -635,6 +751,102 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   onPublicidadCambio(publicidad: Publicidad): void {
     // Aquí puedes agregar lógica adicional como analytics
+  }
+
+  // ✅ MÉTODO MEJORADO para calcular precio con descuento considerando tamaños específicos
+  private calcularPrecioConDescuento(producto: ProductoConBadge | Menu, promocionesActivas: any[], tamanoSeleccionado?: any): number {
+    // ✅ OBTENER PRECIO BASE según el contexto
+    let precioOriginal: number;
+    
+    if (tamanoSeleccionado && !this.esMenu(producto)) {
+      // Si hay tamaño seleccionado, buscar el precio de ese tamaño específico
+      const productoConTamanos = producto as ProductoConBadge;
+      const tamanoDetalle = productoConTamanos.tamanos_detalle?.find(t => 
+        t.codigo_tamano === tamanoSeleccionado.codigo_tamano || 
+        t.codigo_tamano === tamanoSeleccionado.codigo
+      );
+      precioOriginal = tamanoDetalle ? parseFloat(tamanoDetalle.precio.toString()) : parseFloat(producto.precio.toString());
+      
+      console.log(`🎯 Calculando descuento para tamaño ${tamanoSeleccionado.codigo_tamano}: precio base $${precioOriginal}`);
+    } else {
+      // Precio base del producto o menú
+      precioOriginal = typeof producto.precio === 'number' ? producto.precio : this.obtenerPrecioMostrar(producto as ProductoConBadge);
+    }
+    
+    // Para menús, buscar promociones específicas de menús
+    if (this.esMenu(producto)) {
+      const promosMenu = promocionesActivas.filter((p: any) =>
+        Array.isArray(p.menus_detalle) &&
+        p.menus_detalle.some((menu: any) =>
+          (menu.menu && menu.menu.id === producto.id) ||
+          (menu.menu_id === producto.id) ||  
+          (menu.id === producto.id)
+        )
+      );
+
+      if (promosMenu.length > 0) {
+        const mayorDescuento = Math.max(...promosMenu.map((p: any) => Number(p.valor_descuento) || 0));
+        const precioConDescuento = precioOriginal * (1 - mayorDescuento / 100);
+        console.log(`📋 Menú ${producto.id}: Original $${precioOriginal}, Descuento ${mayorDescuento}%, Final $${precioConDescuento}`);
+        return precioConDescuento;
+      }
+    } else {
+      // ✅ MEJORADO: Para productos, considerar promociones por tamaño específico
+      const promosProducto = promocionesActivas.filter((p: any) => {
+        if (!Array.isArray(p.productos_detalle)) return false;
+        
+        return p.productos_detalle.some((prod: any) => {
+          const coincideProducto = (prod.producto && prod.producto.id === producto.id) || (prod.producto_id === producto.id);
+          
+          // Si no hay tamaño seleccionado, considerar solo promociones generales (sin tamaño específico)
+          if (!tamanoSeleccionado) {
+            return coincideProducto && (!prod.tamano_codigo || prod.tamano_codigo === null);
+          }
+          
+          // Si hay tamaño seleccionado, buscar promociones específicas para ese tamaño
+          const coincideTamano = prod.tamano_codigo === tamanoSeleccionado.codigo_tamano || 
+                                prod.tamano_codigo === tamanoSeleccionado.codigo;
+          
+          console.log(`🔍 Verificando promoción para tamaño ${tamanoSeleccionado.codigo_tamano}:`, {
+            promo_id: p.id,
+            promo_tamano_codigo: prod.tamano_codigo,
+            tamano_seleccionado_codigo: tamanoSeleccionado.codigo_tamano,
+            coincide_tamano: coincideTamano,
+            descuento: p.valor_descuento
+          });
+          
+          return coincideProducto && coincideTamano;
+        });
+      });
+
+      if (promosProducto.length > 0) {
+        const mayorDescuento = Math.max(...promosProducto.map((p: any) => Number(p.valor_descuento) || 0));
+        const precioConDescuento = precioOriginal * (1 - mayorDescuento / 100);
+        
+        console.log(`📦 Producto ${producto.id} (${tamanoSeleccionado?.codigo_tamano || 'sin tamaño'}): Original $${precioOriginal}, Descuento ${mayorDescuento}%, Final $${precioConDescuento}`);
+        return precioConDescuento;
+      }
+    }
+    
+    console.log(`🏷️ Sin promoción: ${producto.id} (${tamanoSeleccionado?.codigo_tamano || 'sin tamaño'}) - $${precioOriginal}`);
+    return precioOriginal;
+  }
+
+  // ✅ MÉTODO MEJORADO para obtener precio con descuento con soporte para tamaños
+  obtenerPrecioConDescuento(producto: ProductoConBadge, tamanoSeleccionado?: any): number {
+    return this.calcularPrecioConDescuento(producto, this.promocionesActivas(), tamanoSeleccionado);
+  }
+
+  // Método para verificar si tiene promoción
+  tienePromociones(producto: ProductoConBadge): boolean {
+    return this.tienePromoBadge(producto);
+  }
+
+  // ✅ AGREGAR: Método para verificar si un producto tiene múltiples tamaños
+  productoTieneTamanos(item: ProductoConBadge | Menu): boolean {
+    if (this.esMenu(item)) return false;
+    const producto = item as ProductoConBadge;
+    return !!(producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0);
   }
 
 }

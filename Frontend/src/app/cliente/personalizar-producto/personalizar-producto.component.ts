@@ -3,7 +3,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CatalogoService } from '../../services/catalogo.service';
 import { PedidoService } from '../../services/pedido.service';
+import { PublicidadService } from '../../services/publicidad.service';
 import { PersonalizacionIngrediente } from '../../models/pedido.model';
+import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
+import { Publicidad } from '../../models/marketing.model';
 import { combineLatest } from 'rxjs';
 
 interface IngredientePersonalizacion {
@@ -20,7 +23,7 @@ interface IngredientePersonalizacion {
 @Component({
   selector: 'app-personalizar-producto',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PublicidadSectionComponent],
   templateUrl: './personalizar-producto.component.html',
   styleUrls: ['./personalizar-producto.component.scss']
 })
@@ -61,6 +64,13 @@ export class PersonalizarProductoComponent implements OnInit {
   private router = inject(Router);
   private catalogoService = inject(CatalogoService);
   public pedidoService = inject(PedidoService);
+  private publicidadService = inject(PublicidadService);
+  
+  // Variables para guardar estado original y personalizado
+  private precioOriginal: number = 0;
+  private cantidadOriginal: number = 1;
+  private cantidadPersonalizada: number = 1;
+  private codigoTamano: string | undefined = undefined; // ✅ AGREGAR código de tamaño
 
   productoId: number | null = null;
   cantidad = signal<number>(1);
@@ -186,9 +196,41 @@ export class PersonalizarProductoComponent implements OnInit {
     this.categoriaProducto = Number(params['categoria']) || null;
     this.descripcionProducto = '';
     this.imagenProducto = 'assets/placeholder-producto.png';
-    this.precioProducto = params['tamano_precio']
+    
+    // ✅ OBTENER código de tamaño desde parámetros o datos actuales
+    this.codigoTamano = params['tamano_codigo'] || this.datosActuales?.tamano_codigo || undefined;
+    
+    // ✅ OBTENER PRECIO RECIBIDO (ya viene con descuento aplicado desde el menú)
+    const precioRecibido = params['tamano_precio']
       ? Number(params['tamano_precio']) || 0
       : Number(params['precio']) || 0;
+    
+    console.log('💰 Precio recibido en personalizar-producto:', precioRecibido);
+    console.log('📝 Parámetros recibidos:', params);
+    
+    // ✅ LÓGICA CORREGIDA: Distinguir entre precio base y precio personalizado
+    if (this.modoEdicion) {
+      // En modo edición, usar el precio base sin personalizaciones previas
+      this.precioOriginal = precioRecibido; // Este ya es el precio base
+      this.precioProducto = precioRecibido;
+      console.log('🔧 Modo edición: usando precio base', {
+        precio_recibido: precioRecibido,
+        datos_actuales: this.datosActuales
+      });
+    } else {
+      // Primera vez (desde menú), usar precio recibido como base
+      this.precioOriginal = precioRecibido;
+      this.precioProducto = precioRecibido;
+      console.log('🆕 Nuevo producto: usando precio recibido como base', {
+        precio_recibido: precioRecibido,
+        precio_original_menu: params['precio_original_menu']
+      });
+    }
+
+    // Establecer cantidad inicial y sincronizar con la cantidad visual
+    const cantidadInicial = Number(params['cantidad']) || 1;
+    this.cantidadPersonalizada = cantidadInicial;
+    this.cantidad.set(cantidadInicial);
 
     if (this.modoEdicion) {
       this.precargarPersonalizaciones();
@@ -299,6 +341,7 @@ export class PersonalizarProductoComponent implements OnInit {
 
     const nuevaPersonalizacion = this.generarPersonalizacionFinal();
     const nuevoPrecio = this.calcularPrecioFinal();
+    const nuevaCantidad = this.cantidad(); // ✅ OBTENER LA NUEVA CANTIDAD
 
 
     if (nuevoPrecio <= 0) {
@@ -310,7 +353,8 @@ export class PersonalizarProductoComponent implements OnInit {
       this.datosActuales.producto_id,
       this.personalizacionOriginal,
       nuevaPersonalizacion,
-      nuevoPrecio
+      nuevoPrecio,
+      nuevaCantidad // ✅ PASAR LA NUEVA CANTIDAD
     );
 
     if (resultado !== false) {
@@ -455,6 +499,11 @@ export class PersonalizarProductoComponent implements OnInit {
           if (producto) {
             this.productoDatos = producto;
             this.actualizarDatosProducto(producto);
+            
+            // ❌ NO aplicar descuento aquí - el precio ya viene con descuento del menú
+            // setTimeout(() => {
+            //   this.aplicarDescuentoPromocion();
+            // }, 100);
           }
         },
         error: (error) => {
@@ -573,7 +622,8 @@ export class PersonalizarProductoComponent implements OnInit {
 
     const tienePrecionTamano = this.route.snapshot.queryParams['tamano_precio'];
     if (!tienePrecionTamano) {
-      this.precioProducto = Number(producto.precio) || this.precioProducto;
+      // No actualizar precio aquí para evitar sobrescribir el descuento
+      // this.precioProducto = Number(producto.precio) || this.precioProducto;
     } else {
     }
 
@@ -646,17 +696,33 @@ export class PersonalizarProductoComponent implements OnInit {
     // NUEVO: Obtén las personalizaciones
     const personalizaciones = this.obtenerPersonalizacionesParaPedido();
 
-    this.pedidoService.agregarProducto(
-      this.productoId!,
-      precioUnitarioConExtras,
-      cantidadFinal,
-      personalizaciones
-    );
+    // Actualizar la cantidad personalizada antes de agregar al carrito
+    this.cantidadPersonalizada = cantidadFinal;
+
+    console.log('agregarAlCarrito - Modo edición:', this.modoEdicion);
+    console.log('agregarAlCarrito - Carrito index:', this.carritoIndex);
+    console.log('agregarAlCarrito - Cantidad final:', cantidadFinal);
+
+    // Si estamos en modo edición, actualizar el producto existente
+    if (this.modoEdicion && this.carritoIndex !== null) {
+      console.log('Actualizando producto existente...');
+      this.actualizarCantidadEnCarrito();
+    } else {
+      console.log('Agregando nuevo producto...');
+      // Si es un producto nuevo, agregarlo normalmente
+      this.pedidoService.agregarProducto(
+        this.productoId!,
+        precioUnitarioConExtras,
+        cantidadFinal,
+        personalizaciones,
+        this.precioOriginal, // ✅ PASAR precio base sin personalizaciones
+        this.codigoTamano // ✅ PASAR código de tamaño
+      );
+    }
 
     let mensaje = `✅ ${this.nombreProducto} agregado al carrito!\n`;
     mensaje += `Cantidad: ${cantidadFinal}\n`;
     mensaje += `Precio total: $${precioTotal.toFixed(2)}`;
-
 
     // 🔧 RESETEAR estado INMEDIATAMENTE después de agregar
     this.procesandoConfirmacion = false;
@@ -670,11 +736,18 @@ export class PersonalizarProductoComponent implements OnInit {
 
 
   cancelarPedido(): void {
+    // Actualizar el carrito con los cambios antes de navegar
+    if (this.modoEdicion && this.carritoIndex !== null) {
+      this.actualizarCantidadEnCarrito();
+    }
     this.volverAlMenu();
   }
 
   continuar(): void {
-    // Aquí podrías navegar a la siguiente página del flujo de pedido
+    // Actualizar el carrito con los cambios antes de navegar
+    if (this.modoEdicion && this.carritoIndex !== null) {
+      this.actualizarCantidadEnCarrito();
+    }
     this.volverAlMenu();
   }
 
@@ -764,8 +837,43 @@ export class PersonalizarProductoComponent implements OnInit {
       }
     });
 
-
     return personalizaciones;
+  }
+
+  private actualizarCantidadEnCarrito(): void {
+    if (this.carritoIndex === null || this.productoId === null) {
+      console.log('No se puede actualizar: carritoIndex o productoId es null');
+      return;
+    }
+
+    console.log('Actualizando carrito:', {
+      carritoIndex: this.carritoIndex,
+      productoId: this.productoId,
+      cantidadPersonalizada: this.cantidadPersonalizada,
+      precioProducto: this.precioProducto
+    });
+
+    try {
+      // Eliminar el producto original del carrito
+      console.log('Eliminando producto original del carrito...');
+      this.pedidoService.eliminarProducto(this.carritoIndex);
+      
+      // Agregar el producto actualizado con la nueva cantidad y personalizaciones
+      const personalizaciones = this.obtenerPersonalizacionesParaPedido();
+      console.log('Agregando producto actualizado al carrito...');
+      this.pedidoService.agregarProducto(
+        this.productoId,
+        this.precioProducto,
+        this.cantidadPersonalizada,
+        personalizaciones,
+        undefined, // precio base no necesario en actualización
+        this.codigoTamano // ✅ PASAR código de tamaño
+      );
+
+      console.log('Carrito actualizado exitosamente');
+    } catch (error) {
+      console.error('Error al actualizar carrito:', error);
+    }
   }
 
   public hayAlMenosUnIngredienteSeleccionado(): boolean {
@@ -786,6 +894,101 @@ export class PersonalizarProductoComponent implements OnInit {
         return `Disminuir cantidad de ${ingrediente.nombre}`;
       }
     }
+  }
+
+  private aplicarDescuentoPromocion(): void {
+    // Obtener promociones activas usando el servicio de publicidad
+    this.publicidadService.getPromociones().subscribe({
+      next: (promociones: any[]) => {
+        // Filtrar promociones activas
+        const promocionesActivas = promociones.filter(p =>
+          p.estado === 'Activado' &&
+          (!p.codigo_promocional || String(p.codigo_promocional).trim() === '')
+        );
+
+        // Buscar promociones que incluyan este producto
+        const promocionesProducto = promocionesActivas.filter(p => {
+          if (!p.productos_detalle || !Array.isArray(p.productos_detalle)) return false;
+          
+          return p.productos_detalle.some((prod: any) =>
+            (prod.producto && prod.producto.id === this.productoId) ||
+            (prod.producto_id === this.productoId)
+          );
+        });
+
+        if (promocionesProducto.length > 0) {
+          // Obtener el mayor descuento
+          const mayorDescuento = Math.max(...promocionesProducto.map(p =>
+            Number(p.valor_descuento) || 0
+          ));
+          
+          // Aplicar descuento al precio original (no al precio actual)
+          const precioConDescuento = this.precioOriginal * (1 - mayorDescuento / 100);
+          const precioFinal = Math.round(precioConDescuento * 100) / 100;
+          
+          // Forzar actualización del precio con un cambio detectable por Angular
+          this.precioProducto = precioFinal;
+          
+          // Forzar actualización de los computed properties
+          this.precioTotalCalculado();
+          this.precioUnitarioConIngredientes();
+          this.costoIngredientesAdicionales();
+        }
+      },
+      error: (error: any) => {
+        // Si hay error al obtener promociones, mantener el precio original
+        console.log('Error al obtener promociones:', error);
+      }
+    });
+  }
+
+  private verificarYAplicarDescuento(): void {
+    // Método para verificar si necesita aplicar descuento
+    // Solo aplicar si no viene ya con descuento del menú
+    console.log('Verificando si necesita aplicar descuento...');
+    console.log('Precio recibido:', this.precioProducto);
+    
+    // Obtener promociones para ver si este producto debería tener descuento
+    this.publicidadService.getPromociones().subscribe({
+      next: (promociones: any[]) => {
+        const promocionesActivas = promociones.filter(p =>
+          p.estado === 'Activado' &&
+          (!p.codigo_promocional || String(p.codigo_promocional).trim() === '')
+        );
+
+        const promocionesProducto = promocionesActivas.filter(p => {
+          if (!p.productos_detalle || !Array.isArray(p.productos_detalle)) return false;
+          
+          return p.productos_detalle.some((prod: any) =>
+            (prod.producto && prod.producto.id === this.productoId) ||
+            (prod.producto_id === this.productoId)
+          );
+        });
+
+        if (promocionesProducto.length > 0) {
+          // Hay promociones para este producto
+          const mayorDescuento = Math.max(...promocionesProducto.map(p =>
+            Number(p.valor_descuento) || 0
+          ));
+          
+          console.log('Descuento encontrado:', mayorDescuento, '%');
+          
+          // El precio ya debería venir con descuento desde el menú
+          // Solo verificar que esté correcto
+          console.log('Precio con descuento ya aplicado desde menú:', this.precioProducto);
+        } else {
+          console.log('No hay promociones para este producto');
+        }
+      },
+      error: (error: any) => {
+        console.log('Error al verificar promociones:', error);
+      }
+    });
+  }
+
+  // Método para manejar cambios de publicidad
+  onPublicidadCambio(publicidad: Publicidad): void {
+    // Implementación opcional para manejar cambios de publicidad
   }
 
 }

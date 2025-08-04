@@ -37,20 +37,30 @@
             </div>
             <div class="producto-info">
               <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
+              
+              <!-- Mostrar información del tamaño si existe -->
+              <div *ngIf="obtenerInfoTamano(item)" class="producto-tamano">
+                <span class="tamano-info">Tamaño: {{ obtenerInfoTamano(item) }}</span>
+              </div>
 
               <!-- Si es producto, muestra personalizaciones -->
               <div *ngIf="item.tipo === 'producto'">
-                <div class="producto-personalizaciones" *ngIf="item.personalizacion && item.personalizacion.length > 0">
-                  <ng-container *ngFor="let ingr of item.personalizacion">
+                <!-- Solo mostrar personalizaciones si los ingredientes ya se cargaron -->
+                <div class="producto-personalizaciones" *ngIf="ingredientesCargados && item.personalizacion && item.personalizacion.length > 0">
+                  <ng-container *ngFor="let ingr of obtenerPersonalizacionesAgrupadas(item.personalizacion)">
                     <span
-                      class="personalizacion"
-                      [ngClass]="{
-                        'personalizacion-agregado': ingr.accion === 'agregar',
-                        'personalizacion-removido': ingr.accion === 'quitar'
-                      }">
-                      {{ ingr.accion === 'agregar' ? 'extra' : 'sin' }} {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}
+                      *ngIf="ingr.accion === 'agregar'"
+                      class="personalizacion personalizacion-agregado">
+                      Extra: {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}<span *ngIf="ingr.cantidad > 1"> x{{ ingr.cantidad }}</span>
                     </span>
                   </ng-container>
+                </div>
+                
+                <!-- Placeholder mientras se cargan los ingredientes -->
+                <div class="producto-personalizaciones" *ngIf="!ingredientesCargados && item.personalizacion && item.personalizacion.length > 0">
+                  <span class="personalizacion personalizacion-agregado">
+                    Cargando extras...
+                  </span>
                 </div>
               </div>
 
@@ -101,11 +111,10 @@
               </div>
             </div>
 
-            <!--  BOTÓN PERSONALIZAR INFERIOR (MENOS ESPACIO) -->
             <div class="producto-controles-inferiores">
               <button
                 *ngIf="item.tipo === 'producto'"
-                class="btn-personalizar-inline"
+                class="btn-personalizar-below"
                 (click)="personalizarProducto(item, i)">
                 Personalizar
               </button>
