@@ -381,6 +381,22 @@ $font-family-base: 'Lato', sans-serif;
   }
 }
 
+// ===== INFORMACIÓN DE TAMAÑO =====
+.producto-tamano {
+  margin-top: 3px;
+  margin-bottom: 5px;
+  
+  .tamano-info {
+    font-size: 12px;
+    color: #666;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 8px;
+    display: inline-block;
+    font-weight: 500;
+  }
+}
+
 // ===== PERSONALIZACIONES =====
 .producto-personalizaciones {
   margin-top: 5px;

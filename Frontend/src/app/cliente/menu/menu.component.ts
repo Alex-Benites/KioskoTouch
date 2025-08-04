@@ -417,7 +417,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     // Por ahora, agregar el tamaño más pequeño por defecto
     if (producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
       const tamanoDefault = producto.tamanos_detalle[0]; // El más pequeño (orden)
-      this.pedidoService.agregarProducto(producto.id, tamanoDefault.precio, 1);
+      this.pedidoService.agregarProducto(producto.id, tamanoDefault.precio, 1, undefined, undefined, tamanoDefault.codigo_tamano);
     }
   }
 
@@ -585,10 +585,14 @@ export class MenuComponent implements OnInit, OnDestroy {
       console.log(`Agregando menú ${producto.id} con precio descuento: $${precioConDescuento}`);
       this.pedidoService.agregarMenu(producto.id, precioConDescuento, cantidad, []);
     } else {
+      // ✅ Variable para almacenar el código de tamaño
+      let codigoTamano: string | undefined = undefined;
+
       // ✅ MEJORADO: Calcular precio con descuento para productos considerando tamaño específico
       if (tamanoSeleccionado) {
         // Si hay tamaño seleccionado, usar ese precio ya con descuento aplicado
         precioConDescuento = tamanoSeleccionado.precio;
+        codigoTamano = tamanoSeleccionado.codigo; // ✅ Guardar código de tamaño
         console.log(`Agregando producto ${producto.id} tamaño ${tamanoSeleccionado.codigo} con precio: $${precioConDescuento}`);
       } else if ((producto as ProductoConBadge).aplica_tamanos && (producto as ProductoConBadge).tamanos_detalle && (producto as ProductoConBadge).tamanos_detalle!.length > 0) {
         // Si no hay tamaño seleccionado pero tiene tamaños, usar el primero
@@ -601,6 +605,7 @@ export class MenuComponent implements OnInit, OnDestroy {
         // Aplicar proporción al precio del tamaño
         const factorDescuento = precioConDescuento / producto.precio;
         precioConDescuento = primerTamano.precio * factorDescuento;
+        codigoTamano = primerTamano.codigo_tamano; // ✅ Guardar código de tamaño
         console.log(`Agregando producto ${producto.id} primer tamaño ${primerTamano.codigo_tamano} con precio: $${precioConDescuento}`);
       } else {
         // Producto sin tamaños, usar descuento general
@@ -608,7 +613,8 @@ export class MenuComponent implements OnInit, OnDestroy {
         console.log(`Agregando producto ${producto.id} sin tamaños con precio descuento: $${precioConDescuento}`);
       }
 
-      this.pedidoService.agregarProducto(producto.id, precioConDescuento, cantidad);
+      // ✅ Pasar el código de tamaño al servicio
+      this.pedidoService.agregarProducto(producto.id, precioConDescuento, cantidad, undefined, undefined, codigoTamano);
     }
   }
 
@@ -648,10 +654,12 @@ export class MenuComponent implements OnInit, OnDestroy {
     if (tamanoSeleccionado) {
       queryParams.tamano_id = tamanoSeleccionado.id;
       queryParams.tamano_precio = tamanoSeleccionado.precio; // ✅ YA INCLUYE DESCUENTO
+      queryParams.tamano_codigo = tamanoSeleccionado.codigo; // ✅ AGREGAR código de tamaño
       
       console.log('📏 Tamaño seleccionado enviado a personalizar:', {
         tamano: tamanoSeleccionado.nombre || tamanoSeleccionado.codigo,
-        precioTamanoConDescuento: tamanoSeleccionado.precio
+        precioTamanoConDescuento: tamanoSeleccionado.precio,
+        codigoTamano: tamanoSeleccionado.codigo
       });
     }
 

@@ -187,7 +187,7 @@ export class PedidoService {
     }));
   }
 
-  agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[], precioBase?: number): void {
+  agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[], precioBase?: number, tamanoCodigo?: string): void {
     let detalles = this.detallesState();
     let detalle = detalles.find(d => d.productos);
 
@@ -196,10 +196,11 @@ export class PedidoService {
       this.detallesState.update(detalles => [...detalles, detalle!]);
     }
 
-    // Busca si el producto ya existe en el array productos, considerando la personalización
+    // Busca si el producto ya existe considerando producto_id, personalización Y tamaño
     let productoExistente = detalle.productos!.find(p =>
       p.producto_id === producto_id &&
-      this.personalizacionesIguales(p.personalizacion, personalizacion)
+      this.personalizacionesIguales(p.personalizacion, personalizacion) &&
+      p.tamano_codigo === tamanoCodigo
     );
 
     if (productoExistente) {
@@ -212,7 +213,8 @@ export class PedidoService {
         cantidad,
         subtotal: precio * cantidad,
         personalizacion,
-        precio_base: precioBase || precio // ✅ AGREGAR precio base sin personalizaciones
+        precio_base: precioBase || precio, // ✅ AGREGAR precio base sin personalizaciones
+        tamano_codigo: tamanoCodigo // ✅ AGREGAR código de tamaño
       });
     }
 
@@ -574,6 +576,7 @@ export class PedidoService {
             precio_base: producto.precio_base || (producto.subtotal / producto.cantidad), // ✅ INCLUIR precio base
             subtotal: producto.subtotal,
             personalizacion: producto.personalizacion || [],
+            tamano_codigo: producto.tamano_codigo, // ✅ INCLUIR código de tamaño
             nombre: `Producto ${producto.producto_id}`, // Temporal
             imagen_url: null
           };

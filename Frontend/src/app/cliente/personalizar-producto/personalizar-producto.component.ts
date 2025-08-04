@@ -68,6 +68,7 @@ export class PersonalizarProductoComponent implements OnInit {
   private precioOriginal: number = 0;
   private cantidadOriginal: number = 1;
   private cantidadPersonalizada: number = 1;
+  private codigoTamano: string | undefined = undefined; // ✅ AGREGAR código de tamaño
 
   productoId: number | null = null;
   cantidad = signal<number>(1);
@@ -193,6 +194,9 @@ export class PersonalizarProductoComponent implements OnInit {
     this.categoriaProducto = Number(params['categoria']) || null;
     this.descripcionProducto = '';
     this.imagenProducto = 'assets/placeholder-producto.png';
+    
+    // ✅ OBTENER código de tamaño desde parámetros o datos actuales
+    this.codigoTamano = params['tamano_codigo'] || this.datosActuales?.tamano_codigo || undefined;
     
     // ✅ OBTENER PRECIO RECIBIDO (ya viene con descuento aplicado desde el menú)
     const precioRecibido = params['tamano_precio']
@@ -709,7 +713,8 @@ export class PersonalizarProductoComponent implements OnInit {
         precioUnitarioConExtras,
         cantidadFinal,
         personalizaciones,
-        this.precioOriginal // ✅ PASAR precio base sin personalizaciones
+        this.precioOriginal, // ✅ PASAR precio base sin personalizaciones
+        this.codigoTamano // ✅ PASAR código de tamaño
       );
     }
 
@@ -858,7 +863,9 @@ export class PersonalizarProductoComponent implements OnInit {
         this.productoId,
         this.precioProducto,
         this.cantidadPersonalizada,
-        personalizaciones
+        personalizaciones,
+        undefined, // precio base no necesario en actualización
+        this.codigoTamano // ✅ PASAR código de tamaño
       );
 
       console.log('Carrito actualizado exitosamente');

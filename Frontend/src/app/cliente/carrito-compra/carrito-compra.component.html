@@ -37,6 +37,11 @@
             </div>
             <div class="producto-info">
               <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
+              
+              <!-- Mostrar información del tamaño si existe -->
+              <div *ngIf="obtenerInfoTamano(item)" class="producto-tamano">
+                <span class="tamano-info">Tamaño: {{ obtenerInfoTamano(item) }}</span>
+              </div>
 
               <!-- Si es producto, muestra personalizaciones -->
               <div *ngIf="item.tipo === 'producto'">

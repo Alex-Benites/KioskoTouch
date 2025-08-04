@@ -292,6 +292,23 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     return Array.from(agrupadas.values());
   }
 
+  // Obtener información del tamaño si existe
+  obtenerInfoTamano(item: any): string | null {
+    if (item.tamano_codigo) {
+      // Convertir código de tamaño a descripción legible
+      const codigo = item.tamano_codigo.toLowerCase();
+      
+      switch (codigo) {
+        case 'p': case 'pequeno': case 'pequeño': return 'Pequeño';
+        case 'm': case 'mediano': return 'Mediano';
+        case 'g': case 'grande': return 'Grande';
+        case 'xl': case 'extragrand': case 'extra_grande': return 'Extra Grande';
+        default: return item.tamano_codigo.toUpperCase();
+      }
+    }
+    return null;
+  }
+
   personalizarProducto(item: any, index: number): void {
     if (!item.producto_id) {
       alert('Los menús no se pueden personalizar individualmente');
@@ -314,7 +331,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       precio_base: productoReal.precio_base || productoReal.precio_unitario, // ✅ AGREGAR precio base sin personalizaciones
       cantidad: productoReal.cantidad,
       carritoIndex: index,
-      subtotal: productoReal.subtotal
+      subtotal: productoReal.subtotal,
+      tamano_codigo: productoReal.tamano_codigo // ✅ AGREGAR código de tamaño
     };
 
     console.log('Navegando a personalización con modo edición:', {
@@ -322,7 +340,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       carritoIndex: index,
       cantidad: productoReal.cantidad,
       precio_unitario: productoReal.precio_unitario,
-      precio_base: productoReal.precio_base || productoReal.precio_unitario
+      precio_base: productoReal.precio_base || productoReal.precio_unitario,
+      tamano_codigo: productoReal.tamano_codigo
     });
 
     this.router.navigate(['/cliente/personalizar-producto', productoReal.producto_id], {
@@ -332,7 +351,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
         cantidad: productoReal.cantidad,
         precio: productoReal.precio_base || productoReal.precio_unitario, // ✅ USAR precio base sin personalizaciones
         precio_personalizado: productoReal.precio_unitario, // ✅ AGREGAR precio personalizado actual
-        nombre: this.obtenerNombreProducto(productoReal)
+        nombre: this.obtenerNombreProducto(productoReal),
+        tamano_codigo: productoReal.tamano_codigo // ✅ AGREGAR código de tamaño
       },
       state: {
         datosActuales: datosActuales
