@@ -45,7 +45,8 @@
 
               <!-- Si es producto, muestra personalizaciones -->
               <div *ngIf="item.tipo === 'producto'">
-                <div class="producto-personalizaciones" *ngIf="item.personalizacion && item.personalizacion.length > 0">
+                <!-- Solo mostrar personalizaciones si los ingredientes ya se cargaron -->
+                <div class="producto-personalizaciones" *ngIf="ingredientesCargados && item.personalizacion && item.personalizacion.length > 0">
                   <ng-container *ngFor="let ingr of obtenerPersonalizacionesAgrupadas(item.personalizacion)">
                     <span
                       *ngIf="ingr.accion === 'agregar'"
@@ -53,6 +54,13 @@
                       Extra: {{ obtenerIngredientePorId(ingr.ingrediente_id).nombre }}<span *ngIf="ingr.cantidad > 1"> x{{ ingr.cantidad }}</span>
                     </span>
                   </ng-container>
+                </div>
+                
+                <!-- Placeholder mientras se cargan los ingredientes -->
+                <div class="producto-personalizaciones" *ngIf="!ingredientesCargados && item.personalizacion && item.personalizacion.length > 0">
+                  <span class="personalizacion personalizacion-agregado">
+                    Cargando extras...
+                  </span>
                 </div>
               </div>
 

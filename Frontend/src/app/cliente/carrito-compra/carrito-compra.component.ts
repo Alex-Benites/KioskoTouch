@@ -32,6 +32,7 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   private catalogoService = inject(CatalogoService);
   private dialog = inject(MatDialog);
   ingredientes: any[] = [];
+  ingredientesCargados: boolean = false; // ✅ AGREGAR flag de estado
 
   get productosCarrito(): any[] {
     const productos = this.pedidoService.obtenerProductosParaCarrito();
@@ -251,15 +252,22 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     this.catalogoService.getIngredientes().subscribe({
       next: (ingredientes) => {
         this.ingredientes = ingredientes;
+        this.ingredientesCargados = true; // ✅ MARCAR como cargados
       },
       error: (error) => {
         this.ingredientes = [];
+        this.ingredientesCargados = true; // ✅ MARCAR como cargados aunque haya error
       }
     });
   }
 
   // Obtener ingrediente por ID real
   obtenerIngredientePorId(ingredienteId: number): any {
+    // Si los ingredientes aún no se han cargado, mostrar placeholder
+    if (!this.ingredientesCargados) {
+      return { nombre: '...' }; // ✅ PLACEHOLDER mientras se cargan
+    }
+    
     const ingrediente = this.ingredientes.find(i => Number(i.id) === Number(ingredienteId));
     if (!ingrediente) {
       return { nombre: `ingrediente desconocido (${ingredienteId})` };
