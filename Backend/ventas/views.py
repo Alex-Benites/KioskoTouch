@@ -446,7 +446,7 @@ def procesar_pedido_completo(datos_validados):
 
     # 4. Crear factura SIEMPRE (con o sin datos de facturación)
     factura = crear_factura(pedido, datos_validados.get('datos_facturacion'))
-    crear_detalles_factura(factura, datos_validados['productos'])
+    crear_detalles_factura(factura, pedido)  # ✅ CAMBIAR: pasar pedido en lugar de productos
     print(f"Factura creada: ID {factura.id}")
 
     return {
@@ -644,22 +644,31 @@ def crear_factura(pedido, datos_facturacion=None):
     print(f"Factura creada para {nombre}")
     return factura
 
-def crear_detalles_factura(factura, productos):
+def crear_detalles_factura(factura, pedido):
     """
-    Crea los registros de detalle de factura para cada producto comprado.
+    Crea los registros de detalle de factura para cada detalle de pedido.
+    ✅ ACTUALIZADO: Usa detalles del pedido en lugar de productos directos
     """
-    for prod in productos:
+    # Obtener todos los detalles del pedido
+    detalles_pedido = AppkioskoDetallepedido.objects.filter(pedido=pedido)
+    
+    print(f"Creando detalles de factura para {detalles_pedido.count()} productos")
+    
+    for detalle in detalles_pedido:
         AppkioskoDetallefacturaproducto.objects.create(
-            factura_id=factura.id,
-            producto_id=prod.get('producto_id'),
-            cantidad=prod['cantidad'],
-            precio_unitario=prod['precio_unitario'],
-            iva=prod.get('iva', 0),  # Ajusta si tienes el IVA por producto
-            descuento=prod.get('descuento', 0),
-            subtotal=prod['subtotal'],
-            total=prod['subtotal'] + prod.get('iva', 0) - prod.get('descuento', 0),
-            fecha_emision_factura=datetime.now(),
+            factura=factura,
+            detalle_pedido=detalle,  # ✅ NUEVO CAMPO
+            producto=detalle.producto,  # ✅ MANTENER por compatibilidad
+            cantidad=detalle.cantidad,
+            precio_unitario=detalle.precio_unitario,
+            iva=detalle.iva if hasattr(detalle, 'iva') else 0,
+            descuento=detalle.descuento_promocion if hasattr(detalle, 'descuento_promocion') else 0,
+            subtotal=detalle.subtotal,
+            total=detalle.total,
+            fecha_emision_factura=timezone.now(),  # ✅ USAR timezone.now() para evitar warning
         )
+        
+        print(f"Detalle factura creado: {detalle.producto.nombre} x{detalle.cantidad}")
 
 
 def generar_numero_pedido():

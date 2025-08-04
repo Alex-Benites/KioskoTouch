@@ -128,7 +128,8 @@ class AppkioskoFacturas(models.Model):
 
 class AppkioskoDetallefacturaproducto(models.Model):
     factura = models.ForeignKey(AppkioskoFacturas, on_delete=models.CASCADE, blank=True, null=True)
-    producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True)
+    detalle_pedido = models.ForeignKey(AppkioskoDetallepedido, on_delete=models.CASCADE, blank=True, null=True)  # ✅ NUEVO CAMPO
+    producto = models.ForeignKey(AppkioskoProductos, on_delete=models.CASCADE, blank=True, null=True)  # ✅ MANTENER por compatibilidad
     cantidad = models.IntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     iva = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
@@ -142,7 +143,7 @@ class AppkioskoDetallefacturaproducto(models.Model):
     class Meta:
         managed = True
         db_table = 'appkiosko_detallefacturaproducto'
-        unique_together = (('factura', 'producto'),)
+        unique_together = (('factura', 'detalle_pedido'),)  # ✅ CAMBIAR: usar detalle_pedido en lugar de producto
         verbose_name = 'Detalle Factura Producto'
         verbose_name_plural = 'Detalles Factura Producto'
 
