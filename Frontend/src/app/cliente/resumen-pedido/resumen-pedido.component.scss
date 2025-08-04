@@ -24,21 +24,21 @@ $border-color: #e0e0e0;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    align-items: flex-start; // ✅ Cambio: de center a flex-start
-    padding: 20px 40px; // ✅ Más padding horizontal
-    gap: 25px;
-    max-width: 1200px; // ✅ Ancho máximo del contenedor
+    align-items: flex-start; 
+    padding: 20px 40px;
+    max-width: 1200px; 
     width: 100%;
   }
 }
 
-// Logo
 .kiosko-logo {
-  max-width: 300px;
-  width: 300px; // ✅ Ancho fijo
-  height: auto;
+  display: block;
+  height: 50px;      
+  width: auto;      
+  max-height: 50px;  
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
   margin-bottom: 10px;
-  // ✅ Ya no centrado
 }
 
 // Título principal
@@ -560,8 +560,11 @@ $border-color: #e0e0e0;
   }
 
   .kiosko-logo {
-    max-width: 250px;
-    width: 250px;
+    display: block;
+    height: 50px;      // mantener 50px también en mobile para igualar carrito
+    width: auto;
+    max-height: 50px;
+    object-fit: contain;
   }
 
   .resumen-card {
