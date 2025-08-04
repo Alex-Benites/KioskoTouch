@@ -655,20 +655,25 @@ def crear_detalles_factura(factura, pedido):
     print(f"Creando detalles de factura para {detalles_pedido.count()} productos")
     
     for detalle in detalles_pedido:
+        # Calcular valores para la factura basados en los campos disponibles
+        iva_calculado = 0  # Por ahora, no hay IVA en el modelo de detalle
+        descuento = detalle.descuento_promocion if detalle.descuento_promocion else 0
+        total_calculado = detalle.subtotal + iva_calculado - descuento
+        
         AppkioskoDetallefacturaproducto.objects.create(
             factura=factura,
             detalle_pedido=detalle,  # ✅ NUEVO CAMPO
             producto=detalle.producto,  # ✅ MANTENER por compatibilidad
             cantidad=detalle.cantidad,
             precio_unitario=detalle.precio_unitario,
-            iva=detalle.iva if hasattr(detalle, 'iva') else 0,
-            descuento=detalle.descuento_promocion if hasattr(detalle, 'descuento_promocion') else 0,
+            iva=iva_calculado,  # ✅ CALCULAR IVA (por ahora 0)
+            descuento=descuento,  # ✅ USAR descuento_promocion
             subtotal=detalle.subtotal,
-            total=detalle.total,
+            total=total_calculado,  # ✅ CALCULAR TOTAL
             fecha_emision_factura=timezone.now(),  # ✅ USAR timezone.now() para evitar warning
         )
         
-        print(f"Detalle factura creado: {detalle.producto.nombre} x{detalle.cantidad}")
+        print(f"Detalle factura creado: {detalle.producto.nombre} x{detalle.cantidad} - Subtotal: ${detalle.subtotal}")
 
 
 def generar_numero_pedido():
