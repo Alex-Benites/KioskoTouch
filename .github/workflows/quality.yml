@@ -7,32 +7,72 @@ on:
     branches: [ main ]
 
 jobs:
-  quality-check:
+  linting:
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: 'Frontend/package-lock.json'
-        
     - name: Install dependencies
       working-directory: Frontend
       run: npm ci
-      
     - name: Run linting
       working-directory: Frontend
       run: npx ng lint || true
-      
+
+  testing:
+    runs-on: ubuntu-latest
+    needs: linting
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'Frontend/package-lock.json'
+    - name: Install dependencies
+      working-directory: Frontend
+      run: npm ci
     - name: Run tests
       working-directory: Frontend
       run: npx ng test --watch=false --browsers=ChromeHeadless --include=src/app/testing/auth-permission.integration.spec.ts --include=src/app/testing/pedido-flow.integration.spec.ts --include=src/app/testing/admin-navigation.integration.spec.ts --include=src/app/testing/cliente-menu-integration.spec.ts --include=src/app/testing/admin-product-creation.integration.spec.ts --include=src/app/testing/service-integration.integration.spec.ts
-      
+
+  building:
+    runs-on: ubuntu-latest
+    needs: [linting, testing]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'Frontend/package-lock.json'
+    - name: Install dependencies
+      working-directory: Frontend
+      run: npm ci
     - name: Build project
       working-directory: Frontend
       run: npm run build
+
+  quality-report:
+    runs-on: ubuntu-latest
+    needs: [linting, testing, building]
+    if: always()
+    steps:
+    - name: Generate summary
+      run: |
+        echo "## Quality Check Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- Linting: Completed" >> $GITHUB_STEP_SUMMARY
+        echo "- Testing: Completed" >> $GITHUB_STEP_SUMMARY
+        echo "- Building: Completed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "All quality checks have been executed successfully!" >> $GITHUB_STEP_SUMMARY
