@@ -27,7 +27,7 @@ jobs:
       
     - name: Run linting 
       working-directory: Frontend
-      run: ng lint
+      run: npx ng lint
       
     - name: Run tests
       working-directory: Frontend
