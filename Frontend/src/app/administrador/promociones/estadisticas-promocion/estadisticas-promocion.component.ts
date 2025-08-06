@@ -327,4 +327,23 @@ export class EstadisticasPromocionComponent implements OnInit, OnDestroy {
   volver(): void {
     this.router.navigate(['/administrador/gestion-promociones']);
   }
+
+  // Métodos para calcular totales de la tabla
+  getTotalPedidos(): number {
+    return this.pedidosPorMes.reduce((sum, mes) => sum + (mes.total_pedidos || 0), 0);
+  }
+
+  getTotalPromocion(): number {
+    return this.pedidosPorMes.reduce((sum, mes) => sum + (mes.pedidos_con_promocion || 0), 0);
+  }
+
+  getPromedioPromocion(): number {
+    if (this.pedidosPorMes.length === 0) return 0;
+    const totalPromedio = this.pedidosPorMes.reduce((sum, mes) => sum + (mes.porcentaje_promocion || 0), 0);
+    return Math.round(totalPromedio / this.pedidosPorMes.length * 100) / 100;
+  }
+
+  getTotalIngresos(): number {
+    return this.pedidosPorMes.reduce((sum, mes) => sum + (mes.ingresos_totales || 0), 0);
+  }
 }

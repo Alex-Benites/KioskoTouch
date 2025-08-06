@@ -90,6 +90,15 @@
                   </tr>
                 }
               </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td><strong>TOTAL</strong></td>
+                  <td><strong>{{ getTotalPedidos() }}</strong></td>
+                  <td><strong>{{ getTotalPromocion() }}</strong></td>
+                  <td><strong>{{ getPromedioPromocion() }}%</strong></td>
+                  <td><strong>{{ getTotalIngresos() | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+                </tr>
+              </tfoot>
             </table>
           } @else {
             <p class="no-data">No hay datos de pedidos en los últimos 6 meses</p>
