@@ -896,14 +896,44 @@ export class MenuComponent implements OnInit, OnDestroy {
       return [];
     }
 
-    return productosData.map((p: any) => ({
-      id: p.producto?.id || p.producto_id || p.id || 0,
-      nombre: p.nombre || p.producto_nombre || (p.producto?.nombre ?? '') || p.nombre,
-      imagenUrl: p.producto?.imagenUrl || p.producto?.imagen_url || p.imagenUrl || p.imagen_url || '',
-      cantidad: p.cantidad || 1,
-      tamano_codigo: p.tamano_codigo || '',
-      tamano_nombre: p.tamano_nombre || ''
-    }));
+    return productosData.map((p: any) => {
+      // Debug para ver la estructura real
+      console.log('🔍 Estructura del producto en menú:', p);
+      
+      const tamanoCodigoOriginal = p.tamano_codigo || '';
+      const tamanoNombreExpandido = this.expandirNombreTamano(tamanoCodigoOriginal);
+      
+      console.log(`🔄 Tamaño: "${tamanoCodigoOriginal}" → "${tamanoNombreExpandido}"`);
+      
+      return {
+        id: p.producto?.id || p.producto_id || p.id || 0,
+        nombre: p.nombre || p.producto_nombre || (p.producto?.nombre ?? '') || p.nombre,
+        imagenUrl: p.producto?.imagenUrl || p.producto?.imagen_url || p.imagenUrl || p.imagen_url || '',
+        cantidad: p.cantidad || 1,
+        tamano_codigo: tamanoCodigoOriginal,
+        tamano_nombre: tamanoNombreExpandido // ✅ USAR NOMBRE EXPANDIDO
+      };
+    });
+  }
+
+  // ✅ SIMPLIFICADO: Solo convertir P, M, G
+  private expandirNombreTamano(codigo: string): string {
+    if (!codigo) return '';
+    
+    const codigoUpper = codigo.toUpperCase().trim();
+    
+    // Solo mapear P, M, G
+    switch (codigoUpper) {
+      case 'P':
+        return 'Pequeño';
+      case 'M':
+        return 'Mediano';
+      case 'G':
+        return 'Grande';
+      default:
+        // Devolver el código original sin cambios
+        return codigo;
+    }
   }
 
   onPublicidadCambio(publicidad: Publicidad): void {

@@ -7,7 +7,6 @@
   </div>
 
   <div class="menu-detail-popup__content">
-    <!-- Imagen del menú -->
     <div class="menu-image-section">
       <img 
         [src]="data.getFullImageUrl(data.menu.imagenUrl)" 
@@ -21,9 +20,8 @@
       </div>
     </div>
 
-    <!-- Lista de productos incluidos -->
     <div class="products-section">
-      <h3 class="products-title">Productos incluidos:</h3>
+      <h3 class="products-title">Productos incluidos</h3>
       
       @if (data.menu.productosDetalle && data.menu.productosDetalle.length > 0) {
         <div class="products-grid">
@@ -42,15 +40,14 @@
               </div>
               <div class="product-info">
                 <span class="product-name">{{ producto.nombre }}</span>
-                @if (producto.tamano_codigo || producto.tamano_nombre) {
-                  <span class="product-size">({{ producto.tamano_codigo || producto.tamano_nombre }})</span>
+                @if (producto.tamano_nombre) {
+                  <span class="product-size">{{ producto.tamano_nombre }}</span>
                 }
               </div>
             </div>
           }
         </div>
       } @else if (data.menu.productosLista && data.menu.productosLista.length > 0) {
-        <!-- Fallback para cuando solo tenemos la lista de strings -->
         <div class="products-list-fallback">
           @for (producto of data.menu.productosLista; track $index) {
             <div class="product-list-item">
@@ -65,7 +62,6 @@
     </div>
   </div>
 
-  <!-- Footer con controles -->
   <div class="menu-detail-popup__footer">
     <div class="action-buttons">
       <button class="cancel-button" (click)="cancelar()">
