@@ -9,6 +9,7 @@ import { Producto, Categoria, Menu } from '../../models/catalogo.model'; // Aseg
 import { catchError, forkJoin, of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ProductPopupComponent, ProductPopupData, ProductPopupResult } from '../../shared/product-popup/product-popup.component';
+import { MenuDetailPopupComponent, MenuDetailPopupData, MenuDetailPopupResult } from '../../shared/menu-detail-popup/menu-detail-popup.component';
 import { PublicidadSectionComponent } from '../../shared/publicidad-section/publicidad-section.component';
 import { Publicidad } from '../../models/marketing.model';
 import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
@@ -749,10 +750,41 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.mostrarPopupProducto(producto);
   }
 
-  onPublicidadCambio(publicidad: Publicidad): void {
-    // Aquí puedes agregar lógica adicional como analytics
+  verDetallesMenu(menu: any, event?: Event): void {
+    // Prevenir que el clic se propague al contenedor padre
+    if (event) {
+      event.stopPropagation();
+    }
+
+    // Crear los productos detallados con información adicional
+    const productosDetallados = this.getProductosDetallados(menu);
+    
+    const dialogData: MenuDetailPopupData = {
+      menu: {
+        ...menu,
+        imagenUrl: menu.imagenUrl || '',
+        productosLista: this.getProductosLista(menu),
+        productosDetalle: productosDetallados
+      },
+      getFullImageUrl: (imageUrl: string) => this.catalogoService.getFullImageUrl(imageUrl)
+    };
+
+    const dialogRef = this.dialog.open(MenuDetailPopupComponent, {
+      data: dialogData,
+      disableClose: false,
+      panelClass: 'menu-detail-dialog',
+      maxWidth: '600px',
+      width: '90%',
+      maxHeight: '90vh'
+    });
+
+    dialogRef.afterClosed().subscribe((resultado: MenuDetailPopupResult) => {
+      // Solo cerrar el modal, no hacer nada más
+      // El usuario puede usar el botón "Ordenar" de la card si quiere ordenar
+    });
   }
 
+  
   // ✅ MÉTODO MEJORADO para calcular precio con descuento considerando tamaños específicos
   private calcularPrecioConDescuento(producto: ProductoConBadge | Menu, promocionesActivas: any[], tamanoSeleccionado?: any): number {
     // ✅ OBTENER PRECIO BASE según el contexto
@@ -847,6 +879,35 @@ export class MenuComponent implements OnInit, OnDestroy {
     if (this.esMenu(item)) return false;
     const producto = item as ProductoConBadge;
     return !!(producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0);
+  }
+
+  private getProductosDetallados(menu: any): Array<{
+    id: number;
+    nombre: string;
+    imagenUrl?: string;
+    cantidad: number;
+    tamano_codigo?: string;
+    tamano_nombre?: string;
+  }> {
+    // Usar productos_detalle si existe (como viene del backend)
+    const productosData = (menu as any).productos_detalle || menu.productos || [];
+    
+    if (!Array.isArray(productosData)) {
+      return [];
+    }
+
+    return productosData.map((p: any) => ({
+      id: p.producto?.id || p.producto_id || p.id || 0,
+      nombre: p.nombre || p.producto_nombre || (p.producto?.nombre ?? '') || p.nombre,
+      imagenUrl: p.producto?.imagenUrl || p.producto?.imagen_url || p.imagenUrl || p.imagen_url || '',
+      cantidad: p.cantidad || 1,
+      tamano_codigo: p.tamano_codigo || '',
+      tamano_nombre: p.tamano_nombre || ''
+    }));
+  }
+
+  onPublicidadCambio(publicidad: Publicidad): void {
+    // Aquí puedes agregar lógica adicional como analytics
   }
 
 }

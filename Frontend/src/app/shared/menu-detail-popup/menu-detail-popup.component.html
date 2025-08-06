@@ -1,0 +1,76 @@
+<div class="menu-detail-popup">
+  <div class="menu-detail-popup__header">
+    <button class="close-button" (click)="cancelar()" mat-icon-button>
+      <mat-icon>close</mat-icon>
+    </button>
+    <h2 class="menu-title">{{ data.menu.nombre }}</h2>
+  </div>
+
+  <div class="menu-detail-popup__content">
+    <!-- Imagen del menú -->
+    <div class="menu-image-section">
+      <img 
+        [src]="data.getFullImageUrl(data.menu.imagenUrl)" 
+        [alt]="data.menu.nombre"
+        class="menu-main-image"
+        onerror="this.src='assets/placeholder-producto.png'"
+      />
+      <div class="menu-price">
+        <span class="price-label">Precio:</span>
+        <span class="price-value">${{ data.menu.precio.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <!-- Lista de productos incluidos -->
+    <div class="products-section">
+      <h3 class="products-title">Productos incluidos:</h3>
+      
+      @if (data.menu.productosDetalle && data.menu.productosDetalle.length > 0) {
+        <div class="products-grid">
+          @for (producto of data.menu.productosDetalle; track producto.id) {
+            <div class="product-item">
+              <div class="product-image-wrapper">
+                <img 
+                  [src]="obtenerImagenProducto(producto)"
+                  [alt]="producto.nombre"
+                  class="product-image"
+                  onerror="this.src='assets/placeholder-producto.png'"
+                />
+                @if (producto.cantidad && producto.cantidad > 1) {
+                  <span class="quantity-badge">{{ producto.cantidad }}x</span>
+                }
+              </div>
+              <div class="product-info">
+                <span class="product-name">{{ producto.nombre }}</span>
+                @if (producto.tamano_codigo || producto.tamano_nombre) {
+                  <span class="product-size">({{ producto.tamano_codigo || producto.tamano_nombre }})</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (data.menu.productosLista && data.menu.productosLista.length > 0) {
+        <!-- Fallback para cuando solo tenemos la lista de strings -->
+        <div class="products-list-fallback">
+          @for (producto of data.menu.productosLista; track $index) {
+            <div class="product-list-item">
+              <mat-icon class="product-icon">restaurant</mat-icon>
+              <span>{{ producto }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="no-products">Sin productos asignados</p>
+      }
+    </div>
+  </div>
+
+  <!-- Footer con controles -->
+  <div class="menu-detail-popup__footer">
+    <div class="action-buttons">
+      <button class="cancel-button" (click)="cancelar()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

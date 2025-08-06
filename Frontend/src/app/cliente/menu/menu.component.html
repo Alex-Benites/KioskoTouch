@@ -97,11 +97,18 @@
                         <span class="menu-price">{{ obtenerTextoPrecioGenerico(menu) }}</span>
                       }
                     </div>
-                    <button
-                      class="product-card__order-button"
-                      (click)="agregarProducto(menu, $event)">
-                      Ordenar
-                    </button>
+                    <div class="menu-buttons">
+                      <button
+                        class="detail-button"
+                        (click)="verDetallesMenu(menu, $event)">
+                        Ver detalles
+                      </button>
+                      <button
+                        class="product-card__order-button"
+                        (click)="agregarProducto(menu, $event)">
+                        Ordenar
+                      </button>
+                    </div>
                   </div>
                 </div>
               }
