@@ -819,7 +819,6 @@ export class MenuComponent implements OnInit, OnDestroy {
       if (promosMenu.length > 0) {
         const mayorDescuento = Math.max(...promosMenu.map((p: any) => Number(p.valor_descuento) || 0));
         const precioConDescuento = precioOriginal * (1 - mayorDescuento / 100);
-        console.log(`📋 Menú ${producto.id}: Original $${precioOriginal}, Descuento ${mayorDescuento}%, Final $${precioConDescuento}`);
         return precioConDescuento;
       }
     } else {

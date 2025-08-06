@@ -109,13 +109,7 @@ $background-light: #f8f9fa;
           border: 2px solid $kiosko-red;
           border-radius: 12px;
           background: white;
-          transition: all 0.2s ease;
           box-shadow: 0 2px 8px rgba($kiosko-red, 0.1);
-          
-          &:hover {
-            box-shadow: 0 4px 12px rgba($kiosko-red, 0.2);
-            transform: translateY(-1px);
-          }
           
           .product-image-wrapper {
             position: relative;
