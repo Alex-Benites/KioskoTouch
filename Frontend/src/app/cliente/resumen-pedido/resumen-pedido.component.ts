@@ -473,9 +473,12 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   }
 
   private generarNumeroOrden(): string {
-    return Math.floor(Math.random() * 1000 + 1)
-      .toString()
-      .padStart(3, '0');
+    // Usar crypto seguro en lugar de Math.random()
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const numeroAleatorio = (array[0] % 1000) + 1;
+
+    return numeroAleatorio.toString().padStart(3, '0');
   }
 
   verificarDatos(): void {
