@@ -202,7 +202,6 @@ export class PublicidadSectionComponent implements OnInit, OnDestroy {
 
   public obtenerMediaUrl(): string {
     if (this.esVideo() && this.publicidadActual?.media_url) {
-      console.log('🎥 Usando media_url para video:', this.publicidadActual.media_url);
       return this.publicidadService.getFullMediaUrl(this.publicidadActual.media_url);
     }
     
