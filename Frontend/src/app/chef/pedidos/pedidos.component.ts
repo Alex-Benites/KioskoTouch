@@ -206,6 +206,17 @@ export class PedidosComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Obtener solo los ingredientes extra (agregados)
+   */
+  obtenerIngredientesExtra(personalizaciones?: any[]): any[] {
+    if (!personalizaciones) return [];
+    
+    return personalizaciones.filter(pers => 
+      pers.accion === 'agregar_nuevo' || pers.accion === 'cantidad_aumentada'
+    );
+  }
+
+  /**
    * Obtener clase CSS para el estado del pedido
    */
   obtenerClaseEstado(pedido: PedidoChef): string {

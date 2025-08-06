@@ -326,11 +326,59 @@
         &.cantidad_reducida {
           .accion-icon {
             color: #ff9800;
+      }
+    }
+    
+    .extras-section {
+      margin-left: 38px;
+      margin-top: 8px;
+      
+      .extras-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #d32f2f;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .personalizaciones {
+        margin-left: 0;
+        
+        .personalizacion {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 2px 0;
+          font-size: 0.85rem;
+          
+          .accion-icon {
+            font-weight: 700;
+            width: 16px;
+            text-align: center;
+            color: #4caf50;
+          }
+          
+          .ingrediente {
+            flex: 1;
+            color: #666;
+          }
+          
+          .cantidad {
+            color: #999;
+            font-size: 0.8rem;
+          }
+          
+          .precio-extra {
+            color: #4caf50;
+            font-weight: 600;
+            font-size: 0.8rem;
           }
         }
       }
     }
   }
+}  }
 }
 
 .pedido-actions {

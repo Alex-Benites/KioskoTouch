@@ -121,30 +121,26 @@
                         </div>
                       }
                       
-                      <!-- Personalizaciones -->
-                      @if (item.personalizaciones && item.personalizaciones.length > 0) {
-                        <div class="personalizaciones">
-                          @for (pers of pedidoChefService.procesarPersonalizaciones(item.personalizaciones); track pers.ingrediente) {
-                            <div class="personalizacion" [class]="pers.accion">
-                              <span class="accion-icon">
-                                {{
-                                  pers.accion === 'agregar_nuevo' ? '+' :
-                                  pers.accion === 'eliminar_completo' ? '×' :
-                                  pers.accion === 'cantidad_aumentada' ? '++' :
-                                  pers.accion === 'cantidad_reducida' ? '--' : '='
-                                }}
-                              </span>
-                              <span class="ingrediente">{{ pers.ingrediente }}</span>
-                              @if (pers.cantidad > 1) {
-                                <span class="cantidad">×{{ pers.cantidad }}</span>
-                              }
-                              @if (pers.precio_aplicado > 0) {
-                                <span class="precio-extra">
-                                  (+{{ formatearPrecio(pers.precio_aplicado) }})
-                                </span>
-                              }
-                            </div>
-                          }
+                      <!-- Solo Ingredientes Extra -->
+                      @if (obtenerIngredientesExtra(item.personalizaciones).length > 0) {
+                        <div class="extras-section">
+                          <div class="extras-title">Extras</div>
+                          <div class="personalizaciones">
+                            @for (pers of obtenerIngredientesExtra(item.personalizaciones); track pers.ingrediente) {
+                              <div class="personalizacion" [class]="pers.accion">
+                                <span class="accion-icon">+</span>
+                                <span class="ingrediente">{{ pers.ingrediente }}</span>
+                                @if (pers.cantidad > 1) {
+                                  <span class="cantidad">×{{ pers.cantidad }}</span>
+                                }
+                                @if (pers.precio_aplicado > 0) {
+                                  <span class="precio-extra">
+                                    (+{{ formatearPrecio(pers.precio_aplicado) }})
+                                  </span>
+                                }
+                              </div>
+                            }
+                          </div>
                         </div>
                       }
                     </div>
