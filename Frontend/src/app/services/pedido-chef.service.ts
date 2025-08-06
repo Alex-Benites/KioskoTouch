@@ -365,6 +365,58 @@ export class PedidoChefService {
     this.cargarPedidos();
   }
 
+  /**
+   * Procesar personalizaciones para agrupar ingredientes por nombre
+   * y mostrar solo los extras (no los ingredientes base)
+   */
+  procesarPersonalizaciones(personalizaciones: PersonalizacionChef[]): PersonalizacionChef[] {
+    if (!personalizaciones || personalizaciones.length === 0) {
+      return [];
+    }
+
+    console.log('🔍 PROCESANDO PERSONALIZACIONES:', personalizaciones);
+
+    // Agrupar por ingrediente y acción
+    const agrupados = new Map<string, PersonalizacionChef>();
+    
+    for (const pers of personalizaciones) {
+      const key = `${pers.ingrediente}_${pers.accion}`;
+      
+      if (agrupados.has(key)) {
+        // Si ya existe, sumar cantidades
+        const existente = agrupados.get(key)!;
+        existente.cantidad += pers.cantidad;
+        existente.precio_aplicado += pers.precio_aplicado;
+      } else {
+        // Si no existe, agregar directamente
+        agrupados.set(key, { ...pers });
+      }
+    }
+
+    console.log('📦 PERSONALIZACIONES AGRUPADAS:', Array.from(agrupados.values()));
+
+    // Procesar ingredientes para mostrar solo los extras
+    const resultado: PersonalizacionChef[] = [];
+    
+    for (const pers of agrupados.values()) {
+      // Solo mostrar ingredientes extra, no los base
+      if (pers.accion === 'agregar_nuevo') {
+        resultado.push({
+          ...pers,
+          cantidad: pers.cantidad,
+          precio_aplicado: pers.precio_aplicado
+        });
+        console.log('✅ AGREGANDO A RESULTADO (agregar_nuevo):', pers);
+      } else {
+        console.log('❌ FILTRANDO (no mostrar):', pers);
+      }
+      // No mostrar: incluir_base, incluir_adicional, eliminar_completo, cantidad_reducida, cantidad_aumentada
+    }
+
+    console.log('🎯 RESULTADO FINAL:', resultado);
+    return resultado;
+  }
+
   ngOnDestroy(): void {
   }
 }

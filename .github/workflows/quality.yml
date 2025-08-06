@@ -23,7 +23,7 @@ jobs:
       run: npm ci
     - name: Run ESLint
       working-directory: Frontend
-      run: npm run lint || true  # Permite que el job continúe incluso si hay errores de linting
+      run: npm run lint || true  
 
   testing:
     runs-on: ubuntu-latest

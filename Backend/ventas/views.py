@@ -143,17 +143,84 @@ def obtener_pedidos_chef(request):
                         try:
                             personalizaciones = AppkioskoPedidoProductoIngredientes.objects.filter(
                                 pedido=pedido,
+                                detalle_pedido=detalle
+                            ).select_related('ingrediente')
+
+                            print(f"     Personalizaciones encontradas para {detalle.producto.nombre}: {personalizaciones.count()}")
+
+                            # Obtener ingredientes base del producto para comparar cantidades
+                            ingredientes_base = AppkioskoProductosIngredientes.objects.filter(
                                 producto=detalle.producto
                             ).select_related('ingrediente')
 
-                            item_data['personalizaciones'] = [
-                                {
-                                    'ingrediente': p.ingrediente.nombre,
-                                    'accion': p.accion,
-                                    'cantidad': p.cantidad,
-                                    'precio_aplicado': float(p.precio_aplicado)
-                                } for p in personalizaciones
-                            ]
+                            # Crear diccionario de ingredientes base {ingrediente_id: cantidad_base}
+                            base_map = {}
+                            for ing_base in ingredientes_base:
+                                base_map[ing_base.ingrediente.id] = {
+                                    'cantidad': ing_base.cantidad,
+                                    'es_base': ing_base.es_base
+                                }
+                                print(f"       Base: {ing_base.ingrediente.nombre} - cantidad_base={ing_base.cantidad}, es_base={ing_base.es_base}")
+
+                            # Agrupar personalizaciones por ingrediente y acción
+                            personalizaciones_agrupadas = {}
+                            for p in personalizaciones:
+                                print(f"       - {p.ingrediente.nombre}: {p.accion} (cantidad={p.cantidad}, precio={p.precio_aplicado})")
+                                
+                                # Obtener cantidad base para este ingrediente
+                                info_base = base_map.get(p.ingrediente.id, {'cantidad': 0, 'es_base': False})
+                                cantidad_base = info_base['cantidad']
+                                es_base = info_base['es_base']
+                                
+                                # Para cantidad_aumentada, calcular la cantidad extra real
+                                if p.accion == 'cantidad_aumentada':
+                                    cantidad_extra = p.cantidad - cantidad_base
+                                    if cantidad_extra > 0:
+                                        # Crear dos registros: base + extra
+                                        # 1. Registro base (no se muestra al chef)
+                                        key_base = f"{p.ingrediente.nombre}_incluir_base"
+                                        personalizaciones_agrupadas[key_base] = {
+                                            'ingrediente': p.ingrediente.nombre,
+                                            'accion': 'incluir_base',
+                                            'cantidad': cantidad_base,
+                                            'precio_aplicado': 0.00
+                                        }
+                                        
+                                        # 2. Registro extra (sí se muestra al chef)
+                                        key_extra = f"{p.ingrediente.nombre}_agregar_nuevo"
+                                        personalizaciones_agrupadas[key_extra] = {
+                                            'ingrediente': p.ingrediente.nombre,
+                                            'accion': 'agregar_nuevo',
+                                            'cantidad': cantidad_extra,
+                                            'precio_aplicado': float(p.precio_aplicado)
+                                        }
+                                        print(f"         DIVIDIDO en: Base x{cantidad_base} + Extra x{cantidad_extra}")
+                                    else:
+                                        # Si no hay cantidad extra, solo incluir base
+                                        key = f"{p.ingrediente.nombre}_incluir_base"
+                                        personalizaciones_agrupadas[key] = {
+                                            'ingrediente': p.ingrediente.nombre,
+                                            'accion': 'incluir_base',
+                                            'cantidad': p.cantidad,
+                                            'precio_aplicado': 0.00
+                                        }
+                                else:
+                                    # Para otras acciones, mantener como están
+                                    key = f"{p.ingrediente.nombre}_{p.accion}"
+                                    if key not in personalizaciones_agrupadas:
+                                        personalizaciones_agrupadas[key] = {
+                                            'ingrediente': p.ingrediente.nombre,
+                                            'accion': p.accion,
+                                            'cantidad': 0,
+                                            'precio_aplicado': 0.00
+                                        }
+                                    personalizaciones_agrupadas[key]['cantidad'] += p.cantidad
+                                    personalizaciones_agrupadas[key]['precio_aplicado'] += float(p.precio_aplicado)
+                            
+                            item_data['personalizaciones'] = list(personalizaciones_agrupadas.values())
+                            print(f"     Personalizaciones agrupadas: {len(item_data['personalizaciones'])} items")
+                            for pers in item_data['personalizaciones']:
+                                print(f"       FINAL: {pers['ingrediente']} - {pers['accion']} x{pers['cantidad']}")
                         except Exception as e:
                             print(f"Error obteniendo personalizaciones: {e}")
                             item_data['personalizaciones'] = []
@@ -333,17 +400,24 @@ def obtener_pedido(request, pedido_id):
                 # Obtener personalizaciones
                 personalizaciones = AppkioskoPedidoProductoIngredientes.objects.filter(
                     pedido=pedido,
-                    producto=detalle.producto
+                    detalle_pedido=detalle
                 ).select_related('ingrediente')
 
-                item_data['personalizaciones'] = [
-                    {
-                        'ingrediente': p.ingrediente.nombre,
-                        'accion': p.accion,
-                        'cantidad': p.cantidad,
-                        'precio_aplicado': float(p.precio_aplicado)
-                    } for p in personalizaciones
-                ]
+                # Agrupar personalizaciones por ingrediente y acción
+                personalizaciones_agrupadas = {}
+                for p in personalizaciones:
+                    key = f"{p.ingrediente.nombre}_{p.accion}"
+                    if key not in personalizaciones_agrupadas:
+                        personalizaciones_agrupadas[key] = {
+                            'ingrediente': p.ingrediente.nombre,
+                            'accion': p.accion,
+                            'cantidad': 0,
+                            'precio_aplicado': 0.00
+                        }
+                    personalizaciones_agrupadas[key]['cantidad'] += p.cantidad
+                    personalizaciones_agrupadas[key]['precio_aplicado'] += float(p.precio_aplicado)
+                
+                item_data['personalizaciones'] = list(personalizaciones_agrupadas.values())
 
             elif detalle.menu:
                 item_data.update({
@@ -784,23 +858,50 @@ def procesar_todos_los_ingredientes(pedido, detalle_pedido, producto_data):
         else:
             if cantidad_final > cantidad_base:
                 print(f"     Cantidad AUMENTADA: {ingrediente_nombre} x{cantidad_final} (era {cantidad_base})")
-                accion_tipo = 'cantidad_aumentada'
-                precio_extra = cambios['precio_por_unidad'] * cambios['cantidad_agregada']
+                
+                # Primero, crear el registro base
+                accion_base = 'incluir_base' if es_base else 'incluir_adicional'
+                AppkioskoPedidoProductoIngredientes.objects.create(
+                    pedido=pedido,
+                    detalle_pedido=detalle_pedido,
+                    producto=producto,  
+                    ingrediente=ingrediente_producto.ingrediente,
+                    accion=accion_base,
+                    precio_aplicado=0.00,
+                    cantidad=cantidad_base,
+                    created_at=datetime.now()
+                )
+                print(f"     Guardado ingrediente base: {ingrediente_nombre} x{cantidad_base}")
+                
+                # Luego, crear el registro para la cantidad extra
+                if cambios['cantidad_agregada'] > 0:
+                    cantidad_extra = cambios['cantidad_agregada']
+                    precio_extra = cambios['precio_por_unidad'] * cantidad_extra
+                    
+                    AppkioskoPedidoProductoIngredientes.objects.create(
+                        pedido=pedido,
+                        detalle_pedido=detalle_pedido, 
+                        producto=producto,  
+                        ingrediente=ingrediente_producto.ingrediente,
+                        accion='agregar_nuevo',
+                        precio_aplicado=cambios['precio_por_unidad'],
+                        cantidad=cantidad_extra,  # Solo la cantidad extra, no la total
+                        created_at=datetime.now()
+                    )
+                    print(f"     Guardado ingrediente extra: {ingrediente_nombre} x{cantidad_extra}")
+                    
             else:
                 print(f"     Cantidad REDUCIDA: {ingrediente_nombre} x{cantidad_final} (era {cantidad_base})")
-                accion_tipo = 'cantidad_reducida'
-                precio_extra = 0.00
-
-            AppkioskoPedidoProductoIngredientes.objects.create(
-                pedido=pedido,
-                detalle_pedido=detalle_pedido, 
-                producto=producto,  
-                ingrediente=ingrediente_producto.ingrediente,
-                accion=accion_tipo,
-                precio_aplicado=precio_extra,
-                cantidad=cantidad_final,
-                created_at=datetime.now()
-            )
+                AppkioskoPedidoProductoIngredientes.objects.create(
+                    pedido=pedido,
+                    detalle_pedido=detalle_pedido, 
+                    producto=producto,  
+                    ingrediente=ingrediente_producto.ingrediente,
+                    accion='cantidad_reducida',
+                    precio_aplicado=0.00,
+                    cantidad=cantidad_final,
+                    created_at=datetime.now()
+                )
 
         # Remover de cambios procesados
         if ingrediente_id in cambios_ingredientes:
