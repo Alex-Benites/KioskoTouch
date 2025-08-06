@@ -273,13 +273,46 @@
                   <span>Finalizado</span>
                 </div>
 
-                <!-- Items del pedido (versión simplificada) -->
+                <!-- Items del pedido -->
                 <div class="pedido-items">
                   @for (item of pedido.items; track item.id) {
                     <div class="item">
-                      <span class="cantidad">{{ item.cantidad }}x</span>
-                      <span class="nombre">{{ item.nombre }}</span>
-                      <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
+                      <div class="item-header">
+                        <span class="cantidad">{{ item.cantidad }}x</span>
+                        <span class="nombre">{{ item.nombre }}</span>
+                        <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
+                      </div>
+                      
+                      <!-- Promoción si existe -->
+                      @if (item.promocion) {
+                        <div class="promocion-info">
+                          <span class="promocion-badge">{{ item.promocion.nombre }}</span>
+                          <span class="descuento">-{{ formatearPrecio(item.promocion.descuento) }}</span>
+                        </div>
+                      }
+                      
+                      <!-- Solo Ingredientes Extra -->
+                      @if (obtenerIngredientesExtra(item.personalizaciones).length > 0) {
+                        <div class="extras-section">
+                          <div class="extras-title">Extras</div>
+                          <div class="personalizaciones">
+                            @for (pers of obtenerIngredientesExtra(item.personalizaciones); track pers.ingrediente) {
+                              <div class="personalizacion" [class]="pers.accion">
+                                <span class="accion-icon">+</span>
+                                <span class="ingrediente">{{ pers.ingrediente }}</span>
+                                @if (pers.cantidad > 1) {
+                                  <span class="cantidad">×{{ pers.cantidad }}</span>
+                                }
+                                @if (pers.precio_aplicado > 0) {
+                                  <span class="precio-extra">
+                                    (+{{ formatearPrecio(pers.precio_aplicado) }})
+                                  </span>
+                                }
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
                     </div>
                   }
                 </div>
