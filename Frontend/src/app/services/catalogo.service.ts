@@ -260,6 +260,245 @@ export class CatalogoService {
     return this.http.put<any>(`${this.apiUrl}/comun/iva/actualizar/`, datosIva);
   }
 
+  // ===== 🆕 MÉTODOS PARA CONFIGURACIÓN EMPRESARIAL COMPLETA =====
+
+  /**
+   * Obtener configuración empresarial completa (para edición)
+   */
+  getConfiguracionEmpresa(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/comun/empresa/gestionar/`).pipe(
+      map((response: any) => {
+        console.log('🏢 Configuración empresarial recibida:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ Error al obtener configuración empresarial:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtener datos de empresa para facturas (público)
+   */
+  getDatosEmpresaPublico(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/comun/empresa/configuracion/`).pipe(
+      map((response: any) => {
+        console.log('📄 Datos empresa para facturas:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ Error al obtener datos empresa:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Crear nueva configuración empresarial
+   */
+  crearConfiguracionEmpresa(datosEmpresa: {
+    porcentaje_iva: number;
+    ruc?: string;
+    razon_social?: string;
+    nombre_comercial?: string;
+    direccion?: string;
+    ciudad?: string;
+    provincia?: string;
+    codigo_postal?: string;
+    telefono?: string;
+    email?: string;
+  }): Observable<any> {
+    console.log('🆕 Creando configuración empresarial:', datosEmpresa);
+    
+    return this.http.post<any>(`${this.apiUrl}/comun/empresa/gestionar/`, datosEmpresa).pipe(
+      map((response: any) => {
+        console.log('✅ Configuración empresarial creada:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ Error al crear configuración empresarial:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Actualizar configuración empresarial existente
+   */
+  actualizarConfiguracionEmpresa(datosEmpresa: {
+    porcentaje_iva: number;
+    ruc?: string;
+    razon_social?: string;
+    nombre_comercial?: string;
+    direccion?: string;
+    ciudad?: string;
+    provincia?: string;
+    codigo_postal?: string;
+    telefono?: string;
+    email?: string;
+  }): Observable<any> {
+    console.log('🔄 Actualizando configuración empresarial:', datosEmpresa);
+    
+    return this.http.put<any>(`${this.apiUrl}/comun/empresa/gestionar/`, datosEmpresa).pipe(
+      map((response: any) => {
+        console.log('✅ Configuración empresarial actualizada:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ Error al actualizar configuración empresarial:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Listar todas las configuraciones empresariales (para admin)
+   */
+  listarConfiguracionesEmpresa(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/comun/empresa/configuraciones/`).pipe(
+      map((response: any) => {
+        console.log('📋 Lista de configuraciones:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ Error al listar configuraciones:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Activar una configuración específica
+   */
+  activarConfiguracionEmpresa(configId: number): Observable<any> {
+    console.log(`🔄 Activando configuración ID: ${configId}`);
+    
+    return this.http.patch<any>(`${this.apiUrl}/comun/empresa/activar/${configId}/`, {}).pipe(
+      map((response: any) => {
+        console.log('✅ Configuración activada:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ Error al activar configuración:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Eliminar una configuración específica
+   */
+  eliminarConfiguracionEmpresa(configId: number): Observable<any> {
+    console.log(`🗑️ Eliminando configuración ID: ${configId}`);
+    
+    return this.http.delete<any>(`${this.apiUrl}/comun/empresa/eliminar/${configId}/`).pipe(
+      map((response: any) => {
+        console.log('✅ Configuración eliminada:', response);
+        return response;
+      }),
+      catchError((error: any) => {
+        console.error('❌ Error al eliminar configuración:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ===== 🔧 MÉTODOS DE UTILIDAD =====
+
+  /**
+   * Validar RUC ecuatoriano
+   */
+  validarRucEcuatoriano(ruc: string): boolean {
+    if (!ruc || ruc.length !== 13) {
+      return false;
+    }
+    
+    // Verificar que solo contenga números
+    if (!/^\d{13}$/.test(ruc)) {
+      return false;
+    }
+    
+    // Aquí se podría agregar validación más específica del RUC ecuatoriano
+    // Por ahora, solo verificamos longitud y que sean números
+    return true;
+  }
+
+  /**
+   * Formatear RUC para mostrar (con guiones)
+   */
+  formatearRuc(ruc: string): string {
+    if (!ruc || ruc.length !== 13) {
+      return ruc;
+    }
+    
+    return `${ruc.substring(0, 2)}-${ruc.substring(2, 10)}-${ruc.substring(10, 13)}`;
+  }
+
+  /**
+   * Limpiar RUC (quitar guiones y espacios)
+   */
+  limpiarRuc(ruc: string): string {
+    if (!ruc) {
+      return '';
+    }
+    
+    return ruc.replace(/[-\s]/g, '');
+  }
+
+  /**
+   * Obtener configuración para uso en facturas o documentos
+   * (Método de conveniencia que maneja errores internamente)
+   */
+  obtenerDatosParaFactura(): Observable<any> {
+    return this.getDatosEmpresaPublico().pipe(
+      map((response: any) => {
+        if (response.success && response.data) {
+          return {
+            success: true,
+            configuracion: response.data
+          };
+        } else {
+          // Devolver configuración por defecto si no hay datos
+          return {
+            success: true,
+            configuracion: {
+              ruc: '1791310199001',
+              razon_social: 'KIOSKO TOUCH',
+              nombre_comercial: 'Kiosko de Autoservicio',
+              direccion: 'Dirección no configurada',
+              ciudad: 'Ciudad no configurada',
+              telefono: '',
+              email: '',
+              porcentaje_iva: 15.00
+            },
+            esConfiguracionPorDefecto: true
+          };
+        }
+      }),
+      catchError((error: any) => {
+        console.warn('⚠️ Error al obtener configuración, usando valores por defecto');
+        
+        // En caso de error, devolver configuración por defecto
+        return [{
+          success: true,
+          configuracion: {
+            ruc: '1791310199001',
+            razon_social: 'KIOSKO TOUCH',
+            nombre_comercial: 'Kiosko de Autoservicio',
+            direccion: 'Dirección no configurada',
+            ciudad: 'Ciudad no configurada',
+            telefono: '',
+            email: '',
+            porcentaje_iva: 15.00
+          },
+          esConfiguracionPorDefecto: true,
+          error: error
+        }];
+      })
+    );
+  }
+
   crearPedido(pedidoData: PedidoRequest): Observable<PedidoResponse> {
     return this.http.post<PedidoResponse>(`${this.apiUrl}/ventas/pedidos/crear/`, pedidoData);
   }

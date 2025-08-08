@@ -1,0 +1,277 @@
+.factura-wrapper {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  
+  @media print {
+    padding: 0;
+    margin: 0;
+  }
+}
+
+.factura-container {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  
+  @media print {
+    border: none;
+    border-radius: 0;
+    padding: 10px;
+    font-size: 11px;
+  }
+}
+
+.header {
+  text-align: center;
+  border-bottom: 2px dashed #333;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #2c3e50;
+}
+
+.nombre-comercial {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #34495e;
+}
+
+.ruc {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+.direccion {
+  font-size: 11px;
+  margin-bottom: 5px;
+  line-height: 1.4;
+  color: #7f8c8d;
+}
+
+.contacto {
+  font-size: 11px;
+  margin-bottom: 3px;
+  color: #7f8c8d;
+}
+
+.tipo-documento {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 10px;
+  padding: 5px;
+  background-color: #ecf0f1;
+  border-radius: 4px;
+  color: #2c3e50;
+  
+  @media print {
+    background-color: transparent;
+    border: 1px solid #333;
+  }
+}
+
+.info-section {
+  margin: 15px 0;
+  padding: 10px 0;
+  border-bottom: 1px dashed #bdc3c7;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 5px 0;
+  
+  span:first-child {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  span:last-child {
+    color: #34495e;
+  }
+}
+
+.productos {
+  border-top: 2px dashed #333;
+  border-bottom: 2px dashed #333;
+  padding: 15px 0;
+  margin: 15px 0;
+}
+
+.productos-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
+.producto {
+  margin: 8px 0;
+  padding: 5px 0;
+  border-bottom: 1px dotted #bdc3c7;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.producto-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2px 0;
+  
+  &:first-child {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  &:last-child {
+    font-size: 11px;
+    color: #7f8c8d;
+  }
+}
+
+.totales {
+  text-align: right;
+  margin-top: 15px;
+  padding: 10px 0;
+}
+
+.total-final {
+  font-weight: bold;
+  font-size: 15px;
+  border-top: 2px solid #2c3e50;
+  padding-top: 8px;
+  margin-top: 8px;
+  color: #2c3e50;
+  
+  span {
+    color: #2c3e50;
+  }
+}
+
+.footer {
+  text-align: center;
+  font-size: 11px;
+  margin-top: 20px;
+  border-top: 2px dashed #333;
+  padding-top: 15px;
+  color: #7f8c8d;
+}
+
+.agradecimiento {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #27ae60;
+}
+
+.establecimiento {
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.fecha-pie {
+  margin-bottom: 5px;
+}
+
+.contacto-pie {
+  font-size: 10px;
+  margin-top: 5px;
+}
+
+.acciones {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px 0;
+  border-top: 1px solid #ecf0f1;
+  
+  @media print {
+    display: none;
+  }
+}
+
+.btn-imprimir {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3);
+  
+  &:hover {
+    background: linear-gradient(135deg, #2980b9, #21618c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(52, 152, 219, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 4px rgba(52, 152, 219, 0.3);
+  }
+}
+
+// ✅ ESTILOS ESPECÍFICOS PARA IMPRESIÓN
+@media print {
+  .factura-wrapper {
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .factura-container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 5mm;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  
+  .header {
+    border-bottom: 1px dashed #000;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .productos {
+    border-top: 1px dashed #000;
+    border-bottom: 1px dashed #000;
+    padding: 5px 0;
+    margin: 8px 0;
+  }
+  
+  .footer {
+    border-top: 1px dashed #000;
+    padding-top: 5px;
+    margin-top: 10px;
+  }
+  
+  .total-final {
+    border-top: 1px solid #000;
+  }
+  
+  .acciones {
+    display: none;
+  }
+}

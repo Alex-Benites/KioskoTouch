@@ -1,6 +1,6 @@
 from rest_framework import generics
 from .models import AppkioskoEstados, AppkioskoIva
-from .serializers import EstadosSerializer, AppkioskoIvaSerializer
+from .serializers import EstadosSerializer, AppkioskoIvaSerializer, ConfiguracionEmpresaSerializer, IvaSimpleSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -127,7 +127,7 @@ def iva_actual(request):
         iva_actual = AppkioskoIva.objects.filter(activo=True).first()
 
         if iva_actual:
-            serializer = AppkioskoIvaSerializer(iva_actual)
+            serializer = IvaSimpleSerializer(iva_actual)  # ✅ Usar serializer simple
             return Response({
                 'success': True,
                 'data': serializer.data,
@@ -135,7 +135,7 @@ def iva_actual(request):
             })
         else:
             return Response({
-                'success': False,
+                'success': False, 
                 'data': None,
                 'message': 'No hay configuración de IVA activa'
             })
@@ -274,6 +274,238 @@ def actualizar_iva(request):
         print(f"❌ Error al actualizar IVA: {e}")
         import traceback
         print(f"❌ Traceback: {traceback.format_exc()}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+# ===== 🆕 NUEVAS VIEWS PARA CONFIGURACIÓN EMPRESARIAL =====
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def configuracion_empresa(request):
+    """Obtener datos completos de la empresa para facturas"""
+    try:
+        config_actual = AppkioskoIva.objects.filter(activo=True).first()
+        
+        if config_actual:
+            serializer = ConfiguracionEmpresaSerializer(config_actual)
+            return Response({
+                'success': True,
+                'data': serializer.data,
+                'message': 'Configuración empresarial obtenida correctamente'
+            })
+        else:
+            # Devolver valores por defecto
+            datos_default = {
+                'ruc': '1791310199001',
+                'razon_social': 'KIOSKO TOUCH',
+                'nombre_comercial': 'Kiosko de Autoservicio',
+                'direccion': 'Dirección no configurada',
+                'ciudad': 'Ciudad no configurada',
+                'provincia': '',
+                'telefono': '',
+                'email': '',
+                'porcentaje_iva': 15.00
+            }
+            return Response({
+                'success': True,
+                'data': datos_default,
+                'message': 'Usando configuración por defecto (no hay configuración activa)'
+            })
+
+    except Exception as e:
+        print(f"❌ Error al obtener configuración empresa: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@api_view(['GET', 'POST', 'PUT'])
+@permission_classes([IsAuthenticated])
+def gestionar_configuracion_empresa(request):
+    """CRUD completo para configuración empresarial"""
+    
+    if request.method == 'GET':
+        """Obtener configuración empresarial actual para edición"""
+        try:
+            config_actual = AppkioskoIva.objects.filter(activo=True).first()
+            
+            if config_actual:
+                serializer = AppkioskoIvaSerializer(config_actual)
+                return Response({
+                    'success': True,
+                    'data': serializer.data,
+                    'message': 'Configuración actual obtenida'
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'data': None,
+                    'message': 'No hay configuración activa'
+                })
+
+        except Exception as e:
+            print(f"❌ Error en GET configuración: {e}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        """Crear nueva configuración empresarial"""
+        try:
+            print("📥 Creando nueva configuración empresarial:", request.data)
+            
+            serializer = AppkioskoIvaSerializer(data=request.data)
+            
+            if serializer.is_valid():
+                # Desactivar configuraciones existentes
+                AppkioskoIva.objects.filter(activo=True).update(activo=False)
+                
+                # Crear nueva configuración activa
+                nueva_config = serializer.save(activo=True)
+                
+                return Response({
+                    'success': True,
+                    'data': serializer.data,
+                    'message': 'Configuración empresarial creada correctamente'
+                }, status=201)
+            else:
+                return Response({
+                    'success': False,
+                    'errors': serializer.errors
+                }, status=400)
+                
+        except Exception as e:
+            print(f"❌ Error al crear configuración: {e}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'PUT':
+        """Actualizar configuración empresarial existente"""
+        try:
+            print("📥 Actualizando configuración empresarial:", request.data)
+            
+            config_actual = AppkioskoIva.objects.filter(activo=True).first()
+            
+            if not config_actual:
+                # Si no hay configuración activa, crear una nueva
+                return gestionar_configuracion_empresa(request.POST if hasattr(request, 'POST') else request)
+            
+            serializer = AppkioskoIvaSerializer(config_actual, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                config_actualizada = serializer.save()
+                
+                return Response({
+                    'success': True,
+                    'data': serializer.data,
+                    'message': 'Configuración empresarial actualizada correctamente'
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'errors': serializer.errors
+                }, status=400)
+                
+        except Exception as e:
+            print(f"❌ Error al actualizar configuración: {e}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def listar_configuraciones(request):
+    """Listar todas las configuraciones (para admin)"""
+    try:
+        configuraciones = AppkioskoIva.objects.all().order_by('-created_at')
+        serializer = AppkioskoIvaSerializer(configuraciones, many=True)
+        
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'count': configuraciones.count(),
+            'message': f'Se encontraron {configuraciones.count()} configuraciones'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error al listar configuraciones: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def activar_configuracion(request, config_id):
+    """Activar una configuración específica"""
+    try:
+        config = AppkioskoIva.objects.get(id=config_id)
+        
+        # Desactivar todas las demás
+        AppkioskoIva.objects.filter(activo=True).update(activo=False)
+        
+        # Activar la seleccionada
+        config.activo = True
+        config.save()
+        
+        serializer = AppkioskoIvaSerializer(config)
+        
+        return Response({
+            'success': True,
+            'data': serializer.data,
+            'message': f'Configuración {config_id} activada correctamente'
+        })
+        
+    except AppkioskoIva.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': 'Configuración no encontrada'
+        }, status=404)
+    except Exception as e:
+        print(f"❌ Error al activar configuración: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def eliminar_configuracion(request, config_id):
+    """Eliminar una configuración (solo si no está activa)"""
+    try:
+        config = AppkioskoIva.objects.get(id=config_id)
+        
+        if config.activo:
+            return Response({
+                'success': False,
+                'error': 'No se puede eliminar la configuración activa'
+            }, status=400)
+        
+        config.delete()
+        
+        return Response({
+            'success': True,
+            'message': f'Configuración {config_id} eliminada correctamente'
+        })
+        
+    except AppkioskoIva.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': 'Configuración no encontrada'
+        }, status=404)
+    except Exception as e:
+        print(f"❌ Error al eliminar configuración: {e}")
         return Response({
             'success': False,
             'error': str(e)

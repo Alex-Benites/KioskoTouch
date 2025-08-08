@@ -1,163 +1,284 @@
 <app-header-admin></app-header-admin>
 
-<div class="iva-container">
-  <p class="breadcrumb-title">GESTIÓN DE PRODUCTOS</p>
-  <h1 class="form-main-title">Configuración de IVA</h1>
+<div class="config-container">
+  <div class="header-section">
+    <p class="breadcrumb">CONFIGURACIÓN</p>
+    <h1 class="page-title">Configuración Empresarial</h1>
+  </div>
 
-  <div class="iva-content">
+  <div class="content-grid">
 
-    
-    <mat-card class="iva-info-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>info</mat-icon>
-          IVA Actual del Sistema
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        @if (loading) {
-          <div class="loading-state">
-            <mat-icon class="loading-icon">hourglass_empty</mat-icon>
-            <p>Cargando configuración...</p>
+    <!-- ✅ CARD IZQUIERDA: Estado Actual -->
+    <div class="status-card">
+      <div class="card-header">
+        <h2>Estado Actual</h2>
+      </div>
+      
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando...</p>
+        </div>
+      } @else if (configActual) {
+        <div class="status-content">
+          <div class="status-item">
+            <span class="label">IVA</span>
+            <span class="value">{{ configActual.porcentaje_iva }}%</span>
           </div>
-        } @else if (ivaActual) {
-          <div class="iva-actual-display">
-            <div class="iva-percentage">
-              <span class="percentage-number">{{ ivaActual.porcentaje_iva }}%</span>
-              <span class="percentage-label">IVA Vigente</span>
-            </div>
-            <div class="iva-status">
-              <mat-icon class="status-active">check_circle</mat-icon>
-              <span>Activo</span>
-            </div>
+          <div class="status-item">
+            <span class="label">Empresa</span>
+            <span class="value">{{ configActual.razon_social || 'No configurado' }}</span>
           </div>
-        } @else {
-          <div class="no-iva-state">
-            <mat-icon class="warning-icon">warning</mat-icon>
-            <p>No hay configuración de IVA definida</p>
-            <small>Configure el IVA para el cálculo correcto de precios</small>
+          <div class="status-item">
+            <span class="label">RUC</span>
+            <span class="value">{{ configActual.ruc || 'No configurado' }}</span>
           </div>
-        }
-      </mat-card-content>
-    </mat-card>
-
-    
-    <mat-card class="iva-form-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>{{ isEditMode ? 'edit' : 'add' }}</mat-icon>
-          {{ isEditMode ? 'Actualizar IVA' : 'Configurar IVA' }}
-        </mat-card-title>
-        <mat-card-subtitle>
-          {{ isEditMode ? 'Modifique el porcentaje de IVA actual' : 'Establezca el porcentaje de IVA inicial' }}
-        </mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content>
-        <form [formGroup]="ivaForm" (ngSubmit)="onSubmit()" class="iva-form">
-
-          <div class="form-field-container">
-            <mat-form-field appearance="outline" class="iva-field">
-              <mat-label>Porcentaje de IVA</mat-label>
-              <input
-                matInput
-                type="number"
-                formControlName="porcentaje_iva"
-                placeholder="Ej: 15 o 15.00"
-                step="0.01"
-                min="0"
-                max="99.99"
-                class="iva-input">
-              <span matSuffix>%</span>
-              
-              <mat-hint>Ingrese el porcentaje (puede ser entero: 15, o decimal: 15.00)</mat-hint>
-              @if (porcentajeError) {
-                <mat-error>{{ porcentajeError }}</mat-error>
-              }
-            </mat-form-field>
-          </div>
-
-          
-          @if (ivaForm.get('porcentaje_iva')?.value && ivaForm.get('porcentaje_iva')?.valid) {
-            <div class="calculation-preview">
-              <h3>Vista Previa del Cálculo</h3>
-              <div class="preview-example">
-                <div class="example-row">
-                  <span>Subtotal:</span>
-                  <span>$100.00</span>
-                </div>
-                <div class="example-row iva-row">
-                  <span>IVA ({{ ivaForm.get('porcentaje_iva')?.value }}%):</span>
-                  <span>+${{ (100 * (ivaForm.get('porcentaje_iva')?.value / 100)).toFixed(2) }}</span>
-                </div>
-                <div class="example-row total-row">
-                  <span><strong>Total:</strong></span>
-                  <span><strong>${{ (100 + (100 * (ivaForm.get('porcentaje_iva')?.value / 100))).toFixed(2) }}</strong></span>
-                </div>
-              </div>
-            </div>
-          }
-
-          
-          <div class="form-actions">
-            <button
-              type="button"
-              mat-stroked-button
-              color="warn"
-              (click)="resetearFormulario()"
-              [disabled]="loading">
-              <mat-icon>refresh</mat-icon>
-              Resetear
-            </button>
-
-            <button
-              type="submit"
-              mat-raised-button
-              color="primary"
-              [disabled]="!ivaForm.valid || loading"
-              class="submit-button">
-              @if (loading) {
-                <ng-container>
-                  <mat-icon class="loading-spinner">hourglass_empty</mat-icon>
-                  Guardando...
-                </ng-container>
-              } @else {
-                <ng-container>
-                  {{ isEditMode ? 'Actualizar IVA' : 'Crear IVA' }}
-                </ng-container>
-              }
-            </button>
-          </div>
-
-        </form>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- ✅ INFORMACIÓN ADICIONAL -->
-    <mat-card class="info-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>help</mat-icon>
-          Información Importante
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="info-list">
-          <div class="info-item">
-            <mat-icon class="info-bullet">fiber_manual_record</mat-icon>
-            <span>El IVA se aplicará automáticamente a todos los productos del sistema</span>
-          </div>
-          <div class="info-item">
-            <mat-icon class="info-bullet">fiber_manual_record</mat-icon>
-            <span>Solo puede haber una configuración de IVA activa a la vez</span>
-          </div>
-          <div class="info-item">
-            <mat-icon class="info-bullet">fiber_manual_record</mat-icon>
-            <span>Los cambios se aplicarán inmediatamente en el sistema</span>
+          <div class="status-item">
+            <span class="label">Dirección</span>
+            <span class="value">{{ configActual.direccion || 'No configurado' }}</span>
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+      } @else {
+        <div class="no-config">
+          <p>Sin configuración</p>
+          <span>Configure los datos empresariales</span>
+        </div>
+      }
+    </div>
+
+    <!-- ✅ CARD CENTRO: Formulario Principal -->
+    <div class="form-card">
+      <div class="card-header">
+        <h2>{{ isEditMode ? 'Actualizar' : 'Configurar' }} Empresa</h2>
+      </div>
+
+      <form [formGroup]="empresaForm" (ngSubmit)="onSubmit()" class="config-form">
+        
+        <!-- IVA Section -->
+        <div class="form-section">
+          <h3 class="section-title">Tributario</h3>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input
+                type="number"
+                formControlName="porcentaje_iva"
+                placeholder=" "
+                class="form-input"
+                id="iva"
+                step="0.01"
+                min="0"
+                max="99.99">
+              <label for="iva" class="form-label">Porcentaje de IVA *</label>
+              <span class="input-suffix">%</span>
+            </div>
+            @if (porcentajeError) {
+              <span class="error-text">{{ porcentajeError }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Empresa Section -->
+        <div class="form-section">
+          <h3 class="section-title">Empresa</h3>
+          
+          <div class="input-row">
+            <div class="input-group">
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  formControlName="ruc"
+                  placeholder=" "
+                  class="form-input"
+                  id="ruc"
+                  maxlength="13">
+                <label for="ruc" class="form-label">RUC *</label>
+              </div>
+              @if (rucError) {
+                <span class="error-text">{{ rucError }}</span>
+              }
+            </div>
+
+            <div class="input-group">
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  formControlName="razon_social"
+                  placeholder=" "
+                  class="form-input"
+                  id="razonSocial"
+                  maxlength="300">
+                <label for="razonSocial" class="form-label">Razón Social *</label>
+              </div>
+              @if (razonSocialError) {
+                <span class="error-text">{{ razonSocialError }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input
+                type="text"
+                formControlName="nombre_comercial"
+                placeholder=" "
+                class="form-input"
+                id="nombreComercial"
+                maxlength="300">
+              <label for="nombreComercial" class="form-label">Nombre Comercial</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ubicación Section -->
+        <div class="form-section">
+          <h3 class="section-title">Ubicación</h3>
+          
+          <div class="input-group">
+            <div class="input-wrapper">
+              <textarea
+                formControlName="direccion"
+                placeholder=" "
+                class="form-input form-textarea"
+                id="direccion"
+                rows="3"
+                maxlength="500"></textarea>
+              <label for="direccion" class="form-label">Dirección *</label>
+            </div>
+            @if (direccionError) {
+              <span class="error-text">{{ direccionError }}</span>
+            }
+          </div>
+
+          <div class="input-row">
+            <div class="input-group">
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  formControlName="ciudad"
+                  placeholder=" "
+                  class="form-input"
+                  id="ciudad"
+                  maxlength="100">
+                <label for="ciudad" class="form-label">Ciudad</label>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  formControlName="provincia"
+                  placeholder=" "
+                  class="form-input"
+                  id="provincia"
+                  maxlength="100">
+                <label for="provincia" class="form-label">Provincia</label>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  formControlName="codigo_postal"
+                  placeholder=" "
+                  class="form-input"
+                  id="codigoPostal"
+                  maxlength="10">
+                <label for="codigoPostal" class="form-label">Código Postal</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contacto Section -->
+        <div class="form-section">
+          <h3 class="section-title">Contacto</h3>
+          
+          <div class="input-row">
+            <div class="input-group">
+              <div class="input-wrapper">
+                <input
+                  type="tel"
+                  formControlName="telefono"
+                  placeholder=" "
+                  class="form-input"
+                  id="telefono"
+                  maxlength="20">
+                <label for="telefono" class="form-label">Teléfono</label>
+              </div>
+              @if (telefonoError) {
+                <span class="error-text">{{ telefonoError }}</span>
+              }
+            </div>
+
+            <div class="input-group">
+              <div class="input-wrapper">
+                <input
+                  type="email"
+                  formControlName="email"
+                  placeholder=" "
+                  class="form-input"
+                  id="email"
+                  maxlength="254">
+                <label for="email" class="form-label">Email</label>
+              </div>
+              @if (emailError) {
+                <span class="error-text">{{ emailError }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="resetearFormulario()"
+            [disabled]="loading">
+            Resetear
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!empresaForm.valid || loading">
+            @if (loading) {
+              <span class="btn-loading">Guardando...</span>
+            } @else {
+              <span>{{ isEditMode ? 'Actualizar' : 'Guardar' }}</span>
+            }
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ✅ CARD DERECHA: Información -->
+    <div class="info-card">
+      <div class="card-header">
+        <h2>Información</h2>
+      </div>
+      
+      <div class="info-content">
+        <div class="info-item">
+          <span>• Los campos con (*) son obligatorios</span>
+        </div>
+        <div class="info-item">
+          <span>• El IVA se aplica a todos los productos</span>
+        </div>
+        <div class="info-item">
+          <span>• Solo una configuración activa por vez</span>
+        </div>
+        <div class="info-item">
+          <span>• Los datos se usan en facturas</span>
+        </div>
+        <div class="info-item">
+          <span>• Los cambios se aplican inmediatamente</span>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>

@@ -1,0 +1,89 @@
+<div class="factura-wrapper" *ngIf="datosFactura">
+  <div class="factura-container">
+    <!-- Encabezado de la empresa -->
+    <div class="header">
+      <div class="logo">{{ configuracionEmpresa.razon_social }}</div>
+      <div class="nombre-comercial" *ngIf="configuracionEmpresa.nombre_comercial">
+        {{ configuracionEmpresa.nombre_comercial }}
+      </div>
+      <div class="ruc">RUC: {{ configuracionEmpresa.ruc }}</div>
+      <div class="direccion">{{ obtenerDireccionCompleta() }}</div>
+      <div class="contacto" *ngIf="configuracionEmpresa.telefono">
+        Tel: {{ configuracionEmpresa.telefono }}
+      </div>
+      <div class="contacto" *ngIf="configuracionEmpresa.email">
+        Email: {{ configuracionEmpresa.email }}
+      </div>
+      <div class="tipo-documento">Factura Simplificada</div>
+    </div>
+
+    <!-- Información del pedido -->
+    <div class="info-section">
+      <div class="info-row">
+        <span>Fecha:</span>
+        <span>{{ fechaActual }}</span>
+      </div>
+      <div class="info-row">
+        <span>Orden:</span>
+        <span>{{ datosFactura.pedido_id }}</span>
+      </div>
+      <div class="info-row">
+        <span>Cliente:</span>
+        <span>{{ datosFactura.cliente }}</span>
+      </div>
+      <div class="info-row" *ngIf="datosFactura.turno">
+        <span>Turno:</span>
+        <span>{{ datosFactura.turno }}</span>
+      </div>
+    </div>
+
+    <!-- Lista de productos -->
+    <div class="productos">
+      <div class="productos-title">PRODUCTOS:</div>
+      <div class="producto" *ngFor="let producto of datosFactura.productos">
+        <div class="producto-line">
+          <span>{{ producto.nombre }}</span>
+        </div>
+        <div class="producto-line">
+          <span>{{ producto.cantidad }} x ${{ producto.precio.toFixed(2) }}</span>
+          <span>${{ calcularSubtotalProducto(producto.cantidad, producto.precio).toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="totales">
+      <div class="info-row">
+        <span>Subtotal:</span>
+        <span>${{ datosFactura.subtotal.toFixed(2) }}</span>
+      </div>
+      <div class="info-row">
+        <span>IVA ({{ configuracionEmpresa.porcentaje_iva }}%):</span>
+        <span>${{ datosFactura.iva.toFixed(2) }}</span>
+      </div>
+      <div class="info-row total-final">
+        <span>TOTAL:</span>
+        <span>${{ datosFactura.total.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <!-- Pie de página -->
+    <div class="footer">
+      <div class="agradecimiento">¡Gracias por su compra!</div>
+      <div class="establecimiento">
+        {{ configuracionEmpresa.nombre_comercial || configuracionEmpresa.razon_social }}
+      </div>
+      <div class="fecha-pie">{{ fechaHora }}</div>
+      <div class="contacto-pie" *ngIf="configuracionEmpresa.email">
+        {{ configuracionEmpresa.email }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón de impresión manual (opcional) -->
+  <div class="acciones" *ngIf="!autoImprimir">
+    <button class="btn-imprimir" (click)="imprimirFactura()">
+      🖨️ Imprimir Factura
+    </button>
+  </div>
+</div>

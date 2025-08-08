@@ -7,18 +7,36 @@ import { PinpadService, EstadoPago, PagoResponse } from '../../services/pinpad.s
 import { Subscription } from 'rxjs';
 import { PedidoService } from '../../services/pedido.service';
 import { CatalogoService } from '../../services/catalogo.service';
+import { FacturaPagoComponent } from './factura/factura-pago.component';
+import { ViewChild } from '@angular/core';
+// ✅ NUEVA INTERFAZ PARA CONFIGURACIÓN EMPRESARIAL
+interface ConfiguracionEmpresarial {
+  ruc: string;
+  razon_social: string;
+  nombre_comercial?: string;
+  direccion: string;
+  ciudad?: string;
+  provincia?: string;
+  telefono?: string;
+  email?: string;
+  porcentaje_iva: number;
+}
 
 @Component({
   selector: 'app-instruccion-pago',
   standalone: true,
   imports: [
     CommonModule,
-    PublicidadSectionComponent
+    PublicidadSectionComponent,
+    FacturaPagoComponent,
+    
   ],
   templateUrl: './instruccion-pago.component.html',
   styleUrls: ['./instruccion-pago.component.scss']
 })
 export class InstruccionPagoComponent implements OnInit, OnDestroy {
+  @ViewChild(FacturaPagoComponent) facturaComponent?: FacturaPagoComponent;
+  private facturaYaImpresa: boolean = false;
 
   tipoPago: 'tarjeta' | 'efectivo' | 'completado' = 'tarjeta';
   numeroOrden: string = '21';
@@ -35,7 +53,24 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
 
   private renderer = inject(Renderer2);
   private catalogoService = inject(CatalogoService);
-  ivaActual: number = 15.0; // Valor por defecto, se cargará dinámicamente
+
+  datosFactura?: any;
+  mostrarFactura: boolean = false;
+
+  
+  // ✅ NUEVA: Configuración empresarial con valores por defecto
+  configuracionEmpresa: ConfiguracionEmpresarial = {
+    ruc: '1791310199001',
+    razon_social: 'KIOSKO TOUCH',
+    nombre_comercial: 'Kiosko de Autoservicio',
+    direccion: 'Dirección no configurada',
+    ciudad: 'Ciudad no configurada',
+    telefono: '',
+    email: '',
+    porcentaje_iva: 15.0
+  };
+  
+  ivaActual: number = 15.0;
   productosCarrito: any[] = [];
 
   private estadoPagoSubscription?: Subscription;
@@ -51,6 +86,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     
     this.pinpadService.reiniciarEstado();
     
+    // ✅ CARGAR CONFIGURACIÓN EMPRESARIAL AL INICIO    
     this.route.queryParams.subscribe(params => {
       this.tipoPago = params['tipo'] || 'tarjeta';
       this.numeroOrden = params['orden'] || this.generarNumeroOrden();
@@ -209,7 +245,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
    * MÉTODO PARA CANCELAR PAGO - LÓGICA FINAL CORREGIDA
    */
   cancelarPago(): void {
-    
+    this.facturaYaImpresa = false;
     this.pinpadService.reiniciarEstado();
     
     this.procesandoPago = false;
@@ -257,9 +293,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
 
       case 'efectivo':
         this.cargarDatosParaImpresion();
-        setTimeout(() => {
-          this.imprimirFacturaAutomatica();
-        }, 500);
         this.tipoPago = 'completado';
         break;
 
@@ -270,23 +303,53 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * NUEVO: CONFIRMAR PAGO Y FINALIZAR COMPLETAMENTE
+   * ✅ ACTUALIZADO: CONFIRMAR PAGO Y FINALIZAR CON DESCUENTO DE STOCK
    */
   private confirmarPagoYFinalizar(): void {
+    console.log('💳 Iniciando confirmación de pago con descuento automático de stock...');
     
     const pedidoCreado = this.pedidoService.getPedidoCreado();
     
     if (pedidoCreado && pedidoCreado.numero) {
+      // ✅ DETERMINAR MÉTODO DE PAGO
+      const metodoPago = this.tipoPago === 'tarjeta' ? 'tarjeta' : 'efectivo';
       
-      this.pedidoService.confirmarPagoBackend(pedidoCreado.numero).subscribe({
-        next: () => {
-          this.finalizarCompletamente();
-        },
-        error: (error) => {
-          this.finalizarCompletamente();
-        }
+      console.log('📋 Confirmando pago:', {
+        pedido: pedidoCreado.numero,
+        metodo: metodoPago
       });
+      
+      // ✅ USAR EL NUEVO MÉTODO QUE DESCUENTA STOCK AUTOMÁTICAMENTE
+      this.pedidoService.confirmarPagoConStock(pedidoCreado.numero, metodoPago)
+        .subscribe({
+          next: (response) => {
+            console.log('✅ Pago confirmado exitosamente:', response);
+            
+            // ✅ MOSTRAR INFORMACIÓN DEL STOCK ACTUALIZADO
+            if (response.stock_actualizado && response.stock_actualizado.length > 0) {
+              console.log('📊 Ingredientes con stock actualizado:');
+              response.stock_actualizado.forEach((item: any) => {
+                console.log(`  - ${item.ingrediente}: ${item.stock_anterior} → ${item.stock_actual} ${item.unidad} (-${item.cantidad_descontada})`);
+              });
+            }
+            
+            this.finalizarCompletamente();
+          },
+          error: (error) => {
+            console.error('❌ Error al confirmar pago:', error);
+            
+            // Mostrar mensaje de error si es necesario
+            if (error.error?.mensaje) {
+              console.warn('⚠️ Mensaje del servidor:', error.error.mensaje);
+            }
+            
+            // ✅ FINALIZAR DE TODAS FORMAS PARA NO BLOQUEAR AL USUARIO
+            // (El pedido ya se creó, solo falló el descuento de stock)
+            this.finalizarCompletamente();
+          }
+        });
     } else {
+      console.warn('⚠️ No se encontró pedido creado para confirmar');
       this.finalizarCompletamente();
     }
   }
@@ -294,16 +357,8 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   /**
    * NUEVO: FINALIZAR COMPLETAMENTE Y LIMPIAR TODO
    */
-  /*
   private finalizarCompletamente(): void {
-    this.pedidoService.limpiarTodoCompletamente();
-    
-    this.pinpadService.reiniciarEstado();
-    
-    this.router.navigate(['/cliente/home']);
-  }*/
-
-  private finalizarCompletamente(): void {
+    this.facturaYaImpresa = false;
     this.pedidoService.limpiarTodoCompletamente();
     this.pinpadService.reiniciarEstado();
     this.router.navigate(['/cliente/home']);
@@ -314,17 +369,10 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
    */
   private completarPago(): void {
     
-    // ❌ NO LIMPIAR CARRITO AQUÍ - Solo cambiar estado visual
-    // El carrito se limpiará cuando el usuario presione "Finalizar pedido"
-    
     this.tipoPago = 'completado';
     this.estadoPago = { estado: 'exitoso', mensaje: 'Pago completado exitosamente' };
     
     this.cargarDatosParaImpresion();
-    
-    setTimeout(() => {
-      this.imprimirFacturaAutomatica();
-    }, 500);
     
     setTimeout(() => {
       this.pinpadService.reiniciarEstado();
@@ -378,326 +426,176 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     });
   }
 
-
-
-
   /**
-   * CARGAR DATOS DEL CARRITO PARA IMPRESIÓN
+   * ✅ ACTUALIZADO: CARGAR DATOS DEL CARRITO PARA IMPRESIÓN CON DEBUG
    */
   private cargarDatosParaImpresion(): void {
-    // Obtener productos del carrito
-    this.productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
+    console.log('📋 Iniciando carga de datos para impresión...');
     
-    // Cargar IVA actual
-    this.catalogoService.getIvaActual().subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.ivaActual = response.data.porcentaje_iva;
-        } else {
-          this.ivaActual = 15.0;
+    this.productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
+    console.log('🛒 Productos del carrito completos:', this.productosCarrito);
+    
+    // ✅ CREAR ARRAY DE PROMESAS PARA OBTENER NOMBRES REALES
+    const promesasNombres = this.productosCarrito.map(async (p, index) => {
+      console.log(`📦 Procesando producto ${index + 1}:`, p);
+      
+      try {
+        let nombreProducto = p.nombre || `Producto ${p.producto_id}`;
+        
+        // ✅ SI ES PRODUCTO, CONSULTAR NOMBRE REAL
+        if (p.tipo === 'producto' && p.producto_id) {
+          const producto = await this.catalogoService.obtenerProductoPorId(p.producto_id).toPromise();
+          if (producto && producto.nombre) {
+            nombreProducto = producto.nombre;
+            console.log(`✅ Nombre real obtenido: "${nombreProducto}"`);
+          }
         }
-      },
-      error: (error) => {
-        this.ivaActual = 15.0;
+        
+        // ✅ SI ES MENÚ, CONSULTAR NOMBRE REAL
+        if (p.tipo === 'menu' && p.menu_id) {
+          const menu = await this.catalogoService.obtenerMenuPorId(p.menu_id).toPromise();
+          if (menu && menu.nombre) {
+            nombreProducto = menu.nombre;
+            console.log(`✅ Nombre de menú obtenido: "${nombreProducto}"`);
+          }
+        }
+        
+        return {
+          nombre: nombreProducto,
+          cantidad: p.cantidad,
+          precio: p.precio_unitario
+        };
+        
+      } catch (error) {
+        console.warn(`⚠️ Error al obtener nombre del producto ${p.producto_id}:`, error);
+        return {
+          nombre: p.nombre || `Producto ${p.producto_id}`,
+          cantidad: p.cantidad,
+          precio: p.precio_unitario
+        };
       }
+    });
+    
+    // ✅ ESPERAR A QUE TODAS LAS CONSULTAS TERMINEN
+    Promise.all(promesasNombres).then(productosConNombres => {
+      this.datosFactura = {
+        pedido_id: this.numeroOrden,
+        cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
+        productos: productosConNombres,
+        subtotal: this.subtotal,
+        iva: this.iva,
+        total: this.montoTotal,
+        turno: this.numeroTurno
+      };
+      
+      this.mostrarFactura = true;
+      console.log('📋 Datos de factura preparados con nombres reales:', this.datosFactura);
+      
+      // ✅ IMPRIMIR AUTOMÁTICAMENTE DESPUÉS DE CARGAR DATOS
+      this.imprimirFacturaAutomatica();
+      
+    }).catch(error => {
+      console.error('❌ Error al procesar nombres de productos:', error);
+      
+      // ✅ FALLBACK: USAR DATOS ORIGINALES
+      this.datosFactura = {
+        pedido_id: this.numeroOrden,
+        cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
+        productos: this.productosCarrito.map(p => ({
+          nombre: p.nombre || `Producto ${p.producto_id}`,
+          cantidad: p.cantidad,
+          precio: p.precio_unitario
+        })),
+        subtotal: this.subtotal,
+        iva: this.iva,
+        total: this.montoTotal,
+        turno: this.numeroTurno
+      };
+      
+      this.mostrarFactura = true;
+      
+      // ✅ IMPRIMIR INCLUSO CON DATOS FALLBACK
+      this.imprimirFacturaAutomatica();
     });
   }
 
+
   /**
-   * IMPRIMIR FACTURA AUTOMÁTICAMENTE TRAS PAGO EXITOSO
-   */
+   * ✅ MÉTODO SIMPLIFICADO PARA IMPRESIÓN AUTOMÁTICA
+  */ 
   private imprimirFacturaAutomatica(): void {
-
-    // Preparar datos de la factura
-    const factura = {
-      pedido_id: this.numeroOrden,
-      cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
-      productos: this.productosCarrito.map(p => ({
-        nombre: this.obtenerNombreProducto(p),
-        cantidad: p.cantidad,
-        precio: p.precio_unitario
-      })),
-      subtotal: this.subtotal,
-      iva: this.iva,
-      total: this.montoTotal
-    };
-
-    // Imprimir usando la nueva lógica sin ventanas
-    this.imprimirFacturaFrontend(factura);
+    if (this.facturaYaImpresa) {
+      return;
+    }
+    
+    if (!this.datosFactura) {
+      return;
+    }
+    
+    this.facturaYaImpresa = true;
+    // ✅ ESPERAR A QUE EL COMPONENTE ESTÉ LISTO Y LUEGO IMPRIMIR
+    setTimeout(() => {
+      if (this.facturaComponent) {
+        console.log('✅ Componente de factura encontrado, iniciando impresión...');
+        this.facturaComponent.imprimirFactura();
+      } else {
+        console.warn('⚠️ Componente de factura no disponible, usando método directo...');
+        this.imprimirFacturaDirecta();
+      }
+    }, 800); // Aumentar tiempo para asegurar que el componente esté listo
   }
 
   /**
-   * OBTENER NOMBRE DEL PRODUCTO O MENÚ
+   * ✅ MÉTODO DIRECTO COMO FALLBACK
+   */
+  private imprimirFacturaDirecta(): void {
+    console.log('🖨️ Imprimiendo factura directamente...');
+    
+    // Crear una instancia temporal del componente para imprimir
+    const tempComponent = new FacturaPagoComponent();
+    tempComponent.datosFactura = this.datosFactura!;
+    tempComponent.autoImprimir = true;
+    tempComponent.ngOnInit();
+    
+    setTimeout(() => {
+      tempComponent.imprimirFactura();
+    }, 500);
+  }
+
+  /**
+   * ✅ OBTENER NOMBRE DEL PRODUCTO O MENÚ CON DEBUG
    */
   private obtenerNombreProducto(item: any): string {
+    // ✅ AGREGAR CONSOLE.LOG AQUÍ PARA VER LOS CAMPOS
+    console.log('🔍 DEBUG - Item completo:', item);
+    console.log('🔍 DEBUG - Campos del item:', Object.keys(item));
+    console.log('🔍 DEBUG - Tipo:', item.tipo);
+    console.log('🔍 DEBUG - Producto ID:', item.producto_id);
+    console.log('🔍 DEBUG - Menu ID:', item.menu_id);
+    console.log('🔍 DEBUG - Nombre directo:', item.nombre);
+    console.log('🔍 DEBUG - Producto info:', item.producto_info);
+    console.log('🔍 DEBUG - Menu info:', item.menu_info);
+    
+    // ✅ LÓGICA MEJORADA PARA OBTENER EL NOMBRE
+    if (item.nombre) {
+      console.log('✅ Usando nombre directo:', item.nombre);
+      return item.nombre;
+    }
+    
     if (item.tipo === 'menu') {
+      if (item.menu_info?.nombre) {
+        console.log('✅ Usando nombre de menu_info:', item.menu_info.nombre);
+        return item.menu_info.nombre;
+      }
+      console.log('⚠️ Menu sin nombre, usando fallback');
       return `Menú ${item.menu_id}`;
     } else {
+      if (item.producto_info?.nombre) {
+        console.log('✅ Usando nombre de producto_info:', item.producto_info.nombre);
+        return item.producto_info.nombre;
+      }
+      console.log('⚠️ Producto sin nombre, usando fallback');
       return `Producto ${item.producto_id}`;
     }
   }
-
-  /**
-   * MÉTODO PARA IMPRESIÓN COMPLETAMENTE INVISIBLE (SIN VENTANAS NI IFRAMES)
-   */
-  private imprimirFacturaFrontend(factura: any): void {
-
-    try {
-      this.imprimirContenidoDirecto(factura);
-      
-    } catch (error) {
-      this.enviarFacturaABackend(factura);
-    }
-  }
-
-  /**
-   * IMPRIMIR MANIPULANDO EL DOM ACTUAL SIN VENTANAS
-   */
-  private imprimirContenidoDirecto(factura: any): void {
-    const contenidoOriginal = document.body.innerHTML;
-    const tituloOriginal = document.title;
-    const style = document.createElement('style');
-    
-    try {
-      const facturaHTML = this.generarHTMLFacturaDirecto(factura);
-      
-      style.innerHTML = this.obtenerEstilosImpresion();
-      document.head.appendChild(style);
-      
-      document.title = `Factura - ${factura.pedido_id}`;
-      document.body.innerHTML = facturaHTML;
-      
-      
-      requestAnimationFrame(() => {
-        window.print();
-        
-        setTimeout(() => {
-          try {
-            document.body.innerHTML = contenidoOriginal;
-            document.title = tituloOriginal;
-            
-            if (style.parentNode) {
-              document.head.removeChild(style);
-            }
-            
-            
-            this.reinicializarComponente();
-            
-            window.location.reload();
-          } catch (restoreError) {}
-        }, 50);
-      });
-      
-    } catch (error) {
-      document.body.innerHTML = contenidoOriginal;
-      document.title = tituloOriginal;
-      if (style.parentNode) {
-        document.head.removeChild(style);
-      }
-    }
-  }
-
-  /**
-   * GENERAR HTML SIMPLIFICADO PARA IMPRESIÓN DIRECTA
-   */
-  private generarHTMLFacturaDirecto(factura: any): string {
-    const fecha = new Date().toLocaleString('es-EC', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    return `
-      <div class="factura-container">
-        <div class="header">
-          <div class="logo">KIOSKO TOUCH</div>
-          <div>RUC: 1791310199001</div>
-          <div>Factura Simplificada</div>
-        </div>
-        
-        <div class="info-section">
-          <div class="info-row">
-            <span>Fecha:</span>
-            <span>${fecha}</span>
-          </div>
-          <div class="info-row">
-            <span>Orden:</span>
-            <span>${factura.pedido_id}</span>
-          </div>
-          <div class="info-row">
-            <span>Cliente:</span>
-            <span>${factura.cliente}</span>
-          </div>
-        </div>
-        
-        <div class="productos">
-          <div class="productos-title">PRODUCTOS:</div>
-          ${factura.productos.map((p: any) => `
-            <div class="producto">
-              <div class="producto-line">
-                <span>${p.nombre}</span>
-              </div>
-              <div class="producto-line">
-                <span>${p.cantidad} x $${p.precio.toFixed(2)}</span>
-                <span>$${(p.cantidad * p.precio).toFixed(2)}</span>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div class="totales">
-          <div class="info-row">
-            <span>Subtotal:</span>
-            <span>$${factura.subtotal.toFixed(2)}</span>
-          </div>
-          <div class="info-row">
-            <span>IVA (${this.ivaActual}%):</span>
-            <span>$${factura.iva.toFixed(2)}</span>
-          </div>
-          <div class="info-row total-final">
-            <span>TOTAL:</span>
-            <span>$${factura.total.toFixed(2)}</span>
-          </div>
-        </div>
-        
-        <div class="footer">
-          <div>¡Gracias por su compra!</div>
-          <div>Kiosco de Autoservicio</div>
-          <div>${fecha}</div>
-        </div>
-      </div>`;
-  }
-
-  /**
-   * OBTENER ESTILOS CSS PARA IMPRESIÓN TÉRMICA
-   */
-  private obtenerEstilosImpresion(): string {
-    return `
-      @page {
-        size: 80mm auto;
-        margin: 2mm;
-      }
-      
-      @media print {
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: 'Courier New', monospace;
-          font-size: 11px;
-          line-height: 1.2;
-          color: black;
-          background: white;
-          width: 80mm;
-        }
-        
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-      }
-      
-      .factura-container {
-        width: 80mm;
-        margin: 0 auto;
-        padding: 5mm;
-        font-family: 'Courier New', monospace;
-        font-size: 11px;
-        line-height: 1.2;
-      }
-      
-      .header {
-        text-align: center;
-        border-bottom: 1px dashed #000;
-        padding-bottom: 5px;
-        margin-bottom: 8px;
-      }
-      
-      .logo {
-        font-size: 16px;
-        font-weight: bold;
-        margin-bottom: 3px;
-      }
-      
-      .info-row {
-        display: flex;
-        justify-content: space-between;
-        margin: 2px 0;
-      }
-      
-      .productos {
-        border-top: 1px dashed #000;
-        border-bottom: 1px dashed #000;
-        padding: 5px 0;
-        margin: 8px 0;
-      }
-      
-      .productos-title {
-        font-weight: bold;
-        margin-bottom: 5px;
-      }
-      
-      .producto {
-        margin: 3px 0;
-      }
-      
-      .producto-line {
-        display: flex;
-        justify-content: space-between;
-      }
-      
-      .totales {
-        text-align: right;
-        margin-top: 8px;
-      }
-      
-      .total-final {
-        font-weight: bold;
-        font-size: 13px;
-        border-top: 1px solid #000;
-        padding-top: 3px;
-        margin-top: 3px;
-      }
-      
-      .footer {
-        text-align: center;
-        font-size: 10px;
-        margin-top: 10px;
-        border-top: 1px dashed #000;
-        padding-top: 5px;
-      }
-    `;
-  }
-
-  /**
-   * REINICIALIZAR COMPONENTE DESPUÉS DE RESTAURAR CONTENIDO
-   */
-  private reinicializarComponente(): void {
-    try {
-    } catch (error) {
-    }
-  }
-
-  /**
-   * MÉTODO FALLBACK PARA ENVÍO A BACKEND
-   */
-  private enviarFacturaABackend(factura: any): void {
-    
-    const datosImpresion = {
-      establecimiento: 'KIOSKO TOUCH',
-      ruc: '1791310199001',
-      tipo_documento: 'Factura Simplificada',
-      pedido_id: factura.pedido_id,
-      cliente: factura.cliente,
-      fecha: new Date().toLocaleString('es-EC'),
-      productos: factura.productos,
-      subtotal: factura.subtotal,
-      iva_porcentaje: this.ivaActual,
-      iva_valor: factura.iva,
-      total: factura.total
-    };
-
-  }
-
 }

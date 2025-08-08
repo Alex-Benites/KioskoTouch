@@ -9,4 +9,7 @@ urlpatterns = [
     # Endpoints para chef
     path('pedidos/chef/', views.obtener_pedidos_chef, name='obtener-pedidos-chef'),
     path('pedidos/<int:pedido_id>/estado/', views.cambiar_estado_pedido, name='cambiar-estado-pedido'),
+
+    path('pedidos/confirmar-pago/<str:numero_pedido>/', views.confirmar_pago_con_stock, name='confirmar_pago_con_stock'),
+
 ]

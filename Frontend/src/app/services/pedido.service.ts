@@ -188,6 +188,7 @@ export class PedidoService {
   }
 
   agregarProducto(producto_id: number, precio: number, cantidad: number = 1, personalizacion?: PersonalizacionIngrediente[], precioBase?: number, tamanoCodigo?: string): void {
+    
     let detalles = this.detallesState();
     let detalle = detalles.find(d => d.productos);
 
@@ -843,5 +844,33 @@ export class PedidoService {
     this.limpiarEstadoPersistido();
     
   }
+
+  confirmarPagoConStock(numeroPedido: string, metodoPago: string = 'efectivo'): Observable<any> {
+    const url = `${environment.apiUrl}/ventas/pedidos/confirmar-pago/${numeroPedido}/`;
+    
+    const payload = {
+      metodo_pago: metodoPago
+    };
+    
+    console.log('💳 Confirmando pago con descuento de stock:', {
+      pedido: numeroPedido,
+      metodo: metodoPago,
+      url: url,
+      payload: payload
+    });
+    
+    return this.http.post<any>(url, payload).pipe(
+      tap(response => {
+        if (response.success) {
+          console.log('✅ Pago confirmado y stock descontado:', response);
+          console.log('📊 Stock actualizado:', response.stock_actualizado);
+        }
+      }),
+      catchError(error => {
+        console.error('❌ Error al confirmar pago:', error);
+        throw error;
+      })
+    );
+  }  
 
 }

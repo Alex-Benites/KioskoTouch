@@ -64,8 +64,9 @@ class AppkioskoImagen(models.Model):
     def __str__(self):
         return f"Imagen {self.id} - {self.get_categoria_imagen_display()}"
 
-# ✅ MEJORAR: Versión inteligente del modelo IVA
+
 class AppkioskoIva(models.Model):
+    # ===== CONFIGURACIÓN TRIBUTARIA =====
     porcentaje_iva = models.DecimalField(
         max_digits=5,
         decimal_places=2,
@@ -75,28 +76,140 @@ class AppkioskoIva(models.Model):
         default=True,
         verbose_name="Activo"
     )
+    
+    # ===== DATOS EMPRESARIALES =====
+    ruc = models.CharField(
+        max_length=13,
+        verbose_name="RUC",
+        help_text="RUC de la empresa (13 dígitos)",
+        blank=True,
+        null=True
+    )
+    razon_social = models.CharField(
+        max_length=300,
+        verbose_name="Razón Social",
+        help_text="Nombre legal de la empresa",
+        blank=True,
+        null=True
+    )
+    nombre_comercial = models.CharField(
+        max_length=300,
+        verbose_name="Nombre Comercial",
+        help_text="Nombre comercial del establecimiento",
+        blank=True,
+        null=True
+    )
+    
+    # ===== UBICACIÓN =====
+    direccion = models.TextField(
+        verbose_name="Dirección",
+        help_text="Dirección completa del establecimiento",
+        blank=True,
+        null=True
+    )
+    ciudad = models.CharField(
+        max_length=100,
+        verbose_name="Ciudad",
+        blank=True,
+        null=True
+    )
+    provincia = models.CharField(
+        max_length=100,
+        verbose_name="Provincia",
+        blank=True,
+        null=True
+    )
+    codigo_postal = models.CharField(
+        max_length=10,
+        verbose_name="Código Postal",
+        blank=True,
+        null=True
+    )
+    
+    # ===== CONTACTO =====
+    telefono = models.CharField(
+        max_length=20,
+        verbose_name="Teléfono",
+        blank=True,
+        null=True
+    )
+    email = models.EmailField(
+        verbose_name="Email",
+        blank=True,
+        null=True
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     class Meta:
         managed = True
         db_table = 'appkiosko_iva'
-        verbose_name = 'Configuración de IVA'
-        verbose_name_plural = 'Configuraciones de IVA'
+        verbose_name = 'Configuración Empresarial'
+        verbose_name_plural = 'Configuración Empresarial'
 
     def __str__(self):
         estado = "ACTIVO" if self.activo else "INACTIVO"
-        return f"IVA {self.porcentaje_iva}% - {estado}"
+        nombre = self.nombre_comercial or self.razon_social or "Sin nombre"
+        return f"{nombre} - IVA {self.porcentaje_iva}% - {estado}"
 
     def save(self, *args, **kwargs):
-        # Solo un IVA puede estar activo a la vez
+        # Solo una configuración puede estar activa a la vez
         if self.activo:
             AppkioskoIva.objects.filter(activo=True).update(activo=False)
         super().save(*args, **kwargs)
 
-    @classmethod
+    @classmethod 
+    def get_configuracion_actual(cls):
+        """Obtener la configuración empresarial actual"""
+        config_actual = cls.objects.filter(activo=True).first()
+        return config_actual
+
+    @classmethod 
     def get_porcentaje_actual(cls):
         """Obtener el porcentaje del IVA actual"""
-        iva_actual = cls.objects.filter(activo=True).first()
-        return iva_actual.porcentaje_iva if iva_actual else 15.00
+        config = cls.get_configuracion_actual()
+        return config.porcentaje_iva if config else 15.00
+
+    @classmethod
+    def get_datos_empresa(cls):
+        """Obtener datos completos de la empresa para facturas"""
+        config = cls.get_configuracion_actual()
+        if not config:
+            return {
+                'ruc': '1791310199001',
+                'razon_social': 'KIOSKO TOUCH',
+                'nombre_comercial': 'Kiosko de Autoservicio',
+                'direccion': 'Dirección no configurada',
+                'ciudad': 'Ciudad no configurada',
+                'telefono': 'Teléfono no configurado',
+                'email': 'email@no-configurado.com',
+                'porcentaje_iva': 15.00
+            }
+        
+        return {
+            'ruc': config.ruc or '1791310199001',
+            'razon_social': config.razon_social or 'KIOSKO TOUCH',
+            'nombre_comercial': config.nombre_comercial or 'Kiosko de Autoservicio',
+            'direccion': config.direccion or 'Dirección no configurada',
+            'ciudad': config.ciudad or 'Ciudad no configurada',
+            'provincia': config.provincia or '',
+            'telefono': config.telefono or '',
+            'email': config.email or '',
+            'porcentaje_iva': config.porcentaje_iva
+        }
+
+    def clean(self):
+        """Validaciones personalizadas"""
+        from django.core.exceptions import ValidationError
+        
+        # Validar RUC ecuatoriano (13 dígitos)
+        if self.ruc and len(self.ruc) != 13:
+            raise ValidationError({'ruc': 'El RUC debe tener exactamente 13 dígitos'})
+        
+        # Validar que el porcentaje sea positivo
+        if self.porcentaje_iva and self.porcentaje_iva < 0:
+            raise ValidationError({'porcentaje_iva': 'El porcentaje de IVA no puede ser negativo'})
 
     @classmethod
     def activar_o_crear_iva(cls, porcentaje):
@@ -140,3 +253,4 @@ class AppkioskoIva(models.Model):
         except Exception as e:
             print(f"❌ Error en activar_o_crear_iva: {e}")
             raise e
+
