@@ -1,3 +1,4 @@
+com\kiosko\pinpad\config\CorsConfig.class
 com\kiosko\pinpad\dto\PagoRequest.class
 com\kiosko\pinpad\PinpadServiceApplication.class
 com\kiosko\pinpad\controller\PinpadController.class
