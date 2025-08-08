@@ -550,15 +550,12 @@ private confirmarPagoYFinalizar(): void {
   }
 }
 
-/**
- * ✅ NUEVO: IMPRESIÓN SIMPLE CON VENTANA PROPIA (NO INTERFIERE CON DOM)
- */
+
 private imprimirFacturaVentanaSimple(): void {
   try {
-    // ✅ USAR CONFIGURACIÓN EMPRESARIAL DINÁMICA
-    const config = this.configuracionEmpresa;
+    console.log('🖨️ Iniciando impresión silenciosa con componente factura...');
     
-    const factura = {
+    const datosFactura = {
       pedido_id: this.numeroOrden,
       cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
       productos: this.productosCarrito.map(p => ({
@@ -572,213 +569,238 @@ private imprimirFacturaVentanaSimple(): void {
       turno: this.numeroTurno
     };
 
-    const ventana = window.open('', '_blank', 'width=400,height=600');
-    
-    if (ventana) {
-      const fecha = new Date().toLocaleString('es-EC', {
+
+    // Crear instancia temporal del componente de factura
+    const facturaComponentTemp = {
+      datosFactura: datosFactura,
+      configuracionEmpresa: this.configuracionEmpresa,
+      fechaActual: new Date().toLocaleString('es-EC', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit'
-      });
+      }),
+      
+      imprimirSilencioso: () => {
+        const contenidoOriginal = document.body.innerHTML;
+        const tituloOriginal = document.title;
+        const estilosOriginales = Array.from(document.head.querySelectorAll('style')).map(s => s.outerHTML);
+        
+        try {
+          const facturaHTML = this.generarHTMLFacturaSencillo(datosFactura);
+          const estilosImpresion = this.generarEstilosFactura();
+          
+          const elementoImpresion = document.createElement('div');
+          elementoImpresion.innerHTML = facturaHTML;
+          elementoImpresion.style.display = 'none';
+          elementoImpresion.style.position = 'absolute';
+          elementoImpresion.style.top = '-9999px';
+          elementoImpresion.style.left = '-9999px';
+          elementoImpresion.className = 'factura-temp-impresion';
+          document.body.appendChild(elementoImpresion);
+          
+          const styleElement = document.createElement('style');
+          styleElement.innerHTML = estilosImpresion + `
+            @media screen {
+              .factura-temp-impresion {
+                display: none !important;
+                visibility: hidden !important;
+                position: absolute !important;
+                top: -9999px !important;
+                left: -9999px !important;
+              }
+            }
+            @media print {
+              body * {
+                visibility: hidden !important;
+              }
+              .factura-temp-impresion, .factura-temp-impresion * {
+                visibility: visible !important;
+                display: block !important;
+                position: static !important;
+              }
+              .factura-temp-impresion {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+              }
+            }
+          `;
+          document.head.appendChild(styleElement);
+          
+          document.title = `Factura - ${datosFactura.pedido_id}`;
+          
+          setTimeout(() => {
+            window.print();
+            
+            setTimeout(() => {
+              if (elementoImpresion.parentNode) {
+                document.body.removeChild(elementoImpresion);
+              }
+              if (styleElement.parentNode) {
+                document.head.removeChild(styleElement);
+              }
+              document.title = tituloOriginal;
+              
+              console.log('✅ Factura impresa silenciosamente sin mostrar contenido en pantalla');
+            }, 500);
+          }, 100);
+          
+        } catch (error) {
+          console.error('❌ Error en impresión:', error);
+          document.body.innerHTML = contenidoOriginal;
+          document.title = tituloOriginal;
+        }
+      }
+    };
 
-      // ✅ USAR DATOS DINÁMICOS EN TODA LA FACTURA
-      ventana.document.write(`
-        <html>
-          <head>
-            <title>Factura - ${factura.pedido_id}</title>
-            <style>
-              @page {
-                size: 80mm auto;
-                margin: 2mm;
-              }
-              
-              body {
-                margin: 0;
-                padding: 10px;
-                font-family: 'Courier New', monospace;
-                font-size: 12px;
-                line-height: 1.3;
-                color: black;
-                background: white;
-                width: 300px;
-              }
-              
-              .header {
-                text-align: center;
-                border-bottom: 1px dashed #000;
-                padding-bottom: 8px;
-                margin-bottom: 10px;
-              }
-              
-              .logo {
-                font-size: 18px;
-                font-weight: bold;
-                margin-bottom: 5px;
-              }
-              
-              .info-empresa {
-                font-size: 10px;
-                margin: 2px 0;
-              }
-              
-              .info-row {
-                display: flex;
-                justify-content: space-between;
-                margin: 3px 0;
-              }
-              
-              .productos {
-                border-top: 1px dashed #000;
-                border-bottom: 1px dashed #000;
-                padding: 8px 0;
-                margin: 10px 0;
-              }
-              
-              .productos-title {
-                font-weight: bold;
-                margin-bottom: 8px;
-              }
-              
-              .producto {
-                margin: 5px 0;
-              }
-              
-              .producto-line {
-                display: flex;
-                justify-content: space-between;
-                margin: 2px 0;
-              }
-              
-              .totales {
-                margin-top: 10px;
-              }
-              
-              .total-final {
-                font-weight: bold;
-                font-size: 14px;
-                border-top: 1px solid #000;
-                padding-top: 5px;
-                margin-top: 5px;
-              }
-              
-              .footer {
-                text-align: center;
-                font-size: 11px;
-                margin-top: 15px;
-                border-top: 1px dashed #000;
-                padding-top: 8px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <div class="logo">${config.nombre_comercial || config.razon_social}</div>
-              <div class="info-empresa">RUC: ${config.ruc}</div>
-              <div class="info-empresa">Factura Simplificada</div>
-              ${config.direccion && config.direccion !== 'Dirección no configurada' ? `
-                <div class="info-empresa">${config.direccion}</div>
-              ` : ''}
-              ${config.ciudad && config.ciudad !== 'Ciudad no configurada' ? `
-                <div class="info-empresa">${config.ciudad}${config.provincia ? `, ${config.provincia}` : ''}</div>
-              ` : ''}
-              ${config.telefono ? `
-                <div class="info-empresa">Tel: ${config.telefono}</div>
-              ` : ''}
-              ${config.email ? `
-                <div class="info-empresa">Email: ${config.email}</div>
-              ` : ''}
-            </div>
-            
-            <div class="info-section">
-              <div class="info-row">
-                <span>Fecha:</span>
-                <span>${fecha}</span>
-              </div>
-              <div class="info-row">
-                <span>Orden:</span>
-                <span>${factura.pedido_id}</span>
-              </div>
-              <div class="info-row">
-                <span>Cliente:</span>
-                <span>${factura.cliente}</span>
-              </div>
-              ${factura.turno ? `
-              <div class="info-row">
-                <span>Turno:</span>
-                <span>${factura.turno}</span>
-              </div>
-              ` : ''}
-            </div>
-            
-            <div class="productos">
-              <div class="productos-title">PRODUCTOS:</div>
-              ${factura.productos.map((p: any) => `
-                <div class="producto">
-                  <div class="producto-line">
-                    <span>${p.nombre}</span>
-                  </div>
-                  <div class="producto-line">
-                    <span>${p.cantidad} x ${config.moneda || '$'}${p.precio.toFixed(2)}</span>
-                    <span>${config.moneda || '$'}${(p.cantidad * p.precio).toFixed(2)}</span>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-            
-            <div class="totales">
-              <div class="info-row">
-                <span>Subtotal:</span>
-                <span>${config.moneda || '$'}${factura.subtotal.toFixed(2)}</span>
-              </div>
-              <div class="info-row">
-                <span>IVA (${config.porcentaje_iva}%):</span>
-                <span>${config.moneda || '$'}${factura.iva.toFixed(2)}</span>
-              </div>
-              <div class="info-row total-final">
-                <span>TOTAL:</span>
-                <span>${config.moneda || '$'}${factura.total.toFixed(2)}</span>
-              </div>
-            </div>
-            
-            <div class="footer">
-              <div>¡Gracias por su compra!</div>
-              ${config.eslogan ? `<div>${config.eslogan}</div>` : ''}
-              <div>${fecha}</div>
-            </div>
-          </body>
-        </html>
-      `);
-      
-      ventana.document.close();
-      
-      setTimeout(() => {
-        ventana.print();
-        setTimeout(() => {
-          ventana.close();
-        }, 1500);
-      }, 500);
-    }
-    
-    console.log('✅ Factura enviada a impresión con datos empresariales dinámicos');
+    facturaComponentTemp.imprimirSilencioso();
     
   } catch (error) {
-    console.error('❌ Error en impresión:', error);
+    console.error('❌ Error en impresión silenciosa:', error);
   }
 }
 
-/**
- * ✅ ACTUALIZAR: CARGAR DATOS SIMPLIFICADO
- */
+
+private generarHTMLFacturaSencillo(factura: any): string {
+  const config = this.configuracionEmpresa;
+  const fecha = new Date().toLocaleString('es-EC', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  return `
+    <div class="factura-impresion">
+      <div class="header">
+        <div class="logo">${config.nombre_comercial || config.razon_social}</div>
+        <div class="ruc">RUC: ${config.ruc}</div>
+        <div class="tipo">Factura Simplificada</div>
+        ${config.direccion ? `<div class="direccion">${config.direccion}</div>` : ''}
+        ${config.telefono ? `<div class="telefono">Tel: ${config.telefono}</div>` : ''}
+      </div>
+      
+      <div class="info">
+        <div><span>Fecha:</span> <span>${fecha}</span></div>
+        <div><span>Orden:</span> <span>${factura.pedido_id}</span></div>
+        <div><span>Cliente:</span> <span>${factura.cliente}</span></div>
+        ${factura.turno ? `<div><span>Turno:</span> <span>${factura.turno}</span></div>` : ''}
+      </div>
+      
+      <div class="productos">
+        <div class="titulo">PRODUCTOS:</div>
+        ${factura.productos.map((p: any) => `
+          <div class="producto">
+            <div>${p.nombre}</div>
+            <div>${p.cantidad} x $${p.precio.toFixed(2)} = $${(p.cantidad * p.precio).toFixed(2)}</div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div class="totales">
+        <div>Subtotal: $${factura.subtotal.toFixed(2)}</div>
+        <div>IVA (${config.porcentaje_iva}%): $${factura.iva.toFixed(2)}</div>
+        <div class="total"><strong>TOTAL: $${factura.total.toFixed(2)}</strong></div>
+      </div>
+      
+      <div class="footer">
+        <div>¡Gracias por su compra!</div>
+        <div>${config.nombre_comercial || config.razon_social}</div>
+      </div>
+    </div>
+  `;
+}
+
+
+private generarEstilosFactura(): string {
+  return `
+    @page {
+      size: 80mm auto;
+      margin: 2mm;
+    }
+    
+    @media print {
+      .factura-impresion {
+        width: 80mm;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        line-height: 1.2;
+        color: black;
+        background: white;
+      }
+      
+      .header {
+        text-align: center;
+        border-bottom: 1px dashed #000;
+        padding-bottom: 5px;
+        margin-bottom: 8px;
+      }
+      
+      .logo {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 2px;
+      }
+      
+      .info > div {
+        display: flex;
+        justify-content: space-between;
+        margin: 2px 0;
+      }
+      
+      .productos {
+        border-top: 1px dashed #000;
+        border-bottom: 1px dashed #000;
+        padding: 5px 0;
+        margin: 8px 0;
+      }
+      
+      .titulo {
+        font-weight: bold;
+        margin-bottom: 3px;
+      }
+      
+      .producto {
+        margin: 3px 0;
+      }
+      
+      .totales {
+        text-align: right;
+        margin-top: 8px;
+      }
+      
+      .totales > div {
+        margin: 2px 0;
+      }
+      
+      .total {
+        border-top: 1px solid #000;
+        padding-top: 3px;
+        margin-top: 3px;
+      }
+      
+      .footer {
+        text-align: center;
+        font-size: 10px;
+        margin-top: 8px;
+        border-top: 1px dashed #000;
+        padding-top: 5px;
+      }
+    }
+  `;
+}
+
+
 private cargarDatosParaImpresion(): void {
   console.log('📋 Iniciando carga de datos para impresión...');
   
   this.productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
   console.log('🛒 Productos del carrito completos:', this.productosCarrito);
-  
-  // ✅ YA NO NECESITAMOS datosFactura NI mostrarFactura
-  // Solo preparamos productosCarrito para la impresión
+
 }
 
 }
