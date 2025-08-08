@@ -700,7 +700,7 @@ def estadisticas_promociones(request):
     # PEDIDOS QUE USARON PROMOCIONES (por campo promocion en DetallePedido)
     pedidos_con_promocion = AppkioskoPedidos.objects.filter(
         created_at__gte=fecha_limite,
-        appkioskodetallepedido__promocion__isnull=False
+        detalles__promocion__isnull=False
     ).distinct().count()
     
     porcentaje_usuarios_promocion = (pedidos_con_promocion / total_pedidos_periodo * 100) if total_pedidos_periodo > 0 else 0
