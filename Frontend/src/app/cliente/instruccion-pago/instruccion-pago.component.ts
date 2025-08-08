@@ -7,9 +7,9 @@ import { PinpadService, EstadoPago, PagoResponse } from '../../services/pinpad.s
 import { Subscription } from 'rxjs';
 import { PedidoService } from '../../services/pedido.service';
 import { CatalogoService } from '../../services/catalogo.service';
-import { FacturaPagoComponent } from './factura/factura-pago.component';
-import { ViewChild } from '@angular/core';
-// ✅ NUEVA INTERFAZ PARA CONFIGURACIÓN EMPRESARIAL
+
+
+// ✅ INTERFAZ EXISTENTE
 interface ConfiguracionEmpresarial {
   ruc: string;
   razon_social: string;
@@ -20,6 +20,8 @@ interface ConfiguracionEmpresarial {
   telefono?: string;
   email?: string;
   porcentaje_iva: number;
+  eslogan?: string;
+  moneda?: string;
 }
 
 @Component({
@@ -28,14 +30,12 @@ interface ConfiguracionEmpresarial {
   imports: [
     CommonModule,
     PublicidadSectionComponent,
-    FacturaPagoComponent,
-    
   ],
   templateUrl: './instruccion-pago.component.html',
   styleUrls: ['./instruccion-pago.component.scss']
 })
 export class InstruccionPagoComponent implements OnInit, OnDestroy {
-  @ViewChild(FacturaPagoComponent) facturaComponent?: FacturaPagoComponent;
+  
   private facturaYaImpresa: boolean = false;
   private metodoPagoOriginal: 'tarjeta' | 'efectivo' = 'tarjeta';
   tipoPago: 'tarjeta' | 'efectivo' | 'completado' = 'tarjeta';
@@ -57,8 +57,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   datosFactura?: any;
   mostrarFactura: boolean = false;
 
-  
-  // ✅ NUEVA: Configuración empresarial con valores por defecto
+  // ✅ ACTUALIZADO: Ahora se carga dinámicamente
   configuracionEmpresa: ConfiguracionEmpresarial = {
     ruc: '1791310199001',
     razon_social: 'KIOSKO TOUCH',
@@ -74,6 +73,8 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   productosCarrito: any[] = [];
 
   private estadoPagoSubscription?: Subscription;
+  // ✅ NUEVA SUSCRIPCIÓN PARA CONFIGURACIÓN
+  private configuracionSubscription?: Subscription;
 
   constructor(
     private router: Router,
@@ -83,14 +84,16 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.log('🚀 Iniciando componente instruccion-pago...');
     
     this.pinpadService.reiniciarEstado();
     
-    // ✅ CARGAR CONFIGURACIÓN EMPRESARIAL AL INICIO    
+    // ✅ CARGAR CONFIGURACIÓN EMPRESARIAL AL INICIO
+    this.cargarConfiguracionEmpresarial();
+    
     this.route.queryParams.subscribe(params => {
       this.tipoPago = params['tipo'] || 'tarjeta';
       this.numeroOrden = params['orden'] || this.generarNumeroOrden();
-      
 
       this.montoTotal = parseFloat(params['monto']) || 0;
       this.cantidadProductos = parseInt(params['productos']) || 0;
@@ -102,9 +105,9 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         try {
           this.datosFacturacion = JSON.parse(params['facturacion']);
         } catch (e) {
+          console.warn('⚠️ Error parseando datos de facturación:', e);
         }
       }
-
 
       if (this.montoTotal <= 0) {
         this.router.navigate(['/cliente/carrito']);
@@ -127,20 +130,63 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     if (this.tipoPago === 'tarjeta') {
       this.verificarConectividad();
     }
+    
     setTimeout(() => {
       console.log('🔍 DEBUG - Estado actual:', {
         tipoPago: this.tipoPago,
         mostrarFactura: this.mostrarFactura,
-        facturaYaImpresa: this.facturaYaImpresa
+        facturaYaImpresa: this.facturaYaImpresa,
+        configuracionCargada: !!this.configuracionEmpresa
       });
     }, 2000);
-
   }
 
   ngOnDestroy(): void {
     if (this.estadoPagoSubscription) {
       this.estadoPagoSubscription.unsubscribe();
     }
+    // ✅ LIMPIAR SUSCRIPCIÓN DE CONFIGURACIÓN
+    if (this.configuracionSubscription) {
+      this.configuracionSubscription.unsubscribe();
+    }
+  }
+
+  // ✅ NUEVO MÉTODO: CARGAR CONFIGURACIÓN EMPRESARIAL DINÁMICAMENTE
+  private cargarConfiguracionEmpresarial(): void {
+    console.log('🏢 Cargando configuración empresarial desde backend...');
+    
+    this.configuracionSubscription = this.catalogoService.obtenerDatosParaFactura().subscribe({
+      next: (response) => {
+        if (response.success && response.configuracion) {
+          this.configuracionEmpresa = {
+            ruc: response.configuracion.ruc || '1791310199001',
+            razon_social: response.configuracion.razon_social || 'KIOSKO TOUCH',
+            nombre_comercial: response.configuracion.nombre_comercial || 'Kiosko de Autoservicio',
+            direccion: response.configuracion.direccion || 'Dirección no configurada',
+            ciudad: response.configuracion.ciudad || 'Ciudad no configurada',
+            provincia: response.configuracion.provincia || '',
+            telefono: response.configuracion.telefono || '',
+            email: response.configuracion.email || '',
+            porcentaje_iva: response.configuracion.porcentaje_iva || 15.0,
+            eslogan: response.configuracion.eslogan || 'Autoservicio Digital',
+            moneda: response.configuracion.moneda || 'USD'
+          };
+          
+          this.ivaActual = this.configuracionEmpresa.porcentaje_iva;
+          
+          console.log('✅ Configuración empresarial cargada:', {
+            empresa: this.configuracionEmpresa.razon_social,
+            ruc: this.configuracionEmpresa.ruc,
+            iva: this.configuracionEmpresa.porcentaje_iva,
+            esDefault: response.esConfiguracionPorDefecto || false
+          });
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error cargando configuración empresarial:', error);
+        console.log('⚠️ Usando configuración por defecto');
+      }
+    });
   }
 
   onPublicidadCambio(publicidad: Publicidad): void {
@@ -417,23 +463,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
   }
 
 
-  /**
-   * ✅ MÉTODO DIRECTO COMO FALLBACK
-   */
-  private imprimirFacturaDirecta(): void {
-    console.log('🖨️ Imprimiendo factura directamente...');
-    
-    // Crear una instancia temporal del componente para imprimir
-    const tempComponent = new FacturaPagoComponent();
-    tempComponent.datosFactura = this.datosFactura!;
-    tempComponent.autoImprimir = true;
-    tempComponent.ngOnInit();
-    
-    setTimeout(() => {
-      tempComponent.imprimirFactura();
-    }, 500);
-  }
-
 
 irAlInicio(): void {
   console.log('🏠 BOTÓN IR AL INICIO PRESIONADO - INICIO DEL MÉTODO');
@@ -526,7 +555,9 @@ private confirmarPagoYFinalizar(): void {
  */
 private imprimirFacturaVentanaSimple(): void {
   try {
-    // ✅ CREAR DATOS DE FACTURA
+    // ✅ USAR CONFIGURACIÓN EMPRESARIAL DINÁMICA
+    const config = this.configuracionEmpresa;
+    
     const factura = {
       pedido_id: this.numeroOrden,
       cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
@@ -541,7 +572,6 @@ private imprimirFacturaVentanaSimple(): void {
       turno: this.numeroTurno
     };
 
-    // ✅ ABRIR VENTANA NUEVA PARA IMPRESIÓN
     const ventana = window.open('', '_blank', 'width=400,height=600');
     
     if (ventana) {
@@ -553,6 +583,7 @@ private imprimirFacturaVentanaSimple(): void {
         minute: '2-digit'
       });
 
+      // ✅ USAR DATOS DINÁMICOS EN TODA LA FACTURA
       ventana.document.write(`
         <html>
           <head>
@@ -585,6 +616,11 @@ private imprimirFacturaVentanaSimple(): void {
                 font-size: 18px;
                 font-weight: bold;
                 margin-bottom: 5px;
+              }
+              
+              .info-empresa {
+                font-size: 10px;
+                margin: 2px 0;
               }
               
               .info-row {
@@ -638,9 +674,21 @@ private imprimirFacturaVentanaSimple(): void {
           </head>
           <body>
             <div class="header">
-              <div class="logo">KIOSKO TOUCH</div>
-              <div>RUC: 1791310199001</div>
-              <div>Factura Simplificada</div>
+              <div class="logo">${config.nombre_comercial || config.razon_social}</div>
+              <div class="info-empresa">RUC: ${config.ruc}</div>
+              <div class="info-empresa">Factura Simplificada</div>
+              ${config.direccion && config.direccion !== 'Dirección no configurada' ? `
+                <div class="info-empresa">${config.direccion}</div>
+              ` : ''}
+              ${config.ciudad && config.ciudad !== 'Ciudad no configurada' ? `
+                <div class="info-empresa">${config.ciudad}${config.provincia ? `, ${config.provincia}` : ''}</div>
+              ` : ''}
+              ${config.telefono ? `
+                <div class="info-empresa">Tel: ${config.telefono}</div>
+              ` : ''}
+              ${config.email ? `
+                <div class="info-empresa">Email: ${config.email}</div>
+              ` : ''}
             </div>
             
             <div class="info-section">
@@ -672,8 +720,8 @@ private imprimirFacturaVentanaSimple(): void {
                     <span>${p.nombre}</span>
                   </div>
                   <div class="producto-line">
-                    <span>${p.cantidad} x $${p.precio.toFixed(2)}</span>
-                    <span>$${(p.cantidad * p.precio).toFixed(2)}</span>
+                    <span>${p.cantidad} x ${config.moneda || '$'}${p.precio.toFixed(2)}</span>
+                    <span>${config.moneda || '$'}${(p.cantidad * p.precio).toFixed(2)}</span>
                   </div>
                 </div>
               `).join('')}
@@ -682,21 +730,21 @@ private imprimirFacturaVentanaSimple(): void {
             <div class="totales">
               <div class="info-row">
                 <span>Subtotal:</span>
-                <span>$${factura.subtotal.toFixed(2)}</span>
+                <span>${config.moneda || '$'}${factura.subtotal.toFixed(2)}</span>
               </div>
               <div class="info-row">
-                <span>IVA (15%):</span>
-                <span>$${factura.iva.toFixed(2)}</span>
+                <span>IVA (${config.porcentaje_iva}%):</span>
+                <span>${config.moneda || '$'}${factura.iva.toFixed(2)}</span>
               </div>
               <div class="info-row total-final">
                 <span>TOTAL:</span>
-                <span>$${factura.total.toFixed(2)}</span>
+                <span>${config.moneda || '$'}${factura.total.toFixed(2)}</span>
               </div>
             </div>
             
             <div class="footer">
               <div>¡Gracias por su compra!</div>
-              <div>Kiosco de Autoservicio</div>
+              ${config.eslogan ? `<div>${config.eslogan}</div>` : ''}
               <div>${fecha}</div>
             </div>
           </body>
@@ -705,17 +753,15 @@ private imprimirFacturaVentanaSimple(): void {
       
       ventana.document.close();
       
-      // ✅ IMPRIMIR AUTOMÁTICAMENTE
       setTimeout(() => {
         ventana.print();
-        // ✅ CERRAR VENTANA DESPUÉS DE IMPRIMIR
         setTimeout(() => {
           ventana.close();
         }, 1500);
       }, 500);
     }
     
-    console.log('✅ Factura enviada a impresión');
+    console.log('✅ Factura enviada a impresión con datos empresariales dinámicos');
     
   } catch (error) {
     console.error('❌ Error en impresión:', error);
@@ -734,7 +780,5 @@ private cargarDatosParaImpresion(): void {
   // ✅ YA NO NECESITAMOS datosFactura NI mostrarFactura
   // Solo preparamos productosCarrito para la impresión
 }
-
-
 
 }

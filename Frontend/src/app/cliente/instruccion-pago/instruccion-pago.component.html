@@ -17,57 +17,41 @@
 
     <h2 class="pago-title">{{ obtenerTitulo() }}</h2>
 
-    <!-- ✅ UN SOLO CONTENEDOR DE BOTONES SIN DUPLICADOS -->
-    <div class="botones-unico" style="margin-top: 50px;">
-      
-      <!-- BOTÓN PARA COMPLETADO -->
-      <div *ngIf="tipoPago === 'completado'" >
-        <button 
-          style="
-            background: #28a745; 
-            color: white; 
-            padding: -1px 40px; 
-            border: none; 
-            border-radius: 20px; 
-            font-size: 30px; 
-            cursor: pointer;
-            width: 300px;
-            height: 60px;
-            margin: 20px auto;
-            display: block;
-            font-weight: bold;
-          "
-          (click)="finalizarPedido()">
-            Finalizar Pedido
-        </button>
-      </div>
+    <!-- Instrucciones dinámicas -->
+    <p class="pago-instrucciones">{{ obtenerInstrucciones() }}</p>
 
-      <!-- BOTÓN PARA OTROS CASOS -->
-      <div *ngIf="tipoPago !== 'completado'">
-        <button 
-          class="pago-button" 
-          [disabled]="procesandoPago"
-          (click)="continuar()">
-          {{ obtenerTextoBoton() }}
-        </button>
-      </div>
+    <!-- ✅ CONTENEDOR DE BOTONES SIMPLIFICADO -->
+    <div class="botones-container">
+      
+      <!-- BOTÓN PRINCIPAL -->
+      <button 
+        class="pago-button"
+        [class.btn-finalizar]="tipoPago === 'completado'"
+        [disabled]="procesandoPago"
+        (click)="tipoPago === 'completado' ? finalizarPedido() : continuar()">
+        {{ tipoPago === 'completado' ? 'Finalizar Pedido' : obtenerTextoBoton() }}
+      </button>
 
       <!-- BOTÓN CANCELAR -->
-      <div *ngIf="tipoPago === 'tarjeta' && estadoPago.estado !== 'exitoso'">
-        <button 
-          class="btn-cancelar" 
-          [disabled]="procesandoPago"
-          (click)="cancelarPago()">
-          Cancelar
-        </button>
-      </div>
+      <button 
+        *ngIf="tipoPago === 'tarjeta' && estadoPago.estado !== 'exitoso'"
+        class="btn-cancelar" 
+        [disabled]="procesandoPago"
+        (click)="cancelarPago()">
+        Cancelar
+      </button>
+
+
     </div>
 
-    <!-- FACTURA OCULTA -->
-    <app-factura-pago 
-      *ngIf="mostrarFactura && datosFactura"
-      [datosFactura]="datosFactura"
-      style="position: absolute; left: -9999px; top: -9999px;">
-    </app-factura-pago>
+    <!-- ✅ INDICADOR DE ESTADO (opcional pero útil) -->
+    <div class="estado-pago" *ngIf="tipoPago === 'tarjeta'">
+      <div class="estado-mensaje" [class]="estadoPago.estado">
+        {{ estadoPago.mensaje }}
+      </div>
+      <div *ngIf="procesandoPago" class="spinner-loading"></div>
+    </div>
   </main>
 </div>
+
+<!-- ✅ ELIMINADO: Factura oculta innecesaria ya que usas ventana propia -->
