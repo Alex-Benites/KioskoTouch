@@ -720,35 +720,49 @@ def crear_factura(pedido, datos_facturacion=None):
 
 def crear_detalles_factura(factura, pedido):
     """
-    Crea los registros de detalle de factura para cada detalle de pedido.
-    ✅ ACTUALIZADO: Usa detalles del pedido en lugar de productos directos
+    ✅ CORREGIDO: Crear detalles de factura desde el pedido manejando productos Y menús
     """
-    # Obtener todos los detalles del pedido
-    detalles_pedido = AppkioskoDetallepedido.objects.filter(pedido=pedido)
+    print(f"Creando detalles de factura para {pedido.detalles.count()} productos")
     
-    print(f"Creando detalles de factura para {detalles_pedido.count()} productos")
+    for detalle_pedido in pedido.detalles.all():
+        try:
+            # ✅ DETERMINAR NOMBRE SEGÚN EL TIPO
+            if detalle_pedido.producto:
+                # Es un producto individual
+                nombre_item = detalle_pedido.producto.nombre
+                print(f"Procesando producto: {nombre_item}")
+            elif detalle_pedido.menu:
+                # Es un menú
+                nombre_item = detalle_pedido.menu.nombre
+                print(f"Procesando menú: {nombre_item}")
+            else:
+                # Fallback por si no tiene ni producto ni menú
+                nombre_item = "Item sin nombre"
+                print("⚠️ Detalle sin producto ni menú definido")
+            
+            # ✅ CREAR DETALLE DE FACTURA CON AMBOS CAMPOS
+            detalle_factura = AppkioskoDetallefacturaproducto.objects.create(
+                factura=factura,
+                detalle_pedido=detalle_pedido,  # ✅ REFERENCIA AL DETALLE COMPLETO
+                producto=detalle_pedido.producto,  # Puede ser None para menús
+                menu=detalle_pedido.menu,  # ✅ AHORA SÍ EXISTE ESTE CAMPO
+                cantidad=detalle_pedido.cantidad,
+                precio_unitario=detalle_pedido.precio_unitario,
+                iva=0.00,  # Por ahora 0, calcular si es necesario
+                descuento=detalle_pedido.descuento_promocion if detalle_pedido.descuento_promocion else 0,
+                subtotal=detalle_pedido.subtotal,
+                total=detalle_pedido.subtotal,  # Ajustar si incluye IVA
+                fecha_emision_factura=timezone.now()
+            )
+            
+            print(f"Detalle factura creado: {nombre_item} x{detalle_pedido.cantidad} - Subtotal: ${detalle_pedido.subtotal}")
+            
+        except Exception as e:
+            print(f"❌ Error al crear detalle de factura para item {nombre_item}: {e}")
+            # Continuar con el siguiente detalle en caso de error
+            continue
     
-    for detalle in detalles_pedido:
-        # Calcular valores para la factura basados en los campos disponibles
-        iva_calculado = 0  # Por ahora, no hay IVA en el modelo de detalle
-        descuento = detalle.descuento_promocion if detalle.descuento_promocion else 0
-        total_calculado = detalle.subtotal + iva_calculado - descuento
-        
-        AppkioskoDetallefacturaproducto.objects.create(
-            factura=factura,
-            detalle_pedido=detalle,  # ✅ NUEVO CAMPO
-            producto=detalle.producto,  # ✅ MANTENER por compatibilidad
-            cantidad=detalle.cantidad,
-            precio_unitario=detalle.precio_unitario,
-            iva=iva_calculado,  # ✅ CALCULAR IVA (por ahora 0)
-            descuento=descuento,  # ✅ USAR descuento_promocion
-            subtotal=detalle.subtotal,
-            total=total_calculado,  # ✅ CALCULAR TOTAL
-            fecha_emision_factura=timezone.now(),  # ✅ USAR timezone.now() para evitar warning
-        )
-        
-        print(f"Detalle factura creado: {detalle.producto.nombre} x{detalle.cantidad} - Subtotal: ${detalle.subtotal}")
-
+    print("✅ Detalles de factura creados exitosamente")
 
 def generar_numero_pedido():
     """
@@ -1074,6 +1088,387 @@ def confirmar_pago_y_descontar_stock(request, invoice_number):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def confirmar_pago_con_stock(request, numero_pedido):
+    """
+    ✅ ACTUALIZADO: Confirma pago Y descuenta stock para productos y menús
+    """
+    try:
+        # Buscar el pedido
+        pedido = AppkioskoPedidos.objects.get(invoice_number=numero_pedido)
+        
+        # Validar estado del pedido
+        if hasattr(pedido, 'estado') and pedido.estado:
+            if pedido.estado.nombre.lower() in ['cancelado', 'pagado']:
+                return Response({
+                    'success': False,
+                    'error': f'El pedido está en estado "{pedido.estado.nombre}" y no se puede procesar'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        metodo_pago = request.data.get('metodo_pago', 'efectivo')
+        print(f"📋 Procesando pedido {numero_pedido}")
+        
+        stock_actualizado = []
+        
+        # ✅ PROCESAR CADA DETALLE DEL PEDIDO
+        detalles = AppkioskoDetallepedido.objects.filter(pedido=pedido)
+        print(f"📋 Procesando {detalles.count()} items del pedido {numero_pedido}")
+        
+        for detalle in detalles:
+            if detalle.producto:
+                print(f"🍔 Procesando producto: {detalle.producto.nombre} (cantidad: {detalle.cantidad})")
+                
+                # ✅ 1. DESCONTAR INGREDIENTES BASE DEL PRODUCTO
+                ingredientes_producto = AppkioskoProductosIngredientes.objects.filter(
+                    producto=detalle.producto
+                ).select_related('ingrediente')
+                
+                for prod_ingrediente in ingredientes_producto:
+                    cantidad_a_descontar = prod_ingrediente.cantidad * detalle.cantidad
+                    stock_actual = prod_ingrediente.ingrediente.stock
+                    
+                    print(f"  🥗 Ingrediente: {prod_ingrediente.ingrediente.nombre}, descontar: {cantidad_a_descontar}, stock actual: {stock_actual}")
+                    
+                    if stock_actual >= cantidad_a_descontar:
+                        nuevo_stock = stock_actual - cantidad_a_descontar
+                        prod_ingrediente.ingrediente.stock = nuevo_stock
+                        prod_ingrediente.ingrediente.save()
+                        
+                        stock_actualizado.append({
+                            'ingrediente': prod_ingrediente.ingrediente.nombre,
+                            'stock_anterior': stock_actual,
+                            'cantidad_descontada': cantidad_a_descontar,
+                            'stock_nuevo': nuevo_stock,
+                            'tipo': 'base',
+                            'origen': f'producto: {detalle.producto.nombre}'
+                        })
+                        
+                        print(f"    ✅ Stock actualizado: {prod_ingrediente.ingrediente.nombre} ({stock_actual} → {nuevo_stock})")
+                    else:
+                        print(f"    ⚠️ Stock insuficiente: {prod_ingrediente.ingrediente.nombre} (disponible: {stock_actual}, necesario: {cantidad_a_descontar})")
+                
+                # ✅ 2. DESCONTAR INGREDIENTES ADICIONALES DE PERSONALIZACIONES
+                personalizaciones = AppkioskoPedidoProductoIngredientes.objects.filter(
+                    detalle_pedido=detalle,
+                    accion='agregar_nuevo'
+                ).select_related('ingrediente')
+                
+                if personalizaciones.exists():
+                    print(f"  🎨 Procesando {personalizaciones.count()} ingredientes adicionales")
+                    
+                    for personalizacion in personalizaciones:
+                        cantidad_a_descontar = personalizacion.cantidad * detalle.cantidad
+                        stock_actual = personalizacion.ingrediente.stock
+                        
+                        print(f"    🔥 Ingrediente adicional: {personalizacion.ingrediente.nombre}, descontar: {cantidad_a_descontar}, stock actual: {stock_actual}")
+                        
+                        if stock_actual >= cantidad_a_descontar:
+                            nuevo_stock = stock_actual - cantidad_a_descontar
+                            personalizacion.ingrediente.stock = nuevo_stock
+                            personalizacion.ingrediente.save()
+                            
+                            stock_actualizado.append({
+                                'ingrediente': personalizacion.ingrediente.nombre,
+                                'stock_anterior': stock_actual,
+                                'cantidad_descontada': cantidad_a_descontar,
+                                'stock_nuevo': nuevo_stock,
+                                'tipo': 'adicional',
+                                'origen': f'personalización: {detalle.producto.nombre}',
+                                'accion': personalizacion.accion
+                            })
+                            
+                            print(f"      ✅ Stock adicional actualizado: {personalizacion.ingrediente.nombre} ({stock_actual} → {nuevo_stock})")
+                        else:
+                            print(f"      ⚠️ Stock adicional insuficiente: {personalizacion.ingrediente.nombre} (disponible: {stock_actual}, necesario: {cantidad_a_descontar})")
+            
+            # ✅ 3. PROCESAR MENÚS (CORREGIDO)
+            elif detalle.menu:
+                print(f"🍽️ Procesando menú: {detalle.menu.nombre} (cantidad: {detalle.cantidad})")
+                
+                try:
+                    # ✅ USAR EL MODELO CORRECTO
+                    from catalogo.models import AppkioskoMenuproductos
+                    
+                    productos_menu = AppkioskoMenuproductos.objects.filter(
+                        menu=detalle.menu
+                    ).select_related('producto')
+                    
+                    print(f"  📦 Productos en el menú: {productos_menu.count()}")
+                    
+                    for menu_producto in productos_menu:
+                        producto = menu_producto.producto
+                        cantidad_producto_en_menu = menu_producto.cantidad
+                        cantidad_total_a_descontar = cantidad_producto_en_menu * detalle.cantidad
+                        
+                        print(f"    🍔 Producto del menú: {producto.nombre} x{cantidad_producto_en_menu} (total: x{cantidad_total_a_descontar})")
+                        
+                        # Obtener ingredientes de este producto
+                        ingredientes_producto = AppkioskoProductosIngredientes.objects.filter(
+                            producto=producto
+                        ).select_related('ingrediente')
+                        
+                        for prod_ingrediente in ingredientes_producto:
+                            cantidad_a_descontar = prod_ingrediente.cantidad * cantidad_total_a_descontar
+                            stock_actual = prod_ingrediente.ingrediente.stock
+                            
+                            print(f"      🥗 Ingrediente: {prod_ingrediente.ingrediente.nombre}, descontar: {cantidad_a_descontar}, stock actual: {stock_actual}")
+                            
+                            if stock_actual >= cantidad_a_descontar:
+                                nuevo_stock = stock_actual - cantidad_a_descontar
+                                prod_ingrediente.ingrediente.stock = nuevo_stock
+                                prod_ingrediente.ingrediente.save()
+                                
+                                stock_actualizado.append({
+                                    'ingrediente': prod_ingrediente.ingrediente.nombre,
+                                    'stock_anterior': stock_actual,
+                                    'cantidad_descontada': cantidad_a_descontar,
+                                    'stock_nuevo': nuevo_stock,
+                                    'tipo': 'menu',
+                                    'origen': f'menú: {detalle.menu.nombre} → {producto.nombre}',
+                                    'unidad': getattr(prod_ingrediente.ingrediente, 'unidad_medida', 'unidades')
+                                })
+                                
+                                print(f"        ✅ Stock menú actualizado: {prod_ingrediente.ingrediente.nombre} ({stock_actual} → {nuevo_stock})")
+                            else:
+                                print(f"        ⚠️ Stock menú insuficiente: {prod_ingrediente.ingrediente.nombre} (disponible: {stock_actual}, necesario: {cantidad_a_descontar})")
+                
+                except Exception as e:
+                    print(f"      ❌ Error procesando ingredientes del menú: {e}")
+        
+        # ✅ 4. ACTUALIZAR ESTADO DEL PEDIDO A 'PAGADO'
+        try:
+            if hasattr(pedido, 'estado'):
+                estado_pagado = AppkioskoEstados.objects.filter(nombre__iexact='pagado').first()
+                if estado_pagado:
+                    pedido.estado = estado_pagado
+                    pedido.save()
+                    print(f"✅ Pedido {numero_pedido} marcado como PAGADO")
+        except Exception as e:
+            print(f"⚠️ No se pudo cambiar estado: {e}")
+        
+        # ✅ 5. RESPUESTA DE CONFIRMACIÓN
+        ingredientes_base = [item for item in stock_actualizado if item['tipo'] == 'base']
+        ingredientes_adicionales = [item for item in stock_actualizado if item['tipo'] == 'adicional']
+        ingredientes_menu = [item for item in stock_actualizado if item['tipo'] == 'menu']
+        
+        print(f"✅ Stock actualizado completamente para pedido {numero_pedido}: {len(ingredientes_base)} base + {len(ingredientes_adicionales)} adicionales + {len(ingredientes_menu)} menús")
+        
+        return Response({
+            'success': True,
+            'message': f'Pago confirmado para pedido {numero_pedido}',
+            'pedido': numero_pedido,
+            'metodo_pago': metodo_pago,
+            'stock_actualizado': {
+                'total_items': len(stock_actualizado),
+                'ingredientes_base': ingredientes_base,
+                'ingredientes_adicionales': ingredientes_adicionales,
+                'ingredientes_menu': ingredientes_menu,
+                'resumen': f"{len(ingredientes_base)} base + {len(ingredientes_adicionales)} adicionales + {len(ingredientes_menu)} menús = {len(stock_actualizado)} total"
+            }
+        })
+        
+    except AppkioskoPedidos.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': f'Pedido {numero_pedido} no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        print(f"❌ Error al confirmar pago con stock: {str(e)}")
+        return Response({
+            'success': False,
+            'error': f'Error interno: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    """
+    ✅ ACTUALIZADO: Confirma pago Y descuenta stock para productos y menús
+    """
+    try:
+        # Buscar el pedido
+        pedido = AppkioskoPedidos.objects.get(invoice_number=numero_pedido)
+        
+        # Validar estado del pedido
+        if hasattr(pedido, 'estado') and pedido.estado:
+            if pedido.estado.nombre.lower() in ['cancelado', 'pagado']:
+                return Response({
+                    'success': False,
+                    'error': f'El pedido está en estado "{pedido.estado.nombre}" y no se puede procesar'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        metodo_pago = request.data.get('metodo_pago', 'efectivo')
+        print(f"📋 Procesando pedido {numero_pedido}")
+        
+        stock_actualizado = []
+        
+        # ✅ PROCESAR CADA DETALLE DEL PEDIDO
+        detalles = AppkioskoDetallepedido.objects.filter(pedido=pedido)
+        print(f"📋 Procesando {detalles.count()} items del pedido {numero_pedido}")
+        
+        for detalle in detalles:
+            if detalle.producto:
+                print(f"🍔 Procesando producto: {detalle.producto.nombre} (cantidad: {detalle.cantidad})")
+                
+                # ✅ 1. DESCONTAR INGREDIENTES BASE DEL PRODUCTO
+                ingredientes_producto = AppkioskoProductosIngredientes.objects.filter(
+                    producto=detalle.producto
+                ).select_related('ingrediente')
+                
+                for prod_ingrediente in ingredientes_producto:
+                    cantidad_a_descontar = prod_ingrediente.cantidad * detalle.cantidad
+                    stock_actual = prod_ingrediente.ingrediente.stock
+                    
+                    print(f"  🥗 Ingrediente: {prod_ingrediente.ingrediente.nombre}, descontar: {cantidad_a_descontar}, stock actual: {stock_actual}")
+                    
+                    if stock_actual >= cantidad_a_descontar:
+                        nuevo_stock = stock_actual - cantidad_a_descontar
+                        prod_ingrediente.ingrediente.stock = nuevo_stock
+                        prod_ingrediente.ingrediente.save()
+                        
+                        stock_actualizado.append({
+                            'ingrediente': prod_ingrediente.ingrediente.nombre,
+                            'stock_anterior': stock_actual,
+                            'cantidad_descontada': cantidad_a_descontar,
+                            'stock_nuevo': nuevo_stock,
+                            'tipo': 'base',
+                            'origen': f'producto: {detalle.producto.nombre}'
+                        })
+                        
+                        print(f"    ✅ Stock actualizado: {prod_ingrediente.ingrediente.nombre} ({stock_actual} → {nuevo_stock})")
+                    else:
+                        print(f"    ⚠️ Stock insuficiente: {prod_ingrediente.ingrediente.nombre} (disponible: {stock_actual}, necesario: {cantidad_a_descontar})")
+                
+                # ✅ 2. DESCONTAR INGREDIENTES ADICIONALES DE PERSONALIZACIONES
+                personalizaciones = AppkioskoPedidoProductoIngredientes.objects.filter(
+                    detalle_pedido=detalle,
+                    accion='agregar_nuevo'
+                ).select_related('ingrediente')
+                
+                if personalizaciones.exists():
+                    print(f"  🎨 Procesando {personalizaciones.count()} ingredientes adicionales")
+                    
+                    for personalizacion in personalizaciones:
+                        cantidad_a_descontar = personalizacion.cantidad * detalle.cantidad
+                        stock_actual = personalizacion.ingrediente.stock
+                        
+                        print(f"    🔥 Ingrediente adicional: {personalizacion.ingrediente.nombre}, descontar: {cantidad_a_descontar}, stock actual: {stock_actual}")
+                        
+                        if stock_actual >= cantidad_a_descontar:
+                            nuevo_stock = stock_actual - cantidad_a_descontar
+                            personalizacion.ingrediente.stock = nuevo_stock
+                            personalizacion.ingrediente.save()
+                            
+                            stock_actualizado.append({
+                                'ingrediente': personalizacion.ingrediente.nombre,
+                                'stock_anterior': stock_actual,
+                                'cantidad_descontada': cantidad_a_descontar,
+                                'stock_nuevo': nuevo_stock,
+                                'tipo': 'adicional',
+                                'origen': f'personalización: {detalle.producto.nombre}',
+                                'accion': personalizacion.accion
+                            })
+                            
+                            print(f"      ✅ Stock adicional actualizado: {personalizacion.ingrediente.nombre} ({stock_actual} → {nuevo_stock})")
+                        else:
+                            print(f"      ⚠️ Stock adicional insuficiente: {personalizacion.ingrediente.nombre} (disponible: {stock_actual}, necesario: {cantidad_a_descontar})")
+            
+            # ✅ 3. NUEVO: PROCESAR MENÚS
+            elif detalle.menu:
+                print(f"🍽️ Procesando menú: {detalle.menu.nombre} (cantidad: {detalle.cantidad})")
+                
+                # Obtener productos del menú
+                try:
+                    # ✅ IMPORTAR EL MODELO DE MENÚS SI NO ESTÁ IMPORTADO
+                    from catalogo.models import AppkioskoMenuProductos
+                    
+                    productos_menu = AppkioskoMenuProductos.objects.filter(
+                        menu=detalle.menu
+                    ).select_related('producto')
+                    
+                    print(f"  📦 Productos en el menú: {productos_menu.count()}")
+                    
+                    for menu_producto in productos_menu:
+                        producto = menu_producto.producto
+                        cantidad_producto_en_menu = menu_producto.cantidad  # Cantidad del producto en el menú
+                        cantidad_total_a_descontar = cantidad_producto_en_menu * detalle.cantidad
+                        
+                        print(f"    🍔 Producto del menú: {producto.nombre} x{cantidad_producto_en_menu} (total: x{cantidad_total_a_descontar})")
+                        
+                        # Obtener ingredientes de este producto
+                        ingredientes_producto = AppkioskoProductosIngredientes.objects.filter(
+                            producto=producto
+                        ).select_related('ingrediente')
+                        
+                        for prod_ingrediente in ingredientes_producto:
+                            cantidad_a_descontar = prod_ingrediente.cantidad * cantidad_total_a_descontar
+                            stock_actual = prod_ingrediente.ingrediente.stock
+                            
+                            print(f"      🥗 Ingrediente: {prod_ingrediente.ingrediente.nombre}, descontar: {cantidad_a_descontar}, stock actual: {stock_actual}")
+                            
+                            if stock_actual >= cantidad_a_descontar:
+                                nuevo_stock = stock_actual - cantidad_a_descontar
+                                prod_ingrediente.ingrediente.stock = nuevo_stock
+                                prod_ingrediente.ingrediente.save()
+                                
+                                stock_actualizado.append({
+                                    'ingrediente': prod_ingrediente.ingrediente.nombre,
+                                    'stock_anterior': stock_actual,
+                                    'cantidad_descontada': cantidad_a_descontar,
+                                    'stock_nuevo': nuevo_stock,
+                                    'tipo': 'menu',
+                                    'origen': f'menú: {detalle.menu.nombre} → {producto.nombre}',
+                                    'unidad': getattr(prod_ingrediente.ingrediente, 'unidad', 'unidades')
+                                })
+                                
+                                print(f"        ✅ Stock menú actualizado: {prod_ingrediente.ingrediente.nombre} ({stock_actual} → {nuevo_stock})")
+                            else:
+                                print(f"        ⚠️ Stock menú insuficiente: {prod_ingrediente.ingrediente.nombre} (disponible: {stock_actual}, necesario: {cantidad_a_descontar})")
+                
+                except ImportError as e:
+                    print(f"      ❌ Error importando modelo de menús: {e}")
+                except Exception as e:
+                    print(f"      ❌ Error procesando ingredientes del menú: {e}")
+        
+        # ✅ 4. ACTUALIZAR ESTADO DEL PEDIDO A 'PAGADO'
+        try:
+            if hasattr(pedido, 'estado'):
+                estado_pagado = AppkioskoEstados.objects.filter(nombre__iexact='pagado').first()
+                if estado_pagado:
+                    pedido.estado = estado_pagado
+                    pedido.save()
+                    print(f"✅ Pedido {numero_pedido} marcado como PAGADO")
+        except Exception as e:
+            print(f"⚠️ No se pudo cambiar estado: {e}")
+        
+        # ✅ 5. RESPUESTA DE CONFIRMACIÓN
+        ingredientes_base = [item for item in stock_actualizado if item['tipo'] == 'base']
+        ingredientes_adicionales = [item for item in stock_actualizado if item['tipo'] == 'adicional']
+        ingredientes_menu = [item for item in stock_actualizado if item['tipo'] == 'menu']
+        
+        print(f"✅ Stock actualizado completamente para pedido {numero_pedido}: {len(ingredientes_base)} base + {len(ingredientes_adicionales)} adicionales + {len(ingredientes_menu)} menús")
+        
+        return Response({
+            'success': True,
+            'message': f'Pago confirmado para pedido {numero_pedido}',
+            'pedido': numero_pedido,
+            'metodo_pago': metodo_pago,
+            'stock_actualizado': {
+                'total_items': len(stock_actualizado),
+                'ingredientes_base': ingredientes_base,
+                'ingredientes_adicionales': ingredientes_adicionales,
+                'ingredientes_menu': ingredientes_menu,
+                'resumen': f"{len(ingredientes_base)} base + {len(ingredientes_adicionales)} adicionales + {len(ingredientes_menu)} menús = {len(stock_actualizado)} total"
+            }
+        })
+        
+    except AppkioskoPedidos.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': f'Pedido {numero_pedido} no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        print(f"❌ Error al confirmar pago con stock: {str(e)}")
+        return Response({
+            'success': False,
+            'error': f'Error interno: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     """
     ✅ NUEVA FUNCIONALIDAD: Confirma pago Y descuenta stock automáticamente
     Incluye ingredientes base + ingredientes adicionales de personalizaciones

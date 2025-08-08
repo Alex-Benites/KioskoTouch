@@ -846,8 +846,7 @@ export class PedidoService {
   }
 
   confirmarPagoConStock(numeroPedido: string, metodoPago: string = 'efectivo'): Observable<any> {
-    const url = `${environment.apiUrl}/ventas/pedidos/confirmar-pago/${numeroPedido}/`;
-    
+    const url = `${environment.apiUrl}/ventas/pedidos/confirmar-pago/${numeroPedido}/`;    
     const payload = {
       metodo_pago: metodoPago
     };

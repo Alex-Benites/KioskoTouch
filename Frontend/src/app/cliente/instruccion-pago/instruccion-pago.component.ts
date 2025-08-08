@@ -37,7 +37,7 @@ interface ConfiguracionEmpresarial {
 export class InstruccionPagoComponent implements OnInit, OnDestroy {
   @ViewChild(FacturaPagoComponent) facturaComponent?: FacturaPagoComponent;
   private facturaYaImpresa: boolean = false;
-
+  private metodoPagoOriginal: 'tarjeta' | 'efectivo' = 'tarjeta';
   tipoPago: 'tarjeta' | 'efectivo' | 'completado' = 'tarjeta';
   numeroOrden: string = '21';
   cantidadProductos: number = 0;
@@ -127,6 +127,14 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     if (this.tipoPago === 'tarjeta') {
       this.verificarConectividad();
     }
+    setTimeout(() => {
+      console.log('🔍 DEBUG - Estado actual:', {
+        tipoPago: this.tipoPago,
+        mostrarFactura: this.mostrarFactura,
+        facturaYaImpresa: this.facturaYaImpresa
+      });
+    }, 2000);
+
   }
 
   ngOnDestroy(): void {
@@ -285,6 +293,7 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
    * MANEJAR CLICK DEL BOTÓN CONTINUAR - LÓGICA FINAL
    */
   continuar(): void {
+    console.log(`🔄 Procesando continuar para tipo: ${this.tipoPago}`);
     
     switch (this.tipoPago) {
       case 'tarjeta':
@@ -292,82 +301,63 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
         break;
 
       case 'efectivo':
+        console.log('💰 Procesando pago en efectivo...');
+        this.metodoPagoOriginal = 'efectivo';
         this.cargarDatosParaImpresion();
         this.tipoPago = 'completado';
+        console.log('✅ Estado cambiado a completado. tipoPago:', this.tipoPago);
         break;
 
       case 'completado':
-        this.confirmarPagoYFinalizar();
+        console.log('🏠 Caso completado - confirmando pago y descontando stock...');
+        this.confirmarPagoYFinalizar(); // ✅ CAMBIO: Llamar a confirmarPagoYFinalizar en lugar de finalizarCompletamente
         break;
     }
   }
 
   /**
-   * ✅ ACTUALIZADO: CONFIRMAR PAGO Y FINALIZAR CON DESCUENTO DE STOCK
+   * ✅ NUEVO MÉTODO: Para el botón "Finalizar Pedido" que confirma pago y descuenta stock
    */
-  private confirmarPagoYFinalizar(): void {
-    console.log('💳 Iniciando confirmación de pago con descuento automático de stock...');
+  finalizarPedido(): void {
+    console.log('🏠 BOTÓN FINALIZAR PEDIDO PRESIONADO');
+    console.log('📋 Estado actual:', {
+      tipoPago: this.tipoPago,
+      metodoPagoOriginal: this.metodoPagoOriginal
+    });
     
-    const pedidoCreado = this.pedidoService.getPedidoCreado();
-    
-    if (pedidoCreado && pedidoCreado.numero) {
-      // ✅ DETERMINAR MÉTODO DE PAGO
-      const metodoPago = this.tipoPago === 'tarjeta' ? 'tarjeta' : 'efectivo';
-      
-      console.log('📋 Confirmando pago:', {
-        pedido: pedidoCreado.numero,
-        metodo: metodoPago
-      });
-      
-      // ✅ USAR EL NUEVO MÉTODO QUE DESCUENTA STOCK AUTOMÁTICAMENTE
-      this.pedidoService.confirmarPagoConStock(pedidoCreado.numero, metodoPago)
-        .subscribe({
-          next: (response) => {
-            console.log('✅ Pago confirmado exitosamente:', response);
-            
-            // ✅ MOSTRAR INFORMACIÓN DEL STOCK ACTUALIZADO
-            if (response.stock_actualizado && response.stock_actualizado.length > 0) {
-              console.log('📊 Ingredientes con stock actualizado:');
-              response.stock_actualizado.forEach((item: any) => {
-                console.log(`  - ${item.ingrediente}: ${item.stock_anterior} → ${item.stock_actual} ${item.unidad} (-${item.cantidad_descontada})`);
-              });
-            }
-            
-            this.finalizarCompletamente();
-          },
-          error: (error) => {
-            console.error('❌ Error al confirmar pago:', error);
-            
-            // Mostrar mensaje de error si es necesario
-            if (error.error?.mensaje) {
-              console.warn('⚠️ Mensaje del servidor:', error.error.mensaje);
-            }
-            
-            // ✅ FINALIZAR DE TODAS FORMAS PARA NO BLOQUEAR AL USUARIO
-            // (El pedido ya se creó, solo falló el descuento de stock)
-            this.finalizarCompletamente();
-          }
-        });
-    } else {
-      console.warn('⚠️ No se encontró pedido creado para confirmar');
-      this.finalizarCompletamente();
-    }
+    // ✅ CONFIRMAR PAGO Y DESCONTAR STOCK ANTES DE FINALIZAR
+    this.confirmarPagoYFinalizar();
   }
 
   /**
    * NUEVO: FINALIZAR COMPLETAMENTE Y LIMPIAR TODO
    */
   private finalizarCompletamente(): void {
+    console.log('🔄 Finalizando completamente...');
+    
     this.facturaYaImpresa = false;
     this.pedidoService.limpiarTodoCompletamente();
     this.pinpadService.reiniciarEstado();
-    this.router.navigate(['/cliente/home']);
+    
+    console.log('🏠 Navegando a cliente/home...');
+    this.router.navigate(['/cliente/home']).then(
+      (success) => {
+        console.log('✅ Navegación exitosa:', success);
+      },
+      (error) => {
+        console.error('❌ Error en navegación:', error);
+        // ✅ FALLBACK: RECARGAR LA PÁGINA
+        window.location.href = '/cliente/home';
+      }
+    );
   }
 
   /**
    * COMPLETAR PAGO EXITOSO - CAMBIAR ESTADO E IMPRIMIR FACTURA
    */
   private completarPago(): void {
+    // ✅ GUARDAR EL MÉTODO AQUÍ TAMBIÉN
+    this.metodoPagoOriginal = 'tarjeta';
     
     this.tipoPago = 'completado';
     this.estadoPago = { estado: 'exitoso', mensaje: 'Pago completado exitosamente' };
@@ -377,8 +367,8 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.pinpadService.reiniciarEstado();
     }, 1000);
-    
   }
+
 
   /**
    * MANEJAR LÓGICA DE PAGO CON TARJETA
@@ -426,124 +416,6 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * ✅ ACTUALIZADO: CARGAR DATOS DEL CARRITO PARA IMPRESIÓN CON DEBUG
-   */
-  private cargarDatosParaImpresion(): void {
-    console.log('📋 Iniciando carga de datos para impresión...');
-    
-    this.productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
-    console.log('🛒 Productos del carrito completos:', this.productosCarrito);
-    
-    // ✅ CREAR ARRAY DE PROMESAS PARA OBTENER NOMBRES REALES
-    const promesasNombres = this.productosCarrito.map(async (p, index) => {
-      console.log(`📦 Procesando producto ${index + 1}:`, p);
-      
-      try {
-        let nombreProducto = p.nombre || `Producto ${p.producto_id}`;
-        
-        // ✅ SI ES PRODUCTO, CONSULTAR NOMBRE REAL
-        if (p.tipo === 'producto' && p.producto_id) {
-          const producto = await this.catalogoService.obtenerProductoPorId(p.producto_id).toPromise();
-          if (producto && producto.nombre) {
-            nombreProducto = producto.nombre;
-            console.log(`✅ Nombre real obtenido: "${nombreProducto}"`);
-          }
-        }
-        
-        // ✅ SI ES MENÚ, CONSULTAR NOMBRE REAL
-        if (p.tipo === 'menu' && p.menu_id) {
-          const menu = await this.catalogoService.obtenerMenuPorId(p.menu_id).toPromise();
-          if (menu && menu.nombre) {
-            nombreProducto = menu.nombre;
-            console.log(`✅ Nombre de menú obtenido: "${nombreProducto}"`);
-          }
-        }
-        
-        return {
-          nombre: nombreProducto,
-          cantidad: p.cantidad,
-          precio: p.precio_unitario
-        };
-        
-      } catch (error) {
-        console.warn(`⚠️ Error al obtener nombre del producto ${p.producto_id}:`, error);
-        return {
-          nombre: p.nombre || `Producto ${p.producto_id}`,
-          cantidad: p.cantidad,
-          precio: p.precio_unitario
-        };
-      }
-    });
-    
-    // ✅ ESPERAR A QUE TODAS LAS CONSULTAS TERMINEN
-    Promise.all(promesasNombres).then(productosConNombres => {
-      this.datosFactura = {
-        pedido_id: this.numeroOrden,
-        cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
-        productos: productosConNombres,
-        subtotal: this.subtotal,
-        iva: this.iva,
-        total: this.montoTotal,
-        turno: this.numeroTurno
-      };
-      
-      this.mostrarFactura = true;
-      console.log('📋 Datos de factura preparados con nombres reales:', this.datosFactura);
-      
-      // ✅ IMPRIMIR AUTOMÁTICAMENTE DESPUÉS DE CARGAR DATOS
-      this.imprimirFacturaAutomatica();
-      
-    }).catch(error => {
-      console.error('❌ Error al procesar nombres de productos:', error);
-      
-      // ✅ FALLBACK: USAR DATOS ORIGINALES
-      this.datosFactura = {
-        pedido_id: this.numeroOrden,
-        cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
-        productos: this.productosCarrito.map(p => ({
-          nombre: p.nombre || `Producto ${p.producto_id}`,
-          cantidad: p.cantidad,
-          precio: p.precio_unitario
-        })),
-        subtotal: this.subtotal,
-        iva: this.iva,
-        total: this.montoTotal,
-        turno: this.numeroTurno
-      };
-      
-      this.mostrarFactura = true;
-      
-      // ✅ IMPRIMIR INCLUSO CON DATOS FALLBACK
-      this.imprimirFacturaAutomatica();
-    });
-  }
-
-
-  /**
-   * ✅ MÉTODO SIMPLIFICADO PARA IMPRESIÓN AUTOMÁTICA
-  */ 
-  private imprimirFacturaAutomatica(): void {
-    if (this.facturaYaImpresa) {
-      return;
-    }
-    
-    if (!this.datosFactura) {
-      return;
-    }
-    
-    this.facturaYaImpresa = true;
-    // ✅ ESPERAR A QUE EL COMPONENTE ESTÉ LISTO Y LUEGO IMPRIMIR
-    setTimeout(() => {
-      if (this.facturaComponent) {
-        console.log('✅ Componente de factura encontrado, iniciando impresión...');
-        this.facturaComponent.imprimirFactura();
-      } else {
-        console.warn('⚠️ Componente de factura no disponible, usando método directo...');
-        this.imprimirFacturaDirecta();
-      }
-    }, 800); // Aumentar tiempo para asegurar que el componente esté listo
-  }
 
   /**
    * ✅ MÉTODO DIRECTO COMO FALLBACK
@@ -562,40 +434,307 @@ export class InstruccionPagoComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
-  /**
-   * ✅ OBTENER NOMBRE DEL PRODUCTO O MENÚ CON DEBUG
-   */
-  private obtenerNombreProducto(item: any): string {
-    // ✅ AGREGAR CONSOLE.LOG AQUÍ PARA VER LOS CAMPOS
-    console.log('🔍 DEBUG - Item completo:', item);
-    console.log('🔍 DEBUG - Campos del item:', Object.keys(item));
-    console.log('🔍 DEBUG - Tipo:', item.tipo);
-    console.log('🔍 DEBUG - Producto ID:', item.producto_id);
-    console.log('🔍 DEBUG - Menu ID:', item.menu_id);
-    console.log('🔍 DEBUG - Nombre directo:', item.nombre);
-    console.log('🔍 DEBUG - Producto info:', item.producto_info);
-    console.log('🔍 DEBUG - Menu info:', item.menu_info);
+
+irAlInicio(): void {
+  console.log('🏠 BOTÓN IR AL INICIO PRESIONADO - INICIO DEL MÉTODO');
+  
+  try {
+    console.log('🧹 Limpiando pedido service...');
+    this.pedidoService.limpiarTodoCompletamente();
     
-    // ✅ LÓGICA MEJORADA PARA OBTENER EL NOMBRE
-    if (item.nombre) {
-      console.log('✅ Usando nombre directo:', item.nombre);
-      return item.nombre;
-    }
+    console.log('🔄 Reiniciando pinpad service...');
+    this.pinpadService.reiniciarEstado();
     
-    if (item.tipo === 'menu') {
-      if (item.menu_info?.nombre) {
-        console.log('✅ Usando nombre de menu_info:', item.menu_info.nombre);
-        return item.menu_info.nombre;
+    console.log('🚀 Iniciando navegación a /cliente/home...');
+    
+    // ✅ NAVEGACIÓN DIRECTA
+    this.router.navigate(['/cliente/home']).then(
+      (success) => {
+        console.log('✅ NAVEGACIÓN EXITOSA:', success);
+      },
+      (error) => {
+        console.error('❌ ERROR EN NAVEGACIÓN:', error);
+        // ✅ FALLBACK: RECARGAR PÁGINA
+        console.log('🔄 Usando fallback - recargando página...');
+        window.location.href = '/cliente/home';
       }
-      console.log('⚠️ Menu sin nombre, usando fallback');
-      return `Menú ${item.menu_id}`;
-    } else {
-      if (item.producto_info?.nombre) {
-        console.log('✅ Usando nombre de producto_info:', item.producto_info.nombre);
-        return item.producto_info.nombre;
-      }
-      console.log('⚠️ Producto sin nombre, usando fallback');
-      return `Producto ${item.producto_id}`;
-    }
+    );
+  } catch (error) {
+    console.error('❌ ERROR EN irAlInicio:', error);
+    // ✅ FALLBACK TOTAL
+    window.location.href = '/cliente/home';
   }
+}
+
+
+/**
+ * ✅ REEMPLAZAR: CONFIRMAR PAGO Y FINALIZAR CON IMPRESIÓN SIMPLE
+ */
+private confirmarPagoYFinalizar(): void {
+  const pedidoCreado = this.pedidoService.getPedidoCreado();
+  
+  if (pedidoCreado && pedidoCreado.numero) {
+    const metodoPago = this.metodoPagoOriginal;
+    
+    console.log('📋 Confirmando pago:', {
+      pedido: pedidoCreado.numero,
+      metodo: metodoPago,
+      tipoPagoActual: this.tipoPago
+    });
+    
+    // ✅ USAR EL NUEVO MÉTODO QUE DESCUENTA STOCK AUTOMÁTICAMENTE
+    this.pedidoService.confirmarPagoConStock(pedidoCreado.numero, metodoPago)
+      .subscribe({
+        next: (response) => {
+          console.log('✅ Pago confirmado exitosamente:', response);
+          
+          // ✅ MOSTRAR INFORMACIÓN DEL STOCK ACTUALIZADO
+          if (response.stock_actualizado && response.stock_actualizado.length > 0) {
+            console.log('📊 Ingredientes con stock actualizado:');
+            response.stock_actualizado.forEach((item: any) => {
+              console.log(`  - ${item.ingrediente}: ${item.stock_anterior} → ${item.stock_actual} ${item.unidad} (-${item.cantidad_descontada})`);
+            });
+          }
+          
+          // ✅ IMPRIMIR FACTURA CON DOM PROPIO
+          this.imprimirFacturaVentanaSimple();
+          
+          // ✅ FINALIZAR DESPUÉS DE UN PEQUEÑO DELAY
+          setTimeout(() => {
+            this.finalizarCompletamente();
+          }, 1000);
+        },
+        error: (error) => {
+          console.error('❌ Error al confirmar pago:', error);
+          
+          if (error.error?.mensaje) {
+            console.warn('⚠️ Mensaje del servidor:', error.error.mensaje);
+          }
+          
+          // ✅ FINALIZAR DE TODAS FORMAS
+          this.finalizarCompletamente();
+        }
+      });
+  } else {
+    console.warn('⚠️ No se encontró pedido creado para confirmar');
+    this.finalizarCompletamente();
+  }
+}
+
+/**
+ * ✅ NUEVO: IMPRESIÓN SIMPLE CON VENTANA PROPIA (NO INTERFIERE CON DOM)
+ */
+private imprimirFacturaVentanaSimple(): void {
+  try {
+    // ✅ CREAR DATOS DE FACTURA
+    const factura = {
+      pedido_id: this.numeroOrden,
+      cliente: this.datosFacturacion?.nombreCompleto || 'Consumidor Final',
+      productos: this.productosCarrito.map(p => ({
+        nombre: p.nombre || `Producto ${p.producto_id}`,
+        cantidad: p.cantidad,
+        precio: p.precio_unitario
+      })),
+      subtotal: this.subtotal,
+      iva: this.iva,
+      total: this.montoTotal,
+      turno: this.numeroTurno
+    };
+
+    // ✅ ABRIR VENTANA NUEVA PARA IMPRESIÓN
+    const ventana = window.open('', '_blank', 'width=400,height=600');
+    
+    if (ventana) {
+      const fecha = new Date().toLocaleString('es-EC', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      ventana.document.write(`
+        <html>
+          <head>
+            <title>Factura - ${factura.pedido_id}</title>
+            <style>
+              @page {
+                size: 80mm auto;
+                margin: 2mm;
+              }
+              
+              body {
+                margin: 0;
+                padding: 10px;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                line-height: 1.3;
+                color: black;
+                background: white;
+                width: 300px;
+              }
+              
+              .header {
+                text-align: center;
+                border-bottom: 1px dashed #000;
+                padding-bottom: 8px;
+                margin-bottom: 10px;
+              }
+              
+              .logo {
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 5px;
+              }
+              
+              .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin: 3px 0;
+              }
+              
+              .productos {
+                border-top: 1px dashed #000;
+                border-bottom: 1px dashed #000;
+                padding: 8px 0;
+                margin: 10px 0;
+              }
+              
+              .productos-title {
+                font-weight: bold;
+                margin-bottom: 8px;
+              }
+              
+              .producto {
+                margin: 5px 0;
+              }
+              
+              .producto-line {
+                display: flex;
+                justify-content: space-between;
+                margin: 2px 0;
+              }
+              
+              .totales {
+                margin-top: 10px;
+              }
+              
+              .total-final {
+                font-weight: bold;
+                font-size: 14px;
+                border-top: 1px solid #000;
+                padding-top: 5px;
+                margin-top: 5px;
+              }
+              
+              .footer {
+                text-align: center;
+                font-size: 11px;
+                margin-top: 15px;
+                border-top: 1px dashed #000;
+                padding-top: 8px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="logo">KIOSKO TOUCH</div>
+              <div>RUC: 1791310199001</div>
+              <div>Factura Simplificada</div>
+            </div>
+            
+            <div class="info-section">
+              <div class="info-row">
+                <span>Fecha:</span>
+                <span>${fecha}</span>
+              </div>
+              <div class="info-row">
+                <span>Orden:</span>
+                <span>${factura.pedido_id}</span>
+              </div>
+              <div class="info-row">
+                <span>Cliente:</span>
+                <span>${factura.cliente}</span>
+              </div>
+              ${factura.turno ? `
+              <div class="info-row">
+                <span>Turno:</span>
+                <span>${factura.turno}</span>
+              </div>
+              ` : ''}
+            </div>
+            
+            <div class="productos">
+              <div class="productos-title">PRODUCTOS:</div>
+              ${factura.productos.map((p: any) => `
+                <div class="producto">
+                  <div class="producto-line">
+                    <span>${p.nombre}</span>
+                  </div>
+                  <div class="producto-line">
+                    <span>${p.cantidad} x $${p.precio.toFixed(2)}</span>
+                    <span>$${(p.cantidad * p.precio).toFixed(2)}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="totales">
+              <div class="info-row">
+                <span>Subtotal:</span>
+                <span>$${factura.subtotal.toFixed(2)}</span>
+              </div>
+              <div class="info-row">
+                <span>IVA (15%):</span>
+                <span>$${factura.iva.toFixed(2)}</span>
+              </div>
+              <div class="info-row total-final">
+                <span>TOTAL:</span>
+                <span>$${factura.total.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <div>¡Gracias por su compra!</div>
+              <div>Kiosco de Autoservicio</div>
+              <div>${fecha}</div>
+            </div>
+          </body>
+        </html>
+      `);
+      
+      ventana.document.close();
+      
+      // ✅ IMPRIMIR AUTOMÁTICAMENTE
+      setTimeout(() => {
+        ventana.print();
+        // ✅ CERRAR VENTANA DESPUÉS DE IMPRIMIR
+        setTimeout(() => {
+          ventana.close();
+        }, 1500);
+      }, 500);
+    }
+    
+    console.log('✅ Factura enviada a impresión');
+    
+  } catch (error) {
+    console.error('❌ Error en impresión:', error);
+  }
+}
+
+/**
+ * ✅ ACTUALIZAR: CARGAR DATOS SIMPLIFICADO
+ */
+private cargarDatosParaImpresion(): void {
+  console.log('📋 Iniciando carga de datos para impresión...');
+  
+  this.productosCarrito = this.pedidoService.obtenerProductosParaCarrito();
+  console.log('🛒 Productos del carrito completos:', this.productosCarrito);
+  
+  // ✅ YA NO NECESITAMOS datosFactura NI mostrarFactura
+  // Solo preparamos productosCarrito para la impresión
+}
+
+
+
 }
