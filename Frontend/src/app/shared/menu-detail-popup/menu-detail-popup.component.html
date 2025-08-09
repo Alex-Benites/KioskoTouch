@@ -8,12 +8,14 @@
 
   <div class="menu-detail-popup__content">
     <div class="menu-image-section">
-      <img 
-        [src]="data.getFullImageUrl(data.menu.imagenUrl)" 
-        [alt]="data.menu.nombre"
-        class="menu-main-image"
-        onerror="this.src='assets/placeholder-producto.png'"
-      />
+      <div class="image-container">
+        <img 
+          [src]="data.getFullImageUrl(data.menu.imagenUrl)" 
+          [alt]="data.menu.nombre"
+          class="menu-main-image"
+          onerror="this.src='assets/placeholder-producto.png'"
+        />
+      </div>
       <div class="menu-price">
         <span class="price-label">Precio:</span>
         <span class="price-value">${{ data.menu.precio.toFixed(2) }}</span>

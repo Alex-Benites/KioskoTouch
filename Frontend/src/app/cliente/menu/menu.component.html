@@ -74,18 +74,6 @@
                   </div>
                   <div class="menu-info">
                     <h3 class="menu-name">{{ menu.nombre }}</h3>
-                    @if (esMenu(menu) && menu.productosLista && menu.productosLista.length > 0) {
-                      <div class="productos-list">
-                        <h4>Productos incluidos:</h4>
-                        <ul>
-                          @for (producto of menu.productosLista; track $index) {
-                            <li>{{ producto }}</li>
-                          }
-                        </ul>
-                      </div>
-                    } @else {
-                      <p class="no-productos">Sin productos asignados</p>
-                    }
                   </div>
                   <div class="menu-actions">
                     <div class="price-container">
