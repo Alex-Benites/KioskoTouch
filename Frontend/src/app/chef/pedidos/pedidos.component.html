@@ -13,7 +13,6 @@
     </button>
   </div>
 
-  <!-- Error State -->
   @if (pedidoChefService.error()) {
     <div class="error-container">
       <mat-icon class="error-icon">error_outline</mat-icon>
@@ -24,14 +23,12 @@
     </div>
   }
 
-  <!-- Tabs de pedidos -->
   @if (!pedidoChefService.error()) {
     <mat-tab-group 
       class="chef-pedidos-tabs" 
       (selectedTabChange)="onTabChange($event.index)"
       [selectedIndex]="selectedTabIndex">
       
-      <!-- Tab Pedidos Activos -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>restaurant</mat-icon>
@@ -39,7 +36,6 @@
         </ng-template>
         
         <div class="tab-content">
-          <!-- Barra de acciones para pedidos activos -->
           @if (pedidoChefService.cantidadActivos() > 0) {
             <div class="actions-bar">
               <div class="selection-controls">
@@ -76,11 +72,9 @@
             </div>
           }
 
-          <!-- Grid de pedidos activos -->
           <div class="pedidos-grid">
             @for (pedido of pedidoChefService.pedidosActivos(); track pedido.id) {
               <div class="pedido-card" [class]="obtenerClaseEstado(pedido)">
-                <!-- Header del pedido -->
                 <div class="pedido-header">
                   <div class="pedido-info">
                     <div class="pedido-numero">{{ pedido.numero }}</div>
@@ -97,13 +91,11 @@
                   </div>
                 </div>
 
-                <!-- Estado del pedido -->
                 <div class="pedido-estado" [class]="obtenerClaseEstado(pedido)">
                   <mat-icon>{{ obtenerIconoEstado(pedido.estado_cocina) }}</mat-icon>
                   <span>{{ obtenerTextoEstado(pedido.estado_cocina) }}</span>
                 </div>
 
-                <!-- Items del pedido -->
                 <div class="pedido-items">
                   @for (item of pedido.items; track item.id) {
                     <div class="item">
@@ -113,7 +105,6 @@
                         <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
                       </div>
                       
-                      <!-- Promoción si existe -->
                       @if (item.promocion) {
                         <div class="promocion-info">
                           <span class="promocion-badge">{{ item.promocion.nombre }}</span>
@@ -121,7 +112,6 @@
                         </div>
                       }
                       
-                      <!-- Solo Ingredientes Extra -->
                       @if (obtenerIngredientesExtra(item.personalizaciones).length > 0) {
                         <div class="extras-section">
                           <div class="extras-title">Extras</div>
@@ -147,7 +137,6 @@
                   }
                 </div>
 
-                <!-- Acciones del pedido -->
                 <div class="pedido-actions">
                   @if (pedido.estado_cocina === 'pendiente') {
                     <button 
@@ -187,7 +176,6 @@
                   }
                 </div>
 
-                <!-- Total del pedido -->
                 <div class="pedido-total">
                   <strong>Total: {{ formatearPrecio(pedido.total) }}</strong>
                 </div>
@@ -203,7 +191,6 @@
         </div>
       </mat-tab>
       
-      <!-- Tab Pedidos Finalizados -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>check_circle</mat-icon>
@@ -211,7 +198,6 @@
         </ng-template>
         
         <div class="tab-content">
-          <!-- Barra de acciones para pedidos finalizados -->
           @if (pedidoChefService.cantidadFinalizados() > 0) {
             <div class="actions-bar">
               <div class="selection-controls">
@@ -248,11 +234,9 @@
             </div>
           }
 
-          <!-- Grid de pedidos finalizados -->
           <div class="pedidos-grid">
             @for (pedido of pedidoChefService.pedidosFinalizados(); track pedido.id) {
               <div class="pedido-card finalizado">
-                <!-- Header del pedido -->
                 <div class="pedido-header">
                   <div class="pedido-info">
                     <div class="pedido-numero">{{ pedido.numero }}</div>
@@ -267,13 +251,11 @@
                   </div>
                 </div>
 
-                <!-- Estado finalizado -->
                 <div class="pedido-estado finalizado">
                   <mat-icon>check_circle</mat-icon>
                   <span>Finalizado</span>
                 </div>
 
-                <!-- Items del pedido -->
                 <div class="pedido-items">
                   @for (item of pedido.items; track item.id) {
                     <div class="item">
@@ -283,7 +265,6 @@
                         <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
                       </div>
                       
-                      <!-- Promoción si existe -->
                       @if (item.promocion) {
                         <div class="promocion-info">
                           <span class="promocion-badge">{{ item.promocion.nombre }}</span>
@@ -291,7 +272,6 @@
                         </div>
                       }
                       
-                      <!-- Solo Ingredientes Extra -->
                       @if (obtenerIngredientesExtra(item.personalizaciones).length > 0) {
                         <div class="extras-section">
                           <div class="extras-title">Extras</div>
@@ -317,7 +297,6 @@
                   }
                 </div>
 
-                <!-- Total del pedido -->
                 <div class="pedido-total">
                   <strong>Total: {{ formatearPrecio(pedido.total) }}</strong>
                 </div>
