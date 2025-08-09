@@ -152,26 +152,26 @@ $border-color: #e0e0e0;
     align-items: center;
 
     .total-label {
-      font-size: 1rem;
+      font-size: 1.2rem; // ✅ CAMBIO: Aumentado de 1.1rem a 1.2rem
       color: $text-color-dark;
       font-weight: 500;
     }
 
     .total-valor {
-      font-size: 1rem;
+      font-size: 1.2rem; // ✅ CAMBIO: Aumentado de 1.1rem a 1.2rem
       color: $text-color-dark;
       font-weight: 600;
     }
 
     &.total-final {
-      font-size: 1.2rem;
+      font-size: 1.4rem; // ✅ CAMBIO: Aumentado de 1.3rem a 1.4rem
       font-weight: 700;
       padding-top: 10px;
       border-top: 2px solid $border-color;
 
       .total-label,
       .total-valor {
-        font-size: 1.2rem;
+        font-size: 1.4rem; // ✅ CAMBIO: Aumentado de 1.3rem a 1.4rem
         font-weight: 700;
       }
     }
