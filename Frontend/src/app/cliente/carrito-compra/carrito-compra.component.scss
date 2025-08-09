@@ -285,7 +285,7 @@ $font-family-base: 'Lato', sans-serif;
 
     .producto-precio {
       .precio-valor {
-        font-size: 20px;
+        font-size: 28px; // ✅ CAMBIO: Aumentado de 24px a 28px
         font-weight: 700;
         color: #333;
         text-align: center;

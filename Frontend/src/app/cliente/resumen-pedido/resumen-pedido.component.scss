@@ -283,6 +283,7 @@ $border-color: #e0e0e0;
 // ✅ NUEVO: Datos de facturación con checkbox
 .datos-facturacion {
   width: 100%;
+  margin-bottom: 30px; // ✅ NUEVO: Agregar espacio después del formulario
 
   .checkbox-container {
     display: flex;
@@ -554,7 +555,7 @@ $border-color: #e0e0e0;
 // ✅ OPCIONAL: Estilos para mostrar el turno
 .turno-info {
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 30px; // ✅ CAMBIO: Aumentado de 20px a 30px
 
   .turno-display {
     background-color: color.adjust($kiosko-red, $lightness: 48%);
@@ -572,13 +573,13 @@ $border-color: #e0e0e0;
     }
 
     .turno-label {
-      font-size: 1.1rem;
+      font-size: 1.5rem; // ✅ CAMBIO: Aumentado de 1.3rem a 1.5rem
       font-weight: 600;
       color: $text-color-dark;
     }
 
     .turno-numero {
-      font-size: 1.5rem;
+      font-size: 1.8rem; // ✅ CAMBIO: Aumentado de 1.5rem a 1.8rem
       font-weight: 700;
       color: $kiosko-red;
       letter-spacing: 2px;
