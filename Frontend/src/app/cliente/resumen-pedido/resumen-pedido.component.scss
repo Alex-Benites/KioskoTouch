@@ -209,27 +209,27 @@ $border-color: #e0e0e0;
     text-align: left; // ✅ Cambio: de center a left
   }
 
-  .pago-opciones {
-    display: flex;
-    gap: 15px;
-    justify-content: flex-start; // ✅ Cambio: de center a flex-start
-    margin-bottom: 22px; // Espacio entre los botones de pago y el siguiente bloque (datos de facturación)
-
-    .pago-opcion {
-      background-color: white;
-      border: 2px solid $border-color;
-      border-radius: 15px;
-      padding: 15px 10px; // ✅ CAMBIO: Menos padding vertical, más horizontal
-      min-width: 310px; // ✅ CAMBIO: Ancho mínimo en lugar de fijo
-      width: auto; // ✅ CAMBIO: Ancho automático
+    .pago-opciones {
       display: flex;
-      flex-direction: row; // ✅ CAMBIO: de column a row (horizontal)
-      align-items: center; // ✅ CAMBIO: centrar verticalmente
-      gap: 12px; // ✅ CAMBIO: gap entre ícono y texto
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
+      gap: 15px;
+      justify-content: flex-start; // ✅ Cambio: de center a flex-start
+      margin-bottom: 22px; // Espacio entre los botones de pago y el siguiente bloque (datos de facturación)
 
+      .pago-opcion {
+        background-color: white;
+        border: 2px solid $border-color;
+        border-radius: 15px;
+        padding: 15px 10px; // ✅ CAMBIO: Menos padding vertical, más horizontal
+        min-width: 310px; // ✅ CAMBIO: Ancho mínimo en lugar de fijo
+        width: auto; // ✅ CAMBIO: Ancho automático
+        display: flex;
+        flex-direction: row; // ✅ CAMBIO: de column a row (horizontal)
+        align-items: center; // ✅ CAMBIO: centrar verticalmente
+        justify-content: center; // ✅ NUEVO: centrar horizontalmente
+        gap: 12px; // ✅ CAMBIO: gap entre ícono y texto
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
       &:hover {
         border-color: color.adjust($kiosko-red, $lightness: 20%);
       }
@@ -270,14 +270,13 @@ $border-color: #e0e0e0;
         }
       }
 
-      .pago-texto {
-        font-size: 1rem;
-        font-weight: 600;
-        color: $text-color-dark;
-        text-align: left; // ✅ CAMBIO: de center a left
-        white-space: nowrap; // ✅ NUEVO: Evitar que el texto se corte
-      }
-    }
+        .pago-texto {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: $text-color-dark;
+          text-align: center; // ✅ CAMBIO: centrar el texto
+          white-space: nowrap; // ✅ NUEVO: Evitar que el texto se corte
+        }    }
   }
 }
 
