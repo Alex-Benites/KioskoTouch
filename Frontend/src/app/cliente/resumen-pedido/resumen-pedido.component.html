@@ -1,31 +1,24 @@
 <div class="resumen-page-container">
 
-  <!-- Banner Promocional Superior (igual que instruccion-pago) -->
   <app-publicidad-section
     seccion="pago"
     altura="200px"
     (publicidadCambio)="onPublicidadCambio($event)">
   </app-publicidad-section>
 
-  <!-- Contenido Principal -->
   <main class="resumen-content">
 
-    <!-- Logo Kiosko (alineado a la izquierda) -->
     <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
 
-    <!-- Título (alineado a la izquierda) -->
     <h1 class="resumen-title">Resumen del Pedido</h1>
 
-    <!-- Card Principal con productos (ancho completo) -->
     <div class="resumen-card">
 
-      <!-- Lista de productos -->
       <div *ngIf="productosCarrito.length > 0; else sinProductos" class="productos-lista">
         <div
           *ngFor="let item of productosCarrito; let i = index"
           class="producto-item">
 
-          <!-- Imagen del producto -->
           <div class="producto-imagen">
             <img
               [src]="obtenerImagenProducto(item)"
@@ -33,7 +26,6 @@
               class="producto-img">
           </div>
 
-          <!-- Info del producto -->
           <div class="producto-info">
             <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
             <p class="producto-precio">${{ item.subtotal | number:'1.2-2' }}</p>
@@ -41,7 +33,6 @@
         </div>
       </div>
 
-      <!-- Mensaje si no hay productos -->
       <ng-template #sinProductos>
         <div class="sin-productos">
           <p>No hay productos en el pedido</p>
@@ -49,11 +40,8 @@
         </div>
       </ng-template>
 
-      <!-- Separador -->
       <div class="separador"></div>
 
-      <!-- Totales -->
-      <!--  SECCIÓN DE TOTALES ACTUALIZADA -->
       <div class="totales-section">
         <div class="totales-container">
 
@@ -67,7 +55,6 @@
           </div>
 
           <div class="total-item">
-            <!--  MOSTRAR solo la parte entera del IVA -->
             <span class="total-label">IVA {{ ivaActual | number:'1.0-0' }}%</span>
             @if (cargandoIva) {
               <span class="total-valor loading">Calculando...</span>
@@ -89,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Métodos de Pago -->
     <div class="metodos-pago">
       <h2 class="metodos-title">Métodos de Pago</h2>
 
@@ -112,7 +98,6 @@
       </div>
     </div>
 
-    <!--  NUEVO: Datos de Facturación con Checkbox -->
     <div class="datos-facturacion">
       <div class="checkbox-container">
         <input
@@ -126,7 +111,6 @@
         </label>
       </div>
 
-      <!--  NUEVO: Formulario de datos de facturación -->
       <div class="datos-form" *ngIf="mostrarDatosFacturacion">
         <div class="form-row">
           <div class="form-group">
@@ -189,7 +173,6 @@
       </div>
     </div>
 
-    <!--  OPCIONAL: Mostrar el turno si existe -->
     <div class="turno-info" *ngIf="tieneTurno">
       <div class="turno-display">
         <i class="fas fa-ticket-alt"></i>
@@ -198,9 +181,7 @@
       </div>
     </div>
 
-    <!-- Botones de acción (reorganizados) -->
     <div class="botones-accion">
-      <!-- Primera fila: Cancelar y Editar -->
       <div class="botones-fila">
         <button
           class="secondary-button cancel-btn"
@@ -217,7 +198,6 @@
         </button>
       </div>
 
-      <!-- Segunda fila: Continuar (ancho completo) -->
       <button
         class="primary-button confirm-btn"
         (click)="confirmarPedido()"

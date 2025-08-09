@@ -1,5 +1,4 @@
 <div class="menu-page-container">
-  <!-- Banner Promocional Superior -->
   <app-publicidad-section
     seccion="menu"
     altura="200px"
@@ -10,7 +9,6 @@
     <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
 
-  <!-- Indicador de carga global -->
   @if (estaCargando) {
     <div class="loading-container">
       <div class="loading-spinner"></div>
@@ -18,7 +16,6 @@
     </div>
   }
 
-  <!-- Mensaje de error -->
   @if (hayError) {
     <div class="error-container">
       <p class="error-message">{{ hayError }}</p>
@@ -26,10 +23,8 @@
     </div>
   }
 
-  <!-- Contenido principal -->
   @if (!estaCargando && !hayError) {
     <div class="menu-content-layout">
-      <!-- Barra Lateral de Categorías -->
       <aside class="category-sidebar">
         @for (categoria of categoriasLista; track categoria.id) {
           <div
@@ -43,14 +38,12 @@
         }
       </aside>
 
-      <!-- Contenido Principal: Título del Menú y Productos -->
       <main class="main-menu-content">
         <div class="menu-title-section">
           <span class="menu-title-label">MENÚ</span>
           <h2 class="menu-category-name">{{ categoriaActual?.nombre || 'Seleccione Categoría' }}</h2>
         </div>
 
-        <!-- SOLO UNO DE LOS GRIDS SEGÚN LA CATEGORÍA -->
         @if (categoriaActual?.nombre?.toLowerCase() === 'combos') {
           @if (productosActuales.length > 0) {
             <div class="menu-grid">
@@ -77,7 +70,6 @@
                   </div>
                   <div class="menu-actions">
                     <div class="price-container">
-                      <!-- ✅ MEJORADO: Mostrar descuento en menús si aplica -->
                       @if (tienePromoBadge(menu)) {
                         <span class="price-original">{{ obtenerTextoPrecioGenerico(menu) }}</span>
                         <span class="price-discount">{{ obtenerTextoPrecioConDescuento(menu) }}</span>
@@ -119,12 +111,9 @@
                     <h3 class="product-card__name">{{ producto.nombre }}</h3>
                     <div class="product-card__footer">
                       <div class="price-container">
-                        <!-- ✅ VALIDACIÓN: Si tiene tamaños, solo precio original. Si no tiene tamaños, mostrar descuento -->
                         @if (productoTieneTamanos(producto)) {
-                          <!-- Producto CON tamaños: Solo precio original (rango) -->
                           <span class="product-card__price">{{ obtenerTextoPrecio(producto) }}</span>
                         } @else {
-                          <!-- Producto SIN tamaños: Mostrar descuento si aplica -->
                           @if (tienePromoBadge(producto)) {
                             <span class="price-original">{{ obtenerTextoPrecio(producto) }}</span>
                             <span class="price-discount">{{ obtenerTextoPrecioConDescuento(producto) }}</span>
@@ -150,9 +139,6 @@
     </div>
   }
 
-  <!-- Footer: Resumen del Pedido -->
-
-<!-- Embellecido: Footer de Resumen del Pedido -->
 <footer class="order-summary-footer mejorado">
   <div class="order-summary-footer__header">
     <mat-icon class="footer-icon">shopping_cart</mat-icon>

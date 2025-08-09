@@ -1,12 +1,10 @@
 <div class="container">
   <header class="header">
-    <!-- Cambiar el texto por una imagen -->
     <img src="assets/cliente/kiosko_go4k.png" alt="KIOSCO GO!" class="header__logo" />
   </header>
 
   <main class="main-content">
     <div class="options__container">
-      <!-- Opción Comer Aquí -->
       <div class="opcion"
            [class.selected]="seleccionLocal() === 'servir'"
            (click)="seleccionar('servir')">
@@ -23,7 +21,6 @@
                class="opcion__radio" />
       </div>
 
-      <!-- Opción Para Llevar -->
       <div class="opcion"
            [class.selected]="seleccionLocal() === 'llevar'"
            (click)="seleccionar('llevar')">

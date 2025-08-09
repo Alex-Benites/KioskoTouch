@@ -4,10 +4,9 @@
   padding: 0;
 }
 
-// ===== ESTILOS MEJORADOS =====
 .container {
-  width: 100%;          // ✅ MEJOR que 720px
-  height: 100vh;        // ✅ MEJOR que 1280px (100% del viewport)
+  width: 100%;
+  height: 100vh;
   background-color: #e5e5e5;
   display: flex;
   flex-direction: column;
@@ -16,23 +15,21 @@
   overflow: hidden;
 }
 
-// ===== HEADER =====
 .header {
-  margin-top: 8vh;      // ✅ Ya está bien con vh
+  margin-top: 8vh;
   width: 100%;
   padding: 30px 20px;
   text-align: center;
 }
 
 .header__logo {
-  width: 300px;         // ✅ Este puede quedar fijo o usar vw
+  width: 300px;
   height: auto;
   object-fit: contain;
 }
 
-// ===== MAIN CONTENT =====
 .main-content {
-  flex: 1;              // ✅ Esto ya es relativo, perfecto
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,7 +44,6 @@
   justify-content: center;
 }
 
-// ===== OPCIONES - TARJETAS =====
 .opcion {
   background-color: white;
   border-radius: 20px;
@@ -115,7 +111,6 @@
   display: none;
 }
 
-// ===== FOOTER =====
 .footer {
   width: 100%;
   padding: 30px 20px 50px 20px;
@@ -153,7 +148,6 @@
   }
 }
 
-// ===== ANIMACIONES =====
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -1,13 +1,11 @@
 <div class="instruccion-pago-container" [class]="tipoPago">
 
-  <!-- Banner Promocional Superior -->
   <app-publicidad-section 
     seccion="pago"
     altura="200px"
     (publicidadCambio)="onPublicidadCambio($event)">
   </app-publicidad-section>
 
-  <!-- Contenido Principal -->
   <main class="pago-content">
     <img src="assets/cliente/kiosko_go4k.png" alt="Kiosko Go!" class="kiosko-logo">
 
@@ -17,13 +15,10 @@
 
     <h2 class="pago-title">{{ obtenerTitulo() }}</h2>
 
-    <!-- Instrucciones dinámicas -->
     <p class="pago-instrucciones">{{ obtenerInstrucciones() }}</p>
 
-    <!-- ✅ CONTENEDOR DE BOTONES SIMPLIFICADO -->
     <div class="botones-container">
       
-      <!-- BOTÓN PRINCIPAL -->
       <button 
         class="pago-button"
         [class.btn-finalizar]="tipoPago === 'completado'"
@@ -32,7 +27,6 @@
         {{ tipoPago === 'completado' ? 'Finalizar Pedido' : obtenerTextoBoton() }}
       </button>
 
-      <!-- BOTÓN CANCELAR -->
       <button 
         *ngIf="tipoPago === 'tarjeta' && estadoPago.estado !== 'exitoso'"
         class="btn-cancelar" 
@@ -44,7 +38,6 @@
 
     </div>
 
-    <!-- ✅ INDICADOR DE ESTADO (opcional pero útil) -->
     <div class="estado-pago" *ngIf="tipoPago === 'tarjeta'">
       <div class="estado-mensaje" [class]="estadoPago.estado">
         {{ estadoPago.mensaje }}
@@ -53,5 +46,3 @@
     </div>
   </main>
 </div>
-
-<!-- ✅ ELIMINADO: Factura oculta innecesaria ya que usas ventana propia -->

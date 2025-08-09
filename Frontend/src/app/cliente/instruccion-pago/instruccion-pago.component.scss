@@ -39,7 +39,7 @@ $line-color: #e0e0e0;
   max-width: 450px;
   width: 80%;
   height: auto;
-  margin-bottom: 16px; /* restore some spacing to balance vertical rhythm */
+  margin-bottom: 16px;
 }
 
 .pago-icon-wrapper {
@@ -134,15 +134,13 @@ $line-color: #e0e0e0;
   }
 }
 
-// ✅ CORREGIDO: Clase específica para imagen de completado (10% más grande)
 .completado {
   .pago-icon {
-    max-width: 75%; // Antes era 65%, ahora 75%
-    max-height: 75%; // Antes era 65%, ahora 75%
+    max-width: 75%;
+    max-height: 75%;
   }
 }
 
-// Media queries para adaptabilidad
 @media (max-width: 480px) {
   .pago-content {
     gap: 25px;
@@ -160,8 +158,8 @@ $line-color: #e0e0e0;
 
   .pago-icon {
     .completado & {
-      max-width: 70%; // Antes era 60%, ahora 70%
-      max-height: 70%; // Antes era 60%, ahora 70%
+      max-width: 70%;
+      max-height: 70%;
     }
   }
 
@@ -193,19 +191,16 @@ $line-color: #e0e0e0;
     font-size: 1.2rem; 
   }
 
-  // ✅ AGREGADO: Responsive para btn-cancelar
   .btn-cancelar {
-    width: 90%; // ✅ MODIFICADO: Cambio de 100% a 90% para que sea más ancho pero no todo el contenedor
-    max-width: 400px; // ✅ AGREGADO: Ancho máximo para mantener proporciones
-    min-width: 250px; // ✅ AGREGADO: Ancho mínimo en responsive
-    padding: 18px 40px; // ✅ MODIFICADO: Más padding horizontal
+    width: 90%;
+    max-width: 400px;
+    min-width: 250px;
+    padding: 18px 40px;
     font-size: 1.2rem;
   }
 }
 
-/* ✅ AGREGAR ESTOS ESTILOS A TU .scss EXISTENTE */
 
-// ✅ SPINNER DE CARGA
 .pago-icon-wrapper {
   position: relative;
   
@@ -237,7 +232,6 @@ $line-color: #e0e0e0;
   100% { transform: rotate(360deg); }
 }
 
-// ✅ INFORMACIÓN DEL PAGO
 .info-pago {
   background: rgba(255,255,255,0.1);
   padding: 1.5rem;
@@ -267,7 +261,6 @@ $line-color: #e0e0e0;
   }
 }
 
-// ✅ ESTADO DEL PAGO
 .estado-pago {
   display: flex;
   align-items: center;
@@ -311,7 +304,6 @@ $line-color: #e0e0e0;
   }
 }
 
-// ✅ DETALLES DE TRANSACCIÓN
 .detalles-transaccion {
   background: rgba(76,175,80,0.1);
   padding: 1rem;
@@ -340,7 +332,6 @@ $line-color: #e0e0e0;
   }
 }
 
-// ✅ INFORMACIÓN DE AUTORIZACIÓN EN COMPLETADO
 .autorizacion-info {
   margin-top: 1rem;
   padding: 0.8rem;
@@ -362,7 +353,6 @@ $line-color: #e0e0e0;
   }
 }
 
-// ✅ CONTENEDOR DE BOTONES
 .botones-container {
   display: flex;
   flex-direction: column;
@@ -372,7 +362,6 @@ $line-color: #e0e0e0;
   max-width: 400px;
 }
 
-// ✅ ESTADOS DE BOTONES
 .pago-button {
   &.btn-procesando {
     background: #2196F3 !important;
@@ -413,40 +402,39 @@ $line-color: #e0e0e0;
 }
 
 .btn-cancelar {
-  background-color: rgba(235, 50, 50, 0.74); // ✅ CAMBIADO: Usar background-color como pago-button
+  background-color: rgba(235, 50, 50, 0.74);
   color: white;
-  border: none; // ✅ IGUALADO: Sin border como pago-button
-  border-radius: 25px; // ✅ IGUALADO: Mismo border-radius que pago-button
-  padding: 22px 80px; // ✅ IGUALADO: Mismo padding que pago-button
-  font-size: clamp(1.3rem, 3vw, 1.6rem); // ✅ IGUALADO: Mismo font-size que pago-button
-  font-weight: 700; // ✅ IGUALADO: Mismo font-weight que pago-button
+  border: none;
+  border-radius: 25px;
+  padding: 22px 80px;
+  font-size: clamp(1.3rem, 3vw, 1.6rem);
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease; // ✅ IGUALADO: Misma transition que pago-button
-  box-shadow: 0 5px 15px rgba(235, 50, 50, 0.4); // ✅ IGUALADO: Mismo box-shadow que pago-button
-  display: inline-block; // ✅ AGREGADO: Asegurar que se comporte igual
-  text-align: center; // ✅ AGREGADO: Centrar texto
-  min-width: 340px; // ✅ MODIFICADO: Ancho mínimo más grande
-  width: auto; // ✅ AGREGADO: Permitir que crezca según contenido
-  white-space: nowrap; // ✅ AGREGADO: Evitar que el texto se divida en líneas
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 5px 15px rgba(235, 50, 50, 0.4);
+  display: inline-block;
+  text-align: center;
+  min-width: 340px;
+  width: auto;
+  white-space: nowrap;
 
   &:hover:not(:disabled) {
     background-color: rgba(200, 40, 40, 0.9);
-    transform: translateY(-3px); // ✅ IGUALADO: Mismo transform que pago-button
+    transform: translateY(-3px);
   }
 
   &:active {
-    transform: translateY(0); // ✅ IGUALADO: Mismo active que pago-button
-    box-shadow: 0 2px 8px rgba(235, 50, 50, 0.3); // ✅ IGUALADO: Mismo active shadow
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(235, 50, 50, 0.3);
   }
 
   &:disabled {
-    opacity: 0.6; // ✅ IGUALADO: Misma opacidad que pago-button
+    opacity: 0.6;
     cursor: not-allowed;
-    transform: none !important; // ✅ IGUALADO: Mismo comportamiento disabled
+    transform: none !important;
   }
 }
 
-// ✅ CONECTIVIDAD INFO
 .conectividad-info {
   display: flex;
   align-items: center;
@@ -466,7 +454,6 @@ $line-color: #e0e0e0;
   100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
 }
 
-// ✅ RESPONSIVE
 @media (max-width: 768px) {
   .info-pago {
     margin: 0.5rem;
@@ -489,7 +476,6 @@ $line-color: #e0e0e0;
     }
   }
 }
-// ✅ AGREGAR AL FINAL DEL SCSS:
 
 .info-pedido {
   background: rgba(255,255,255,0.05);
@@ -612,58 +598,4 @@ $line-color: #e0e0e0;
   &:hover {
     background: #545b62;
   }
-}
-
-.pago-instrucciones {
-  text-align: center;
-  font-size: 18px;
-  color: #666;
-  margin: 20px 0;
-  padding: 0 20px;
-}
-
-.estado-pago {
-  margin-top: 30px;
-  text-align: center;
-
-  .estado-mensaje {
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: bold;
-
-    &.esperando {
-      background: #e7f3ff;
-      color: #004085;
-    }
-
-    &.procesando {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    &.exitoso {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    &.error {
-      background: #f8d7da;
-      color: #721c24;
-    }
-  }
-}
-
-.spinner-loading {
-  margin: 10px auto;
-  width: 30px;
-  height: 30px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #007bff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }

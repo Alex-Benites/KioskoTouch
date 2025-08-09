@@ -1,47 +1,34 @@
 <div class="personalizar-page-container">
-  <!-- Banner Promocional Superior -->
   <app-publicidad-section
     seccion="carrito"
     altura="200px"
     (publicidadCambio)="onPublicidadCambio($event)">
   </app-publicidad-section>
 
-  <!--  Header con logo -->
   <header class="menu-header">
     <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
 
-  <!--  Contenido principal -->
   <main class="personalizacion-content">
-    <!--  Contenedor centrado solo para el producto -->
     <div class="producto-container-centrado">
       <div class="producto-detalle">
-        <!-- Imagen del producto -->
         <div class="producto-imagen">
           <img [src]="imagenProducto" [alt]="nombreProducto" class="imagen-principal">
         </div>
 
-        <!-- Información del producto -->
         <div class="producto-info">
-          <!-- Categoría del producto -->
           <p class="categoria-label">MENÚ {{ nombreCategoria.toUpperCase() }}</p>
 
-          <!-- Nombre del producto -->
           <h1 class="producto-nombre">{{ nombreProducto }}</h1>
 
-          <!-- Descripción del producto -->
           <p class="producto-descripcion">{{ descripcionProducto }}</p>
 
-          <!-- Sección horizontal con precio a la izquierda y cantidad+botón a la derecha -->
           <div class="precio-cantidad-horizontal">
-            <!-- Precio del producto -->
             <div class="precio-seccion">
               <span class="precio-unitario">${{ precioProducto.toFixed(2) }}</span>
             </div>
 
-            <!-- Contenedor para cantidad (SIN botón añadir) -->
             <div class="cantidad-accion-container">
-              <!-- Control de cantidad -->
               <div class="cantidad-control">
                 <button
                   class="cantidad-btn disminuir"
@@ -57,74 +44,58 @@
                 </button>
               </div>
 
-              <!--  QUITAR: Botón añadir de aquí -->
-              <!-- <button class="boton-anadir-principal" (click)="agregarAlCarrito()">
-                Añadir
-              </button> -->
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!--  Sección de ingredientes con cuadrícula -->
     <div class="ingredientes-container">
       <div class="ingredientes-seccion">
         <h2 class="ingredientes-titulo">Ingredientes</h2>
         <div class="ingredientes-separador"></div>
 
-        <!--  MOSTRAR loading mientras carga -->
         <div *ngIf="mostrandoCarga()" class="ingredientes-loading">
           <div class="loading-spinner">⏳</div>
           <p>Cargando opciones de personalización...</p>
         </div>
 
-        <!--  MOSTRAR mensaje solo si ya cargó y no hay ingredientes -->
         <div *ngIf="ingredientesCargados() && !tieneIngredientesPersonalizables()" class="sin-ingredientes-message">
           <div class="message-icon">ℹ️</div>
           <p class="message-text">{{ mensajeSinIngredientes() }}</p>
           <p class="message-subtext">Este producto se agregará al carrito con su preparación estándar.</p>
         </div>
 
-        <!--  MOSTRAR ingredientes solo si ya cargó y hay ingredientes -->
         <div *ngIf="ingredientesCargados() && tieneIngredientesPersonalizables()" class="ingredientes-section">
           <h3 class="section-title">🥗 Personaliza tus ingredientes</h3>
           <p class="section-subtitle">Agrega o quita ingredientes según tu preferencia</p>
  
-          <!-- Grid de ingredientes -->
           <div class="ingredientes-grid">
             <div
                 class="ingrediente-card"
                 *ngFor="let ingrediente of ingredientesDisponibles()"
                 [class.seleccionado]="ingrediente.cantidad > 0">
 
-              <!-- Imagen del ingrediente -->
               <div class="ingrediente-imagen">
                 <img [src]="ingrediente.imagenUrl" [alt]="ingrediente.nombre">
               </div>
 
-              <!-- Información del ingrediente -->
               <div class="ingrediente-info">
                 <h4 class="ingrediente-nombre">{{ ingrediente.nombre }}</h4>
                 <p class="ingrediente-precio">
-                  <!--  NUEVO: Para ingredientes incluidos -->
                   <span *ngIf="ingrediente.esOriginal" class="precio-incluido">
-                    <!-- Mostrar "Sin [ingrediente]" cuando cantidad es 0 -->
                     <span *ngIf="ingrediente.cantidad === 0" class="sin-ingrediente">
                       Sin {{ ingrediente.nombre.toLowerCase() }}
                     </span>
-                    <!-- Mostrar "Incluido" cuando cantidad es 1 -->
                     <span *ngIf="ingrediente.cantidad === 1" class="incluido-normal">
                       Incluido
                     </span>
-                    <!-- Mostrar cantidad extra cuando es mayor a 1 -->
                     <span *ngIf="ingrediente.cantidad > 1" class="incluido-con-extra">
                       Incluido + {{ ingrediente.cantidad - 1 }} extra
                       <span class="costo-extra">(+${{ calcularCostoExtraConIva(ingrediente).toFixed(2) }})</span>
                     </span>
                   </span>
 
-                  <!--  Para ingredientes NO incluidos -->
                   <span *ngIf="!ingrediente.esOriginal" class="precio-adicional">
                     <span *ngIf="ingrediente.cantidad === 0" class="no-seleccionado">
                       +${{ calcularPrecioIngredienteConIva(ingrediente).toFixed(2) }} c/u
@@ -137,9 +108,7 @@
                 </p>
               </div>
 
-              <!--  NUEVO: Controles de cantidad -->
               <div class="ingrediente-controles">
-                <!-- Botón disminuir con lógica mejorada -->
                 <button
                   class="control-btn disminuir"
                   (click)="disminuirIngrediente(ingrediente)"
@@ -148,10 +117,8 @@
                   -
                 </button>
 
-                <!-- Cantidad actual -->
                 <span class="cantidad-ingrediente">{{ ingrediente.cantidad }}</span>
 
-                <!-- Botón aumentar (sin cambios) -->
                 <button
                   class="control-btn aumentar"
                   (click)="aumentarIngrediente(ingrediente)"
@@ -166,7 +133,6 @@
     </div>
   </main>
 
-  <!--  Footer "Mi Orden" - SOLO para AGREGAR -->
   <footer class="order-summary-footer" *ngIf="!modoEdicion">
     <div class="order-summary-header">
       <h2>🛒 Mi Orden</h2>
@@ -204,7 +170,6 @@
     </div>
   </footer>
 
-  <!--  Barra de edición - SOLO para EDITAR -->
   <div class="edit-actions-bar" *ngIf="modoEdicion">
     <button class="btn-volver" (click)="volverAlCarrito()">
       <i class="material-icons">arrow_back</i>

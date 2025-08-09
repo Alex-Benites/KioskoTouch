@@ -1,6 +1,5 @@
 <div class="factura-wrapper" *ngIf="datosFactura">
   <div class="factura-container">
-    <!-- Encabezado de la empresa -->
     <div class="header">
       <div class="logo">{{ configuracionEmpresa.razon_social }}</div>
       <div class="nombre-comercial" *ngIf="configuracionEmpresa.nombre_comercial">
@@ -17,7 +16,6 @@
       <div class="tipo-documento">Factura Simplificada</div>
     </div>
 
-    <!-- Información del pedido -->
     <div class="info-section">
       <div class="info-row">
         <span>Fecha:</span>
@@ -37,7 +35,6 @@
       </div>
     </div>
 
-    <!-- Lista de productos -->
     <div class="productos">
       <div class="productos-title">PRODUCTOS:</div>
       <div class="producto" *ngFor="let producto of datosFactura.productos">
@@ -51,7 +48,6 @@
       </div>
     </div>
 
-    <!-- Totales -->
     <div class="totales">
       <div class="info-row">
         <span>Subtotal:</span>
@@ -67,7 +63,6 @@
       </div>
     </div>
 
-    <!-- Pie de página -->
     <div class="footer">
       <div class="agradecimiento">¡Gracias por su compra!</div>
       <div class="establecimiento">
@@ -80,7 +75,6 @@
     </div>
   </div>
 
-  <!-- Botón de impresión manual (opcional) -->
   <div class="acciones" *ngIf="!autoImprimir">
     <button class="btn-imprimir" (click)="imprimirFactura()">
       🖨️ Imprimir Factura

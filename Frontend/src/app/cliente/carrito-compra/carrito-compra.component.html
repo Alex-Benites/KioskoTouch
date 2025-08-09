@@ -1,17 +1,14 @@
 <div class="carrito-page-container">
-  <!-- Banner Promocional Superior -->
   <app-publicidad-section
     seccion="carrito"
     altura="200px"
     (publicidadCambio)="onPublicidadCambio($event)">
   </app-publicidad-section>
 
-  <!-- Header igual que en menu -->
   <header class="carrito-header">
     <img src="assets/cliente/USUARIO_6.png" alt="Kiosko Go">
   </header>
 
-  <!-- Contenido principal del carrito -->
   <main class="carrito-content">
     <div class="carrito-title-section">
       <span class="carrito-title-label">MENÚ</span>
@@ -19,17 +16,12 @@
 
     </div>
 
-    <!--  ESPACIO EN BLANCO para el contenido del carrito -->
     <div class="carrito-body" [ngClass]="{'con-productos': productosCarrito.length > 0, 'vacio': productosCarrito.length === 0}">
-      <!--  MOSTRAR lista de productos si hay items -->
       <div *ngIf="productosCarrito.length > 0; else carritoVacio" class="productos-lista">
-        <!--  CORREGIR: Iterar sobre el computed -->
-        <!--  Solo cambiar el contenido del producto-item: -->
         <div
           *ngFor="let item of productosCarrito; let i = index"
           class="producto-item">
 
-          <!--  PARTE 1: IMAGEN + NOMBRE (IZQUIERDA) -->
           <div class="producto-seccion-izquierda">
             <div class="producto-barra-lateral"></div>
             <div class="producto-imagen">
@@ -38,14 +30,11 @@
             <div class="producto-info">
               <h3 class="producto-nombre">{{ obtenerNombreProducto(item) }}</h3>
               
-              <!-- Mostrar información del tamaño si existe -->
               <div *ngIf="obtenerInfoTamano(item)" class="producto-tamano">
                 <span class="tamano-info">Tamaño: {{ obtenerInfoTamano(item) }}</span>
               </div>
 
-              <!-- Si es producto, muestra personalizaciones -->
               <div *ngIf="item.tipo === 'producto'">
-                <!-- Solo mostrar personalizaciones si los ingredientes ya se cargaron -->
                 <div class="producto-personalizaciones" *ngIf="ingredientesCargados && item.personalizacion && item.personalizacion.length > 0">
                   <ng-container *ngFor="let ingr of obtenerPersonalizacionesAgrupadas(item.personalizacion)">
                     <span
@@ -56,7 +45,6 @@
                   </ng-container>
                 </div>
                 
-                <!-- Placeholder mientras se cargan los ingredientes -->
                 <div class="producto-personalizaciones" *ngIf="!ingredientesCargados && item.personalizacion && item.personalizacion.length > 0">
                   <span class="personalizacion personalizacion-agregado">
                     Cargando extras...
@@ -64,7 +52,6 @@
                 </div>
               </div>
 
-              <!-- Si es menú, muestra los productos incluidos -->
               <div *ngIf="item.tipo === 'menu' && item.productos && item.productos.length > 0" class="menu-detalle-lista">
                 <span class="menu-detalle-titulo">Incluye:</span>
                 <ul>
@@ -76,10 +63,8 @@
             </div>
           </div>
 
-          <!--  PARTE 2: CONTROLES (DERECHA) -->
           <div class="producto-seccion-derecha">
             
-            <!--  CONTROLES SUPERIORES (MÁS ESPACIO) -->
             <div class="producto-controles-superiores">
               <div class="cantidad-controles">
                 <button
@@ -124,7 +109,6 @@
         </div>
       </div>
 
-      <!--  TEMPLATE cuando el carrito está vacío -->
       <ng-template #carritoVacio>
         <div class="carrito-vacio">
           <div class="carrito-vacio-icon">🛒</div>
@@ -140,7 +124,6 @@
     </div>
   </main>
 
-<!-- Embellecido: Footer de Resumen del Pedido para Carrito -->
 <footer class="order-summary-footer mejorado">
   <div class="order-summary-footer__header">
     <mat-icon class="footer-icon">shopping_cart</mat-icon>
