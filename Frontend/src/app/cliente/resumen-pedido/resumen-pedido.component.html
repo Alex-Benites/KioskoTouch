@@ -198,30 +198,33 @@
       </div>
     </div>
 
-    <!-- Botones de acción (centrados) -->
+    <!-- Botones de acción (reorganizados) -->
     <div class="botones-accion">
-      <button
-        class="secondary-button cancel-btn"
-        (click)="cancelarPedido()">
-        <mat-icon>cancel</mat-icon> <!--  CAMBIAR: Material Icon -->
-        Cancelar Pedido
-      </button>
+      <!-- Primera fila: Cancelar y Editar -->
+      <div class="botones-fila">
+        <button
+          class="secondary-button cancel-btn"
+          (click)="cancelarPedido()">
+          <mat-icon>cancel</mat-icon>
+          Cancelar Pedido
+        </button>
 
-      <button
-        class="tertiary-button edit-btn"
-        (click)="editarPedido()">
-        <mat-icon>edit</mat-icon> <!--  CAMBIAR: Material Icon -->
-        Editar Pedido
-      </button>
+        <button
+          class="tertiary-button edit-btn"
+          (click)="editarPedido()">
+          <mat-icon>edit</mat-icon>
+          Editar Pedido
+        </button>
+      </div>
 
+      <!-- Segunda fila: Continuar (ancho completo) -->
       <button
         class="primary-button confirm-btn"
         (click)="confirmarPedido()"
         [disabled]="cantidadProductos === 0 || !metodoPagoSeleccionado">
-        <mat-icon>arrow_forward</mat-icon> <!--  CAMBIAR: Material Icon -->
+        <mat-icon>arrow_forward</mat-icon>
         Continuar
       </button>
-
     </div>
 
   </main>

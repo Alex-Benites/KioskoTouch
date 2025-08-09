@@ -415,23 +415,36 @@ $border-color: #e0e0e0;
   }
 }
 
-// ✅ MODIFICAR: Botones de acción (mantener centrados)
+// ✅ MODIFICAR: Botones de acción reorganizados
 .botones-accion {
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  align-items: center;
+  align-items: stretch; // ✅ CAMBIO: para que el botón continuar ocupe todo el ancho
   padding: 30px 20px;
+
+  // Nueva fila para botones cancelar y editar
+  .botones-fila {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    justify-content: center;
+
+    .secondary-button,
+    .tertiary-button {
+      flex: 1;
+      max-width: none; // ✅ CAMBIO: Remover límite de ancho
+    }
+  }
 
   .secondary-button,
   .tertiary-button,
   .primary-button {
-    width: 280px;
     padding: 16px 24px;
-    font-size: 1rem;
+    font-size: 1.1rem; // ✅ CAMBIO: Aumentado de 1rem a 1.1rem
     font-weight: 600;
-    border-radius: 12px; // ✅ Menos redondeado, más moderno
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -462,13 +475,20 @@ $border-color: #e0e0e0;
     }
 
     mat-icon {
-      font-size: 1.2rem;
+      font-size: 1.3rem; // ✅ CAMBIO: Aumentado de 1.2rem a 1.3rem
       transition: transform 0.2s ease;
     }
 
     &:hover mat-icon {
       transform: scale(1.1);
     }
+  }
+
+  // El botón principal (Continuar) ocupa todo el ancho disponible
+  .primary-button {
+    width: 100%; // ✅ CAMBIO: de 280px a 100%
+    max-width: 600px; // ✅ NUEVO: límite máximo para pantallas muy grandes
+    align-self: center; // ✅ NUEVO: centrar el botón
   }
 
   // ✅ CANCELAR: Discreto pero visible
@@ -599,13 +619,9 @@ $border-color: #e0e0e0;
   }
 
   .botones-accion {
-    flex-direction: column;
-
-    .secondary-button,
-    .tertiary-button,
     .primary-button {
+      width: 100%; // ✅ CAMBIO: mantener ancho completo en móvil también
       max-width: none;
-      min-width: auto;
     }
   }
 }
