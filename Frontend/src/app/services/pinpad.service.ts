@@ -64,7 +64,7 @@ export class PinpadService {
     } else {
       // 🏢 KIOSKO EN PRODUCCIÓN (frontend desde la nube)
       console.log('🏢 Modo kiosko: Frontend en nube conectando a PinpadService local');
-      return 'http://localhost:8080/api/pinpad';
+      return 'http://localhost:8081/api/pinpad';
     }
   }
 

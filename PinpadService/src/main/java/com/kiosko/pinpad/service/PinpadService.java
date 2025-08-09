@@ -57,6 +57,34 @@ public class PinpadService {
             // Se ejecuta la transacción de pago
             RespuestaProcesoPago respuesta = lan.ProcesoPago(envio);
             
+            // ✅ LOGS DE RESPUESTA CRUDA CON LAS PROPIEDADES CORRECTAS:
+            logger.info("=== RESPUESTA CRUDA DEL PINPAD ===");
+            if (respuesta != null) {
+                // Mostrar la trama cruda antes del parsing
+                String tramaCompleta = respuesta.ObtenerTrama();
+                if (tramaCompleta != null) {
+                    logger.info("Trama cruda longitud: {}", tramaCompleta.length());
+                    logger.info("Trama cruda: [{}]", tramaCompleta);
+                } else {
+                    logger.error("❌ Trama cruda es null");
+                }
+                
+                // Intentar mostrar campos básicos (puede fallar si la trama es muy corta)
+                try {
+                    logger.info("TipoMensaje: [{}]", respuesta.TipoMensaje);
+                    logger.info("CodigoRespuesta: [{}]", respuesta.CodigoRespuesta);
+                    logger.info("RedAdquirente: [{}]", respuesta.RedAdquirente);
+                    logger.info("CodigoRespuestaAut: [{}]", respuesta.CodigoRespuestaAut);
+                    logger.info("MensajeRespuestaAut: [{}]", respuesta.MensajeRespuestaAut);
+                    logger.info("Autorizacion: [{}]", respuesta.Autorizacion);
+                } catch (Exception e) {
+                    logger.error("❌ Error al acceder a campos: {}", e.getMessage());
+                }
+            } else {
+                logger.error("❌ Respuesta es null");
+            }
+            logger.info("==================================");
+            
             // Primero se valida que la respuesta no sea nula
             if (respuesta == null) {
                 logger.error("❌ Respuesta nula del PinPad");
