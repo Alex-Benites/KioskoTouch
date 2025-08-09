@@ -49,6 +49,13 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
     correo: '',
   };
 
+  // Errores de validación para mostrar en el formulario
+  erroresValidacion = {
+    nombreCompleto: '',
+    cedula: '',
+    correo: '',
+  };
+
   ivaActual: number = 15.0; // Valor por defecto
   ivaSubscription?: Subscription;
   cargandoIva = true;
@@ -485,26 +492,42 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   }
 
   validarDatosFacturacion(): boolean {
+    // Limpiar errores anteriores
+    this.erroresValidacion = {
+      nombreCompleto: '',
+      cedula: '',
+      correo: '',
+    };
+
+    let esValido = true;
     const { nombreCompleto, cedula, telefono, correo } = this.datosFacturacion;
 
-    if (
-      !nombreCompleto.trim() ||
-      !cedula.trim() ||
-      !telefono.trim() ||
-      !correo.trim()
-    ) {
-      alert('Por favor completa todos los campos de facturación');
-      return false;
+    // Validar nombre completo
+    if (!nombreCompleto.trim()) {
+      this.erroresValidacion.nombreCompleto = 'El nombre completo es requerido';
+      esValido = false;
     }
 
-    // Validación básica de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(correo)) {
-      alert('Por favor ingresa un correo electrónico válido');
-      return false;
+    // Validar cédula
+    if (!cedula.trim()) {
+      this.erroresValidacion.cedula = 'La cédula es requerida';
+      esValido = false;
     }
 
-    return true;
+    // Validar correo
+    if (!correo.trim()) {
+      this.erroresValidacion.correo = 'El correo electrónico es requerido';
+      esValido = false;
+    } else {
+      // Validación básica de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(correo)) {
+        this.erroresValidacion.correo = 'Por favor ingresa un correo electrónico válido';
+        esValido = false;
+      }
+    }
+
+    return esValido;
   }
 
   cargarIvaActual(): void {

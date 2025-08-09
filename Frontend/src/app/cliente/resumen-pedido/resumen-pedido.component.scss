@@ -383,6 +383,18 @@ $border-color: #e0e0e0;
           &::placeholder {
             color: $text-color-light;
           }
+
+          &.error {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+          }
+        }
+
+        .error-message {
+          color: #dc3545;
+          font-size: 0.85rem;
+          margin-top: 4px;
+          display: block;
         }
       }
     }

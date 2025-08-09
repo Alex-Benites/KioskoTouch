@@ -130,23 +130,33 @@
       <div class="datos-form" *ngIf="mostrarDatosFacturacion">
         <div class="form-row">
           <div class="form-group">
-            <label for="nombre-completo">Nombre Completo</label>
+            <label for="nombre-completo">Nombre Completo *</label>
             <input
               type="text"
               id="nombre-completo"
               [(ngModel)]="datosFacturacion.nombreCompleto"
               placeholder="Ingresa tu nombre completo"
-              class="form-input">
+              class="form-input"
+              [class.error]="erroresValidacion.nombreCompleto"
+              required>
+            <span class="error-message" *ngIf="erroresValidacion.nombreCompleto">
+              {{ erroresValidacion.nombreCompleto }}
+            </span>
           </div>
 
           <div class="form-group">
-            <label for="cedula">Cédula</label>
+            <label for="cedula">Cédula *</label>
             <input
               type="text"
               id="cedula"
               [(ngModel)]="datosFacturacion.cedula"
               placeholder="Ingresa tu cédula"
-              class="form-input">
+              class="form-input"
+              [class.error]="erroresValidacion.cedula"
+              required>
+            <span class="error-message" *ngIf="erroresValidacion.cedula">
+              {{ erroresValidacion.cedula }}
+            </span>
           </div>
         </div>
 
@@ -162,13 +172,18 @@
           </div>
 
           <div class="form-group">
-            <label for="correo">Correo Electrónico</label>
+            <label for="correo">Correo Electrónico *</label>
             <input
               type="email"
               id="correo"
               [(ngModel)]="datosFacturacion.correo"
               placeholder="Ingresa tu correo"
-              class="form-input">
+              class="form-input"
+              [class.error]="erroresValidacion.correo"
+              required>
+            <span class="error-message" *ngIf="erroresValidacion.correo">
+              {{ erroresValidacion.correo }}
+            </span>
           </div>
         </div>
       </div>
