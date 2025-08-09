@@ -214,11 +214,13 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   calcularSubtotal(): number {
     if (this.cargandoIva) return 0;
 
-    // El subtotal es la suma de subtotales de productos SIN IVA
-    // Los precios de productos ya están sin IVA en la base de datos
-    return this.productosCarrito.reduce((total, item) => {
+    // Los precios de productos ya incluyen IVA, necesitamos calcular el subtotal sin IVA
+    const totalConIva = this.productosCarrito.reduce((total, item) => {
       return total + item.precio_unitario * item.cantidad;
     }, 0);
+
+    // Calcular subtotal removiendo el IVA: total / (1 + IVA%)
+    return totalConIva / (1 + this.ivaActual / 100);
   }
 
   calcularIVA(): number {
@@ -229,9 +231,10 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   }
 
   calcularTotal(): number {
-    const subtotal = this.calcularSubtotal();
-    const iva = this.calcularIVA();
-    return subtotal + iva;
+    // Los precios ya incluyen IVA, así que el total es simplemente la suma de precios
+    return this.productosCarrito.reduce((total, item) => {
+      return total + item.precio_unitario * item.cantidad;
+    }, 0);
   }
 
   seleccionarMetodoPago(metodo: 'tarjeta' | 'efectivo'): void {
@@ -356,7 +359,10 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
   private prepararProductosPedido(): ProductoPedidoRequest[] {
     return this.productosCarrito.map((item) => {
-      const subtotalProducto = Math.round(item.precio_unitario * item.cantidad * 100) / 100;
+      // Los precios ya incluyen IVA, calcular subtotal sin IVA para enviar al backend
+      const subtotalConIva = item.precio_unitario * item.cantidad;
+      const subtotalSinIva = subtotalConIva / (1 + this.ivaActual / 100);
+      const precioUnitarioSinIva = item.precio_unitario / (1 + this.ivaActual / 100);
 
       // Preparar personalizaciones (solo para productos, no para menús)
       const personalizaciones: PersonalizacionRequest[] = [];
@@ -373,8 +379,8 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
       const productoBase = {
         cantidad: item.cantidad,
-        precio_unitario: Math.round(item.precio_unitario * 100) / 100,
-        subtotal: subtotalProducto,
+        precio_unitario: Math.round(precioUnitarioSinIva * 100) / 100, // Precio sin IVA
+        subtotal: Math.round(subtotalSinIva * 100) / 100, // Subtotal sin IVA
         personalizaciones: personalizaciones,
       };
 
@@ -536,19 +542,50 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
   cargarIvaActual(): void {
     this.cargandoIva = true;
 
-    this.ivaSubscription = this.catalogoService.getIvaActual().subscribe({
+    // Usar getDatosEmpresaPublico() en lugar de getIvaActual()
+    this.ivaSubscription = this.catalogoService.getDatosEmpresaPublico().subscribe({
       next: (response) => {
-        if (response.success && response.data) {
+        if (response.success && response.data && response.data.porcentaje_iva) {
           this.ivaActual = response.data.porcentaje_iva;
+          console.log('✅ IVA cargado desde configuración empresarial:', response.data.porcentaje_iva);
         } else {
-          this.ivaActual = 15.0;
+          // Fallback a getIvaActual() si getDatosEmpresaPublico() no tiene IVA
+          console.warn('⚠️ No se encontró IVA en configuración empresarial, usando getIvaActual()');
+          this.catalogoService.getIvaActual().subscribe({
+            next: (ivaResponse) => {
+              if (ivaResponse.success && ivaResponse.data) {
+                this.ivaActual = ivaResponse.data.porcentaje_iva;
+              } else {
+                this.ivaActual = 15.0;
+              }
+            },
+            error: (error) => {
+              console.error('Error cargando IVA desde getIvaActual():', error);
+              this.ivaActual = 15.0;
+            }
+          });
         }
         this.cargandoIva = false;
       },
       error: (error) => {
-        this.ivaActual = 15.0;
-        this.cargandoIva = false;
-      },
+        console.error('Error cargando configuración empresarial:', error);
+        // Fallback a getIvaActual()
+        this.catalogoService.getIvaActual().subscribe({
+          next: (ivaResponse) => {
+            if (ivaResponse.success && ivaResponse.data) {
+              this.ivaActual = ivaResponse.data.porcentaje_iva;
+            } else {
+              this.ivaActual = 15.0;
+            }
+            this.cargandoIva = false;
+          },
+          error: (fallbackError) => {
+            console.error('Error en fallback de IVA:', fallbackError);
+            this.ivaActual = 15.0;
+            this.cargandoIva = false;
+          }
+        });
+      }
     });
   }
 

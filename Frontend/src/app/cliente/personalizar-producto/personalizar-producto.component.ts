@@ -30,6 +30,7 @@ interface IngredientePersonalizacion {
 export class PersonalizarProductoComponent implements OnInit {
   ingredientesCargados = signal<boolean>(false);
   cargandoIngredientes = signal<boolean>(false);
+  ivaActual = signal<number>(15.0); // IVA por defecto
 
   modoEdicion = false;
   carritoIndex: number | null = null;
@@ -85,7 +86,7 @@ export class PersonalizarProductoComponent implements OnInit {
 
 
   precioTotalCalculado = computed(() => {
-    const precioBase = this.precioProducto;
+    const precioBase = this.precioProducto; // Este ya incluye IVA
     const ingredientes = this.ingredientesDisponibles();
 
     const costoIngredientesExtra = ingredientes.reduce((total: number, ing) => {
@@ -94,14 +95,18 @@ export class PersonalizarProductoComponent implements OnInit {
           // INGREDIENTES BASE: Solo sumar cantidades EXTRA (por encima de la cantidad base)
           const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
-          const costoEste = cantidadExtra * (ing.precio || 0);
+          // Aplicar IVA al precio del ingrediente extra
+          const precioConIva = ing.precio * (1 + this.ivaActual() / 100);
+          const costoEste = cantidadExtra * precioConIva;
 
           return total + costoEste;
         } else {
           // INGREDIENTES OPCIONALES: Solo sumar cantidad EXTRA si estaba incluido
           const cantidadBase = ing.cantidadBase || 0;
           const cantidadExtra = Math.max(0, ing.cantidad - cantidadBase);
-          const costoEste = cantidadExtra * (ing.precio || 0);
+          // Aplicar IVA al precio del ingrediente extra
+          const precioConIva = ing.precio * (1 + this.ivaActual() / 100);
+          const costoEste = cantidadExtra * precioConIva;
 
           return total + costoEste;
         }
@@ -111,7 +116,6 @@ export class PersonalizarProductoComponent implements OnInit {
 
     const precioUnitario = precioBase + costoIngredientesExtra;
     const precioTotal = precioUnitario * this.cantidad();
-
 
     return precioTotal;
   });
@@ -162,7 +166,10 @@ export class PersonalizarProductoComponent implements OnInit {
   categoriaDatos: any = null;
 
   ngOnInit(): void {
-  combineLatest([
+    // Cargar IVA al inicio
+    this.cargarIvaActual();
+    
+    combineLatest([
     this.route.paramMap,
     this.route.queryParams
   ]).subscribe(([paramMap, params]) => {
@@ -989,6 +996,70 @@ export class PersonalizarProductoComponent implements OnInit {
   // Método para manejar cambios de publicidad
   onPublicidadCambio(publicidad: Publicidad): void {
     // Implementación opcional para manejar cambios de publicidad
+  }
+
+  private cargarIvaActual(): void {
+    this.catalogoService.getDatosEmpresaPublico().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.porcentaje_iva) {
+          this.ivaActual.set(response.data.porcentaje_iva);
+          console.log('✅ IVA cargado en personalización:', response.data.porcentaje_iva);
+        } else {
+          this.catalogoService.getIvaActual().subscribe({
+            next: (ivaResponse) => {
+              if (ivaResponse.success && ivaResponse.data) {
+                this.ivaActual.set(ivaResponse.data.porcentaje_iva);
+              } else {
+                this.ivaActual.set(15.0);
+              }
+            },
+            error: () => this.ivaActual.set(15.0)
+          });
+        }
+      },
+      error: () => {
+        this.catalogoService.getIvaActual().subscribe({
+          next: (ivaResponse) => {
+            if (ivaResponse.success && ivaResponse.data) {
+              this.ivaActual.set(ivaResponse.data.porcentaje_iva);
+            } else {
+              this.ivaActual.set(15.0);
+            }
+          },
+          error: () => this.ivaActual.set(15.0)
+        });
+      }
+    });
+  }
+
+  /**
+   * Calcula el precio de un ingrediente con IVA incluido para mostrar en pantalla
+   */
+  calcularPrecioIngredienteConIva(ingrediente: any): number {
+    if (!ingrediente.precio || ingrediente.precio <= 0) {
+      return 0;
+    }
+    return ingrediente.precio * (1 + this.ivaActual() / 100);
+  }
+
+  /**
+   * Calcula el costo total de ingredientes extra con IVA incluido
+   */
+  calcularCostoExtraConIva(ingrediente: any): number {
+    if (!ingrediente.precio || ingrediente.precio <= 0) {
+      return 0;
+    }
+    
+    const precioConIva = this.calcularPrecioIngredienteConIva(ingrediente);
+    
+    if (ingrediente.esOriginal) {
+      // Para ingredientes originales, solo cobrar las cantidades extra
+      const cantidadExtra = Math.max(0, ingrediente.cantidad - 1);
+      return cantidadExtra * precioConIva;
+    } else {
+      // Para ingredientes adicionales, cobrar toda la cantidad
+      return ingrediente.cantidad * precioConIva;
+    }
   }
 
 }

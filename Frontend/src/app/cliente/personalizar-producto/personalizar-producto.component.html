@@ -120,18 +120,18 @@
                     <!-- Mostrar cantidad extra cuando es mayor a 1 -->
                     <span *ngIf="ingrediente.cantidad > 1" class="incluido-con-extra">
                       Incluido + {{ ingrediente.cantidad - 1 }} extra
-                      <span class="costo-extra">(+${{ ((ingrediente.cantidad - 1) * (ingrediente.precio || 0)).toFixed(2) }})</span>
+                      <span class="costo-extra">(+${{ calcularCostoExtraConIva(ingrediente).toFixed(2) }})</span>
                     </span>
                   </span>
 
                   <!--  Para ingredientes NO incluidos -->
                   <span *ngIf="!ingrediente.esOriginal" class="precio-adicional">
                     <span *ngIf="ingrediente.cantidad === 0" class="no-seleccionado">
-                      +${{ (ingrediente.precio || 0).toFixed(2) }} c/u
+                      +${{ calcularPrecioIngredienteConIva(ingrediente).toFixed(2) }} c/u
                     </span>
                     <span *ngIf="ingrediente.cantidad > 0" class="seleccionado-adicional">
-                      {{ ingrediente.cantidad }} x ${{ (ingrediente.precio || 0).toFixed(2) }} =
-                      <span class="total-ingrediente">+${{ (ingrediente.cantidad * (ingrediente.precio || 0)).toFixed(2) }}</span>
+                      {{ ingrediente.cantidad }} x ${{ calcularPrecioIngredienteConIva(ingrediente).toFixed(2) }} =
+                      <span class="total-ingrediente">+${{ calcularCostoExtraConIva(ingrediente).toFixed(2) }}</span>
                     </span>
                   </span>
                 </p>

@@ -43,10 +43,12 @@ export class MenuComponent implements OnInit, OnDestroy {
   private productos = signal<ProductoConBadge[]>([]);
   private menus = signal<Menu[]>([]);
   private promocionesActivas = signal<any[]>([]);
+  private ivaActual = signal<number>(15.0); // IVA por defecto
 
   cargandoCategorias = signal<boolean>(true);
   cargandoProductos = signal<boolean>(true);
   cargandoMenus = signal<boolean>(true);
+  cargandoIva = signal<boolean>(true);
   errorCarga = signal<string | null>(null);
 
   categoriaSeleccionada = signal<number | null>(null);
@@ -90,7 +92,7 @@ export class MenuComponent implements OnInit, OnDestroy {
 });
 
   cargando = computed(() =>
-    this.cargandoCategorias() || this.cargandoProductos()
+    this.cargandoCategorias() || this.cargandoProductos() || this.cargandoIva()
   );
 
   get categoriasLista() { return this.categorias(); }
@@ -122,6 +124,7 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.renderer.addClass(document.body, 'fondo-home');
+    this.cargarIvaActual();
     this.cargarDatos();
 
   }
@@ -358,12 +361,13 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   obtenerTextoPrecio(item: ProductoConBadge | Menu): string {
-    // Si es un menú, devolver precio simple
+    // Si es un menú, devolver precio con IVA incluido
     if (this.esMenu(item)) {
-      return `$${item.precio.toFixed(2)}`;
+      const precioConIva = item.precio * (1 + this.ivaActual() / 100);
+      return `$${precioConIva.toFixed(2)}`;
     }
 
-    // Si es producto, usar lógica de tamaños ORIGINAL (sin descuentos)
+    // Si es producto, usar lógica de tamaños con IVA incluido
     const producto = item as ProductoConBadge;
 
     if (producto.aplica_tamanos) {
@@ -371,10 +375,10 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
 
     if (producto.aplica_tamanos && producto.tamanos_detalle && producto.tamanos_detalle.length > 0) {
-      // ✅ MOSTRAR PRECIOS ORIGINALES (sin descuento) en las cards
-      const precios = producto.tamanos_detalle.map(t => t.precio);
-      const precioMin = Math.min(...precios);
-      const precioMax = Math.max(...precios);
+      // Mostrar precios con IVA incluido en las cards
+      const preciosConIva = producto.tamanos_detalle.map(t => t.precio * (1 + this.ivaActual() / 100));
+      const precioMin = Math.min(...preciosConIva);
+      const precioMax = Math.max(...preciosConIva);
 
       if (precioMin === precioMax) {
         return `$${precioMin.toFixed(2)}`;
@@ -383,19 +387,22 @@ export class MenuComponent implements OnInit, OnDestroy {
       }
     }
 
-    // ✅ PRECIO ORIGINAL sin descuento para productos sin tamaños
-    return `$${this.obtenerPrecioMostrar(producto).toFixed(2)}`;
+    // Precio con IVA incluido para productos sin tamaños
+    const precioConIva = this.obtenerPrecioMostrar(producto) * (1 + this.ivaActual() / 100);
+    return `$${precioConIva.toFixed(2)}`;
   }
 
   obtenerTextoPrecioConDescuento(item: ProductoConBadge | Menu): string {
-    // ✅ SIMPLIFICADO: Solo mostrar el precio con descuento general del producto/menú
+    // Calcular precio con descuento y luego aplicar IVA
     const precioConDescuento = this.obtenerPrecioConDescuento(item as ProductoConBadge);
-    return `$${precioConDescuento.toFixed(2)}`;
+    const precioConDescuentoConIva = precioConDescuento * (1 + this.ivaActual() / 100);
+    return `$${precioConDescuentoConIva.toFixed(2)}`;
   }
 
 
   obtenerTextoPrecioMenu(menu: Menu): string {
-    return `$${menu.precio.toFixed(2)}`;
+    const precioConIva = menu.precio * (1 + this.ivaActual() / 100);
+    return `$${precioConIva.toFixed(2)}`;
   }
 
   obtenerTextoPrecioGenerico(item: ProductoConBadge | Menu): string {
@@ -488,12 +495,15 @@ export class MenuComponent implements OnInit, OnDestroy {
     const imagenUrl = this.obtenerImagenProducto(producto);
     const permitirPersonalizacion = this.debePermitirPersonalizacion(producto);
 
-    // ✅ CALCULAR PRECIO BASE CON DESCUENTO PARA EL POPUP (sin tamaño específico)
+    // Calcular precio base con descuento para el popup
     const precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+    // Aplicar IVA al precio con descuento
+    const precioFinalConIva = precioConDescuento * (1 + this.ivaActual() / 100);
 
-    console.log('🎯 Popup - Precio original vs con descuento:', {
+    console.log('🎯 Popup - Precios calculados:', {
       original: producto.precio,
       conDescuento: precioConDescuento,
+      finalConIva: precioFinalConIva,
       producto: producto.nombre,
       tieneTamanos: (producto as ProductoConBadge).aplica_tamanos
     });
@@ -502,17 +512,17 @@ export class MenuComponent implements OnInit, OnDestroy {
       producto: {
         id: producto.id,
         nombre: producto.nombre,
-        precio: precioConDescuento, // ✅ USAR PRECIO CON DESCUENTO BASE
+        precio: precioFinalConIva, // Precio con descuento e IVA incluido
         imagenUrl: imagenUrl,
         categoria: (producto as ProductoConBadge).categoria,
         descripcion: (producto as ProductoConBadge).descripcion,
 
         aplica_tamanos: (producto as ProductoConBadge).aplica_tamanos,
         tamanos_detalle: (producto as ProductoConBadge).tamanos_detalle?.map(t => {
-          // ✅ PRECIO ORIGINAL DEL TAMAÑO (sin descuento)
+          // Precio original del tamaño
           const precioOriginalTamano = parseFloat(t.precio.toString());
           
-          // ✅ CALCULAR precio con descuento para este tamaño específico
+          // Calcular precio con descuento para este tamaño específico
           const tamanoData = {
             codigo_tamano: t.codigo_tamano,
             codigo: t.codigo_tamano
@@ -525,9 +535,14 @@ export class MenuComponent implements OnInit, OnDestroy {
             tamanoData
           );
           
+          // Aplicar IVA al precio con descuento del tamaño
+          const precioTamanoFinalConIva = precioTamanoConDescuento * (1 + this.ivaActual() / 100);
+          const precioOriginalConIva = precioOriginalTamano * (1 + this.ivaActual() / 100);
+          
           console.log(`📏 Popup - Calculando tamaño ${t.codigo_tamano}:`, {
             precio_original: precioOriginalTamano,
             precio_con_descuento: precioTamanoConDescuento,
+            precio_final_con_iva: precioTamanoFinalConIva,
             tiene_descuento: precioTamanoConDescuento !== precioOriginalTamano
           });
           
@@ -535,8 +550,8 @@ export class MenuComponent implements OnInit, OnDestroy {
             id: t.id,
             tamano_nombre: t.nombre_tamano,
             codigo_tamano: t.codigo_tamano,
-            precio: precioTamanoConDescuento, // ✅ PRECIO CON DESCUENTO APLICADO
-            precio_original: precioOriginalTamano // ✅ PRECIO ORIGINAL PARA COMPARACIÓN
+            precio: precioTamanoFinalConIva, // Precio final con descuento e IVA
+            precio_original: precioOriginalConIva // Precio original con IVA para comparación
           };
         })
       },
@@ -579,21 +594,24 @@ export class MenuComponent implements OnInit, OnDestroy {
   private agregarProductoAlCarrito(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
     let precio = producto.precio;
     let precioConDescuento = precio;
+    let precioFinalConIva = precio;
 
     if (this.esMenu(producto)) {
-      // ✅ Calcular precio con descuento para menús (sin cambios)
+      // Calcular precio con descuento para menús
       precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
-      console.log(`Agregando menú ${producto.id} con precio descuento: $${precioConDescuento}`);
-      this.pedidoService.agregarMenu(producto.id, precioConDescuento, cantidad, []);
+      // Aplicar IVA al precio con descuento
+      precioFinalConIva = precioConDescuento * (1 + this.ivaActual() / 100);
+      console.log(`Agregando menú ${producto.id} con precio final (con IVA): $${precioFinalConIva}`);
+      this.pedidoService.agregarMenu(producto.id, precioFinalConIva, cantidad, []);
     } else {
-      // ✅ Variable para almacenar el código de tamaño
+      // Variable para almacenar el código de tamaño
       let codigoTamano: string | undefined = undefined;
 
-      // ✅ MEJORADO: Calcular precio con descuento para productos considerando tamaño específico
+      // Calcular precio con descuento para productos considerando tamaño específico
       if (tamanoSeleccionado) {
         // Si hay tamaño seleccionado, usar ese precio ya con descuento aplicado
         precioConDescuento = tamanoSeleccionado.precio;
-        codigoTamano = tamanoSeleccionado.codigo; // ✅ Guardar código de tamaño
+        codigoTamano = tamanoSeleccionado.codigo;
         console.log(`Agregando producto ${producto.id} tamaño ${tamanoSeleccionado.codigo} con precio: $${precioConDescuento}`);
       } else if ((producto as ProductoConBadge).aplica_tamanos && (producto as ProductoConBadge).tamanos_detalle && (producto as ProductoConBadge).tamanos_detalle!.length > 0) {
         // Si no hay tamaño seleccionado pero tiene tamaños, usar el primero
@@ -606,7 +624,7 @@ export class MenuComponent implements OnInit, OnDestroy {
         // Aplicar proporción al precio del tamaño
         const factorDescuento = precioConDescuento / producto.precio;
         precioConDescuento = primerTamano.precio * factorDescuento;
-        codigoTamano = primerTamano.codigo_tamano; // ✅ Guardar código de tamaño
+        codigoTamano = primerTamano.codigo_tamano;
         console.log(`Agregando producto ${producto.id} primer tamaño ${primerTamano.codigo_tamano} con precio: $${precioConDescuento}`);
       } else {
         // Producto sin tamaños, usar descuento general
@@ -614,32 +632,43 @@ export class MenuComponent implements OnInit, OnDestroy {
         console.log(`Agregando producto ${producto.id} sin tamaños con precio descuento: $${precioConDescuento}`);
       }
 
-      // ✅ Pasar el código de tamaño al servicio
-      this.pedidoService.agregarProducto(producto.id, precioConDescuento, cantidad, undefined, undefined, codigoTamano);
+      // Aplicar IVA al precio con descuento
+      precioFinalConIva = precioConDescuento * (1 + this.ivaActual() / 100);
+      console.log(`Precio final con IVA incluido: $${precioFinalConIva}`);
+
+      // Pasar el precio final con IVA incluido al servicio
+      this.pedidoService.agregarProducto(producto.id, precioFinalConIva, cantidad, undefined, undefined, codigoTamano);
     }
   }
 
   private irAPersonalizar(producto: ProductoConBadge | Menu, cantidad: number, tamanoSeleccionado?: any): void {
-    // ✅ MEJORADO: Calcular precio con descuento considerando tamaño específico
+    // Calcular precio con descuento considerando tamaño específico
     const precioOriginal = producto.precio;
     let precioConDescuento = precioOriginal;
+    let precioFinalConIva = precioOriginal;
 
     if (tamanoSeleccionado) {
       // Si hay tamaño seleccionado, usar ese precio ya con descuento aplicado
       precioConDescuento = tamanoSeleccionado.precio;
+      // Aplicar IVA al precio con descuento
+      precioFinalConIva = precioConDescuento * (1 + this.ivaActual() / 100);
       console.log('🍔 Navegando a personalizar con tamaño específico:', {
         producto: producto.nombre,
         tamano: tamanoSeleccionado.codigo,
         precioOriginal: precioOriginal,
-        precioTamanoConDescuento: precioConDescuento
+        precioTamanoConDescuento: precioConDescuento,
+        precioFinalConIva: precioFinalConIva
       });
     } else {
       // Sin tamaño seleccionado, usar descuento general del producto
       precioConDescuento = this.calcularPrecioConDescuento(producto as any, this.promocionesActivas());
+      // Aplicar IVA al precio con descuento
+      precioFinalConIva = precioConDescuento * (1 + this.ivaActual() / 100);
       console.log('🍔 Navegando a personalizar sin tamaño específico:', {
         producto: producto.nombre,
         precioOriginal: precioOriginal,
         precioConDescuento: precioConDescuento,
+        precioFinalConIva: precioFinalConIva,
         tieneDescuento: precioOriginal !== precioConDescuento
       });
     }
@@ -647,19 +676,19 @@ export class MenuComponent implements OnInit, OnDestroy {
     const queryParams: any = {
       cantidad: cantidad,
       nombre: producto.nombre,
-      precio: precioConDescuento, // ✅ PRECIO CON DESCUENTO (será el precio base en personalización)
-      precio_original_menu: precioOriginal, // ✅ PRECIO ORIGINAL DEL MENÚ (para referencia)
+      precio: precioFinalConIva, // Precio final con IVA incluido
+      precio_original_menu: precioOriginal * (1 + this.ivaActual() / 100), // Precio original con IVA para referencia
       categoria: (producto as ProductoConBadge).categoria || null
     };
 
     if (tamanoSeleccionado) {
       queryParams.tamano_id = tamanoSeleccionado.id;
-      queryParams.tamano_precio = tamanoSeleccionado.precio; // ✅ YA INCLUYE DESCUENTO
-      queryParams.tamano_codigo = tamanoSeleccionado.codigo; // ✅ AGREGAR código de tamaño
+      queryParams.tamano_precio = precioFinalConIva; // Precio con IVA incluido
+      queryParams.tamano_codigo = tamanoSeleccionado.codigo;
       
       console.log('📏 Tamaño seleccionado enviado a personalizar:', {
         tamano: tamanoSeleccionado.nombre || tamanoSeleccionado.codigo,
-        precioTamanoConDescuento: tamanoSeleccionado.precio,
+        precioTamanoConIva: precioFinalConIva,
         codigoTamano: tamanoSeleccionado.codigo
       });
     }
@@ -934,6 +963,56 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   onPublicidadCambio(publicidad: Publicidad): void {
     // Aquí puedes agregar lógica adicional como analytics
+  }
+
+  private cargarIvaActual(): void {
+    this.cargandoIva.set(true);
+
+    // Usar getDatosEmpresaPublico() en lugar de getIvaActual()
+    this.catalogoService.getDatosEmpresaPublico().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.porcentaje_iva) {
+          this.ivaActual.set(response.data.porcentaje_iva);
+          console.log('✅ IVA cargado desde configuración empresarial:', response.data.porcentaje_iva);
+        } else {
+          // Fallback a getIvaActual() si getDatosEmpresaPublico() no tiene IVA
+          console.warn('⚠️ No se encontró IVA en configuración empresarial, usando getIvaActual()');
+          this.catalogoService.getIvaActual().subscribe({
+            next: (ivaResponse) => {
+              if (ivaResponse.success && ivaResponse.data) {
+                this.ivaActual.set(ivaResponse.data.porcentaje_iva);
+              } else {
+                this.ivaActual.set(15.0);
+              }
+            },
+            error: (error) => {
+              console.error('Error cargando IVA desde getIvaActual():', error);
+              this.ivaActual.set(15.0);
+            }
+          });
+        }
+        this.cargandoIva.set(false);
+      },
+      error: (error) => {
+        console.error('Error cargando configuración empresarial:', error);
+        // Fallback a getIvaActual()
+        this.catalogoService.getIvaActual().subscribe({
+          next: (ivaResponse) => {
+            if (ivaResponse.success && ivaResponse.data) {
+              this.ivaActual.set(ivaResponse.data.porcentaje_iva);
+            } else {
+              this.ivaActual.set(15.0);
+            }
+            this.cargandoIva.set(false);
+          },
+          error: (fallbackError) => {
+            console.error('Error en fallback de IVA:', fallbackError);
+            this.ivaActual.set(15.0);
+            this.cargandoIva.set(false);
+          }
+        });
+      }
+    });
   }
 
 }
