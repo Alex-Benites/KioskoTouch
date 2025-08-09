@@ -259,7 +259,10 @@ export class ResumenPedidoComponent implements OnInit, OnDestroy {
 
       if (result === true) {
         // Usuario confirmó → Cancelar pedido completo
-
+        
+        // ✅ AGREGAR: Limpiar carrito y turno
+        this.pedidoService.limpiarTodoCompletamente();
+        
         this.router.navigate(['/cliente/home']);
       } else {
       }
