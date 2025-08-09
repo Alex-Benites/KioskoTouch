@@ -47,25 +47,25 @@
     <div *ngIf="tieneTamanos" class="tamanos-selector">
       <h3 class="tamanos-title">Selecciona el tamaño:</h3>
       <div class="tamanos-grid">
-        <div
+         <div
           *ngFor="let tamano of data.producto.tamanos_detalle"
           class="tamano-option"
           [class.selected]="tamanoSeleccionado?.id === tamano.id"
           (click)="seleccionarTamano(tamano); debugTamano(tamano)">
-          <div class="tamano-codigo">{{ tamano.codigo_tamano }}</div>
-          <div class="tamano-nombre">{{ tamano.tamano_nombre }}</div>
-          <div class="tamano-precio">
-            <!-- ✅ MEJORADO: Mostrar precio original tachado y precio con descuento si aplica -->
-            @if (tamanoTieneDescuento(tamano)) {
-              <span class="precio-original-tamano">${{ formatearPrecio(obtenerPrecioOriginalTamano(tamano)) }}</span>
-              <span class="precio-descuento-tamano">${{ formatearPrecio(tamano.precio) }}</span>
-              <small class="descuento-info">{{ ((obtenerPrecioOriginalTamano(tamano) - tamano.precio) / obtenerPrecioOriginalTamano(tamano) * 100).toFixed(0) }}% OFF</small>
-            } @else {
-              <span class="precio-final">${{ formatearPrecio(tamano.precio) }}</span>
-            }
+          <div class="tamano-info">
+            <div class="tamano-nombre">{{ tamano.tamano_nombre }}</div>
+            <div class="tamano-precio">
+              <!-- ✅ MEJORADO: Mostrar precio original tachado y precio con descuento si aplica -->
+              @if (tamanoTieneDescuento(tamano)) {
+                <span class="precio-original-tamano">${{ formatearPrecio(obtenerPrecioOriginalTamano(tamano)) }}</span>
+                <span class="precio-descuento-tamano">${{ formatearPrecio(tamano.precio) }}</span>
+                <small class="descuento-info">{{ ((obtenerPrecioOriginalTamano(tamano) - tamano.precio) / obtenerPrecioOriginalTamano(tamano) * 100).toFixed(0) }}% OFF</small>
+              } @else {
+                <span class="precio-final">${{ formatearPrecio(tamano.precio) }}</span>
+              }
+            </div>
           </div>
-        </div>
-      </div>
+        </div>      </div>
     </div>
   </div>
 
