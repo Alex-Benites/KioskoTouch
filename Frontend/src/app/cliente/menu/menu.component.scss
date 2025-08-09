@@ -145,6 +145,7 @@ $category-inactive-bg: #FFFFFF;
   overflow-y: auto;
   flex: 1;
   align-content: start;
+  grid-auto-rows: max-content; // ✅ AGREGADO: filas se ajustan al contenido
 
   .product-card {
     background-color: white;
@@ -158,7 +159,8 @@ $category-inactive-bg: #FFFFFF;
     position: relative;
     transition: all 0.2s ease;
     cursor: pointer;
-    aspect-ratio: 3/4; // ✅ AUMENTADO: de 1 (cuadrado) a 3/4 para más altura
+    min-height: 400px; // ✅ CAMBIADO: altura mínima en lugar de aspect-ratio fijo
+    height: auto; // ✅ AGREGADO: permitir altura automática según contenido
     overflow: hidden;
 
     &:hover {
@@ -169,7 +171,8 @@ $category-inactive-bg: #FFFFFF;
 
     // ✅ IMAGEN DEL PRODUCTO
     &__image-wrapper {
-      height: 65%; // ✅ AUMENTADO: de 60% a 65% del card para imagen aún más grande
+      min-height: 200px; // ✅ CAMBIADO: altura mínima en lugar de porcentaje
+      max-height: 250px; // ✅ AGREGADO: altura máxima para controlar el tamaño
       padding: 15px;
       display: flex;
       align-items: center;
@@ -185,7 +188,8 @@ $category-inactive-bg: #FFFFFF;
 
     // ✅ CONTENIDO DEL PRODUCTO
     &__content {
-      height: 35%; // ✅ REDUCIDO: de 40% a 35% para dar más espacio a la imagen
+      flex: 1; // ✅ CAMBIADO: usar flex para ocupar el espacio restante
+      min-height: 120px; // ✅ AGREGADO: altura mínima para contenido
       background-color: white;
       padding: 15px;
       display: flex;
@@ -195,7 +199,7 @@ $category-inactive-bg: #FFFFFF;
     }
 
     &__name {
-      font-size: 20px; // ✅ AUMENTADO: de 18px a 20px (igual que los menús)
+      font-size: 24px; // ✅ AUMENTADO: de 20px a 24px para mejor legibilidad
       font-weight: 700;
       color: #333;
       margin: 0 0 8px 0;
@@ -205,20 +209,25 @@ $category-inactive-bg: #FFFFFF;
 
     &__footer {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column; // ✅ CAMBIO: Cambiar a columna para apilar precio y botón
+      align-items: center; // ✅ CENTRAR horizontalmente
+      gap: 12px; // ✅ ESPACIO entre precio y botón
       margin-top: auto;
     }
 
     .price-container {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-height: 50px; 
-      flex-shrink: 1; // ✅ CAMBIO: Permitir que se encoja si es necesario
+      flex-direction: row; // ✅ CAMBIO: fila para precios lado a lado cuando hay descuento
+      align-items: center; // ✅ CENTRAR verticalmente
+      justify-content: center; // ✅ CENTRAR horizontalmente
+      gap: 8px; // ✅ ESPACIO entre precio original y precio con descuento
+      min-height: auto; // ✅ CAMBIO: altura automática
+      width: 100%; // ✅ OCUPAR todo el ancho disponible
+      text-align: center; // ✅ CENTRAR texto
+      flex-wrap: wrap; // ✅ PERMITIR que se envuelva si es necesario
       
       .price-original {
-        font-size: 22px; // ✅ CAMBIO: Aumentado de 18px a 22px (igual que menús)
+        font-size: 26px; // ✅ CAMBIO: Aumentado de 22px a 26px para mejor visibilidad
         font-weight: 700;
         color: #999;
         text-decoration: line-through;
@@ -226,7 +235,7 @@ $category-inactive-bg: #FFFFFF;
       }
 
       .price-discount {
-        font-size: 26px; // ✅ CAMBIO: Aumentado de 22px a 26px (igual que menús)
+        font-size: 30px; // ✅ CAMBIO: Aumentado de 26px a 30px para mayor visibilidad
         font-weight: 700;
         color: #C3453A;
         margin: 0;
@@ -245,7 +254,7 @@ $category-inactive-bg: #FFFFFF;
 
     // ✅ AGREGAR: Estilo específico para product-card__price
     .product-card__price {
-      font-size: 24px; // ✅ CAMBIO: Aumentado de 22px a 24px (igual que menús)
+      font-size: 28px; // ✅ CAMBIO: Aumentado de 24px a 28px para mayor visibilidad
       font-weight: 700;
       color: #333;
       transition: color 0.2s ease;
@@ -256,13 +265,13 @@ $category-inactive-bg: #FFFFFF;
       background-color: $kiosko-red;
       color: white;
       border: none;
-      border-radius: 8px;
-      padding: 8px 14px; // ✅ CAMBIO: Padding intermedio para balance
-      font-size: 13px; // ✅ CAMBIO: Reducido ligeramente de 14px a 13px
+      border-radius: 6px; // ✅ MISMO RADIUS QUE BOTONES DE MENÚ
+      padding: 12px 16px; // ✅ MISMO PADDING QUE BOTONES DE MENÚ
+      font-size: 16px; // ✅ CAMBIO: Aumentado de 13px a 16px para mejor legibilidad
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
-      flex-shrink: 0; // ✅ MANTENER: No permitir que se encoja
+      width: 100%; // ✅ CAMBIO: Ocupar todo el ancho disponible
       white-space: nowrap; // ✅ MANTENER: Evitar que el texto se corte
 
       &:hover {
@@ -309,6 +318,7 @@ $category-inactive-bg: #FFFFFF;
   overflow-y: auto;
   flex: 1;
   align-content: start;
+  grid-auto-rows: max-content; // ✅ AGREGADO: filas se ajustan al contenido
 }
 
 .menu-card {
@@ -321,7 +331,8 @@ $category-inactive-bg: #FFFFFF;
   flex-direction: column;
   transition: all 0.2s ease;
   position: relative;
-  aspect-ratio: 3/4.5; // ✅ REDUCIDO: de 3/5 a 3/4.5 para menor altura
+  min-height: 450px; // ✅ CAMBIADO: altura mínima en lugar de aspect-ratio fijo
+  height: auto; // ✅ AGREGADO: permitir altura automática según contenido
   overflow: hidden;
 
   &:hover {
@@ -355,7 +366,8 @@ $category-inactive-bg: #FFFFFF;
 
 .menu-image-container {
   width: 100%;
-  height: 50%; // ✅ REDUCIDO: de 60% a 50% para dar más espacio al contenido
+  min-height: 180px; // ✅ CAMBIADO: altura mínima en lugar de porcentaje
+  max-height: 220px; // ✅ AGREGADO: altura máxima para controlar el tamaño
   display: flex;
   align-items: center;
   justify-content: center;
@@ -392,7 +404,7 @@ $category-inactive-bg: #FFFFFF;
   justify-content: center; // ✅ CENTRAR VERTICALMENTE EL CONTENIDO
 
   .menu-name {
-    font-size: 20px; // ✅ AUMENTADO DE 18px A 20px
+    font-size: 24px; // ✅ AUMENTADO DE 20px A 24px (igual que productos)
     font-weight: 700;
     color: #333;
     margin: 0 0 8px 0;
@@ -450,22 +462,26 @@ $category-inactive-bg: #FFFFFF;
 
 .menu-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  flex-direction: column; // ✅ CAMBIO: Cambiar a columna para apilar precio y botones
+  align-items: center; // ✅ CENTRAR horizontalmente
   border-top: 1px solid #e9ecef;
   padding-top: 10px;
   margin-top: auto;
-  gap: 10px; // ✅ ESPACIO ENTRE PRECIO Y BOTONES
+  gap: 12px; // ✅ ESPACIO entre precio y botones
 
   .price-container {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-height: 50px; 
-    flex-shrink: 0; // ✅ NO PERMITIR QUE SE ENCOJA
+    flex-direction: row; // ✅ CAMBIO: fila para precios lado a lado cuando hay descuento
+    align-items: center; // ✅ CENTRAR verticalmente
+    justify-content: center; // ✅ CENTRAR horizontalmente
+    gap: 8px; // ✅ ESPACIO entre precio original y precio con descuento
+    min-height: auto; // ✅ CAMBIO: altura automática
+    width: 100%; // ✅ OCUPAR todo el ancho disponible
+    text-align: center; // ✅ CENTRAR texto
+    flex-wrap: wrap; // ✅ PERMITIR que se envuelva si es necesario
     
     .price-original {
-      font-size: 22px; // ✅ CAMBIO: Aumentado de 18px a 22px
+      font-size: 26px; // ✅ CAMBIO: Aumentado de 22px a 26px (igual que productos)
       font-weight: 700;
       color: #999;
       text-decoration: line-through;
@@ -473,7 +489,7 @@ $category-inactive-bg: #FFFFFF;
     }
 
     .price-discount {
-      font-size: 26px; // ✅ CAMBIO: Aumentado de 22px a 26px
+      font-size: 30px; // ✅ CAMBIO: Aumentado de 26px a 30px (igual que productos)
       font-weight: 700;
       color: #C3453A;
       margin: 0;
@@ -490,7 +506,7 @@ $category-inactive-bg: #FFFFFF;
     }
 
     .menu-price {
-      font-size: 24px; // ✅ CAMBIO: Aumentado de 20px a 24px
+      font-size: 28px; // ✅ CAMBIO: Aumentado de 24px a 28px (igual que productos)
       font-weight: 700;
       color: #333;
       margin: 0;
@@ -500,9 +516,10 @@ $category-inactive-bg: #FFFFFF;
   // ✅ AGREGAR: Contenedor para los botones
   .menu-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 10px; // ✅ AUMENTADO: de 8px a 10px para más espacio entre botones
-    min-width: 100px;
+    flex-direction: row; // ✅ CAMBIO: Los botones en la misma fila
+    justify-content: center; // ✅ CENTRAR los botones
+    gap: 12px; // ✅ ESPACIO entre botones
+    width: 100%; // ✅ OCUPAR todo el ancho
   }
 
   // ✅ AGREGAR: Botón "Ver detalles"
@@ -512,10 +529,12 @@ $category-inactive-bg: #FFFFFF;
     border: 2px solid $kiosko-red;
     border-radius: 6px;
     padding: 10px 16px; // ✅ AUMENTADO: de 6px 12px a 10px 16px
-    font-size: 14px; // ✅ AUMENTADO: de 11px a 14px
+    font-size: 16px; // ✅ AUMENTADO: de 14px a 16px (igual que productos)
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    flex: 1; // ✅ AGREGAR: Para que ocupe espacio proporcional
+    max-width: 140px; // ✅ AGREGAR: Ancho máximo
 
     &:hover:not(:disabled) {
       background-color: $kiosko-red;
@@ -539,10 +558,12 @@ $category-inactive-bg: #FFFFFF;
     border: none;
     border-radius: 6px; // ✅ MISMO RADIUS QUE DETAIL BUTTON
     padding: 12px 16px; // ✅ AUMENTADO: de 8px 12px a 12px 16px
-    font-size: 14px; // ✅ AUMENTADO: de 11px a 14px
+    font-size: 16px; // ✅ AUMENTADO: de 14px a 16px (igual que productos)
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    flex: 1; // ✅ AGREGAR: Para que ocupe espacio proporcional
+    max-width: 140px; // ✅ AGREGAR: Ancho máximo
 
     &:hover:not(:disabled) {
       background-color: color.scale($kiosko-red, $lightness: -10%);
