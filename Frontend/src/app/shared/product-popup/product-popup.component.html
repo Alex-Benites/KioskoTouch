@@ -1,12 +1,42 @@
 <div class="product-popup-container">
-  <!-- Botón cerrar -->
-  <button class="close-button" (click)="cerrarPopup()" mat-icon-button>
-    <span class="close-icon">X</span>
-  </button>
+  <!-- Header con botón cerrar -->
+  <div class="popup-header">
+    <button class="close-button" (click)="cerrarPopup()" mat-icon-button>
+      <span class="close-icon">X</span>
+    </button>
+  </div>
 
-  <!-- Imagen del producto -->
-  <div class="product-image-container">
-    <img [src]="data.imagenUrl" [alt]="data.producto.nombre" class="product-image">
+  <!-- Sección imagen y precio -->
+  <div class="image-price-section">
+    <div class="product-image-container">
+      <img [src]="data.imagenUrl" [alt]="data.producto.nombre" class="product-image">
+    </div>
+    <div class="precio-cantidad-section">
+      <div class="precio-section">
+        <div class="precio-total-simple">
+          <span class="precio-valor-unico">${{ precioTotal.toFixed(2) }}</span>
+        </div>
+      </div>
+      
+      <!-- Control de cantidad -->
+      <div class="quantity-section-inline">
+        <h3 class="quantity-label">Cantidad</h3>
+        <div class="quantity-controls">
+          <button
+            class="quantity-button decrease"
+            (click)="disminuirCantidad()"
+            [disabled]="cantidad <= 1">
+            -
+          </button>
+          <span class="quantity-display">{{ cantidad }}</span>
+          <button
+            class="quantity-button increase"
+            (click)="aumentarCantidad()">
+            +
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Información del producto -->
@@ -37,18 +67,10 @@
         </div>
       </div>
     </div>
-
-    <!-- ✅ REEMPLAZAR: La sección completa de precio por esta versión simplificada -->
-    <div class="precio-section">
-      <!-- ✅ Solo mostrar el precio total, sin texto descriptivo -->
-      <div class="precio-total-simple">
-        <span class="precio-valor-unico">${{ precioTotal.toFixed(2) }}</span>
-      </div>
-    </div>
   </div>
 
   <!-- Control de cantidad -->
-  <div class="quantity-section">
+  <div class="quantity-section" style="display: none;">
     <h3 class="quantity-label">Cantidad</h3>
     <div class="quantity-controls">
       <button

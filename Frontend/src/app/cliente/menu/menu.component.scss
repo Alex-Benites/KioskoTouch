@@ -158,7 +158,7 @@ $category-inactive-bg: #FFFFFF;
     position: relative;
     transition: all 0.2s ease;
     cursor: pointer;
-    aspect-ratio: 1; // ✅ CUADRADOS PERFECTOS
+    aspect-ratio: 3/4; // ✅ AUMENTADO: de 1 (cuadrado) a 3/4 para más altura
     overflow: hidden;
 
     &:hover {
@@ -169,7 +169,7 @@ $category-inactive-bg: #FFFFFF;
 
     // ✅ IMAGEN DEL PRODUCTO
     &__image-wrapper {
-      height: 50%; // ✅ 50% del card para imagen
+      height: 65%; // ✅ AUMENTADO: de 60% a 65% del card para imagen aún más grande
       padding: 15px;
       display: flex;
       align-items: center;
@@ -185,7 +185,7 @@ $category-inactive-bg: #FFFFFF;
 
     // ✅ CONTENIDO DEL PRODUCTO
     &__content {
-      height: 50%; // ✅ 50% del card para contenido
+      height: 35%; // ✅ REDUCIDO: de 40% a 35% para dar más espacio a la imagen
       background-color: white;
       padding: 15px;
       display: flex;
@@ -195,7 +195,7 @@ $category-inactive-bg: #FFFFFF;
     }
 
     &__name {
-      font-size: 18px;
+      font-size: 20px; // ✅ AUMENTADO: de 18px a 20px (igual que los menús)
       font-weight: 700;
       color: #333;
       margin: 0 0 8px 0;
