@@ -1,12 +1,10 @@
 <app-header-admin></app-header-admin>
 
 <div class="stats-container">
-  <!-- Encabezado de la página -->
   <div class="page-header">
     <h1 class="page-title">Estadísticas de Promociones</h1>
   </div>
 
-  <!-- Loading State -->
   @if (isLoading) {
     <div class="loading-container">
       <div class="spinner"></div>
@@ -14,7 +12,6 @@
     </div>
   }
 
-  <!-- Error State -->
   @if (hasError && !isLoading) {
     <div class="error-container">
       <div class="error-content">
@@ -35,10 +32,8 @@
     </div>
   }
 
-  <!-- Grid principal de estadísticas -->
   @if (!isLoading && !hasError) {
     <div class="stats-grid">
-      <!-- Ventas generadas -->
       <div class="stat-card bar-chart-card">
         <h3 class="card-title">Ventas generadas por promociones</h3>
         <div class="chart-container">
@@ -51,7 +46,6 @@
         </div>
       </div>
 
-      <!-- Promociones activas vs inactivas -->
       <div class="stat-card doughnut-chart-card">
         <h3 class="card-title">Promociones Activas VS Inactivas</h3>
         <div class="chart-container">
@@ -64,7 +58,6 @@
         </div>
       </div>
 
-      <!-- Tabla de pedidos por mes -->
       <div class="stat-card table-card">
         <h3 class="card-title">Pedidos por mes</h3>
         <div class="table-container">
@@ -106,7 +99,6 @@
         </div>
       </div>
 
-      <!-- Promociones más usadas -->
       <div class="stat-card h-bar-chart-card">
         <h3 class="card-title">Promociones más usadas</h3>
         <div class="chart-container">
@@ -119,9 +111,7 @@
         </div>
       </div>
 
-      <!-- KPIs Ampliados -->
       <div class="kpi-grid">
-        <!-- KPI con círculo: Usuarios que usaron promociones -->
         <div class="stat-card kpi-card">
           <div class="kpi-circle">
             <span class="kpi-percentage">{{ porcentajeUsuarios }}%</span>
@@ -129,7 +119,6 @@
           <p class="kpi-label">Usuarios que usaron promociones</p>
         </div>
         
-        <!-- KPI centralizado: Total descuentos aplicados -->
         <div class="stat-card kpi-card">
           <div class="kpi-value">
             <span class="amount">{{ totalDescuentos | currency:'USD':'symbol':'1.2-2' }}</span>
@@ -137,7 +126,6 @@
           <p class="kpi-label">Total descuentos aplicados</p>
         </div>
         
-        <!-- KPI centralizado: Total pedidos en el sistema -->
         <div class="stat-card kpi-card">
           <div class="kpi-number">
             <span class="big-number">{{ totalPedidosSistema }}</span>
@@ -145,7 +133,6 @@
           <p class="kpi-label">Total pedidos en el sistema</p>
         </div>
         
-        <!-- KPI centralizado: Pedidos últimos 3 meses -->
         <div class="stat-card kpi-card">
           <div class="kpi-number">
             <span class="big-number">{{ totalPedidosPeriodo }}</span>

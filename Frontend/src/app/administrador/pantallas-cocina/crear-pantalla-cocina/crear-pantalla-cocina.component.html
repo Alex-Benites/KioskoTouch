@@ -7,7 +7,6 @@
   </h1>
 
   <form [formGroup]="form" class="form-container">
-    <!-- Formulario de creación -->
     <div class="form-section">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Nombre de la pantalla</mat-label>
@@ -36,7 +35,6 @@
         </div>
       </mat-form-field>
 
-      <!-- Botón para generar el token -->
       <button class="primary__button generar-token-button" (click)="generarToken()" type="button">
         Generar Token
       </button>
@@ -50,11 +48,9 @@
       </mat-form-field>
     </div>
 
-    <!-- Sección de vinculación -->
     <div class="vinculacion-section">
       <h3>Vinculación/Desvinculación del Kiosco Touch</h3>
 
-      <!-- Dropdown para filtrar por establecimiento -->
       <div class="search-bar">
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Filtrar por establecimiento</mat-label>
@@ -79,7 +75,6 @@
           </mat-checkbox>
         </div>
 
-        <!-- Mensaje cuando no hay resultados -->
         <div class="no-results" *ngIf="kioscosFiltrados.length === 0">
           <p>No se encontraron kioscos en el establecimiento seleccionado.</p>
         </div>
@@ -91,7 +86,6 @@
     </div>
   </form>
 
-  <!-- Botones de acción con el mismo estilo que crear.component -->
   <div class="form-actions">
     <button type="button" class="primary__button" (click)="crearPantalla()">
       {{ isEditMode ? 'Actualizar' : 'Crear' }}

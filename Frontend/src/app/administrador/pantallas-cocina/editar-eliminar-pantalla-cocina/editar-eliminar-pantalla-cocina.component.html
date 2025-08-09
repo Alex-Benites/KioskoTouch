@@ -4,7 +4,6 @@
   <p class="breadcrumb-title">GESTIÓN DE PANTALLAS DE COCINA</p>
   <h1 class="section-title">Edición/Eliminación de Pantallas de Cocina</h1>
 
-  <!-- Filtros -->
   <div class="filters-section">
     <div class="filter-group">
       <label>Estado</label>
@@ -30,7 +29,6 @@
     </div>
   </div>
 
-  <!-- Tabla de pantallas -->
   <div class="table-container">
     <table class="pantallas-table">
       <thead>
@@ -48,7 +46,6 @@
           <td>{{ fila.pantalla.token }}</td>
           <td>{{ fila.kiosco?.nombre || 'Sin kiosco' }}</td>
           <td class="estado-cell">
-            <!-- ✅ CORREGIDO: Mostrar "Activo"/"Inactivo" aunque backend envíe "Activado"/"Desactivado" -->
             <span *ngIf="fila.pantalla.estado === 'Activado'" class="estado-activo">
               Activo
             </span>

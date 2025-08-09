@@ -4,14 +4,12 @@
   <p class="breadcrumb-title">GESTIÓN DE KIOSKO TOUCH</p>
   <h1 class="section-title">Edición/Eliminación de Kioscos Touch</h1>
 
-  <!-- Filtros -->
   <div class="filters-section">
     <div class="filter-group">
       <label>Estado</label>
       <mat-form-field appearance="outline" class="filter-field">
         <mat-select [(value)]="filtroEstado" (selectionChange)="aplicarFiltros()">
           <mat-option value="">Todos</mat-option>
-          <!-- ✅ USAR: Valores exactos que devuelve getEstadoNombre() -->
           <mat-option value="activado">Activado</mat-option>
           <mat-option value="desactivado">Desactivado</mat-option>
         </mat-select>
@@ -23,7 +21,6 @@
       <mat-form-field appearance="outline" class="filter-field">
         <mat-select [(value)]="filtroEstablecimiento" (selectionChange)="aplicarFiltros()">
           <mat-option value="">Todos los establecimientos</mat-option>
-          <!-- ✅ REEMPLAZAR: Usar establecimientos reales de la BD -->
           <mat-option *ngFor="let establecimiento of establecimientos"
                       [value]="establecimiento.id">
             {{ establecimiento.nombre }}
@@ -33,10 +30,8 @@
     </div>
   </div>
 
-  <!-- Tabla de kioscos -->
   <div class="table-container">
 
-    <!-- ✅ NUEVO: Header con contador de kioscos -->
     <div class="table-header">
       <h2 class="table-title">Lista de Kioscos Touch</h2>
       <div class="kioscos-stats">
@@ -79,7 +74,6 @@
           </td>
           <td class="actions-cell">
 
-            <!-- Botón Editar con imagen personalizada -->
             <button mat-icon-button
                     class="action-button edit-button"
                     (click)="editarKiosco(kiosco)"
@@ -87,7 +81,6 @@
               <img src="assets/admin/ADMIN_7.png" alt="Editar" class="custom-icon">
             </button>
 
-            <!-- Botón Eliminar con imagen personalizada -->
             <button mat-icon-button
                     class="action-button delete-button"
                     (click)="abrirDialogoEliminar(kiosco)"
@@ -99,7 +92,6 @@
       </tbody>
     </table>
 
-    <!-- Mensaje cuando no hay datos -->
     <div class="no-data" *ngIf="kioscosFiltrados.length === 0 && !loading">
       <p>No se encontraron kioscos con los filtros aplicados.</p>
     </div>

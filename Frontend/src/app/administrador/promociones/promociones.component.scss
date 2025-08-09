@@ -90,13 +90,13 @@
   text-decoration: underline;
 }
 
-@media (max-width: 920px) { // 3*250 (items) + 2*40 (gaps) + 2*50 (container padding) approx
+@media (max-width: 920px) {
   .promo-grid {
     grid-template-columns: repeat(2, 250px);
   }
 }
 
-@media (max-width: 670px) { // 2*250 (items) + 1*40 (gaps) + 2*50 (container padding) approx
+@media (max-width: 670px) {
   .promo-grid {
     grid-template-columns: 250px;
   }

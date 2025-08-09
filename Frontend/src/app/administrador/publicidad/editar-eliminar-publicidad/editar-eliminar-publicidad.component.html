@@ -5,7 +5,6 @@
   <h1 class="page-main-title">Edición/Eliminación de Publicidad</h1>
 
   <div class="content-layout">
-    <!-- Columna de Filtros -->
     <div class="filters-column">
       <form [formGroup]="filtroForm" (ngSubmit)="aplicarFiltros()">
         <div class="filter-section">
@@ -35,7 +34,6 @@
       </form>
     </div>
 
-    <!-- Columna de Contenido (Tarjetas de Publicidad) -->
     <div class="content-column">
       @if (isLoading) {
         <div class="loading-indicator">
@@ -59,7 +57,6 @@
         <div class="publicidad-grid">
           @for (publicidad of publicidadesFiltradas; track publicidad.id) {
             <div class="custom-card">
-              <!-- Header con título centrado -->
               <div class="card-header">
                 <h3 class="card-title">{{ publicidad.nombre }}</h3>
                 <div class="card-badges">
@@ -72,7 +69,6 @@
                 </div>
               </div>
               
-              <!-- Media container -->
               <div class="media-container">
                 @defer (when publicidad.media_url) {
                   @if (isVideoFile(publicidad)) {
@@ -106,14 +102,12 @@
                 }
               </div>
               
-              <!-- Contenido -->
               <div class="card-content">
                 <p class="descripcion-publicidad">
                   {{ publicidad.descripcion || 'Sin descripción disponible.' }}
                 </p>
               </div>
               
-              <!-- Botones centrados -->
               <div class="card-actions">
                 <button 
                   class="primary__button edit-button small" 

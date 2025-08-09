@@ -7,7 +7,6 @@
   </h1>
 
   <form [formGroup]="form" class="form-container">
-    <!-- Formulario de creación -->
     <div class="form-section">
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Nombre de Kiosco</mat-label>
@@ -36,7 +35,6 @@
         </div>
       </mat-form-field>
 
-      <!-- Botón para generar el token -->
       <button class="primary__button generar-token-button" (click)="generarToken()" type="button">
         Generar Token
       </button>
@@ -50,11 +48,9 @@
       </mat-form-field>
     </div>
 
-    <!-- Sección de vinculación -->
     <div class="vinculacion-section">
       <h3>Vinculación/Desvinculación del Establecimiento</h3>
 
-      <!-- ✅ CAMBIAR: Dropdown de provincias -->
       <div class="search-bar">
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Filtrar por provincia</mat-label>
@@ -67,12 +63,10 @@
         </mat-form-field>
       </div>
 
-      <!-- ✅ SIMPLIFICAR: Solo mostrar nombre del establecimiento -->
       <div class="establecimientos-list">
         <div class="establecimiento-item" *ngFor="let establecimiento of establecimientosFiltrados">
           <img src="assets/admin/ADMIN_23.png" alt="Establecimiento" />
           <div class="establecimiento-info">
-            <!-- ✅ CAMBIAR: Solo mostrar el nombre, quitar la provincia -->
             <p class="establecimiento-nombre">{{ establecimiento.nombre }}</p>
           </div>
           <mat-checkbox
@@ -81,7 +75,6 @@
           </mat-checkbox>
         </div>
 
-        <!-- Mensaje cuando no hay resultados -->
         <div class="no-results" *ngIf="establecimientosFiltrados.length === 0">
           <p>No se encontraron establecimientos en la provincia seleccionada.</p>
         </div>
@@ -93,7 +86,6 @@
     </div>
   </form>
 
-  <!-- Botones de acción -->
   <div class="form-actions">
     <button type="button" class="primary__button" (click)="crearKiosco()">
       {{ isEditMode ? 'Actualizar' : 'Crear' }}
@@ -101,7 +93,6 @@
   </div>
 </div>
 
-<!-- ✅ AGREGAR: Popup al final del archivo, antes del footer -->
 <app-success-popup
   [visible]="mostrarPopup"
   [title]="tituloPopup"

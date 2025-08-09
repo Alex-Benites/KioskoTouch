@@ -1,5 +1,4 @@
 <main class="reset-container">
-  <!-- Formulario al lado izquierdo -->
   <div class="form-container">
     <header class="header__container">
       <img src="img/administrador/ADMIN_2_2.png" alt="Kiosko go logo">
@@ -11,17 +10,14 @@
 
     <h1 class="title">Recuperar Contraseña</h1>
 
-    <!-- Mostrar si viene del enlace del email -->
     <p *ngIf="vieneDeEnlace" style="text-align: center; color: #666; margin-bottom: 20px;">
       📧 Llegaste desde el enlace del email. Ingresa tu nueva contraseña.
     </p>
 
-    <!-- Mostrar errores -->
     <div *ngIf="error" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
       {{ error }}
     </div>
 
-    <!-- Mostrar mensaje de éxito -->
     <div *ngIf="mensaje && !mostrarPopup" style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #c3e6cb;">
       {{ mensaje }}
     </div>
@@ -102,7 +98,6 @@
     </form>
   </div>
 
-  <!-- Imagen al lado derecho -->
   <div class="image-container">
     <img src="img/administrador/ADMIN_2.png" alt="Hamburguesa" class="hamburguesa-img" />
   </div>

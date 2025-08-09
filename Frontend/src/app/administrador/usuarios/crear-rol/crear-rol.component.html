@@ -8,7 +8,6 @@
 
   <form [formGroup]="rolForm" (ngSubmit)="guardarRol()">
     
-    <!-- 🏷️ Nombre del Rol -->
     <div class="form-section">
       <h3 class="form-subtitle">
         <mat-icon>badge</mat-icon>
@@ -36,7 +35,6 @@
       </div>
     </div>
 
-    <!-- 🔑 Permisos -->
     <div class="permisos-section">
       <div class="section-header">
         <h3 class="form-subtitle">
@@ -49,13 +47,11 @@
         </div>
       </div>
 
-      <!-- 🔄 Loading -->
       <div *ngIf="loading" class="loading-container">
         <mat-spinner diameter="50"></mat-spinner>
         <p>{{ isEditMode ? 'Cargando datos del rol...' : 'Cargando permisos...' }}</p>
       </div>
 
-      <!-- 📊 Tabla de Permisos -->
       <div *ngIf="!loading" class="permisos-table-wrapper">
         <table mat-table [dataSource]="gestiones" class="permisos-table">
           
@@ -72,7 +68,6 @@
             </td>
           </ng-container>
 
-          <!-- 👁️ Columna Ver -->
           <ng-container matColumnDef="ver">
             <th mat-header-cell *matHeaderCellDef class="action-header">
               <div class="header-content">
@@ -91,7 +86,6 @@
             </td>
           </ng-container>
 
-          <!-- ➕ Columna Crear -->
           <ng-container matColumnDef="crear">
             <th mat-header-cell *matHeaderCellDef class="action-header">
               <div class="header-content">
@@ -110,7 +104,6 @@
             </td>
           </ng-container>
 
-          <!-- ✏️ Columna Modificar -->
           <ng-container matColumnDef="modificar">
             <th mat-header-cell *matHeaderCellDef class="action-header">
               <div class="header-content">
@@ -129,7 +122,6 @@
             </td>
           </ng-container>
 
-          <!-- 🗑️ Columna Eliminar -->
           <ng-container matColumnDef="eliminar">
             <th mat-header-cell *matHeaderCellDef class="action-header">
               <div class="header-content">
@@ -148,7 +140,6 @@
             </td>
           </ng-container>
 
-          <!-- ✅ Columna Todos -->
           <ng-container matColumnDef="todos">
             <th mat-header-cell *matHeaderCellDef class="action-header todos-header">
               <div class="header-content">
@@ -168,14 +159,12 @@
             </td>
           </ng-container>
 
-          <!-- 📋 Header y Rows -->
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="gestion-row"></tr>
         </table>
       </div>
     </div>
 
-    <!-- 🎯 Botones de Acción -->
     <div class="actions-section">
       <button type="button" 
               (click)="cancelar()"

@@ -13,7 +13,6 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Nombre del producto</mat-label>
           <input matInput formControlName="nombre" placeholder="Ej: Hamburguesa Clásica">
-          <!-- ✅ NUEVO: Mensaje de error mejorado -->
           @if (productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched) {
             <mat-error>
               @if (productoForm.get('nombre')?.hasError('required')) {
@@ -29,7 +28,6 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Descripción del producto</mat-label>
           <textarea matInput formControlName="descripcion" placeholder="Ej: Deliciosa carne con queso cheddar..." rows="3"></textarea>
-          <!-- ✅ NUEVO: Mensaje de error mejorado -->
           @if (productoForm.get('descripcion')?.invalid && productoForm.get('descripcion')?.touched) {
             <mat-error>
               @if (productoForm.get('descripcion')?.hasError('required')) {
@@ -49,7 +47,6 @@
             <mat-option [value]="cat.id">{{cat.nombre}}</mat-option>
             }
           </mat-select>
-          <!-- ✅ NUEVO: Mensaje de error mejorado -->
           @if (productoForm.get('categoria')?.invalid && productoForm.get('categoria')?.touched) {
             <mat-error>
               Debes seleccionar una categoría para el producto
@@ -61,7 +58,6 @@
                        [class.precio-deshabilitado]="productoForm.get('aplicaTamanos')?.value">
           <mat-label>{{ productoForm.get('aplicaTamanos')?.value ? 'Precio base (deshabilitado)' : 'Precio del producto' }}</mat-label>
           <input matInput type="number" formControlName="precio" placeholder="Ej: 9.99" step="0.01" min="0">
-          <!-- ✅ NUEVO: Mensajes de error mejorados -->
           @if (productoForm.get('precio')?.invalid && productoForm.get('precio')?.touched && !productoForm.get('aplicaTamanos')?.value) {
             <mat-error>
               @if (productoForm.get('precio')?.hasError('required')) {
@@ -87,7 +83,6 @@
             <mat-option [value]="disp.id">{{disp.nombre}}</mat-option>
             }
           </mat-select>
-          <!-- ✅ NUEVO: Mensaje de error mejorado -->
           @if (productoForm.get('disponibilidad')?.invalid && productoForm.get('disponibilidad')?.touched) {
             <mat-error>
               Debes seleccionar el estado de disponibilidad
@@ -109,7 +104,6 @@
           }
         </div>
         
-        <!-- ✅ NUEVO: Mensaje de error para imagen -->
         @if (!imagePreview && mostrarErroresFormulario && !isEditMode) {
           <div class="image-error-message">
             <mat-icon class="error-icon">error</mat-icon>
@@ -125,8 +119,6 @@
       </div>
     </div>
 
-    <!-- Nueva sección de tamaños -->
-    <!-- ✅ SECCIÓN DE TAMAÑOS EMBELLECIDA -->
     <div class="tamanos-section">
       <div class="tamanos-header">
         <h2>Opciones de Tamaño</h2>
@@ -183,7 +175,6 @@
                 <span matPrefix>$</span>
                 <mat-hint>Precio para tamaño {{ tamano.nombre }}</mat-hint>
                 
-                <!-- ✅ NUEVOS: Mensajes de error mejorados -->
                 @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.invalid && productoForm.get('precio_' + tamano.codigo.toLowerCase())?.touched) {
                   <mat-error>
                     @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.hasError('min')) {
@@ -199,7 +190,6 @@
                 }
               </mat-form-field>
 
-              <!-- Indicador visual del precio -->
               <div class="precio-indicator"
                    [class.has-price]="productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value > 0">
                 @if (productoForm.get('precio_' + tamano.codigo.toLowerCase())?.value > 0) {
@@ -213,7 +203,6 @@
           }
         </div>
 
-        <!-- Resumen de precios -->
         <div class="tamanos-resumen">
           <h3>Resumen de Precios</h3>
           <div class="resumen-grid">
@@ -231,7 +220,6 @@
       }
     </div>
 
-  <!-- Sección de Ingredientes -->
   <div class="ingredientes-section">
     <h2>Ingredientes Disponibles</h2>
     @if (ingredientesDisponibles.length > 0) {
@@ -240,7 +228,6 @@
       <div class="ingrediente-card"
           [class.selected]="ingrediente.cantidad > 0">
 
-        <!-- ✅ CORREGIDO: Checkbox de es_base con ngModelOptions standalone -->
         <div class="ingrediente-base-checkbox">
           <mat-checkbox
             [(ngModel)]="ingrediente.es_base"
@@ -253,7 +240,6 @@
           <span class="base-label" [class.active]="ingrediente.es_base">BASE</span>
         </div>
 
-        <!-- ✅ CONTENIDO DEL INGREDIENTE (SIN referencias a "extra") -->
         <div class="ingrediente-content">
           <div class="ingrediente-image">
             <img [src]="getFullImageUrl(ingrediente.imagen_url)"
@@ -268,7 +254,6 @@
               +${{ ingrediente.precio_adicional }}
             </span>
             }
-            <!-- ✅ NUEVO: Solo mostrar si es base o no (sin "Extra") -->
             <span class="ingrediente-estado"
                   [class.es-base]="ingrediente.es_base"
                   [class.es-opcional]="!ingrediente.es_base">
@@ -277,7 +262,6 @@
           </div>
         </div>
 
-        <!-- ✅ CONTROLES DE CANTIDAD EXISTENTES -->
         <div class="cantidad-controls">
           <button type="button"
                   class="cantidad-btn cantidad-btn-minus"

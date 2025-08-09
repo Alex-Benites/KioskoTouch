@@ -6,10 +6,8 @@
 
   <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" class="user-form">
     <div class="form-layout">
-      <!-- Parte izquierda: Campos del formulario -->
       <div class="form-fields">
 
-        <!-- 🆕 Sección: Información Personal -->
         <div class="form-section">
           <h3 class="section-subtitle">
             <mat-icon>person</mat-icon>
@@ -17,7 +15,6 @@
           </h3>
 
           <div class="form-grid">
-            <!-- Cédula -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Cédula</mat-label>
               <input matInput formControlName="cedula" placeholder="1234567890" maxlength="10">
@@ -32,7 +29,6 @@
               }
             </mat-form-field>
 
-            <!-- Nombres -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Nombres</mat-label>
               <input matInput formControlName="nombres" placeholder="Ej: Juan Carlos">
@@ -41,7 +37,6 @@
               }
             </mat-form-field>
 
-            <!-- Apellidos -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Apellidos</mat-label>
               <input matInput formControlName="apellidos" placeholder="Ej: Pérez González">
@@ -50,7 +45,6 @@
               }
             </mat-form-field>
 
-            <!-- Fecha de Nacimiento -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Fecha de Nacimiento</mat-label>
               <input
@@ -62,7 +56,6 @@
               <mat-datepicker-toggle matSuffix [for]="nacimientoPicker"></mat-datepicker-toggle>
               <mat-datepicker #nacimientoPicker></mat-datepicker>
 
-              <!-- ✅ NUEVOS mensajes de error -->
               @if (usuarioForm.get('fechaNacimiento')?.hasError('edadMinima')) {
                 <mat-error>
                   {{ usuarioForm.get('fechaNacimiento')?.getError('edadMinima')?.mensaje }}
@@ -75,7 +68,6 @@
               }
             </mat-form-field>
 
-            <!-- Teléfono -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Número de Teléfono</mat-label>
               <input matInput formControlName="telefono" placeholder="0987654321" maxlength="10">
@@ -84,7 +76,6 @@
               }
             </mat-form-field>
 
-            <!-- Sexo -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Sexo</mat-label>
               <mat-select formControlName="sexo">
@@ -97,7 +88,6 @@
           </div>
         </div>
 
-        <!-- 🆕 Sección: Credenciales de Acceso -->
         <div class="form-section">
           <h3 class="section-subtitle">
             <mat-icon>security</mat-icon>
@@ -105,7 +95,6 @@
           </h3>
 
           <div class="form-grid">
-            <!-- Username -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Nombre de Usuario</mat-label>
               <input
@@ -124,7 +113,6 @@
               }
             </mat-form-field>
 
-            <!-- Email -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Correo Electrónico</mat-label>
               <input matInput type="email" formControlName="email" placeholder="usuario@empresa.com">
@@ -136,7 +124,6 @@
               }
             </mat-form-field>
 
-            <!-- Contraseña (solo en creación) -->
             @if (!isEditMode) {
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Contraseña</mat-label>
@@ -152,7 +139,6 @@
                 }
               </mat-form-field>
 
-              <!-- Confirmar contraseña (solo en creación) -->
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Confirmar Contraseña</mat-label>
                 <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword">
@@ -170,7 +156,6 @@
           </div>
         </div>
 
-        <!-- 🆕 Sección: Información Laboral -->
         <div class="form-section">
           <h3 class="section-subtitle">
             <mat-icon>work</mat-icon>
@@ -178,7 +163,6 @@
           </h3>
 
           <div class="form-grid">
-            <!-- Establecimiento -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Establecimiento Asignado</mat-label>
               <mat-select formControlName="establecimiento">
@@ -194,7 +178,6 @@
               }
             </mat-form-field>
 
-            <!-- Turno de Trabajo -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Turno de Trabajo</mat-label>
               <mat-select formControlName="turnoTrabajo">
@@ -205,7 +188,6 @@
               </mat-select>
             </mat-form-field>
 
-            <!-- Rol -->
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Rol Asignado</mat-label>
               <mat-select formControlName="grupos">
@@ -221,7 +203,6 @@
               }
             </mat-form-field>
 
-            <!-- Estado activo/inactivo -->
             <div class="form-field estado-field">
               <mat-slide-toggle formControlName="isActive" color="primary">
                 <span class="toggle-label">Usuario Activo</span>
@@ -231,7 +212,6 @@
           </div>
         </div>
 
-        <!-- 🎯 Botones de acción -->
         <div class="actions-section">
           <button type="button" class="cancel__button" (click)="cancelar()">
             Cancelar
@@ -247,7 +227,6 @@
         </div>
       </div>
 
-      <!-- Parte derecha: Imagen -->
       <div class="image-container">
         <img src="assets/admin/ADMIN_6.png" alt="Imagen de usuario" class="user-image">
       </div>

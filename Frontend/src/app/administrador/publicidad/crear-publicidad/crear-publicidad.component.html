@@ -35,7 +35,6 @@
           <mat-hint>{{ descripcion?.value?.length || 0 }}/500 caracteres</mat-hint>
         </mat-form-field>
 
-        <!-- ✅ CORREGIDO: Tipo de publicidad deshabilitado en edición -->
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Tipo de publicidad</mat-label>
           <mat-select formControlName="tipoPublicidad" (selectionChange)="onTipoPublicidadChange()">
@@ -165,10 +164,8 @@
             {{ getFileButtonText() }}
           </button>
           
-          <!-- Preview para múltiples imágenes -->
           @if (selectedMediaType === 'image' && (selectedFiles.length > 0 || existingImages.length > 0)) {
             <div class="images-grid">
-              <!-- Imágenes existentes -->
               @for (existingImage of existingImages; track existingImage.id) {
                 <div class="image-item existing">
                   <div class="image-preview-container">
@@ -188,7 +185,6 @@
                 </div>
               }
               
-              <!-- Nuevas imágenes seleccionadas -->
               @for (filePreview of filePreviews; track $index) {
                 <div class="image-item new">
                   <div class="image-preview-container">
@@ -215,7 +211,6 @@
             </div>
           }
           
-          <!-- Preview para video (igual que antes) -->
           @if (selectedMediaType === 'video' && (selectedFile || existingVideoUrl)) {
             <div class="media-preview">
               <div class="preview-header">
