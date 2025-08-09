@@ -183,7 +183,7 @@
 
       <div class="total-pedido" *ngIf="pedidoService.cantidadItems() > 0">
         <span class="total-label">Total del pedido:</span>
-        <span class="total-valor">${{ (pedidoService.total() + precioTotalCalculado()).toFixed(2) }}</span>
+        <span class="total-valor">${{ pedidoService.total().toFixed(2) }}</span>
       </div>
     </div>
 
