@@ -60,7 +60,7 @@ export class PinpadService {
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       // 🏠 DESARROLLO LOCAL
       console.log('🏠 Modo desarrollo: Conectando al PinpadService local');
-      return 'http://localhost:8080/api/pinpad';
+      return 'http://localhost:8081/api/pinpad';
     } else {
       // 🏢 KIOSKO EN PRODUCCIÓN (frontend desde la nube)
       console.log('🏢 Modo kiosko: Frontend en nube conectando a PinpadService local');
