@@ -156,7 +156,6 @@ $border-color-medium: #ced4da;
     font-weight: 700;
     border-bottom: 3px solid #DD453A;
 
-    // ✅ NUEVO: Estilos para el header con contador
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -524,7 +523,6 @@ $border-color-medium: #ced4da;
   .dialog-body { font-size: 14px; }
 }
 
-// ✅ NUEVO: Responsive para el contador de roles
 @media (max-width: 600px) {
   .roles-list-card .roles-list-header {
     flex-direction: column;

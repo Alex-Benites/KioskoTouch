@@ -1,4 +1,3 @@
-// 🎨 Mantener el mismo fondo gris de la página
 .crear-rol-container {
   padding: 30px 50px;
   background-color: #F2F2F2;
@@ -24,9 +23,8 @@
   color: #333;
 }
 
-// 🏷️ Secciones del formulario al mismo nivel
 .form-section {
-  margin-bottom: 20px; // 🆕 Reducido de 40px a 20px
+  margin-bottom: 20px;
   margin-left: 150px;
 }
 
@@ -44,7 +42,6 @@
   }
 }
 
-// 🆕 Campo personalizado sin Angular Material
 .nombre-field-custom {
   width: 100%;
   max-width: 500px;
@@ -66,7 +63,7 @@
     font-family: 'Lato', sans-serif;
     border: 2px solid #ddd;
     border-radius: 8px;
-    background-color: #E4E4E4; // 🆕 Color solicitado
+    background-color: #E4E4E4;
     color: #333;
     transition: all 0.3s ease;
     box-sizing: border-box;
@@ -113,9 +110,8 @@
   }
 }
 
-// 🔑 Sección de permisos
 .permisos-section {
-  margin-top: 20px; // 🆕 Reducido de 40px a 20px
+  margin-top: 20px;
   margin-left: 150px;
 
   .section-header {
@@ -134,7 +130,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background-color: #E4E4E4; // 🆕 Cambiado de #ffffff a #E4E4E4
+      background-color: #E4E4E4;
       padding: 12px 20px;
       border-radius: 25px;
       color: #555;
@@ -160,7 +156,6 @@
     }
   }
 
-  // 📊 Tabla de permisos con fondo blanco
   .permisos-table-wrapper {
     background-color: #ffffff;
     border-radius: 12px;
@@ -171,7 +166,6 @@
     .permisos-table {
       width: 100%;
 
-      // 🎨 Headers
       ::ng-deep .mat-header-cell {
         background-color: #f8f9fa;
         color: #333;
@@ -217,7 +211,6 @@
         }
       }
 
-      // 🎨 Celdas
       ::ng-deep .mat-cell {
         border-bottom: 1px solid #e0e0e0;
         padding: 20px 16px;
@@ -252,7 +245,6 @@
           justify-content: center;
           min-height: 40px;
 
-          // 🎯 Estilos generales para checkboxes
           ::ng-deep .mat-checkbox {
             margin: 0;
             
@@ -273,7 +265,6 @@
         }
       }
 
-      // 🎨 Filas
       ::ng-deep .gestion-row {
         transition: background-color 0.3s ease;
 
@@ -289,7 +280,6 @@
   }
 }
 
-// 🎯 Botones de acción al mismo nivel
 .actions-section {
   margin-top: 50px;
   margin-left: 150px;
@@ -298,7 +288,6 @@
   justify-content: center;
   padding-top: 30px;
 
-  // 🆕 Botón cancelar personalizado
   .cancel__button {
     display: inline-flex;
     align-items: center;
@@ -313,7 +302,7 @@
     line-height: 1.75;
     color: #666;
 
-    background-color: #E4E4E4; // 🎯 Mismo color del campo nombre
+    background-color: #E4E4E4;
 
     border: 2px solid #ccc;
     border-radius: 100px;
@@ -346,7 +335,6 @@
     }
   }
 
-  // 🎯 Ajustes para el botón primary existente
   .primary__button {
     max-height: 40px;
     padding: 12px 24px;
@@ -354,7 +342,6 @@
   }
 }
 
-// 🎨 Snackbars
 ::ng-deep {
   .error-snackbar {
     background-color: #f44336 !important;
@@ -375,7 +362,6 @@
   }
 }
 
-// 📱 Responsive Design
 @media (max-width: 1200px) {
   .crear-rol-container {
     padding: 20px 30px;
