@@ -1,4 +1,3 @@
-// ===== VARIABLES =====
 $primary-red: #D32F2F;
 $text-dark: #000000;
 $text-light: #666666;
@@ -6,7 +5,6 @@ $background-light: #FFFFFF;
 $border-light: #E0E0E0;
 $error-color: #D32F2F;
 
-// ===== CONTAINER PRINCIPAL =====
 .config-container {
   padding: 2rem;
   background-color: #F8F9FA;
@@ -14,7 +12,6 @@ $error-color: #D32F2F;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-// ===== HEADER =====
 .header-section {
   margin-bottom: 2rem;
   
@@ -36,7 +33,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== GRID LAYOUT =====
 .content-grid {
   display: grid;
   grid-template-columns: 300px 1fr 280px;
@@ -56,7 +52,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== CARDS BASE =====
 .status-card,  
 .form-card,
 .info-card {
@@ -79,7 +74,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== STATUS CARD =====
 .status-card {
   .loading-state {
     padding: 2rem 1.5rem;
@@ -150,7 +144,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== FORM CARD =====
 .form-card {
   .config-form {
     padding: 1.5rem;
@@ -269,7 +262,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== BOTONES =====
 .btn {
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -324,7 +316,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== INFO CARD =====
 .info-card {
   .info-content {
     padding: 1.5rem;
@@ -345,7 +336,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== ANIMACIONES =====
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -355,7 +345,6 @@ $error-color: #D32F2F;
   }
 }
 
-// ===== RESPONSIVE =====
 @media (max-width: 768px) {
   .config-container {
     padding: 1rem;

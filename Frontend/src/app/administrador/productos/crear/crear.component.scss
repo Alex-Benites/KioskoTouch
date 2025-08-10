@@ -135,7 +135,6 @@ mat-error {
   font-size: 0.75em;
 }
 
-// ✅ SECCIÓN DE INGREDIENTES MEJORADA
 .ingredientes-section {
   margin-top: 2rem;
   padding: 1.5rem;
@@ -177,7 +176,6 @@ mat-error {
     transform: translateY(-2px);
   }
 
-  // ✅ CHECKBOX DE INGREDIENTE BASE MEJORADO
   .ingrediente-base-checkbox {
     position: absolute;
     top: 10px;
@@ -221,13 +219,12 @@ mat-error {
     }
   }
   
-  // ✅ CONTENIDO DEL INGREDIENTE MEJORADO
   .ingrediente-content {
     display: flex;
     align-items: flex-start;
     gap: 12px;
     margin-bottom: 12px;
-    padding-right: 60px; // Espacio para el checkbox
+    padding-right: 60px;
   }
   
   .ingrediente-image {
@@ -252,7 +249,7 @@ mat-error {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 0; // Para permitir text-overflow
+    min-width: 0;
   }
 
   .ingrediente-nombre {
@@ -277,7 +274,6 @@ mat-error {
     }
   }
   
-  // ✅ ESTADO DEL INGREDIENTE MEJORADO
   .ingrediente-estado {
     font-size: 10px;
     padding: 3px 8px;
@@ -301,7 +297,6 @@ mat-error {
     }
   }
   
-  // ✅ CONTROLES DE CANTIDAD MEJORADOS
   .cantidad-controls {
     display: flex;
     align-items: center;
@@ -366,7 +361,6 @@ mat-error {
     border: 1px solid #dee2e6;
   }
   
-  // ✅ ESTADOS VISUALES DE LA TARJETA MEJORADOS
   &.selected {
     border-color: #007bff;
     box-shadow: 0 4px 16px rgba(0, 123, 255, 0.25);
@@ -380,7 +374,6 @@ mat-error {
       border-color: #007bff;
     }
     
-    // Estado especial cuando es base Y está seleccionado
     &:has(.ingrediente-base-checkbox .mat-mdc-checkbox-checked) {
       border-color: #4CAF50;
       box-shadow: 0 4px 16px rgba(76, 175, 80, 0.25);
@@ -400,7 +393,6 @@ mat-error {
   }
 }
 
-// ✅ MENSAJE CUANDO NO HAY INGREDIENTES
 .no-ingredientes {
   text-align: center;
   padding: 3rem 2rem;
@@ -416,7 +408,6 @@ mat-error {
   }
 }
 
-// ✅ SECCIÓN DE TAMAÑOS EMBELLECIDA
 .tamanos-section {
   margin-top: 2rem;
   padding: 2rem;
@@ -558,7 +549,6 @@ mat-error {
   gap: 1rem;
   margin-bottom: 1.5rem;
   
-
   .tamano-info {
     flex: 1;
     
@@ -675,7 +665,6 @@ mat-error {
   }
 }
 
-// ✅ RESPONSIVE MEJORADO
 @media (max-width: 768px) {
   .ingredientes-section {
     margin-top: 1rem;
@@ -745,7 +734,6 @@ mat-error {
   }
 }
 
-// ✅ RESPONSIVE PARA TAMAÑOS
 @media (max-width: 768px) {
   .tamanos-section {
     padding: 1.5rem;
@@ -795,7 +783,6 @@ mat-error {
   }
 }
 
-// Estilo para mensaje de error de imagen
 .image-error-message {
   display: flex;
   align-items: center;
@@ -816,7 +803,6 @@ mat-error {
   }
 }
 
-// Mejorar estilos de campos con errores
 .form-field {
   &.ng-invalid.ng-touched {
     .mat-mdc-form-field-outline {
@@ -825,7 +811,6 @@ mat-error {
   }
 }
 
-// Estilo para precio deshabilitado
 .precio-deshabilitado {
   opacity: 0.6;
   
@@ -834,7 +819,6 @@ mat-error {
   }
 }
 
-// Animación suave para mostrar errores
 .mat-mdc-form-field-error {
   animation: slideIn 0.3s ease-in-out;
 }

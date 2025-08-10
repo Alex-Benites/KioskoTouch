@@ -1,4 +1,3 @@
-// Variables
 $font-family-base: 'Lato', sans-serif;
 $background-color: #f2f2f2;
 $card-background: #ffffff;
@@ -8,13 +7,11 @@ $border-color: #e0e0e0;
 $shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 $radius: 16px;
 
-// ✅ NUEVO COLOR ÚNICO PARA PROMOCIONES
 $promo-main-color: #D63031;
 $promo-gradient: linear-gradient(135deg, #D63031 0%, #B71C1C 50%, #D63031 100%);
 $promo-gradient-light: linear-gradient(45deg, #D63031 0%, #E57373 50%, #D63031 100%);
 $promo-gradient-bars: linear-gradient(180deg, #D63031 0%, #B71C1C 100%);
 
-// Color gris para inactivos
 $inactive-color: #9E9E9E;
 
 .stats-container {
@@ -44,7 +41,6 @@ $inactive-color: #9E9E9E;
   }
 }
 
-// Loading State
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -75,7 +71,6 @@ $inactive-color: #9E9E9E;
   100% { transform: rotate(360deg); }
 }
 
-// Error State
 .error-container {
   display: flex;
   justify-content: center;
@@ -157,14 +152,12 @@ $inactive-color: #9E9E9E;
   }
 }
 
-// Grid principal
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
   
-  // Layout específico para pantallas grandes
   @media (min-width: 1200px) {
     grid-template-areas: 
       "bar-chart bar-chart doughnut-chart"
@@ -196,7 +189,6 @@ $inactive-color: #9E9E9E;
   }
 }
 
-// Asignación a áreas de la grilla
 .bar-chart-card { 
   grid-area: bar-chart; 
   
@@ -233,7 +225,6 @@ $inactive-color: #9E9E9E;
   }
 }
 
-// Chart containers
 .chart-container {
   height: 300px;
   position: relative;
@@ -259,7 +250,6 @@ $inactive-color: #9E9E9E;
   height: 320px;
 }
 
-// Tabla de pedidos por mes
 .table-card {
   .table-container {
     overflow-x: auto;
@@ -302,9 +292,7 @@ $inactive-color: #9E9E9E;
   }
 }
 
-// ✅ KPI CARDS COMPLETAMENTE CENTRALIZADAS
 .kpi-card {
-  // Convertir toda la card en un contenedor flex centrado
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -312,9 +300,8 @@ $inactive-color: #9E9E9E;
   text-align: center;
   padding: 2.5rem 1.5rem;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  min-height: 200px; // Altura mínima para mantener consistencia
+  min-height: 200px;
   
-  // ✅ CARD CON CÍRCULO (usuarios que usaron promociones)
   .kpi-circle {
     width: 100px;
     height: 100px;
@@ -323,7 +310,7 @@ $inactive-color: #9E9E9E;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 0 1.5rem 0; // Eliminar margin auto
+    margin: 0 0 1.5rem 0;
     box-shadow: 0 8px 25px rgba(214, 48, 49, 0.3);
     
     .kpi-percentage {
@@ -333,21 +320,20 @@ $inactive-color: #9E9E9E;
     }
   }
   
-  // ✅ CARDS CENTRALIZADAS (descuentos, pedidos sistema, pedidos período)
   .kpi-value {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 0 0 1.5rem 0; // Eliminar margin bottom automático
+    margin: 0 0 1.5rem 0;
     
     .amount {
       font-size: 2.5rem;
       font-weight: 900;
       color: $text-color-dark;
       text-align: center;
-      margin: 0; // Eliminar cualquier margin del elemento
-      line-height: 1; // Ajustar line-height para mejor centrado
+      margin: 0;
+      line-height: 1;
     }
   }
   
@@ -356,15 +342,15 @@ $inactive-color: #9E9E9E;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 0 0 1.5rem 0; // Eliminar margin bottom automático
+    margin: 0 0 1.5rem 0;
     
     .big-number {
       font-size: 2.5rem;
       font-weight: 900;
       color: $text-color-dark;
       text-align: center;
-      margin: 0; // Eliminar cualquier margin del elemento
-      line-height: 1; // Ajustar line-height para mejor centrado
+      margin: 0;
+      line-height: 1;
     }
   }
   
@@ -372,13 +358,12 @@ $inactive-color: #9E9E9E;
     color: $text-color-light;
     font-size: 1rem;
     font-weight: 500;
-    margin: 0; // Eliminar todo el margin
+    margin: 0;
     line-height: 1.4;
     text-align: center;
   }
 }
 
-// Actions
 .actions {
   display: flex;
   justify-content: center;
@@ -410,7 +395,6 @@ $inactive-color: #9E9E9E;
   }
 }
 
-// Responsive design
 @media (max-width: 1200px) {
   .stats-grid {
     grid-template-areas: none;
@@ -457,12 +441,12 @@ $inactive-color: #9E9E9E;
   
   .kpi-card {
     padding: 2rem 1rem;
-    min-height: 180px; // Altura mínima ajustada para móvil
+    min-height: 180px;
     
     .kpi-circle {
       width: 80px;
       height: 80px;
-      margin: 0 0 1rem 0; // Margin reducido
+      margin: 0 0 1rem 0;
       
       .kpi-percentage {
         font-size: 1.2rem;
@@ -474,7 +458,7 @@ $inactive-color: #9E9E9E;
     }
     
     .kpi-value, .kpi-number {
-      margin: 0 0 1rem 0; // Margin reducido
+      margin: 0 0 1rem 0;
     }
   }
   
@@ -518,7 +502,7 @@ $inactive-color: #9E9E9E;
   }
   
   .kpi-card {
-    min-height: 160px; // Altura mínima más pequeña
+    min-height: 160px;
   }
   
   .error-container .error-content {
@@ -531,7 +515,6 @@ $inactive-color: #9E9E9E;
   }
 }
 
-// Animaciones adicionales
 @keyframes fadeIn {
   from {
     opacity: 0;

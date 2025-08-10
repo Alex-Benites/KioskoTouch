@@ -226,7 +226,7 @@
 
     &.edit-button,
     &.delete-button {
-      background-color: #e74c3c; // Mismo tono que crear-promocion
+      background-color: #e74c3c;
       color: white;
 
       &:hover:not(:disabled) {
@@ -264,7 +264,6 @@
   }
 }
 
-// Responsive design
 @media (max-width: 768px) {
   .editar-eliminar-container {
     padding: 15px 20px;

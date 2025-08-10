@@ -151,7 +151,6 @@
   }
 }
 
-// Nuevos estilos para múltiples imágenes
 .images-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -460,7 +459,3 @@ select:focus-visible {
   font-style: italic;
   margin-left: 8px;
 }
-
-
-
-

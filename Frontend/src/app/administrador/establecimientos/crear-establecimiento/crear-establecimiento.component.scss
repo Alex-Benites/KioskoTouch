@@ -41,7 +41,6 @@
       width: 100%;
     }
 
-    // Estilos para textarea
     textarea {
       min-height: 60px;
       resize: vertical;
@@ -89,12 +88,11 @@
         border-color: #d32f2f;
       }
 
-      // ✅ Cuando hay imagen, eliminar padding para que ocupe todo el espacio
       &.has-image {
-        padding: 0; // ✅ Sin padding para que la imagen ocupe todo
+        padding: 0;
         background-color: #fff;
         border-color: #d32f2f;
-        border-style: solid; // ✅ Cambiar a sólido cuando hay imagen
+        border-style: solid;
       }
 
       .upload-content {
@@ -159,33 +157,32 @@
         }
       }
 
-      // ✅ Vista previa que ocupa TODO el placeholder
       .mapa-preview {
-        position: absolute; // ✅ Posición absoluta para ocupar todo el contenedor
+        position: absolute;
         top: 0;
         left: 0;
-        width: 100%; // ✅ Ocupar todo el ancho
-        height: 100%; // ✅ Ocupar toda la altura
-        border-radius: 6px; // ✅ Mismo border-radius que el contenedor
+        width: 100%;
+        height: 100%;
+        border-radius: 6px;
         overflow: hidden;
 
         img {
-          width: 100%; // ✅ Ancho completo
-          height: 100%; // ✅ Altura completa
-          object-fit: cover; // ✅ Cubrir todo el espacio manteniendo proporción
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
           display: block;
           border-radius: 6px;
         }
 
         .remove-image-button {
           position: absolute;
-          top: 15px; // ✅ Separar un poco del borde
-          right: 15px; // ✅ Separar un poco del borde
+          top: 15px;
+          right: 15px;
           background-color: rgba(211, 47, 47, 0.9);
           color: white;
           border: none;
           border-radius: 50%;
-          width: 36px; // ✅ Hacer un poco más grande para mejor visibilidad
+          width: 36px;
           height: 36px;
           display: flex;
           align-items: center;
@@ -193,15 +190,15 @@
           cursor: pointer;
           transition: background-color 0.3s ease;
           z-index: 10;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); // ✅ Sombra para mejor visibilidad
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
           &:hover {
             background-color: rgba(211, 47, 47, 1);
-            transform: scale(1.1); // ✅ Efecto hover
+            transform: scale(1.1);
           }
 
           mat-icon {
-            font-size: 20px; // ✅ Icono más grande
+            font-size: 20px;
             width: 20px;
             height: 20px;
           }
@@ -209,7 +206,6 @@
       }
     }
 
-    // ✅ Botón eliminar centrado y separado
     .eliminar-button {
       background-color: #d32f2f;
       color: white;
@@ -220,8 +216,8 @@
       font-weight: 500;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      align-self: center; // ✅ Centrado
-      margin-top: 15px; // ✅ Separado de la imagen
+      align-self: center;
+      margin-top: 15px;
       margin-bottom: 15px;
 
       &:hover {
@@ -241,7 +237,6 @@
   }
 }
 
-/* ===== SECCIÓN DE IMAGEN MEJORADA ===== */
 .image-upload-column {
   flex: 0 0 350px;
   display: flex;
@@ -257,7 +252,6 @@
   margin-bottom: 10px;
 }
 
-/* Imagen actual en modo edición */
 .imagen-actual-container {
   display: flex;
   flex-direction: column;
@@ -308,7 +302,6 @@
   }
 }
 
-/* Sección de nueva imagen */
 .nueva-imagen-section {
   display: flex;
   flex-direction: column;
@@ -342,7 +335,6 @@
   }
 }
 
-/* Placeholder cuando no hay imagen */
 .upload-placeholder {
   display: flex;
   flex-direction: column;
@@ -382,7 +374,6 @@
   opacity: 1;
 }
 
-/* Vista previa de la imagen */
 .image-preview-container {
   width: 100%;
   height: 100%;
@@ -396,7 +387,6 @@
   }
 }
 
-/* Acciones de imagen */
 .image-actions {
   display: flex;
   justify-content: center;
@@ -425,7 +415,6 @@
   }
 }
 
-/* Información del archivo */
 .file-info {
   background-color: #f8f9fa;
   border: 1px solid #e9ecef;
@@ -445,7 +434,6 @@
   }
 }
 
-/* Estado del establecimiento en columna derecha */
 .estado-section {
   margin-top: -12px;
   padding-top: 20px;
@@ -465,11 +453,10 @@
   }
 }
 
-/* ===== ACCIONES DEL FORMULARIO ===== */
 .form-actions {
   margin-top: 30px;
   display: flex;
-  justify-content: center; /* ← CAMBIAR de flex-start a center */
+  justify-content: center;
   align-items: center;
   width: 100%;
   padding: 20px 0;
@@ -478,13 +465,13 @@
     background-color: #d32f2f;
     color: white;
     border: none;
-    padding: 12px 40px; /* ← Aumentar padding horizontal para que se vea más grande */
+    padding: 12px 40px;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 150px; /* ← Asegurar ancho mínimo */
+    min-width: 150px;
 
     &:hover {
       background-color: #b71c1c;
@@ -497,10 +484,8 @@
     }
   }
 
-  /* ❌ ELIMINAR todos los estilos del .secondary__button */
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .establecimiento-container {
     padding: 15px 20px;
@@ -514,10 +499,10 @@
   .mapa-section {
     .mapa-placeholder {
       padding: 30px 15px;
-      min-height: 300px; // ✅ Altura menor en móviles
+      min-height: 300px;
 
       &.has-image {
-        padding: 0; // ✅ Sin padding en móviles también
+        padding: 0;
       }
 
       .upload-icon {
@@ -569,7 +554,6 @@
     }
   }
 
-  /* ===== SECCIÓN DE IMAGEN MEJORADA ===== */
   .image-upload-column {
     flex: none;
     width: 100%;

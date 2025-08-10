@@ -1,19 +1,16 @@
-// ✅ CREAR Frontend/src/app/administrador/gestion-categorias/gestion-categorias.component.scss
 .gestion-categorias-container {
   padding: 20px;
-  //ax-width: 1400px;
   margin: 0 auto;
   background: #F2F2F2;
   min-height: calc(100vh - 180px);
 }
 
-// ✅ HEADER MEJORADO
 .page-header {
-  //background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); // ✅ Degradado rojo
+  
   border-radius: 16px;
   padding: 30px;
   margin-bottom: 30px;
-  //box-shadow: 0 8px 32px rgba(231, 76, 60, 0.25); // ✅ Sombra roja
+  
 
   .header-content {
     display: flex;
@@ -22,7 +19,6 @@
     flex-wrap: wrap;
     gap: 20px;
 
-    // ✅ AGREGAR: Contenedor para título y subtítulo
     .title-section {
       display: flex;
       flex-direction: column;
@@ -35,15 +31,10 @@
         color: #666;
         font-size: 1.2rem;
         font-weight: 700;
-        margin: 0; // ✅ AGREGAR para quitar margin por defecto
+        margin: 0;
 
-        //i {
-        //  font-size: 2rem;
-        //  color: #666;
-        //}
       }
 
-      // ✅ AGREGAR: Estilos del subtítulo
       .page-subtitle {
         color: rgba(0, 0, 0, 0.8);
         font-size: 2.2rem;
@@ -61,7 +52,6 @@
       padding: 12px 24px;
       border-radius: 25px;
       transition: all 0.3s ease;
-      //backdrop-filter: blur(10px);
       font-size: 1.1rem;
 
 
@@ -86,7 +76,6 @@
   }
 }
 
-// ✅ LOADING MEJORADO
 .loading-container {
   display: flex;
   justify-content: center;
@@ -101,7 +90,7 @@
 
     i {
       font-size: 3rem;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
       margin-bottom: 20px;
     }
 
@@ -114,7 +103,6 @@
   }
 }
 
-// ✅ ERROR MEJORADO
 .error-container {
   display: flex;
   justify-content: center;
@@ -155,7 +143,6 @@
   }
 }
 
-// ✅ STATS BAR MEJORADA
 .stats-bar {
   display: flex;
   gap: 20px;
@@ -183,7 +170,7 @@
     }
 
     i {
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
       font-size: 1.4rem;
     }
 
@@ -193,14 +180,12 @@
   }
 }
 
-// ✅ GRID DE CATEGORÍAS MEJORADO
 .categorias-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 25px;
 }
 
-// ✅ CATEGORIA CARD SÚPER MEJORADA
 .categoria-card {
   background: white;
   border-radius: 16px;
@@ -219,7 +204,6 @@
     border-left: 5px solid #ffc107;
   }
 
-  // === IMAGEN (sin cambios) ===
   .categoria-imagen {
     height: 200px;
     overflow: hidden;
@@ -262,14 +246,13 @@
     }
   }
 
-  // === INFO ===
   .categoria-info {
     padding: 20px;
 
     .categoria-nombre {
       font-size: 1.3rem;
       font-weight: 700;
-      color: #000000; // ✅ MANTENER: Negro como solicitaste
+      color: #000000;
       margin: 0 0 15px 0;
     }
 
@@ -287,7 +270,7 @@
         font-weight: 500;
 
         &.stat-highlight {
-          color: #556fff; // ✅ CAMBIAR: De azul a rojo
+          color: #556fff;
           font-weight: 600;
         }
 
@@ -321,7 +304,6 @@
 
         .uso-fill {
           height: 100%;
-          // ✅ CAMBIAR: De azul a rojo
           background: linear-gradient(90deg, #e74c3c, #c0392b);
           transition: width 0.5s ease;
         }
@@ -334,7 +316,6 @@
     }
   }
 
-  // ✅ MANTENER: Botones de las cards SIN cambios (como solicitaste)
   .categoria-acciones {
     padding: 0 20px 20px 20px;
     display: flex;
@@ -363,7 +344,6 @@
     }
   }
 
-  // === BADGES (sin cambios) ===
   .no-eliminar-badge {
     position: absolute;
     top: 15px;
@@ -405,7 +385,6 @@
   }
 }
 
-// ✅ CAMBIAR: Empty state
 .empty-state {
   text-align: center;
   padding: 80px 40px;
@@ -414,7 +393,7 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 
   i {
-    color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+    color: #e74c3c;
     margin-bottom: 30px;
   }
 
@@ -460,7 +439,6 @@
   }
 }
 
-// ✅ CAMBIAR: Botones principales
 .btn {
   display: inline-flex;
   align-items: center;
@@ -472,7 +450,6 @@
   font-family: inherit;
 
   &.btn-primary {
-    // ✅ CAMBIAR: De azul a rojo
     background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: white;
     border: 2px solid transparent;
@@ -485,16 +462,15 @@
 
   &.btn-outline-primary {
     background: transparent;
-    color: #2c79ff; // ✅ CAMBIAR: De azul a rojo
+    color: #2c79ff;
     border: 1.5px solid #2c79ff;
 
     &:hover {
-      background: #2c79ff; // ✅ CAMBIAR: De azul a rojo
+      background: #2c79ff;
       color: white;
     }
   }
 
-  // ✅ MANTENER: Otros botones sin cambios
   &.btn-outline-info {
     background: transparent;
     color: #17a2b8;
@@ -529,14 +505,12 @@
   }
 }
 
-// ✅ CAMBIAR: Popup header
 .popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #e0e0e0;
-  // ✅ CAMBIAR: De azul a rojo
   background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
 
@@ -577,7 +551,6 @@
   }
 }
 
-// ✅ CAMBIAR: Stats del popup
 .detalle-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -603,7 +576,7 @@
 
     i {
       font-size: 1.8rem;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
     }
 
     .stat-content {
@@ -624,7 +597,6 @@
   }
 }
 
-// ✅ CAMBIAR: Rows del popup
 .detalle-rows {
   .detalle-row {
     display: flex;
@@ -638,7 +610,7 @@
 
     i {
       margin-top: 2px;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
 
       &.text-success {
         color: #4caf50;
@@ -676,7 +648,6 @@
   }
 }
 
-// === POPUP INTEGRADO ===
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -704,14 +675,12 @@
   animation: slideUp 0.3s ease;
 }
 
-// === POPUP HEADER ===
 .popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #e0e0e0;
-  // ✅ CAMBIAR: De azul a rojo
   background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
 
@@ -752,14 +721,12 @@
   }
 }
 
-// === POPUP BODY ===
 .popup-body {
   padding: 24px;
   max-height: 60vh;
   overflow-y: auto;
 }
 
-// === IMAGEN DETALLE ===
 .detalle-imagen {
   text-align: center;
   margin-bottom: 24px;
@@ -775,7 +742,6 @@
   }
 }
 
-// === INFO DETALLE ===
 .detalle-info {
   .detalle-nombre {
     text-align: center;
@@ -786,7 +752,6 @@
   }
 }
 
-// === STATS DETALLE ===
 .detalle-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -812,7 +777,7 @@
 
     i {
       font-size: 1.8rem;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
     }
 
     .stat-content {
@@ -833,7 +798,6 @@
   }
 }
 
-// === ROWS DETALLE ===
 .detalle-rows {
   .detalle-row {
     display: flex;
@@ -847,7 +811,7 @@
 
     i {
       margin-top: 2px;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
 
       &.text-success {
         color: #4caf50;
@@ -885,7 +849,6 @@
   }
 }
 
-// === USO VISUAL ===
 .uso-visual {
   margin-top: 24px;
   padding: 16px;
@@ -942,7 +905,6 @@
   }
 }
 
-// === POPUP FOOTER ===
 .popup-footer {
   display: flex;
   justify-content: flex-end;
@@ -961,7 +923,6 @@
   }
 }
 
-// === ANIMACIONES ===
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -978,7 +939,6 @@
   }
 }
 
-// === RESPONSIVE ===
 @media (max-width: 1024px) {
   .categorias-grid {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1041,9 +1001,7 @@
 }
 
 
-// ✅ AGREGAR al final de gestion-categorias.component.scss
 
-// === POPUP INTEGRADO ===
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -1071,14 +1029,12 @@
   animation: slideUp 0.3s ease;
 }
 
-// === POPUP HEADER ===
 .popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #e0e0e0;
-  // ✅ CAMBIAR: De azul a rojo
   background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
 
@@ -1119,14 +1075,12 @@
   }
 }
 
-// === POPUP BODY ===
 .popup-body {
   padding: 24px;
   max-height: 60vh;
   overflow-y: auto;
 }
 
-// === IMAGEN DETALLE ===
 .detalle-imagen {
   text-align: center;
   margin-bottom: 24px;
@@ -1142,7 +1096,6 @@
   }
 }
 
-// === INFO DETALLE ===
 .detalle-info {
   .detalle-nombre {
     text-align: center;
@@ -1153,7 +1106,6 @@
   }
 }
 
-// === STATS DETALLE ===
 .detalle-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1179,7 +1131,7 @@
 
     i {
       font-size: 1.8rem;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
     }
 
     .stat-content {
@@ -1200,7 +1152,6 @@
   }
 }
 
-// === ROWS DETALLE ===
 .detalle-rows {
   .detalle-row {
     display: flex;
@@ -1214,7 +1165,7 @@
 
     i {
       margin-top: 2px;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
 
       &.text-success {
         color: #4caf50;
@@ -1252,7 +1203,6 @@
   }
 }
 
-// === USO VISUAL ===
 .uso-visual {
   margin-top: 24px;
   padding: 16px;
@@ -1309,7 +1259,6 @@
   }
 }
 
-// === POPUP FOOTER ===
 .popup-footer {
   display: flex;
   justify-content: flex-end;
@@ -1328,7 +1277,6 @@
   }
 }
 
-// === ANIMACIONES ===
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1345,7 +1293,6 @@
   }
 }
 
-// === RESPONSIVE ===
 @media (max-width: 768px) {
   .popup-overlay {
     padding: 10px;

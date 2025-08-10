@@ -25,10 +25,10 @@
 
 .promo-grid {
   display: grid;
-  grid-template-columns: repeat(3, 250px); 
+  grid-template-columns: repeat(3, 250px);
   gap: 40px;
   justify-items: center;
-  justify-content: center; 
+  justify-content: center;
 }
 
 .promo-item {
@@ -57,7 +57,7 @@
   height: 450px;
   object-fit: contain;
   padding: 20px;
-  background-color: #E4E4E4; 
+  background-color: #E4E4E4;
   box-sizing: border-box;
   margin: 0;
 }
@@ -76,7 +76,7 @@
   justify-content: center;
 }
 
-.promo-atras { 
+.promo-atras {
   margin-top: 40px;
   color: #d32f2f;
   font-weight: bold;

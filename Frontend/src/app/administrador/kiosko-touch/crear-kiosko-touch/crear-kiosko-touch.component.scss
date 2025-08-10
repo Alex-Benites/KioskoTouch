@@ -136,7 +136,6 @@
   }
 }
 
-// Estilos para los campos de formulario (mismo estilo que crear.component)
 ::ng-deep .mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-flex {
   background-color: #fff !important;
   border-radius: 4px !important;
@@ -146,7 +145,6 @@
   background-color: #fff !important;
 }
 
-// Estilos para los botones de acción (mismo estilo que crear.component)
 .form-actions {
   display: flex;
   justify-content: center;
@@ -155,7 +153,6 @@
   border-top: 1px solid #eee;
 }
 
-// Estilos del botón primary (copiado de crear.component)
 .primary__button {
   background-color: #d32f2f;
   color: white;
@@ -226,7 +223,6 @@
   }
 }
 
-// Responsive
 @media (max-width: 768px) {
   .kiosko-touch-container {
     padding: 15px 20px;

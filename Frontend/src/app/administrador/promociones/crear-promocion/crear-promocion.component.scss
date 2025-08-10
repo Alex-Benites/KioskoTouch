@@ -261,7 +261,7 @@
     font-weight: 700;
     margin-bottom: 10px;
     font-size: 1.15rem;
-    color: #444; // Un gris más oscuro para el nombre del menú
+    color: #444;
   }
   .menu-productos-lista {
     margin-bottom: 14px;
@@ -271,7 +271,7 @@
       margin: 0;
       li {
         font-size: 1.05rem;
-        color: #666; // Gris para los productos
+        color: #666;
         margin-bottom: 2px;
         text-align: left;
       }
@@ -299,9 +299,6 @@
     }
   }
 }
-
-
-
 
 .tamanos-selector {
   display: flex;
@@ -464,7 +461,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    background-color: #e74c3c; // Igual que editar-eliminar
+    background-color: #e74c3c;
     color: white;
 
     &:hover {

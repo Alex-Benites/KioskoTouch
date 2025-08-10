@@ -4,16 +4,16 @@
   background: #F2F2F2;
 }
 
-// === HEADER SECTION ===
+
 .header-section {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 30px;
-  //background: white;
+  
   padding: 25px 30px;
   border-radius: 15px;
-  //box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -37,11 +37,6 @@
     color: #000000;
     margin: 0 0 8px 0;
     font-weight: 700;
-    // ✅ MANTENER: Degradado rojo
-    //background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    //-webkit-background-clip: text;
-    //-webkit-text-fill-color: transparent;
-    //background-clip: text;
   }
 }
 
@@ -52,9 +47,8 @@
   .create-btn {
     padding: 12px 24px;
     font-size: 1rem;
-    font-weight: 700; // ✅ CAMBIAR: Más bold
+    font-weight: 700;
     border-radius: 25px;
-    // ✅ CAMBIAR: De verde a rojo con fondo blanco
     background: white;
     color: #e74c3c;
     border: 2px solid #e74c3c;
@@ -62,7 +56,6 @@
     transition: all 0.3s ease;
 
     &:hover {
-      // ✅ CAMBIAR: Hover rojo con letras blancas
       background: #e74c3c;
       color: white;
       transform: translateY(-2px);
@@ -74,11 +67,10 @@
     }
   }
 
-  // ✅ NUEVO: Estilos para el botón "Actualizar"
   .refresh-btn {
     padding: 12px 24px;
     font-size: 1rem;
-    font-weight: 700; // ✅ CAMBIAR: Más bold
+    font-weight: 700;
     border-radius: 25px;
     background: white;
     color: #e74c3c;
@@ -105,7 +97,6 @@
   }
 }
 
-// === TABS CONTAINER ===
 .tabs-container {
   background: white;
   border-radius: 15px;
@@ -121,19 +112,19 @@
     }
 
     .mat-mdc-tab {
-      font-weight: 700; // ✅ CAMBIAR: Más bold (era 600)
-      font-size: 1.2rem; // ✅ CAMBIAR: Más grande (era 1rem)
+      font-weight: 700;
+      font-size: 1.2rem;
       min-width: 120px;
 
       .mdc-tab__text-label {
-        font-weight: 700; // ✅ AGREGAR: Asegurar negrita
-        font-size: 1.2rem; // ✅ AGREGAR: Tamaño específico
-        color: #2c3e50; // ✅ AGREGAR: Color más oscuro por defecto
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #2c3e50;
       }
 
       &.mdc-tab--active {
         .mdc-tab__text-label {
-          color: #e74c3c; // ✅ CAMBIAR: De verde a rojo
+          color: #e74c3c;
           font-weight: 800;
         }
       }
@@ -149,7 +140,6 @@
   }
 }
 
-// ✅ CAMBIAR: Indicador de tab activo
 .mat-mdc-tab-group {
   .mat-mdc-tab-header {
     .mat-mdc-tab_label-container {
@@ -158,7 +148,7 @@
           &.mdc-tab--active {
             .mdc-tab-indicator {
               .mdc-tab-indicator__content {
-                background-color: #e74c3c !important; // ✅ CAMBIAR: Indicador rojo
+                background-color: #e74c3c !important;
               }
             }
           }
@@ -168,13 +158,11 @@
   }
 }
 
-// === TAB CONTENT ===
 .tab-content {
   padding: 30px;
   min-height: 500px;
 }
 
-// === LOADING STATE ===
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -194,7 +182,6 @@
   }
 }
 
-// === EMPTY STATE ===
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -228,9 +215,8 @@
 
   button {
     padding: 12px 24px;
-    font-weight: 700; // ✅ CAMBIAR: Más bold
+    font-weight: 700;
     border-radius: 25px;
-    // ✅ CAMBIAR: De azul a rojo
     background: white;
     color: #e74c3c;
     border: 2px solid #e74c3c;
@@ -244,7 +230,6 @@
   }
 }
 
-// === INGREDIENTS GRID ===
 .ingredients-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -256,7 +241,6 @@
   }
 }
 
-// === INGREDIENT CARD ===
 .ingredient-card {
   border-radius: 15px;
   overflow: hidden;
@@ -290,7 +274,6 @@
       position: absolute;
       top: 12px;
       right: 12px;
-      // ✅ CAMBIAR: De verde a rojo
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
       color: white;
       padding: 6px 12px;
@@ -345,7 +328,6 @@
     }
   }
 
-  // ✅ MANTENER: Botones de las cards SIN cambios (como solicitaste)
   .card-actions {
     padding: 12px 20px 20px 20px;
     display: flex;
@@ -392,7 +374,6 @@
   }
 }
 
-// === NUEVOS ESTILOS PARA CATEGORÍAS DINÁMICAS ===
 .info-row {
   display: flex;
   align-items: center;
@@ -440,7 +421,6 @@
   }
 }
 
-// === INGREDIENT CARD STATES ===
 .ingredient-card {
   &.stock-bajo {
     border-left: 4px solid #f39c12;
@@ -452,7 +432,6 @@
   }
 }
 
-// === STATS SUMMARY ===
 .stats-summary {
   h2 {
     color: #2c3e50;
@@ -486,7 +465,7 @@
       font-size: 32px;
       width: 32px;
       height: 32px;
-      color: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+      color: #e74c3c;
     }
 
     .stat-info {
@@ -507,7 +486,6 @@
   }
 }
 
-// === CATEGORY DISTRIBUTION ===
 .category-distribution {
   background: white;
   padding: 25px;
@@ -541,7 +519,7 @@
       }
 
       .categoria-count {
-        background: #e74c3c; // ✅ CAMBIAR: De azul a rojo
+        background: #e74c3c;
         color: white;
         padding: 2px 8px;
         border-radius: 12px;
@@ -560,7 +538,6 @@
 
       .progress-fill {
         height: 100%;
-        // ✅ CAMBIAR: De azul a rojo
         background: linear-gradient(90deg, #e74c3c, #c0392b);
         transition: width 0.3s ease;
       }
@@ -568,7 +545,6 @@
   }
 }
 
-// === RESPONSIVE ADDITIONS ===
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
@@ -601,7 +577,6 @@
   }
 }
 
-// === ANIMATIONS ===
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -617,7 +592,6 @@
   animation: fadeIn 0.6s ease-out;
 }
 
-// === RESPONSIVE ===
 @media (max-width: 768px) {
   .container {
     padding: 15px;
@@ -662,7 +636,6 @@
   }
 }
 
-// === MATERIAL DESIGN OVERRIDES ===
 .mat-mdc-snack-bar-container {
   .mdc-snackbar__surface {
     border-radius: 8px;
@@ -686,7 +659,6 @@
   }
 }
 
-// === SCROLLBAR STYLING ===
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -697,18 +669,14 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  // ✅ CAMBIAR: De azul a rojo
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  // ✅ CAMBIAR: De azul a rojo más oscuro
   background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
 }
 
-
-// ✅ OPCIÓN MINIMALISTA
 .ingredients-grid .empty-state {
   grid-column: 1 / -1;
   text-align: center;
@@ -740,7 +708,6 @@
   }
 }
 
-// ✅ AGREGAR: Estilos específicos para tabs con ::ng-deep
 ::ng-deep .mat-mdc-tab-group {
   .mat-mdc-tab-header {
     .mat-mdc-tab-label-container {
@@ -776,7 +743,6 @@
   }
 }
 
-// ✅ ALTERNATIVA: Si lo anterior no funciona, usa esto
 ::ng-deep .ingredients-tabs {
   .mat-mdc-tab {
     font-size: 1.3rem !important;

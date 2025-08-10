@@ -61,7 +61,6 @@
   width: 100%;
 }
 
-// Estilos para campos de Material
 .mat-mdc-form-field {
   .mat-mdc-text-field-wrapper {
     border-radius: 8px;
@@ -72,7 +71,6 @@
   }
 }
 
-// Sección de imagen
 .image-section {
   .image-label {
     display: block;
@@ -205,7 +203,6 @@
   margin-top: 8px;
 }
 
-// Botones de acción
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -274,7 +271,6 @@
   100% { transform: rotate(360deg); }
 }
 
-// ✅ AGREGAR ESTILOS PARA LA SECCIÓN DE STOCK
 .stock-section {
   background: #f8f9fa;
   padding: 25px;
@@ -318,7 +314,6 @@
   min-width: 200px;
 }
 
-// Responsive
 @media (max-width: 768px) {
   .container {
     padding: 15px;

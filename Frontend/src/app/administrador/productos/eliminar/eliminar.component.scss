@@ -113,8 +113,8 @@
     opacity: 0.6;
     cursor: pointer;
     transition: opacity 0.3s ease;
-    z-index: 2; // Añade esta línea
-    pointer-events: none; // Opcional: evita que interfiera con el input
+    z-index: 2;
+    pointer-events: none;
 
     &:hover {
       opacity: 0.8;
@@ -174,7 +174,6 @@
   }
 }
 
-// Mensaje cuando no hay datos - copiado del componente de pantallas cocina
 .no-data {
   text-align: center;
   padding: 40px 20px;
@@ -191,7 +190,6 @@
   }
 }
 
-// Responsive
 @media (max-width: 768px) {
   .search-container {
     padding: 0 15px;

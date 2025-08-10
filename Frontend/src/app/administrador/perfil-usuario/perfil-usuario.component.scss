@@ -29,7 +29,7 @@
 
 .content-grid {
   display: grid;
-  grid-template-columns: 1fr; 
+  grid-template-columns: 1fr;
   gap: 2.5rem;
   margin-bottom: 2rem;
   max-width: 1200px;
@@ -43,16 +43,13 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #e0e0e0;
-  // ✅ AÑADIDO: Para que el border-radius de la tarjeta contenga al header
   overflow: hidden;
   
   mat-card-header {
     background: linear-gradient(135deg, #DD453A 0%, #e96b62 100%);
     color: white;
-    // ✅ CAMBIADO: Sin márgenes para que ocupe el ancho de la tarjeta
     margin: 0;
     padding: 1.5rem 2rem;
-    // ✅ CAMBIADO: El header ya no necesita su propio radius
     border-radius: 0;
     
     mat-card-title {
@@ -240,7 +237,6 @@ form {
 }
 
 ::ng-deep {
-  // ✅ AÑADIDO: Quitar padding por defecto de la tarjeta y añadirlo al contenido
   .perfil-container .mat-mdc-card {
     padding: 0 !important;
   }

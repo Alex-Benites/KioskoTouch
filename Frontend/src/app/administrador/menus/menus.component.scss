@@ -25,7 +25,7 @@
 
 .menu-grid {
   display: grid;
-  grid-template-columns: repeat(2, 250px); 
+  grid-template-columns: repeat(2, 250px);
   gap: 40px;
   justify-items: center;
   justify-content: center;
@@ -57,7 +57,7 @@
   height: 450px;
   object-fit: contain;
   padding: 20px;
-  background-color: #E4E4E4; 
+  background-color: #E4E4E4;
   box-sizing: border-box;
   margin: 0;
 }
@@ -76,7 +76,7 @@
   justify-content: center;
 }
 
-.menu-atras { 
+.menu-atras {
   margin-top: 40px;
   color: #d32f2f;
   font-weight: bold;
@@ -90,8 +90,8 @@
   text-decoration: underline;
 }
 
-@media (max-width: 670px) { 
+@media (max-width: 670px) {
   .menu-grid {
-    grid-template-columns: 250px; 
+    grid-template-columns: 250px;
   }
 }

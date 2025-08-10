@@ -126,7 +126,6 @@
   gap: 20px;
 }
 
-// ✅ Custom Card
 .custom-card {
   background-color: #fff;
   border-radius: 12px;
@@ -142,7 +141,6 @@
   }
 }
 
-// ✅ Header de la card
 .card-header {
   padding: 20px 20px 15px;
   text-align: center;
@@ -165,7 +163,6 @@
   }
 }
 
-// ✅ Media container
 .media-container {
   width: 100%;
   height: 200px;
@@ -203,7 +200,6 @@
   }
 }
 
-// ✅ Contenido de la card (simplificado)
 .card-content {
   padding: 20px;
   flex-grow: 1;
@@ -221,7 +217,6 @@
   }
 }
 
-// ✅ Botones centrados y pequeños
 .card-actions {
   padding: 0 20px 20px;
   display: flex;
@@ -238,7 +233,6 @@
       line-height: 1.4;
     }
     
-    
     &.delete-button {
       background-color: #dc3545;
       
@@ -253,7 +247,6 @@
   }
 }
 
-// ✅ Badges y etiquetas
 .tipo-badge, .estado-badge {
   padding: 4px 12px;
   border-radius: 20px;
@@ -283,7 +276,6 @@
   color: #c62828;
 }
 
-// ✅ Animaciones
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -293,7 +285,6 @@
   }
 }
 
-// ✅ Responsive
 @media (max-width: 768px) {
   .page-container {
     padding: 15px 20px;

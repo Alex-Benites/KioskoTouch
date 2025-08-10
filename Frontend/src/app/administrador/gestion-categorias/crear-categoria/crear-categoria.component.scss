@@ -1,4 +1,3 @@
-// ✅ SCSS MEJORADO PARA CREAR CATEGORÍA - BASADO EN COMPONENTE DE PRODUCTOS
 
 .form-container {
   padding: 20px 40px;
@@ -28,7 +27,6 @@
   margin-bottom: 30px;
 }
 
-// ✅ LOADING MEJORADO
 .loading-container {
   display: flex;
   justify-content: center;
@@ -56,7 +54,6 @@
   }
 }
 
-// ✅ ERROR MEJORADO
 .error-alert {
   display: flex;
   align-items: center;
@@ -78,7 +75,6 @@
   }
 }
 
-// ✅ FORMULARIO PRINCIPAL
 .categoria-form {
   display: flex;
   flex-direction: column;
@@ -99,7 +95,6 @@
   margin-bottom: 2rem;
 }
 
-// ✅ CAMPO DE FORMULARIO
 .form-field {
   display: flex;
   flex-direction: column;
@@ -113,7 +108,6 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
-    justify-content: center;
     
     i {
       color: #d32f2f;
@@ -170,7 +164,6 @@
   }
 }
 
-// ✅ CONTENEDOR DE IMAGEN MEJORADO
 .image-upload-container {
   border: 2px dashed #ccc;
   border-radius: 12px;
@@ -254,7 +247,6 @@
   }
 }
 
-// ✅ MENSAJE DE ERROR PARA IMAGEN
 .image-error-message {
   display: flex;
   align-items: center;
@@ -274,7 +266,6 @@
   }
 }
 
-// ✅ ACCIONES DEL FORMULARIO
 .form-actions {
   display: flex;
   justify-content: center;
@@ -333,7 +324,6 @@
   }
 }
 
-// ✅ PANEL DE INFORMACIÓN MEJORADO
 .info-panel {
   background: white;
   border-radius: 12px;
@@ -389,7 +379,6 @@
   }
 }
 
-// ✅ MENSAJES DE ÉXITO/ERROR
 .mensaje-container {
   position: fixed;
   top: 80px;
@@ -472,7 +461,6 @@
   }
 }
 
-// ✅ RESPONSIVE DESIGN
 @media (max-width: 768px) {
   .form-container {
     padding: 15px 20px;
@@ -535,7 +523,6 @@
   }
 }
 
-// ✅ ANIMACIONES SUAVES
 .form-field {
   animation: fadeInUp 0.5s ease-out;
 }
@@ -551,7 +538,6 @@
   }
 }
 
-// ✅ MEJORAS DE ACCESIBILIDAD
 .btn:focus,
 .form-control:focus {
   outline: 2px solid #d32f2f;
