@@ -60,7 +60,7 @@ $border-color: #e0e0e0;
 .productos-lista {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 5px;
   margin-bottom: 20px;
 }
 
@@ -71,16 +71,18 @@ $border-color: #e0e0e0;
   padding: 10px 0;
 
   .producto-imagen {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-    overflow: hidden;
+    width: 90px;
+    height: 90px;
+    border-radius: 8px;
+    margin-right: 15px;
     flex-shrink: 0;
+    overflow: hidden;
 
     .producto-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
   }
 
@@ -88,16 +90,16 @@ $border-color: #e0e0e0;
     flex: 1;
 
     .producto-nombre {
-      font-size: 1.1rem;
+      font-size: 1.6rem;
+      color: #333;
+      margin: 0;
       font-weight: 600;
-      color: $text-color-dark;
-      margin: 0 0 5px 0;
     }
 
     .producto-precio {
-      font-size: 1rem;
-      font-weight: 700;
-      color: $text-color-dark;
+      font-size: 1.4rem;
+      color: #e74c3c;
+      font-weight: bold;
       margin: 0;
     }
   }
@@ -197,27 +199,28 @@ $border-color: #e0e0e0;
     text-align: left;
   }
 
-    .pago-opciones {
-      display: flex;
-      gap: 15px;
-      justify-content: flex-start;
-      margin-bottom: 22px;
+  .pago-opciones {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-start;
+    margin-bottom: 22px;
 
-      .pago-opcion {
-        background-color: white;
-        border: 2px solid $border-color;
-        border-radius: 15px;
-        padding: 15px 10px;
-        min-width: 310px;
-        width: auto;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
+    .pago-opcion {
+      background-color: white;
+      border: 2px solid $border-color;
+      border-radius: 15px;
+      padding: 15px 10px;
+      min-width: 310px;
+      width: auto;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+
       &:hover {
         border-color: color.adjust($kiosko-red, $lightness: 20%);
       }
@@ -244,8 +247,8 @@ $border-color: #e0e0e0;
       }
 
       .pago-icon {
-        width: 32px;
-        height: 32px;
+        width: 48px;
+        height: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -258,19 +261,20 @@ $border-color: #e0e0e0;
         }
       }
 
-        .pago-texto {
-          font-size: 1.2rem;
-          font-weight: 600;
-          color: $text-color-dark;
-          text-align: center;
-          white-space: nowrap;
-        }    }
+      .pago-texto {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: $text-color-dark;
+        text-align: center;
+        white-space: nowrap;
+      }
+    }
   }
 }
 
 .datos-facturacion {
   width: 100%;
-  margin-bottom: 30px;
+  margin-bottom: 5px;
 
   .checkbox-container {
     display: flex;
@@ -287,14 +291,14 @@ $border-color: #e0e0e0;
       align-items: center;
       gap: 12px;
       cursor: pointer;
-      font-size: 1.1rem;
+      font-size: 1.5rem;
       font-weight: 600;
       color: $text-color-dark;
       user-select: none;
 
       .checkbox-custom {
-        width: 20px;
-        height: 20px;
+        width: 28px;
+        height: 28px;
         border: 2px solid $border-color;
         border-radius: 4px;
         position: relative;
@@ -307,7 +311,7 @@ $border-color: #e0e0e0;
           left: 50%;
           transform: translate(-50%, -50%);
           color: white;
-          font-size: 14px;
+          font-size: 18px;
           font-weight: bold;
           opacity: 0;
           transition: opacity 0.2s ease;
@@ -350,7 +354,7 @@ $border-color: #e0e0e0;
         gap: 8px;
 
         label {
-          font-size: 0.95rem;
+          font-size: 1.1rem;
           font-weight: 600;
           color: $text-color-dark;
         }
@@ -359,7 +363,7 @@ $border-color: #e0e0e0;
           padding: 12px 15px;
           border: 2px solid $border-color;
           border-radius: 8px;
-          font-size: 1rem;
+          font-size: 1.2rem;
           transition: border-color 0.2s ease;
 
           &:focus {
@@ -426,7 +430,7 @@ $border-color: #e0e0e0;
   .tertiary-button,
   .primary-button {
     padding: 16px 24px;
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     font-weight: 600;
     border-radius: 12px;
     cursor: pointer;
@@ -458,8 +462,11 @@ $border-color: #e0e0e0;
     }
 
     mat-icon {
-      font-size: 1.3rem;
+      font-size: 1.6rem;
       transition: transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     &:hover mat-icon {
@@ -532,7 +539,8 @@ $border-color: #e0e0e0;
 
 .turno-info {
   width: 100%;
-  margin-bottom: 30px;
+  margin-top: 25px;
+  margin-bottom: 10px;
 
   .turno-display {
     background-color: color.adjust($kiosko-red, $lightness: 48%);
