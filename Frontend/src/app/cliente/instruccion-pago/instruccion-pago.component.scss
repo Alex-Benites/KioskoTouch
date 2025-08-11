@@ -61,7 +61,7 @@ $line-color: #e0e0e0;
 }
 
 .pago-title {
-  font-size: clamp(2.2rem, 5vw, 2.8rem); 
+  font-size: clamp(3.2rem, 6vw, 4.2rem); 
   font-weight: 700;
   color: $text-color-dark;
   margin: 0;
@@ -90,23 +90,23 @@ $line-color: #e0e0e0;
 }
 
 .orden-subtitle {
-  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
   color: $text-color-light;
   margin: 0;
   font-weight: 500;
 }
 
 .orden-number {
-  font-size: clamp(1.8rem, 4vw, 2.2rem);
+  font-size: clamp(2.4rem, 5vw, 3.0rem);
   color: $kiosko-red;
   margin: 0;
   font-weight: 700;
 }
 
-.pago-instructions {
-  font-size: clamp(1.2rem, 3vw, 1.5rem); 
+.pago-instrucciones {
+  font-size: clamp(1.4rem, 3vw, 1.7rem); 
   color: $text-color-light;
-  max-width: 500px; 
+  max-width: 600px; 
   line-height: 1.6;
   margin: -20px 0 0 0; 
 }
@@ -116,12 +116,19 @@ $line-color: #e0e0e0;
   color: white;
   border: none;
   border-radius: 25px; 
-  padding: 22px 80px; 
-  font-size: clamp(1.3rem, 3vw, 1.6rem); 
+  padding: 25px 90px; 
+  font-size: clamp(1.6rem, 3.5vw, 1.9rem); 
   font-weight: 700; 
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
   box-shadow: 0 5px 15px rgba(color.scale($kiosko-red, $alpha: -60%), 0.4);
+  width: 380px;
+  height: 70px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 
   &:hover {
     background-color: color.scale($kiosko-red, $lightness: -7%);
@@ -164,7 +171,7 @@ $line-color: #e0e0e0;
   }
 
   .pago-title {
-    font-size: 1.8rem; 
+    font-size: 2.4rem; 
     padding-bottom: 15px;
 
     &::after {
@@ -174,29 +181,21 @@ $line-color: #e0e0e0;
   }
 
   .orden-subtitle {
-    font-size: 1rem;
+    font-size: 1.8rem;
   }
 
   .orden-number {
-    font-size: 1.6rem;
+    font-size: 2.2rem;
   }
 
-  .pago-instructions {
-    font-size: 1.1rem;
+  .pago-instrucciones {
+    font-size: 1.2rem;
   }
 
   .pago-button {
     width: 100%;
-    padding: 18px;
-    font-size: 1.2rem; 
-  }
-
-  .btn-cancelar {
-    width: 90%;
-    max-width: 400px;
-    min-width: 250px;
-    padding: 18px 40px;
-    font-size: 1.2rem;
+    padding: 20px;
+    font-size: clamp(1.6rem, 3.5vw, 1.9rem); 
   }
 }
 
@@ -254,7 +253,7 @@ $line-color: #e0e0e0;
 
     .valor {
       font-weight: bold;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       color: #4CAF50;
       text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
@@ -281,6 +280,15 @@ $line-color: #e0e0e0;
   .estado-texto {
     font-weight: 500;
     flex: 1;
+    font-size: 1.4rem;
+  }
+
+  .estado-mensaje {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: $text-color-dark;
+    text-align: center;
+    width: 100%;
   }
 
   &.estado-esperando {
@@ -360,6 +368,7 @@ $line-color: #e0e0e0;
   align-items: center;
   width: 100%;
   max-width: 400px;
+  margin-top: 5px;
 }
 
 .pago-button {
@@ -406,16 +415,18 @@ $line-color: #e0e0e0;
   color: white;
   border: none;
   border-radius: 25px;
-  padding: 22px 80px;
-  font-size: clamp(1.3rem, 3vw, 1.6rem);
+  padding: 25px 90px;
+  font-size: clamp(1.6rem, 3.5vw, 1.9rem);
   font-weight: 700;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
   box-shadow: 0 5px 15px rgba(235, 50, 50, 0.4);
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  min-width: 340px;
-  width: auto;
+  width: 380px;
+  height: 70px;
   white-space: nowrap;
 
   &:hover:not(:disabled) {
@@ -531,25 +542,30 @@ $line-color: #e0e0e0;
 }
 
 .botones-container {
-  margin-top: 50px;
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 1rem;
 }
 
 .pago-button {
   background: #007bff;
   color: white;
-  padding: 15px 40px;
+  padding: 25px 90px;
   border: none;
-  border-radius: 20px;
-  font-size: 30px;
+  border-radius: 25px;
+  font-size: clamp(1.6rem, 3.5vw, 1.9rem);
   cursor: pointer;
-  width: 330px;
-  height: 60px;
-  font-weight: bold;
+  width: 380px;
+  height: 70px;
+  font-weight: 700;
   transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 
   &:hover:not(:disabled) {
     background: #0056b3;
@@ -573,12 +589,18 @@ $line-color: #e0e0e0;
 .btn-cancelar {
   background: #dc3545;
   color: white;
-  padding: 10px 30px;
+  padding: 25px 90px;
   border: none;
-  border-radius: 15px;
-  font-size: 18px;
+  border-radius: 25px;
+  font-size: clamp(1.6rem, 3.5vw, 1.9rem);
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 380px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 
   &:hover:not(:disabled) {
     background: #c82333;
