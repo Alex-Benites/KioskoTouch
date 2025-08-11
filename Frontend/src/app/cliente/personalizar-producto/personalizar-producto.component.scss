@@ -110,7 +110,7 @@ $font-family-base: 'Lato', sans-serif;
     flex: 0 0 auto;
     
     .precio-unitario {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
       color: $kiosko-red;
     }
@@ -128,14 +128,14 @@ $font-family-base: 'Lato', sans-serif;
       padding: 8px 15px;
 
       .cantidad-btn {
-        width: 35px;
-        height: 35px;
+        width: 40px;
+        height: 40px;
         border: none;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 22px;
         font-weight: bold;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -159,10 +159,10 @@ $font-family-base: 'Lato', sans-serif;
       }
 
       .cantidad-numero {
-        font-size: 20px;
+        font-size: 24px;
         font-weight: 600;
         color: #333;
-        min-width: 30px;
+        min-width: 35px;
         text-align: center;
       }
     }
