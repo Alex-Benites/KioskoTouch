@@ -125,8 +125,7 @@
                                 }
                                 @if (pers.precio_aplicado > 0) {
                                   <span class="precio-extra">
-                                    (+{{ formatearPrecio(pers.precio_aplicado) }})
-                                  </span>
+                                     (+{{ formatearPrecio(obtenerPrecioExtraConIva(pers.precio_aplicado)) }})                                  </span>
                                 }
                               </div>
                             }
@@ -285,8 +284,7 @@
                                 }
                                 @if (pers.precio_aplicado > 0) {
                                   <span class="precio-extra">
-                                    (+{{ formatearPrecio(pers.precio_aplicado) }})
-                                  </span>
+                                     (+{{ formatearPrecio(obtenerPrecioExtraConIva(pers.precio_aplicado)) }})                                  </span>
                                 }
                               </div>
                             }

@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HeaderAdminComponent } from '../../shared/header-admin/header-admin.component';
 import { PedidoChefService, PedidoChef } from '../../services/pedido-chef.service';
+import { CatalogoService } from '../../services/catalogo.service';
 
 @Component({
   selector: 'app-pedidos',
@@ -33,14 +34,17 @@ export class PedidosComponent implements OnInit, OnDestroy {
   
   // Estados del componente
   selectedTabIndex = 0;
+  porcentajeIva: number = 15; // Valor por defecto
   
   constructor(
     public pedidoChefService: PedidoChefService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private catalogoService: CatalogoService
   ) {}
 
   ngOnInit(): void {
     this.inicializarComponente();
+    this.cargarConfiguracionIva();
   }
 
   ngOnDestroy(): void {
@@ -221,6 +225,38 @@ export class PedidosComponent implements OnInit, OnDestroy {
    */
   obtenerClaseEstado(pedido: PedidoChef): string {
     return this.pedidoChefService.obtenerClaseEstado(pedido.estado_cocina);
+  }
+
+  /**
+   * Calcular precio de ingrediente extra con IVA incluido
+   */
+  calcularPrecioConIva(precioBase: number, porcentajeIva: number = 15): number {
+    return precioBase * (1 + porcentajeIva / 100);
+  }
+
+  /**
+   * Cargar configuración de IVA desde el backend
+   */
+  private cargarConfiguracionIva(): void {
+    this.catalogoService.obtenerDatosParaFactura().subscribe({
+      next: (response) => {
+        if (response.success && response.configuracion?.porcentaje_iva) {
+          this.porcentajeIva = response.configuracion.porcentaje_iva;
+          console.log('✅ Porcentaje IVA cargado:', this.porcentajeIva);
+        }
+      },
+      error: (error) => {
+        console.warn('⚠️ Error cargando configuración IVA, usando valor por defecto:', this.porcentajeIva);
+      }
+    });
+  }
+
+  /**
+   * Obtener precio de ingrediente extra con IVA incluido
+   */
+  obtenerPrecioExtraConIva(precioAplicado: number): number {
+    // Aplicar IVA exclusivamente a los ingredientes extra
+    return precioAplicado * (1 + this.porcentajeIva / 100);
   }
 
   /**
