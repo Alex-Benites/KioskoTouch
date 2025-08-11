@@ -186,26 +186,43 @@ $font-family-base: 'Lato', sans-serif;
     margin-bottom: 20px;
     border-radius: 2px;
   }
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 10px 0;
+    text-align: center;
+  }
+
+  .section-subtitle {
+    font-size: 22px;
+    font-weight: 500;
+    color: #666;
+    margin: 0 0 20px 0;
+    text-align: center;
+    line-height: 1.3;
+  }
 }
 
 .ingredientes-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  gap: 20px;
   padding: 0;
   max-width: 100%;
   overflow: hidden;
+  grid-auto-rows: 350px;
 }
 
 .ingrediente-card {
   position: relative;
   background: white;
   border-radius: 12px;
-  padding: 15px;
+  padding: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -213,6 +230,7 @@ $font-family-base: 'Lato', sans-serif;
   border: 3px solid transparent;
   min-width: 0;
   overflow: hidden;
+  height: 350px;
 
   &:hover {
     transform: translateY(-2px);
@@ -226,11 +244,11 @@ $font-family-base: 'Lato', sans-serif;
 
   .ingrediente-imagen {
     width: 100%;
-    height: 50%;
+    height: 65%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     overflow: hidden;
 
     img {
@@ -247,15 +265,16 @@ $font-family-base: 'Lato', sans-serif;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 5px;
+    justify-content: flex-start;
+    gap: 8px;
     overflow: hidden;
+    min-height: 120px;
 
     .ingrediente-nombre {
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 600;
       color: #333;
-      margin: 0;
+      margin: 0 0 8px 0;
       line-height: 1.2;
       text-overflow: ellipsis;
       overflow: hidden;
@@ -264,53 +283,67 @@ $font-family-base: 'Lato', sans-serif;
     }
 
     .ingrediente-precio {
-      font-size: 12px;
+      font-size: 20px;
       font-weight: 500;
       margin: 0;
-      line-height: 1;
+      line-height: 1.3;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
 
       .precio-incluido {
         color: #28a745;
         font-weight: 600;
+        font-size: 20px;
       }
 
       .precio-adicional {
         color: $kiosko-red;
         font-weight: 600;
+        font-size: 20px;
       }
 
       .sin-ingrediente {
         color: #dc3545;
         font-weight: 600;
         font-style: italic;
+        font-size: 20px;
       }
 
       .incluido-normal {
         color: #28a745;
         font-weight: 600;
+        font-size: 20px;
       }
 
       .incluido-con-extra {
         color: #28a745;
         font-weight: 600;
+        font-size: 20px;
 
         .costo-extra {
           color: #fd7e14;
           font-weight: bold;
+          font-size: 20px;
         }
       }
 
       .no-seleccionado {
         color: #6c757d;
+        font-size: 20px;
       }
 
       .seleccionado-adicional {
         color: #007bff;
         font-weight: 600;
+        font-size: 20px;
 
         .total-ingrediente {
           color: #fd7e14;
           font-weight: bold;
+          font-size: 20px;
         }
       }
     }
@@ -347,20 +380,20 @@ $font-family-base: 'Lato', sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 15px;
+    margin-top: 12px;
     padding: 8px;
     width: 100%;
     overflow: hidden;
 
     .control-btn {
-      width: 28px;
-      height: 28px;
+      width: 40px;
+      height: 40px;
       border: 2px solid #007bff;
       background: white;
       border-radius: 50%;
       color: #007bff;
-      font-size: 16px;
+      font-size: 24px;
       font-weight: bold;
       cursor: pointer;
       display: flex;
@@ -381,10 +414,10 @@ $font-family-base: 'Lato', sans-serif;
     }
 
     .cantidad-ingrediente {
-      min-width: 20px;
+      min-width: 35px;
       text-align: center;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 24px;
       color: #333;
       flex-shrink: 0;
     }
@@ -533,13 +566,13 @@ $font-family-base: 'Lato', sans-serif;
       border-bottom: 1px dashed #dee2e6;
 
       .precio-label {
-        font-size: 16px;
+        font-size: 18px;
         color: #495057;
         font-weight: 500;
       }
 
       .precio-valor {
-        font-size: 18px;
+        font-size: 22px;
         color: $kiosko-red;
         font-weight: 700;
       }
@@ -547,13 +580,13 @@ $font-family-base: 'Lato', sans-serif;
 
     .total-pedido {
       .total-label {
-        font-size: 16px;
+        font-size: 18px;
         color: #212529;
         font-weight: 600;
       }
 
       .total-valor {
-        font-size: 20px;
+        font-size: 24px;
         color: $kiosko-red;
         font-weight: 800;
       }
@@ -649,7 +682,7 @@ $font-family-base: 'Lato', sans-serif;
     border: 2px solid #2196f3;
     border-radius: 12px;
     padding: 12px 20px;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 800;
     color: #1565c0;
     min-width: 120px;
