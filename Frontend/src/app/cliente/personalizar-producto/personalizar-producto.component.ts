@@ -769,7 +769,8 @@ export class PersonalizarProductoComponent implements OnInit {
 
   disminuirIngrediente(ingrediente: IngredientePersonalizacion): void {
   if (ingrediente.esOriginal) {
-    if (ingrediente.cantidad > 1) {
+    const cantidadMinima = ingrediente.cantidadBase || 1;
+    if (ingrediente.cantidad > cantidadMinima) {
       ingrediente.cantidad--;
       ingrediente.seleccionado = ingrediente.cantidad > 0;
     }
@@ -889,10 +890,11 @@ export class PersonalizarProductoComponent implements OnInit {
 
   obtenerTooltipDisminuir(ingrediente: IngredientePersonalizacion): string {
     if (ingrediente.esOriginal) {
-      if (ingrediente.cantidad <= 1) {
-        return `${ingrediente.nombre} es un ingrediente base y no se puede quitar completamente`;
+      const cantidadMinima = ingrediente.cantidadBase || 1;
+      if (ingrediente.cantidad <= cantidadMinima) {
+        return `${ingrediente.nombre} es un ingrediente base (mínimo ${cantidadMinima})`;
       } else {
-        return `Disminuir cantidad de ${ingrediente.nombre} (mínimo 1)`;
+        return `Disminuir cantidad de ${ingrediente.nombre} (mínimo ${cantidadMinima})`;
       }
     } else {
       if (ingrediente.cantidad <= 0) {

@@ -87,11 +87,11 @@
                     <span *ngIf="ingrediente.cantidad === 0" class="sin-ingrediente">
                       Sin {{ ingrediente.nombre.toLowerCase() }}
                     </span>
-                    <span *ngIf="ingrediente.cantidad === 1" class="incluido-normal">
-                      Incluido
+                    <span *ngIf="ingrediente.cantidad === (ingrediente.cantidadBase || 1)" class="incluido-normal">
+                      {{ ingrediente.cantidadBase && ingrediente.cantidadBase > 1 ? ingrediente.cantidadBase + ' incluido' : 'Incluido' }}
                     </span>
-                    <span *ngIf="ingrediente.cantidad > 1" class="incluido-con-extra">
-                      Incluido + {{ ingrediente.cantidad - 1 }} extra
+                    <span *ngIf="ingrediente.cantidad > (ingrediente.cantidadBase || 1)" class="incluido-con-extra">
+                      {{ ingrediente.cantidadBase || 1 }} incluido + {{ ingrediente.cantidad - (ingrediente.cantidadBase || 1) }} extra
                       <span class="costo-extra">(+${{ calcularCostoExtraConIva(ingrediente).toFixed(2) }})</span>
                     </span>
                   </span>
@@ -112,7 +112,7 @@
                 <button
                   class="control-btn disminuir"
                   (click)="disminuirIngrediente(ingrediente)"
-                  [disabled]="ingrediente.esOriginal ? ingrediente.cantidad <= 1 : ingrediente.cantidad <= 0"
+                  [disabled]="ingrediente.esOriginal ? ingrediente.cantidad <= (ingrediente.cantidadBase || 1) : ingrediente.cantidad <= 0"
                   [title]="obtenerTooltipDisminuir(ingrediente)">
                   -
                 </button>
