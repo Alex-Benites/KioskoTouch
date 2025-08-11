@@ -1056,11 +1056,14 @@ export class PersonalizarProductoComponent implements OnInit {
     
     if (ingrediente.esOriginal) {
       // Para ingredientes originales, solo cobrar las cantidades extra
-      const cantidadExtra = Math.max(0, ingrediente.cantidad - 1);
+      const cantidadBase = ingrediente.cantidadBase || 1;
+      const cantidadExtra = Math.max(0, ingrediente.cantidad - cantidadBase);
       return cantidadExtra * precioConIva;
     } else {
       // Para ingredientes adicionales, cobrar toda la cantidad
-      return ingrediente.cantidad * precioConIva;
+      const cantidadBase = ingrediente.cantidadBase || 0;
+      const cantidadExtra = Math.max(0, ingrediente.cantidad - cantidadBase);
+      return cantidadExtra * precioConIva;
     }
   }
 
