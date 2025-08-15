@@ -22,18 +22,18 @@ $border-color: #e0e0e0;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    align-items: flex-start; 
+    align-items: flex-start;
     padding: 20px 40px;
-    max-width: 1200px; 
+    max-width: 1200px;
     width: 100%;
   }
 }
 
 .kiosko-logo {
   display: block;
-  height: 50px;      
-  width: auto;      
-  max-height: 50px;  
+  height: 50px;
+  width: auto;
+  max-height: 50px;
   object-fit: contain;
   image-rendering: -webkit-optimize-contrast;
   margin-bottom: 10px;
@@ -204,14 +204,14 @@ $border-color: #e0e0e0;
     gap: 15px;
     justify-content: flex-start;
     margin-bottom: 22px;
+    flex-direction: row; // ← Asegura que sea horizontal por defecto
 
     .pago-opcion {
       background-color: white;
       border: 2px solid $border-color;
       border-radius: 15px;
       padding: 15px 10px;
-      min-width: 310px;
-      width: auto;
+      flex: 1; // ← Cada botón ocupa 50% del ancho
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -590,8 +590,10 @@ $border-color: #e0e0e0;
   }
 
   .pago-opciones {
+    flex-direction: column; // Solo en móvil los botones se apilan
+
     .pago-opcion {
-      width: 100px;
+      width: 100%;
       padding: 15px;
     }
   }
