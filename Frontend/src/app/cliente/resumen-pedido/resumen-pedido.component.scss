@@ -577,38 +577,29 @@ $border-color: #e0e0e0;
     padding: 15px 20px;
   }
 
-  .kiosko-logo {
-    display: block;
-    height: 50px;
-    width: auto;
-    max-height: 50px;
-    object-fit: contain;
-  }
+  .producto-item {
+    .producto-imagen {
+      width: 100px; // ← Para móvil, un poco más pequeño
+      height: 100px;
+    }
 
-  .resumen-card {
-    padding: 20px;
+    .producto-info {
+      .producto-nombre {
+        font-size: 1.6rem; // ← Ajustado para móvil
+      }
+
+      .producto-precio {
+        font-size: 1.4rem; // ← Ajustado para móvil
+      }
+    }
   }
 
   .pago-opciones {
-    flex-direction: column; // Solo en móvil los botones se apilan
+    flex-direction: column;
 
     .pago-opcion {
       width: 100%;
       padding: 15px;
-    }
-  }
-
-  .datos-form {
-    .form-row {
-      flex-direction: column;
-      gap: 15px;
-    }
-  }
-
-  .botones-accion {
-    .primary-button {
-      width: 100%;
-      max-width: none;
     }
   }
 }
