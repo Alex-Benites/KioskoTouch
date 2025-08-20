@@ -700,7 +700,7 @@ export class PersonalizarProductoComponent implements OnInit {
   agregarAlCarrito(): void {
     const cantidadFinal = this.cantidad();
     const precioTotal = this.precioTotalCalculado();
-    const precioUnitarioConExtras = this.precioUnitarioConIngredientes();
+    const precioUnitarioConExtras = this.precioTotalCalculado() / cantidadFinal; // CORREGIDO: usar precio con IVA
     const resumenPersonalizaciones = this.obtenerResumenPersonalizaciones();
 
     // NUEVO: Obtén las personalizaciones
@@ -712,6 +712,7 @@ export class PersonalizarProductoComponent implements OnInit {
     console.log('agregarAlCarrito - Modo edición:', this.modoEdicion);
     console.log('agregarAlCarrito - Carrito index:', this.carritoIndex);
     console.log('agregarAlCarrito - Cantidad final:', cantidadFinal);
+    console.log('agregarAlCarrito - Precio unitario con IVA:', precioUnitarioConExtras);
 
     // Si estamos en modo edición, actualizar el producto existente
     if (this.modoEdicion && this.carritoIndex !== null) {
@@ -873,11 +874,13 @@ export class PersonalizarProductoComponent implements OnInit {
       return;
     }
 
+    const precioUnitarioConExtras = this.precioTotalCalculado() / this.cantidad(); // CORREGIDO: usar precio con IVA
+
     console.log('Actualizando carrito:', {
       carritoIndex: this.carritoIndex,
       productoId: this.productoId,
       cantidadPersonalizada: this.cantidadPersonalizada,
-      precioProducto: this.precioProducto
+      precioUnitarioConExtras: precioUnitarioConExtras
     });
 
     try {
@@ -890,7 +893,7 @@ export class PersonalizarProductoComponent implements OnInit {
       console.log('Agregando producto actualizado al carrito...');
       this.pedidoService.agregarProducto(
         this.productoId,
-        this.precioProducto,
+        precioUnitarioConExtras, // CORREGIDO: usar precio unitario con IVA
         this.cantidadPersonalizada,
         personalizaciones,
         undefined, // precio base no necesario en actualización
