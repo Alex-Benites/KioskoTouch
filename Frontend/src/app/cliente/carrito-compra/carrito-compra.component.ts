@@ -33,6 +33,7 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   ingredientes: any[] = [];
   ingredientesCargados: boolean = false; // ✅ AGREGAR flag de estado
+  private ingredientesProductos: Map<number, any[]> = new Map(); // ✅ AGREGAR cache de ingredientes base por producto
 
   get productosCarrito(): any[] {
     const productos = this.pedidoService.obtenerProductosParaCarrito();
@@ -217,6 +218,8 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
         this.catalogoService.obtenerProductoPorId(numeroId).subscribe({
           next: (producto) => {
             this.productosInfo.set(numeroId, producto);
+            // ✅ CARGAR ingredientes base del producto
+            this.cargarIngredientesBaseProducto(numeroId);
           },
           error: (error) => {
             this.productosInfo.set(numeroId, {
@@ -298,6 +301,73 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
       });
     
     return Array.from(agrupadas.values());
+  }
+
+  // ✅ NUEVO MÉTODO: Obtener solo ingredientes completamente nuevos (no incluidos originalmente)
+  obtenerIngredientesExtrasReales(personalizaciones: any[], productoId: number): any[] {
+    if (!this.ingredientesCargados || !productoId) {
+      console.log('🚫 Ingredientes no cargados o productoId inválido');
+      return [];
+    }
+
+    const ingredientesBase = this.ingredientesProductos.get(productoId) || [];
+    const idsIngredientesBase = new Set(ingredientesBase.map(ing => Number(ing.id)));
+    
+    console.log(`🔍 Producto ${productoId}:`, {
+      ingredientesBase,
+      idsIngredientesBase: Array.from(idsIngredientesBase),
+      personalizaciones
+    });
+    
+    const agrupadas = new Map();
+    
+    // Solo procesar ingredientes agregados que NO están en los ingredientes base
+    personalizaciones
+      .filter(p => {
+        const esAgregar = p.accion === 'agregar';
+        const noEsBase = !idsIngredientesBase.has(Number(p.ingrediente_id));
+        console.log(`🔍 Ingrediente ${p.ingrediente_id}: accion=${p.accion}, esAgregar=${esAgregar}, noEsBase=${noEsBase}`);
+        return esAgregar && noEsBase;
+      })
+      .forEach(p => {
+        const key = p.ingrediente_id;
+        
+        if (agrupadas.has(key)) {
+          agrupadas.get(key).cantidad += 1;
+        } else {
+          agrupadas.set(key, {
+            ingrediente_id: p.ingrediente_id,
+            accion: p.accion,
+            cantidad: 1,
+            precio_aplicado: p.precio_aplicado
+          });
+        }
+      });
+    
+    const resultado = Array.from(agrupadas.values());
+    console.log(`✅ Ingredientes extras reales para producto ${productoId}:`, resultado);
+    return resultado;
+  }
+
+  // ✅ NUEVO MÉTODO: Cargar ingredientes base de un producto
+  private cargarIngredientesBaseProducto(productoId: number): void {
+    if (this.ingredientesProductos.has(productoId)) {
+      return; // Ya cargado
+    }
+
+    this.catalogoService.getIngredientesPorProducto(productoId).subscribe({
+      next: (response) => {
+        console.log(`🔍 Ingredientes cargados para producto ${productoId}:`, response);
+        // Extraer solo ingredientes base (seleccionados) del response
+        const ingredientesBase = (response.ingredientes || []).filter((ing: any) => ing.seleccionado);
+        console.log(`📦 Ingredientes base del producto ${productoId}:`, ingredientesBase);
+        this.ingredientesProductos.set(productoId, ingredientesBase);
+      },
+      error: (error) => {
+        console.warn(`Error cargando ingredientes base del producto ${productoId}:`, error);
+        this.ingredientesProductos.set(productoId, []);
+      }
+    });
   }
 
   // Obtener información del tamaño si existe

@@ -36,7 +36,7 @@
 
               <div *ngIf="item.tipo === 'producto'">
                 <div class="producto-personalizaciones" *ngIf="ingredientesCargados && item.personalizacion && item.personalizacion.length > 0">
-                  <ng-container *ngFor="let ingr of obtenerPersonalizacionesAgrupadas(item.personalizacion)">
+                  <ng-container *ngFor="let ingr of obtenerIngredientesExtrasReales(item.personalizacion, item.producto_id)">
                     <span
                       *ngIf="ingr.accion === 'agregar'"
                       class="personalizacion personalizacion-agregado">
