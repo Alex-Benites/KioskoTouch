@@ -303,53 +303,70 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
     return Array.from(agrupadas.values());
   }
 
-  // ✅ NUEVO MÉTODO: Obtener solo ingredientes completamente nuevos (no incluidos originalmente)
   obtenerIngredientesExtrasReales(personalizaciones: any[], productoId: number): any[] {
-    if (!this.ingredientesCargados || !productoId) {
-      console.log('🚫 Ingredientes no cargados o productoId inválido');
+    console.log('=== DEBUG INGREDIENTES EXTRAS ===');
+    console.log('Producto ID:', productoId);
+    console.log('Personalizaciones completas:', JSON.stringify(personalizaciones, null, 2));
+    
+    if (!personalizaciones || personalizaciones.length === 0) {
       return [];
     }
 
     const ingredientesBase = this.ingredientesProductos.get(productoId) || [];
-    const idsIngredientesBase = new Set(ingredientesBase.map(ing => Number(ing.id)));
+    console.log('Ingredientes base cargados:', ingredientesBase);
     
-    console.log(`🔍 Producto ${productoId}:`, {
-      ingredientesBase,
-      idsIngredientesBase: Array.from(idsIngredientesBase),
-      personalizaciones
+    const personalizacionesAgregar = personalizaciones.filter(p => p.accion === 'agregar');
+    console.log('Personalizaciones agregar completas:', JSON.stringify(personalizacionesAgregar, null, 2));
+    
+    // Si no hay ingredientes base cargados, mostrar todas las personalizaciones como extras
+    if (ingredientesBase.length === 0) {
+      console.log('No hay ingredientes base - usando todas como extras');
+      return this.obtenerPersonalizacionesAgrupadas(personalizaciones);
+    }
+    
+    const idsIngredientesBase = new Set(ingredientesBase.map(ing => Number(ing.id)));
+    console.log('IDs ingredientes base:', Array.from(idsIngredientesBase));
+    
+    // CORREGIDO: Las personalizaciones representan SOLO los ingredientes EXTRAS
+    // No necesitamos restar nada, solo contar las personalizaciones de "agregar"
+    const contadorPersonalizaciones = new Map();
+    personalizacionesAgregar.forEach((p, index) => {
+      const id = Number(p.ingrediente_id);
+      const actual = contadorPersonalizaciones.get(id) || 0;
+      const cantidad = p.cantidad || 1;
+      console.log(`Personalización ${index}: ID=${id}, cantidad=${cantidad}, actual=${actual}`);
+      contadorPersonalizaciones.set(id, actual + cantidad);
+    });
+    console.log('Contador personalizaciones (EXTRAS PUROS):', Object.fromEntries(contadorPersonalizaciones));
+    
+    const resultado: any[] = [];
+    
+    // Para cada ingrediente personalizado
+    contadorPersonalizaciones.forEach((cantidadExtra, ingredienteId) => {
+      const esIngredienteBase = idsIngredientesBase.has(ingredienteId);
+      console.log(`Procesando ingrediente ${ingredienteId}:`);
+      console.log(`  Es ingrediente base: ${esIngredienteBase}`);
+      console.log(`  Cantidad extra (directa): ${cantidadExtra}`);
+      
+      // Las personalizaciones YA representan los extras, no restar nada
+      if (cantidadExtra > 0) {
+        resultado.push({
+          ingrediente_id: ingredienteId,
+          accion: 'agregar',
+          cantidad: cantidadExtra,
+          precio_aplicado: personalizacionesAgregar.find(p => Number(p.ingrediente_id) === ingredienteId)?.precio_aplicado || 0
+        });
+        console.log(`  ✅ Agregando extra: cantidad=${cantidadExtra}`);
+      } else {
+        console.log(`  ❌ No hay extras`);
+      }
     });
     
-    const agrupadas = new Map();
-    
-    // Solo procesar ingredientes agregados que NO están en los ingredientes base
-    personalizaciones
-      .filter(p => {
-        const esAgregar = p.accion === 'agregar';
-        const noEsBase = !idsIngredientesBase.has(Number(p.ingrediente_id));
-        console.log(`🔍 Ingrediente ${p.ingrediente_id}: accion=${p.accion}, esAgregar=${esAgregar}, noEsBase=${noEsBase}`);
-        return esAgregar && noEsBase;
-      })
-      .forEach(p => {
-        const key = p.ingrediente_id;
-        
-        if (agrupadas.has(key)) {
-          agrupadas.get(key).cantidad += 1;
-        } else {
-          agrupadas.set(key, {
-            ingrediente_id: p.ingrediente_id,
-            accion: p.accion,
-            cantidad: 1,
-            precio_aplicado: p.precio_aplicado
-          });
-        }
-      });
-    
-    const resultado = Array.from(agrupadas.values());
-    console.log(`✅ Ingredientes extras reales para producto ${productoId}:`, resultado);
+    console.log('Resultado final:', resultado);
+    console.log('=== FIN DEBUG ===');
     return resultado;
   }
 
-  // ✅ NUEVO MÉTODO: Cargar ingredientes base de un producto
   private cargarIngredientesBaseProducto(productoId: number): void {
     if (this.ingredientesProductos.has(productoId)) {
       return; // Ya cargado
@@ -357,14 +374,11 @@ export class CarritoCompraComponent implements OnInit, OnDestroy {
 
     this.catalogoService.getIngredientesPorProducto(productoId).subscribe({
       next: (response) => {
-        console.log(`🔍 Ingredientes cargados para producto ${productoId}:`, response);
         // Extraer solo ingredientes base (seleccionados) del response
         const ingredientesBase = (response.ingredientes || []).filter((ing: any) => ing.seleccionado);
-        console.log(`📦 Ingredientes base del producto ${productoId}:`, ingredientesBase);
         this.ingredientesProductos.set(productoId, ingredientesBase);
       },
       error: (error) => {
-        console.warn(`Error cargando ingredientes base del producto ${productoId}:`, error);
         this.ingredientesProductos.set(productoId, []);
       }
     });

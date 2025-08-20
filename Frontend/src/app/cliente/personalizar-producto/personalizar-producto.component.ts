@@ -292,13 +292,15 @@ export class PersonalizarProductoComponent implements OnInit {
             ingrediente.cantidad = 0;
             ingrediente.seleccionado = false;
           } else {
-            // Si no se quitó, cantidad base (1) + agregados extra
-            ingrediente.cantidad = 1 + conteo.agregar;
+            // CORREGIDO: Si no se quitó, cantidad base real + agregados extra
+            const cantidadBase = ingrediente.cantidadBase || 1;
+            ingrediente.cantidad = cantidadBase + conteo.agregar;
             ingrediente.seleccionado = true;
           }
         } else {
           // INGREDIENTES NO ORIGINALES
-          ingrediente.cantidad = conteo.agregar;
+          const cantidadBase = ingrediente.cantidadBase || 0;
+          ingrediente.cantidad = cantidadBase + conteo.agregar;
           ingrediente.seleccionado = ingrediente.cantidad > 0;
         }
       } else {
@@ -399,8 +401,9 @@ export class PersonalizarProductoComponent implements OnInit {
       }
 
       // Ingredientes originales con cantidad extra
-      else if (ingrediente.esOriginal && ingrediente.cantidad > 1) {
-        const cantidadExtra = ingrediente.cantidad - 1;
+      else if (ingrediente.esOriginal && ingrediente.cantidad > (ingrediente.cantidadBase || 1)) {
+        const cantidadBase = ingrediente.cantidadBase || 1;
+        const cantidadExtra = ingrediente.cantidad - cantidadBase;
         for (let i = 0; i < cantidadExtra; i++) {
           personalizaciones.push({
             ingrediente_id: ingrediente.id,
@@ -786,14 +789,21 @@ export class PersonalizarProductoComponent implements OnInit {
 
 
   private obtenerPersonalizacionesParaPedido(): PersonalizacionIngrediente[] {
+    console.log('=== OBTENER PERSONALIZACIONES PARA PEDIDO ===');
     const personalizaciones: PersonalizacionIngrediente[] = [];
     const ingredientes = this.ingredientesDisponibles();
-
+    console.log('Ingredientes disponibles:', ingredientes);
 
     ingredientes.forEach(ing => {
+      console.log(`\nProcesando ingrediente: ${ing.nombre} (ID: ${ing.id})`);
+      console.log(`  esOriginal: ${ing.esOriginal}`);
+      console.log(`  cantidad: ${ing.cantidad}`);
+      console.log(`  cantidadBase: ${ing.cantidadBase}`);
+      
       if (ing.esOriginal) {
         // INGREDIENTES BASE (ORIGINALES)
         if (ing.cantidad === 0) {
+          console.log('  -> Ingrediente base removido completamente');
           // Ingrediente base removido completamente
           personalizaciones.push({
             ingrediente_id: ing.id,
@@ -804,20 +814,26 @@ export class PersonalizarProductoComponent implements OnInit {
           // Ingrediente base con cantidad extra
           const cantidadBase = ing.cantidadBase || 1;
           const cantidadExtra = ing.cantidad - cantidadBase;
+          console.log(`  -> Ingrediente base con extras: cantidad=${ing.cantidad}, base=${cantidadBase}, extra=${cantidadExtra}`);
           for (let i = 0; i < cantidadExtra; i++) {
+            console.log(`    -> Agregando personalización ${i + 1}/${cantidadExtra}`);
             personalizaciones.push({
               ingrediente_id: ing.id,
               accion: 'agregar',
               precio_aplicado: ing.precio || 0
             });
           }
+        } else {
+          console.log('  -> Ingrediente base sin cambios (cantidad === cantidadBase)');
         }
         // Si cantidad === cantidadBase, no se agrega nada (está como viene por defecto)
       } else {
         // INGREDIENTES NO ORIGINALES (OPCIONALES)
         const cantidadBase = ing.cantidadBase || 0; // Cantidad incluida en el producto
+        console.log(`  -> Ingrediente no original: cantidad=${ing.cantidad}, base=${cantidadBase}`);
 
         if (ing.cantidad === 0 && cantidadBase > 0) {
+          console.log('  -> Ingrediente incluido que fue removido');
           // Ingrediente incluido que fue removido
           for (let i = 0; i < cantidadBase; i++) {
             personalizaciones.push({
@@ -829,6 +845,7 @@ export class PersonalizarProductoComponent implements OnInit {
         } else if (ing.cantidad > cantidadBase) {
           // Solo agregar la cantidad EXTRA por encima de lo incluido
           const cantidadExtra = ing.cantidad - cantidadBase;
+          console.log(`  -> Ingrediente no original con extras: extra=${cantidadExtra}`);
           for (let i = 0; i < cantidadExtra; i++) {
             personalizaciones.push({
               ingrediente_id: ing.id,
@@ -845,6 +862,8 @@ export class PersonalizarProductoComponent implements OnInit {
       }
     });
 
+    console.log('Personalizaciones finales generadas:', personalizaciones);
+    console.log('=== FIN OBTENER PERSONALIZACIONES ===');
     return personalizaciones;
   }
 
