@@ -102,8 +102,7 @@
                       <div class="item-header">
                         <span class="cantidad">{{ item.cantidad }}x</span>
                         <span class="nombre">{{ item.nombre }}</span>
-                        <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
-                      </div>
+                         <span class="precio">{{ formatearPrecio((item.precio_unitario * item.cantidad) * (1 + porcentajeIva / 100)) }}</span>                      </div>
                       
                       @if (item.promocion) {
                         <div class="promocion-info">
@@ -261,8 +260,7 @@
                       <div class="item-header">
                         <span class="cantidad">{{ item.cantidad }}x</span>
                         <span class="nombre">{{ item.nombre }}</span>
-                        <span class="precio">{{ formatearPrecio(item.subtotal) }}</span>
-                      </div>
+                         <span class="precio">{{ formatearPrecio((item.precio_unitario * item.cantidad) * (1 + porcentajeIva / 100)) }}</span>                      </div>
                       
                       @if (item.promocion) {
                         <div class="promocion-info">
