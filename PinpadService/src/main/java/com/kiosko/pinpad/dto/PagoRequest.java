@@ -5,7 +5,6 @@ import javax.validation.constraints.Pattern;
 
 public class PagoRequest {
     
-    // ✅ CAMPOS OBLIGATORIOS para ProcesoPago
     @NotNull
     @Pattern(regexp = "\\d{12}", message = "MontoTotal debe ser 12 dígitos")
     private String montoTotal;
@@ -19,43 +18,35 @@ public class PagoRequest {
     @Pattern(regexp = "\\d{12}", message = "IVA debe ser 12 dígitos")
     private String iva = "000000000000";
     
-    // ✅ CAMPOS OPCIONALES
     private String servicio = "000000000000";
     private String propina = "000000000000";
     private String numeroFactura;
     
-    // ✅ TIPOS DE TRANSACCIÓN (según documentación)
-    private Integer tipoTransaccion = 1; // 1=Compra, 2=Diferido, 3=Anulación, 6=PayClub
-    private Integer redAdquirente = 1;   // 1=Datafast, 2=Medianet, 3=Banco Austro
-    private String codigoDiferido = "00"; // 00=Corriente
+    private Integer tipoTransaccion = 1; 
+    private Integer redAdquirente = 1;   
+    private String codigoDiferido = "00"; 
     
-    // ✅ CAMPOS PARA ANULACIONES
     private String referencia;
     private String autorizacion;
     
-    // ✅ CAMPOS PARA OTT (PayClub)
     private String ott;
-    private String ottProveedor = "01"; // 01=Diners PayClub, 02=Pacífico BdP
+    private String ottProveedor = "01"; 
     
-    // Constructores
     public PagoRequest() {}
     
-    // ✅ Constructor para compra normal
     public PagoRequest(String montoTotal, String baseImponible, String iva) {
         this.montoTotal = montoTotal;
         this.baseImponible = baseImponible;
         this.iva = iva;
     }
     
-    // ✅ Constructor para anulación
     public PagoRequest(String referencia, String autorizacion, Integer redAdquirente) {
-        this.tipoTransaccion = 3; // Anulación
+        this.tipoTransaccion = 3; 
         this.referencia = referencia;
         this.autorizacion = autorizacion;
         this.redAdquirente = redAdquirente;
     }
     
-    // Getters y Setters
     public String getMontoTotal() { return montoTotal; }
     public void setMontoTotal(String montoTotal) { this.montoTotal = montoTotal; }
     

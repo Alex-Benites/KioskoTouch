@@ -2,14 +2,12 @@ package com.kiosko.pinpad.dto;
 
 public class PagoResponse {
     
-    // ✅ CAMPOS BÁSICOS DE RESPUESTA (según RespuestaProcesoPago)
     private String tipoMensaje = "PP";
     private String codigoRespuesta;
     private String mensajeRespuesta;
     private String codigoRespuestaAut;
     private String mensajeRespuestaAut;
     
-    // ✅ DATOS DE LA TRANSACCIÓN
     private String referencia;
     private String lote;
     private String hora;
@@ -18,19 +16,16 @@ public class PagoResponse {
     private String tid;
     private String mid;
     
-    // ✅ DATOS DEL BANCO/ADQUIRENTE
     private Integer redAdquirente;
     private String codigoAdquirente;
     private String nombreAdquirente;
     
-    // ✅ DATOS DE LA TARJETA
-    private String modoLectura; // 01=Manual, 02=Banda, 03=Chip, 04=Fallback manual, 05=Fallback banda
+    private String modoLectura; 
     private String tarjetaHabiente;
-    private String numeroTarjeta; // Truncado: 123456XXXX123
-    private String numeroTarjetaEncriptado; // SHA2
+    private String numeroTarjeta; 
+    private String numeroTarjetaEncriptado; 
     private String fechaVencimiento;
     
-    // ✅ DATOS EMV (para voucher)
     private String aplicacionEMV;
     private String aid;
     private String criptograma;
@@ -39,16 +34,13 @@ public class PagoResponse {
     private String tvr;
     private String tsi;
     
-    // ✅ OTROS DATOS
     private String interes;
     private String publicidad;
     private String montoFijo;
     private boolean exitoso;
     
-    // Constructores
     public PagoResponse() {}
     
-    // ✅ Constructor para respuesta exitosa
     public PagoResponse(String codigoRespuesta, String mensajeRespuesta, String autorizacion, String numeroTarjeta) {
         this.codigoRespuesta = codigoRespuesta;
         this.mensajeRespuesta = mensajeRespuesta;
@@ -57,14 +49,12 @@ public class PagoResponse {
         this.exitoso = "00".equals(codigoRespuesta);
     }
     
-    // ✅ Constructor para error
     public PagoResponse(String codigoRespuesta, String mensajeRespuesta) {
         this.codigoRespuesta = codigoRespuesta;
         this.mensajeRespuesta = mensajeRespuesta;
         this.exitoso = false;
     }
     
-    // Getters y Setters (todos los campos)
     public String getTipoMensaje() { return tipoMensaje; }
     public void setTipoMensaje(String tipoMensaje) { this.tipoMensaje = tipoMensaje; }
     
@@ -83,7 +73,6 @@ public class PagoResponse {
     public String getMensajeRespuestaAut() { return mensajeRespuestaAut; }
     public void setMensajeRespuestaAut(String mensajeRespuestaAut) { this.mensajeRespuestaAut = mensajeRespuestaAut; }
     
-    // ✅ Continúo con todos los getters/setters...
     public String getReferencia() { return referencia; }
     public void setReferencia(String referencia) { this.referencia = referencia; }
     
@@ -105,7 +94,6 @@ public class PagoResponse {
     public boolean isExitoso() { return exitoso; }
     public void setExitoso(boolean exitoso) { this.exitoso = exitoso; }
     
-    // ✅ REEMPLAZAR la línea 109: "// ✅ Y todos los demás getters/setters..." con:
     
     public String getHora() { return hora; }
     public void setHora(String hora) { this.hora = hora; }

@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PinpadConfig {
     
-    // ✅ CONFIGURACIÓN DEL PINPAD (según documentación Datafast)
     @Value("${pinpad.ip:192.168.1.100}")
     private String pinpadIp;
     
@@ -16,7 +15,6 @@ public class PinpadConfig {
     @Value("${pinpad.timeout:90000}")
     private int timeout;
     
-    // ✅ DATOS DEL COMERCIO (asignados por Datafast)
     @Value("${datafast.mid:123456789012345}")
     private String mid;
     
@@ -26,14 +24,9 @@ public class PinpadConfig {
     @Value("${datafast.cid:CAJA001}")
     private String cid;
     
-    // ✅ CONFIGURACIÓN DATAFAST (según documentación)
     @Value("${datafast.version:2}")
-    private int version; // 2 = FastTrack
-    
     @Value("${datafast.sha:2}")
-    private int sha; // 2 = SHA2
     
-    // Getters
     public String getPinpadIp() { return pinpadIp; }
     public int getPinpadPuerto() { return pinpadPuerto; }
     public int getTimeout() { return timeout; }
@@ -43,7 +36,6 @@ public class PinpadConfig {
     public int getVersion() { return version; }
     public int getSha() { return sha; }
     
-    // ✅ Método para obtener configuración completa como String (para logs)
     public String getConfigInfo() {
         return String.format("PinPad Config: IP=%s:%d, MID=%s, TID=%s, CID=%s", 
                            pinpadIp, pinpadPuerto, mid, tid, cid);

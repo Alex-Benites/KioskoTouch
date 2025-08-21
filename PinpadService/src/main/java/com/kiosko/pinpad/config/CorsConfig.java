@@ -16,38 +16,34 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins(
-                    "https://johrespi.pythonanywhere.com",  // ✅ Tu frontend en producción
-                    "http://localhost:4200",                // ✅ Frontend local desarrollo
-                    "http://127.0.0.1:4200"                 // ✅ Alternativa localhost
+                    "https://johrespi.pythonanywhere.com",  
+                    "http://localhost:4200",              
+                    "http://127.0.0.1:4200"               
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")                        // ✅ CAMBIO: Quitar allowCredentials
-                .maxAge(3600); // Cache preflight por 1 hora
+                .allowedHeaders("*")                       
+                .maxAge(3600); 
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // ✅ DOMINIOS ESPECÍFICOS (NO "*")
         configuration.addAllowedOrigin("https://johrespi.pythonanywhere.com");
         configuration.addAllowedOrigin("http://localhost:4200");
         configuration.addAllowedOrigin("http://127.0.0.1:4200");
         
-        // ✅ MÉTODOS ESPECÍFICOS (NO "*")
         configuration.addAllowedMethod("GET");
         configuration.addAllowedMethod("POST");
         configuration.addAllowedMethod("PUT");
         configuration.addAllowedMethod("DELETE");
         configuration.addAllowedMethod("OPTIONS");
         
-        // ✅ HEADERS ESPECÍFICOS
         configuration.addAllowedHeader("Content-Type");
         configuration.addAllowedHeader("Accept");
         configuration.addAllowedHeader("Authorization");
         configuration.addAllowedHeader("X-Requested-With");
         
-        // ✅ SIN CREDENTIALS para simplificar
         configuration.setAllowCredentials(false);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
