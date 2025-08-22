@@ -25,7 +25,10 @@ public class PinpadConfig {
     private String cid;
     
     @Value("${datafast.version:2}")
+    private int version;
+
     @Value("${datafast.sha:2}")
+    private int sha;
     
     public String getPinpadIp() { return pinpadIp; }
     public int getPinpadPuerto() { return pinpadPuerto; }
